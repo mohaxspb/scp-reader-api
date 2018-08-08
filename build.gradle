@@ -1,0 +1,98 @@
+buildscript {
+    ext.app_version = "1.0.0"
+
+    ext.kotlin_version = '1.2.60'
+    ext.spring_boot_version = '2.0.0.RELEASE'
+
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        //spring
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:$spring_boot_version"
+        // Required for Kotlin integration for spring
+        // See https://kotlinlang.org/docs/reference/compiler-plugins.html#kotlin-spring-compiler-plugin
+        classpath "org.jetbrains.kotlin:kotlin-allopen:$kotlin_version"
+        //fixes no-arg construcor errors
+        classpath "org.jetbrains.kotlin:kotlin-noarg:$kotlin_version"
+    }
+}
+
+plugins {
+    //db migrations
+    id "org.flywaydb.flyway" version "5.1.0"
+}
+
+group 'ru.kuchanov.scp'
+version "$app_version"
+
+apply plugin: 'java'
+apply plugin: 'kotlin'
+// See https://kotlinlang.org/docs/reference/compiler-plugins.html#kotlin-spring-compiler-plugin
+apply plugin: "kotlin-spring"
+//use entities with data classes
+apply plugin: "kotlin-jpa"
+
+//spring boot
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'war'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+//artifacts
+bootJar {
+    baseName = 'scp-reader'
+    version = "$app_version"
+}
+war {
+    baseName = 'scp-reader'
+    version = "$app_version"
+}
+
+//to be able to run with task args to define correct properties file
+//i.e. `bootRun -Dspring.profiles.active=dev`
+bootRun.systemProperties = System.properties as Map<String, ?>
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    compile 'com.fasterxml.jackson.module:jackson-module-kotlin'
+    //fix classNotFound
+    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+
+    //spring
+    compile "org.springframework.boot:spring-boot-starter-web"
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
+    //info
+    compile "org.springframework.boot:spring-boot-starter-actuator"
+    //data
+    compile "org.springframework.boot:spring-boot-starter-data-jpa"
+    //security
+    compile "org.springframework.boot:spring-boot-starter-security"
+    //oauth2
+    compile 'org.springframework.security.oauth:spring-security-oauth2:2.3.0.RELEASE'
+    //spring END
+
+    //postgresql
+    compile 'org.postgresql:postgresql:42.2.1'
+
+    //db migrations
+    compile "org.flywaydb:flyway-core:5.1.0"
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+noArg {
+    annotation("ru.scp.quiz.utils.NoArgConstructor")
+}
