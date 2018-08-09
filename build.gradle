@@ -94,5 +94,5 @@ compileKotlin {
 }
 
 noArg {
-    annotation("ru.scp.quiz.utils.NoArgConstructor")
+    annotation("ru.kuchanov.scpreaderapi.utils.NoArgConstructor")
 }

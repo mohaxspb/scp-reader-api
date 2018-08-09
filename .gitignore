@@ -13,7 +13,6 @@
 .mtj.tmp/
 
 # Package Files #
-*.jar
 *.war
 *.nar
 *.ear
@@ -25,3 +24,6 @@
 hs_err_pid*
 
 /.idea/
+/src/main/resources/*.properties
+/src/main/resources/migration/*.sql
+/dbBackup/
