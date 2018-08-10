@@ -87,6 +87,9 @@ dependencies {
 
     //db migrations
     compile "org.flywaydb:flyway-core:5.1.0"
+
+    //vk
+    compile 'com.vk.api:sdk:0.5.12'
 }
 
 compileKotlin {

@@ -1,5 +1,10 @@
 package ru.kuchanov.scpreaderapi.controller
 
+import com.vk.api.sdk.client.VkApiClient
+import com.vk.api.sdk.client.actors.ServiceActor
+import com.vk.api.sdk.httpclient.HttpTransportClient
+import com.vk.api.sdk.objects.wall.responses.GetResponse
+import com.vk.api.sdk.queries.wall.WallGetFilter
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -170,5 +175,31 @@ class IndexController {
         }
 
         return "{status:\"done\"}"
+    }
+
+    @Value("\${my.api.vk.app_id}")
+    var vkAppId: Int? = null
+
+    @Value("\${my.api.vk.client_secret}")
+    lateinit var vkClientSecret: String
+
+    @GetMapping("testVkApiSdk")
+    fun testVkApiSdk(): GetResponse? {
+        val transportClient = HttpTransportClient()
+        val vk = VkApiClient(transportClient)
+        val authResponse = vk.oauth()
+                .serviceClientCredentialsFlow(vkAppId, vkClientSecret)
+                .execute()
+
+        val actor = ServiceActor(vkAppId, authResponse.accessToken)
+
+        val getResponse = vk.wall().get(actor)
+                .ownerId(1)
+                .count(100)
+                .offset(5)
+                .filter(WallGetFilter.OWNER)
+                .execute()
+
+        return getResponse
     }
 }
