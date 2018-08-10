@@ -3,8 +3,6 @@ package ru.kuchanov.scpreaderapi.controller
 import com.vk.api.sdk.client.VkApiClient
 import com.vk.api.sdk.client.actors.ServiceActor
 import com.vk.api.sdk.httpclient.HttpTransportClient
-import com.vk.api.sdk.objects.wall.responses.GetResponse
-import com.vk.api.sdk.queries.wall.WallGetFilter
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -183,23 +181,26 @@ class IndexController {
     @Value("\${my.api.vk.client_secret}")
     lateinit var vkClientSecret: String
 
+    @Value("\${my.api.vk.service_access_key}")
+    lateinit var vkServiceAccessKey: String
+
     @GetMapping("testVkApiSdk")
-    fun testVkApiSdk(): GetResponse? {
+    fun testVkApiSdk(): com.vk.api.sdk.objects.photos.responses.GetResponse? {
         val transportClient = HttpTransportClient()
         val vk = VkApiClient(transportClient)
         val authResponse = vk.oauth()
                 .serviceClientCredentialsFlow(vkAppId, vkClientSecret)
                 .execute()
+        val accessToken = authResponse.accessToken
 
-        val actor = ServiceActor(vkAppId, authResponse.accessToken)
+        val actor = ServiceActor(vkAppId, vkClientSecret, vkServiceAccessKey)
 
-        val getResponse = vk.wall().get(actor)
-                .ownerId(1)
-                .count(100)
-                .offset(5)
-                .filter(WallGetFilter.OWNER)
+        //todo move to constants
+        val photos = vk.photos().get(actor)
+                .ownerId(-98801766)
+                .albumId(219430203.toString())
                 .execute()
 
-        return getResponse
+        return photos
     }
 }
