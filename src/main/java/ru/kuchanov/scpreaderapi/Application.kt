@@ -8,6 +8,7 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 import org.springframework.boot.builder.SpringApplicationBuilder
 import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.context.annotation.Bean
+import ru.kuchanov.scpreaderapi.network.ApiClient
 
 
 @SpringBootApplication
@@ -18,9 +19,11 @@ class Application : SpringBootServletInitializer() {
     }
 
     @Bean
-    fun logger(): Logger {
-        return LoggerFactory.getLogger("application")
-    }
+    fun logger() = LoggerFactory.getLogger("application")
+
+    @Bean
+    fun apiClient() = ApiClient()
+
 }
 
 fun main(args: Array<String>) {

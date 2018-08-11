@@ -1,8 +1,5 @@
 package ru.kuchanov.scpreaderapi.controller
 
-import com.vk.api.sdk.client.VkApiClient
-import com.vk.api.sdk.client.actors.ServiceActor
-import com.vk.api.sdk.httpclient.HttpTransportClient
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -15,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import ru.kuchanov.scpreaderapi.Constants.BACK_UP_RATE_MILLIS
 import ru.kuchanov.scpreaderapi.bean.auth.User
+import ru.kuchanov.scpreaderapi.network.ApiClient
 import ru.kuchanov.scpreaderapi.service.auth.AuthorityService
 import ru.kuchanov.scpreaderapi.service.auth.UserService
 import java.io.File
@@ -38,6 +36,9 @@ class IndexController {
 
     @Autowired
     private lateinit var log: Logger
+
+    @Autowired
+    private lateinit var apiClient: ApiClient
 
     @GetMapping("/")
     fun index(): String = "Greetings from Spring Boot!"
@@ -175,32 +176,6 @@ class IndexController {
         return "{status:\"done\"}"
     }
 
-    @Value("\${my.api.vk.app_id}")
-    var vkAppId: Int? = null
-
-    @Value("\${my.api.vk.client_secret}")
-    lateinit var vkClientSecret: String
-
-    @Value("\${my.api.vk.service_access_key}")
-    lateinit var vkServiceAccessKey: String
-
     @GetMapping("testVkApiSdk")
-    fun testVkApiSdk(): com.vk.api.sdk.objects.photos.responses.GetResponse? {
-        val transportClient = HttpTransportClient()
-        val vk = VkApiClient(transportClient)
-        val authResponse = vk.oauth()
-                .serviceClientCredentialsFlow(vkAppId, vkClientSecret)
-                .execute()
-        val accessToken = authResponse.accessToken
-
-        val actor = ServiceActor(vkAppId, vkClientSecret, vkServiceAccessKey)
-
-        //todo move to constants
-        val photos = vk.photos().get(actor)
-                .ownerId(-98801766)
-                .albumId(219430203.toString())
-                .execute()
-
-        return photos
-    }
+    fun testVkApiSdk() = apiClient.getScpArtPhotosFromVk()
 }
