@@ -6,28 +6,18 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.crypto.password.PasswordEncoder
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.CrossOrigin
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import ru.kuchanov.scpreaderapi.Constants.BACK_UP_RATE_MILLIS
 import ru.kuchanov.scpreaderapi.bean.auth.User
-import ru.kuchanov.scpreaderapi.network.ApiClient
-import ru.kuchanov.scpreaderapi.network.ModelConverter
 import ru.kuchanov.scpreaderapi.service.auth.AuthorityService
 import ru.kuchanov.scpreaderapi.service.auth.UserService
-import ru.kuchanov.scpreaderapi.service.gallery.GalleryService
-import ru.kuchanov.scpreaderapi.service.gallery.GalleryTranslationService
 import java.io.File
-import java.io.FileOutputStream
 import java.io.FilenameFilter
-import java.net.URL
-import java.nio.channels.Channels
-import java.nio.channels.FileChannel
-import java.nio.channels.ReadableByteChannel
 import java.text.SimpleDateFormat
 import java.util.*
-import java.nio.file.Files
-import java.nio.file.Paths
-
-
 
 
 @RestController
@@ -45,18 +35,6 @@ class IndexController {
 
     @Autowired
     private lateinit var log: Logger
-
-    @Autowired
-    private lateinit var apiClient: ApiClient
-
-    @Autowired
-    private lateinit var modelConverter: ModelConverter
-
-    @Autowired
-    lateinit var galleryService: GalleryService
-
-    @Autowired
-    lateinit var galleryTranslationService: GalleryTranslationService
 
     @GetMapping("/")
     fun index(): String = "Greetings from Spring Boot!"
@@ -193,60 +171,4 @@ class IndexController {
 
         return "{status:\"done\"}"
     }
-
-    @GetMapping("/testVkApiSdk")
-    fun testVkApiSdk(): String {
-        apiClient.getScpArtPhotosFromVk()?.let { getResponse ->
-            val galleryPhotosFromVk = modelConverter.convert(getResponse.items)
-
-            var newImagesSavedCount = 0
-            var updatedImagesCount = 0
-
-            galleryPhotosFromVk.forEach {
-                val galleryImageInDb = galleryService.getByVkId(it.vkId)
-                if (galleryImageInDb != null) {
-                    val galleryImageTranslationFromVk = it.galleryImageTranslations.first()
-                    val galleryImageTranslationInDb = galleryTranslationService.getOneByTranslation(
-                            galleryImageTranslationFromVk.translation
-                    )
-                    if (galleryImageTranslationInDb != null) {
-                        galleryImageTranslationInDb.translation = galleryImageTranslationFromVk.translation
-                        galleryTranslationService.update(galleryImageTranslationInDb)
-                    } else {
-                        galleryTranslationService.save(galleryImageTranslationFromVk)
-                    }
-                    updatedImagesCount++
-                } else {
-                    galleryService.save(it)
-                    newImagesSavedCount++
-                }
-            }
-
-            return "{status:\"saved: $newImagesSavedCount, updated: $updatedImagesCount\"}"
-        }
-
-        return "{status:\"error\"}"
-    }
-
-    private fun downloadImageFromUrl(url:String, id: Long){
-        val readableByteChannel = Channels.newChannel(URL(url).openStream())
-        Files.createDirectories(Paths.get("gallery"))
-        val file =
-        val fileOutputStream = FileOutputStream("gallery/$id.")
-        FileChannel fileChannel = fileOutputStream.getChannel();
-        fileOutputStream.getChannel()
-                .transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
-
-        // Get the file and save it somewhere
-//        val bytes = file.getBytes()
-//        val path = Paths.get(UPLOADED_FOLDER + file.getOriginalFilename())
-//        Files.write(path, bytes)
-    }
-
-    @GetMapping("/getGallery")
-    fun getGallery() = galleryService.findAll()
-
-    @GetMapping("/gallery/{id}/delete")
-    fun deleteGalleryImageById(@PathVariable(value = "id") id: Long) =
-            galleryService.deleteById(id)
 }
