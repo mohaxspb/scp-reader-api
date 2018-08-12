@@ -6,10 +6,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.crypto.password.PasswordEncoder
-import org.springframework.web.bind.annotation.CrossOrigin
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.Constants.BACK_UP_RATE_MILLIS
 import ru.kuchanov.scpreaderapi.bean.auth.User
 import ru.kuchanov.scpreaderapi.network.ApiClient
@@ -17,6 +14,7 @@ import ru.kuchanov.scpreaderapi.network.ModelConverter
 import ru.kuchanov.scpreaderapi.service.auth.AuthorityService
 import ru.kuchanov.scpreaderapi.service.auth.UserService
 import ru.kuchanov.scpreaderapi.service.gallery.GalleryService
+import ru.kuchanov.scpreaderapi.service.gallery.GalleryTranslationService
 import java.io.File
 import java.io.FilenameFilter
 import java.text.SimpleDateFormat
@@ -47,6 +45,9 @@ class IndexController {
 
     @Autowired
     lateinit var galleryService: GalleryService
+
+    @Autowired
+    lateinit var galleryTranslationService: GalleryTranslationService
 
     @GetMapping("/")
     fun index(): String = "Greetings from Spring Boot!"
@@ -186,10 +187,33 @@ class IndexController {
 
     @GetMapping("/testVkApiSdk")
     fun testVkApiSdk(): String {
-        apiClient.getScpArtPhotosFromVk()?.let {
-            val galleryPhotos = modelConverter.convert(it.items)
-            galleryService.saveAll(galleryPhotos)
-            return "{status:\"done\"}"
+        apiClient.getScpArtPhotosFromVk()?.let { getResponse ->
+            val galleryPhotosFromVk = modelConverter.convert(getResponse.items)
+
+            var newImagesSavedCount = 0
+            var updatedImagesCount = 0
+
+            galleryPhotosFromVk.forEach {
+                val galleryImageInDb = galleryService.getByVkId(it.vkId)
+                if (galleryImageInDb != null) {
+                    val galleryImageTranslationFromVk = it.galleryImageTranslations.first()
+                    val galleryImageTranslationInDb = galleryTranslationService.getOneByTranslation(
+                            galleryImageTranslationFromVk.translation
+                    )
+                    if (galleryImageTranslationInDb != null) {
+                        galleryImageTranslationInDb.translation = galleryImageTranslationFromVk.translation
+                        galleryTranslationService.update(galleryImageTranslationInDb)
+                    } else {
+                        galleryTranslationService.save(galleryImageTranslationFromVk)
+                    }
+                    updatedImagesCount++
+                } else {
+                    galleryService.save(it)
+                    newImagesSavedCount++
+                }
+            }
+
+            return "{status:\"saved: $newImagesSavedCount, updated: $updatedImagesCount\"}"
         }
 
         return "{status:\"error\"}"
@@ -197,4 +221,8 @@ class IndexController {
 
     @GetMapping("/getGallery")
     fun getGallery() = galleryService.findAll()
+
+    @GetMapping("/gallery/{id}/delete")
+    fun deleteGalleryImageById(@PathVariable(value = "id") id: Long) =
+            galleryService.deleteById(id)
 }

@@ -12,13 +12,13 @@ data class GalleryImageTranslation(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long? = null,
-        @ManyToOne
+        @ManyToOne(cascade = [CascadeType.REFRESH])
         var galleryImage: GalleryImage? = null,
         //content
         @Column(name = "lang_code")
         val langCode: String,
         @Column(columnDefinition = "TEXT")
-        val translation: String,
+        var translation: String,
         //status
         val approved: Boolean = false,
         @Column(name = "author_id")
