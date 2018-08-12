@@ -16,9 +16,18 @@ import ru.kuchanov.scpreaderapi.service.auth.UserService
 import ru.kuchanov.scpreaderapi.service.gallery.GalleryService
 import ru.kuchanov.scpreaderapi.service.gallery.GalleryTranslationService
 import java.io.File
+import java.io.FileOutputStream
 import java.io.FilenameFilter
+import java.net.URL
+import java.nio.channels.Channels
+import java.nio.channels.FileChannel
+import java.nio.channels.ReadableByteChannel
 import java.text.SimpleDateFormat
 import java.util.*
+import java.nio.file.Files
+import java.nio.file.Paths
+
+
 
 
 @RestController
@@ -217,6 +226,21 @@ class IndexController {
         }
 
         return "{status:\"error\"}"
+    }
+
+    private fun downloadImageFromUrl(url:String, id: Long){
+        val readableByteChannel = Channels.newChannel(URL(url).openStream())
+        Files.createDirectories(Paths.get("gallery"))
+        val file =
+        val fileOutputStream = FileOutputStream("gallery/$id.")
+        FileChannel fileChannel = fileOutputStream.getChannel();
+        fileOutputStream.getChannel()
+                .transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
+
+        // Get the file and save it somewhere
+//        val bytes = file.getBytes()
+//        val path = Paths.get(UPLOADED_FOLDER + file.getOriginalFilename())
+//        Files.write(path, bytes)
     }
 
     @GetMapping("/getGallery")

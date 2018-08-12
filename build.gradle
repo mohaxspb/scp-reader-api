@@ -90,6 +90,9 @@ dependencies {
 
     //vk
     compile 'com.vk.api:sdk:0.5.12'
+
+    //apache
+    compile 'commons-io:commons-io:2.6'
 }
 
 compileKotlin {
