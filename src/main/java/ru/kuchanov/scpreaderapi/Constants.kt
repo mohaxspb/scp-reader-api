@@ -5,6 +5,10 @@ object Constants {
      * 12 hours
      */
     const val BACK_UP_RATE_MILLIS = 1000L * 60 * 60 * 12
+    /**
+     * 24 hours
+     */
+    const val GALLERY_UPDATE_FROM_VK_RATE_MILLIS = 1000L * 60 * 60 * 24
 
     const val GALLERY_PATH = "gallery"
 

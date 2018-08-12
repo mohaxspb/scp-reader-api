@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.Constants
 import ru.kuchanov.scpreaderapi.network.ApiClient
@@ -40,6 +41,10 @@ class GalleryController {
     @Autowired
     lateinit var galleryTranslationService: GalleryTranslationService
 
+    @Scheduled(
+            fixedDelay = Constants.GALLERY_UPDATE_FROM_VK_RATE_MILLIS,
+            initialDelay = Constants.GALLERY_UPDATE_FROM_VK_RATE_MILLIS
+    )
     @GetMapping("/updateFromVk")
     fun updateFromVk(): ResponseEntity<String> {
         apiClient.getScpArtPhotosFromVk()?.let { getResponse ->
