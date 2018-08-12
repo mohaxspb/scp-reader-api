@@ -27,3 +27,5 @@ hs_err_pid*
 /src/main/resources/*.properties
 /src/main/resources/migration/*.sql
 /dbBackup/
+/logs/myLog.log.*.gz
+/gallery/
