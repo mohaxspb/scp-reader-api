@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.RestController
 import ru.kuchanov.scpreaderapi.Constants.BACK_UP_RATE_MILLIS
 import ru.kuchanov.scpreaderapi.bean.auth.User
 import ru.kuchanov.scpreaderapi.network.ApiClient
+import ru.kuchanov.scpreaderapi.network.ModelConverter
 import ru.kuchanov.scpreaderapi.service.auth.AuthorityService
 import ru.kuchanov.scpreaderapi.service.auth.UserService
+import ru.kuchanov.scpreaderapi.service.gallery.GalleryService
 import java.io.File
 import java.io.FilenameFilter
 import java.text.SimpleDateFormat
@@ -39,6 +41,12 @@ class IndexController {
 
     @Autowired
     private lateinit var apiClient: ApiClient
+
+    @Autowired
+    private lateinit var modelConverter: ModelConverter
+
+    @Autowired
+    lateinit var galleryService: GalleryService
 
     @GetMapping("/")
     fun index(): String = "Greetings from Spring Boot!"
@@ -176,6 +184,17 @@ class IndexController {
         return "{status:\"done\"}"
     }
 
-    @GetMapping("testVkApiSdk")
-    fun testVkApiSdk() = apiClient.getScpArtPhotosFromVk()
+    @GetMapping("/testVkApiSdk")
+    fun testVkApiSdk(): String {
+        apiClient.getScpArtPhotosFromVk()?.let {
+            val galleryPhotos = modelConverter.convert(it.items)
+            galleryService.saveAll(galleryPhotos)
+            return "{status:\"done\"}"
+        }
+
+        return "{status:\"error\"}"
+    }
+
+    @GetMapping("/getGallery")
+    fun getGallery() = galleryService.findAll()
 }

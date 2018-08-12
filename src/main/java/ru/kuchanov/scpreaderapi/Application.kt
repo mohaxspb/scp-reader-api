@@ -9,6 +9,7 @@ import org.springframework.boot.builder.SpringApplicationBuilder
 import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.context.annotation.Bean
 import ru.kuchanov.scpreaderapi.network.ApiClient
+import ru.kuchanov.scpreaderapi.network.ModelConverter
 
 
 @SpringBootApplication
@@ -23,6 +24,9 @@ class Application : SpringBootServletInitializer() {
 
     @Bean
     fun apiClient() = ApiClient()
+
+    @Bean
+    fun modelConverter() = ModelConverter()
 
 }
 

@@ -3,6 +3,7 @@ package ru.kuchanov.scpreaderapi.network
 import com.vk.api.sdk.client.VkApiClient
 import com.vk.api.sdk.client.actors.ServiceActor
 import com.vk.api.sdk.httpclient.HttpTransportClient
+import com.vk.api.sdk.objects.photos.responses.GetResponse
 import org.springframework.beans.factory.annotation.Value
 import javax.annotation.PostConstruct
 
@@ -39,8 +40,9 @@ class ApiClient {
             .serviceClientCredentialsFlow(vkAppId, vkClientSecret)
             .execute().accessToken
 
-    fun getScpArtPhotosFromVk() = vk.photos().get(actor)
+    fun getScpArtPhotosFromVk(): GetResponse? = vk.photos().get(actor)
             .ownerId(artScpVkGroupId)
             .albumId(artScpVkAlbumId.toString())
+            .photoSizes(true)
             .execute()
 }
