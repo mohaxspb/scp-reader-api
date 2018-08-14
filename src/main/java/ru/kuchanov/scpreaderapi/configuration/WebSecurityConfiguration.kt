@@ -123,7 +123,7 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
     }
 
     override fun configure(web: WebSecurity) {
-        web.ignoring().antMatchers("/gallery/files/**")
+        web.ignoring().antMatchers("/gallery/files/**", "/gallery/all")
     }
 
     @Bean
