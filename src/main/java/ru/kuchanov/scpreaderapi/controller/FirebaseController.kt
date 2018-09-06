@@ -31,9 +31,6 @@ class FirebaseController {
     @Autowired
     private lateinit var modelConverter: ModelConverter
 
-//    @Autowired
-//    private lateinit var firebaseApp: FirebaseApp
-
     @Autowired
     private lateinit var firebaseService: FirebaseService
 

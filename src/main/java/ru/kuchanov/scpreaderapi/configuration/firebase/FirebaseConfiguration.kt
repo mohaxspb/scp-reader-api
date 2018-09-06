@@ -49,20 +49,4 @@ class FirebaseConfiguration {
 
         return FirebaseApp.getInstance()
     }
-
-//    private fun initFirebaseApp(serviceAccKeyFileName: String, databaseUrl: String, appName: String) {
-//        val classloader = Thread.currentThread().contextClassLoader
-//
-//        val serviceAccount = classloader.getResourceAsStream(serviceAccKeyFileName)
-//
-//        val options = FirebaseOptions.Builder()
-//                .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-//                .setDatabaseUrl(databaseUrl)
-//                .build()
-//
-//        FirebaseApp.initializeApp(options, appName)
-//        //
-//        //        FirebaseDatabase databaseRu = FirebaseDatabase.getInstance(FirebaseApp.getInstance(appName));
-//        //        databaseRu.setLogLevel(com.google.firebase.database.Logger.Level.ERROR);
-//    }
 }
