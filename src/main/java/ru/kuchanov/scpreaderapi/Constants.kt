@@ -12,8 +12,24 @@ object Constants {
 
     const val GALLERY_PATH = "gallery"
 
-    object LangCodes{
+    const val FIREBASE_PATH = "firebase"
+
+    object LangCodes {
         const val RU = "ru"
         const val EN = "en"
+    }
+
+    object Firebase {
+        enum class FirebaseInstance(val lang: String) {
+            EN("en"),
+            RU("ru"),
+            PL("pl"),
+            DE("de"),
+            FR("fr"),
+            ES("es"),
+            IT("it"),
+            PT("pt"),
+            CH("ch")
+        }
     }
 }
