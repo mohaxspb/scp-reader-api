@@ -4,4 +4,5 @@ import ru.kuchanov.scpreaderapi.bean.auth.Authority
 
 interface AuthorityService {
     fun findAll(): List<Authority>
+    fun insert(authority: Authority): Authority?
 }

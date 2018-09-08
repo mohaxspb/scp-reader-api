@@ -86,7 +86,7 @@ dependencies {
     compile 'org.postgresql:postgresql:42.2.1'
 
     //db migrations
-//    compile "org.flywaydb:flyway-core:5.1.0"
+    compile "org.flywaydb:flyway-core:5.1.0"
 
     //vk
     compile 'com.vk.api:sdk:0.5.12'

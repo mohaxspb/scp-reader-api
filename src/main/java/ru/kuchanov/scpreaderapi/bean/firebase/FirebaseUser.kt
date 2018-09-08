@@ -18,9 +18,7 @@ class FirebaseUser(
         var scoreToNextLevel: Int = 0,
         var curLevelScore: Int = 0
 ) {
-//    var signInRewardGained: Boolean? = null
 //    var socialProviders: List<@JvmSuppressWildcards SocialProviderModel>? = null
-//    var cracked: Boolean = false
 //    var inapp: Map<String,@JvmSuppressWildcards String>? = null
 
     companion object {

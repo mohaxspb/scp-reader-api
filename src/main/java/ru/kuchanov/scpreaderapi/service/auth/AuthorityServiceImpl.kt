@@ -13,4 +13,6 @@ class AuthorityServiceImpl : AuthorityService {
     private lateinit var repository: AuthoritiesRepository
 
     override fun findAll(): List<Authority> = repository.findAll().toList()
+
+    override fun insert(authority: Authority): Authority = repository.save(authority)
 }

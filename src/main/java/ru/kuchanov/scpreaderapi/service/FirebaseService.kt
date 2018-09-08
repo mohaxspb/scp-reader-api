@@ -13,7 +13,15 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.Constants
+import ru.kuchanov.scpreaderapi.bean.auth.Authority
 import ru.kuchanov.scpreaderapi.bean.firebase.FirebaseUser
+import ru.kuchanov.scpreaderapi.bean.users.Lang
+import ru.kuchanov.scpreaderapi.bean.users.User
+import ru.kuchanov.scpreaderapi.bean.users.UsersLangs
+import ru.kuchanov.scpreaderapi.service.auth.AuthorityService
+import ru.kuchanov.scpreaderapi.service.users.LangService
+import ru.kuchanov.scpreaderapi.service.users.UserService
+import ru.kuchanov.scpreaderapi.service.users.UsersLangsService
 
 @Service
 class FirebaseService {
@@ -24,6 +32,20 @@ class FirebaseService {
 
     @Autowired
     private lateinit var log: Logger
+
+    @Autowired
+    private lateinit var userService: UserService
+
+    @Autowired
+    private lateinit var authorityService: AuthorityService
+
+    @Autowired
+    private lateinit var langService: LangService
+
+    @Autowired
+    private lateinit var usersLangsService: UsersLangsService
+
+    fun getAllUsersForLang(langId: String) = langService.getAllUsersByLangId(langId)
 
     @Async
     fun test(lang: Constants.Firebase.FirebaseInstance) {
@@ -43,9 +65,41 @@ class FirebaseService {
                 .toList()
                 .map { it.flatten() }
                 .subscribeBy(
-                        onSuccess = { println(it.size) },
+                        onSuccess = { insertUsers(it, langService.getById(lang.lang)) },
                         onError = { println(it.message) }
                 )
+    }
+
+    private fun insertUsers(firebaseUsers: List<FirebaseUser>, lang: Lang) {
+        println(firebaseUsers.size)
+
+        val users = firebaseUsers.map {
+            User(
+                    myUsername = it.email!!,
+                    myPassword = it.email!!,
+                    avatar = it.avatar,
+                    userAuthorities = setOf(),
+                    firebaseUid = it.uid,
+                    fullName = it.fullName,
+                    signInRewardGained = it.signInRewardGained,
+                    score = it.score
+            )
+        }
+
+        val usersInserted = userService.insert(users)
+
+        usersInserted?.forEach {
+            authorityService.insert(Authority(it.id, "USER"))
+        }
+
+        val usersLangs = usersInserted?.map {
+            UsersLangs(
+                    userId = it.id!!,
+                    langId = lang.id
+            )
+        }
+
+        usersLangsService.insert(usersLangs!!)
     }
 
     private fun usersObservable(

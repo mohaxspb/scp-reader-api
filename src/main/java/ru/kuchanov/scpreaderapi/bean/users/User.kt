@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.bean.auth
+package ru.kuchanov.scpreaderapi.bean.users
 
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
@@ -7,6 +7,7 @@ import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.bind.annotation.ResponseStatus
+import ru.kuchanov.scpreaderapi.bean.auth.Authority
 import java.sql.Timestamp
 import javax.persistence.*
 
@@ -15,26 +16,37 @@ import javax.persistence.*
 data class User(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
-        val id: Long,
+        val id: Long? = null,
         @Column(name = "name_first")
-        var nameFirst: String,
+        var nameFirst: String? = null,
         @Column(name = "name_second")
-        var nameSecond: String,
+        var nameSecond: String? = null,
         @Column(name = "name_third")
-        var nameThird: String,
-        @Column(name = "username")
+        var nameThird: String? = null,
+        @Column(name = "username", unique = true)
         var myUsername: String,
         @Column(name = "password")
         var myPassword: String,
-        var avatar: String,
-        val enabled: Boolean,
+        var avatar: String? = null,
+        val enabled: Boolean = true,
         @OneToMany(cascade = [CascadeType.ALL], mappedBy = "userId", fetch = FetchType.EAGER)
-        val userAuthorities: Set<Authority>,
+        var userAuthorities: Set<Authority>,
         @field:CreationTimestamp
-        val created: Timestamp,
+        val created: Timestamp? = null,
         @field:UpdateTimestamp
         @Version
-        val updated: Timestamp
+        val updated: Timestamp? = null,
+        //firebase
+        var firebaseUid: String? = null,
+        var fullName: String? = null,
+        var signInRewardGained: Boolean? = null,
+        var score: Int? = null
+//        @ManyToMany()
+//        val userLangs:Set<Lang>
+//        var numOfReadArticles: Int = 0,
+//        var levelNum: Int = 0,
+//        var scoreToNextLevel: Int = 0,
+//        var curLevelScore: Int = 0
 ) : UserDetails {
     override fun getAuthorities(): MutableCollection<out GrantedAuthority> =
             userAuthorities.map { SimpleGrantedAuthority(it.authority) }.toMutableList()

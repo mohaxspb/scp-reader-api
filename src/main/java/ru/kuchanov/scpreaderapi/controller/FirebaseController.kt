@@ -1,10 +1,5 @@
 package ru.kuchanov.scpreaderapi.controller
 
-import com.google.firebase.FirebaseApp
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.GetMapping
@@ -12,7 +7,6 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import ru.kuchanov.scpreaderapi.Constants
-import ru.kuchanov.scpreaderapi.bean.firebase.FirebaseUser
 import ru.kuchanov.scpreaderapi.network.ApiClient
 import ru.kuchanov.scpreaderapi.network.ModelConverter
 import ru.kuchanov.scpreaderapi.service.FirebaseService
@@ -55,4 +49,8 @@ class FirebaseController {
 //            }
 //        })
     }
+
+    @GetMapping("/{lang}/users/all")
+    fun getAllUsersForLang(@PathVariable(value = "lang") lang: Constants.Firebase.FirebaseInstance) =
+            firebaseService.getAllUsersForLang(lang.lang)
 }
