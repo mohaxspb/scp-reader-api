@@ -28,26 +28,9 @@ class FirebaseController {
     @Autowired
     private lateinit var firebaseService: FirebaseService
 
-    @GetMapping("/{lang}/test")
+    @GetMapping("/{lang}/users/updateFromFirebase")
     fun test(@PathVariable(value = "lang") lang: Constants.Firebase.FirebaseInstance) {
         firebaseService.test(lang)
-//        val firebaseApp = FirebaseDatabase.getInstance(FirebaseApp.getInstance(lang.lang))
-//        val query = firebaseApp
-//                .getReference("users")
-//                .orderByChild(FirebaseUser.FIELD_SCORE)
-//                .startAt(1.0)
-//                .limitToLast(1000)
-//        println("query: ${query.spec}")
-//
-//        query.addListenerForSingleValueEvent(object : ValueEventListener {
-//            override fun onCancelled(error: DatabaseError?) {
-//                log.debug(error?.message)
-//            }
-//
-//            override fun onDataChange(snapshot: DataSnapshot?) {
-//                log.debug(snapshot?.children?.joinToString { ", " })
-//            }
-//        })
     }
 
     @GetMapping("/{lang}/users/all")

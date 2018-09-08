@@ -37,7 +37,6 @@ data class User(
         @Version
         val updated: Timestamp? = null,
         //firebase
-        var firebaseUid: String? = null,
         var fullName: String? = null,
         var signInRewardGained: Boolean? = null,
         var score: Int? = null

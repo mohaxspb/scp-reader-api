@@ -2,13 +2,16 @@ package ru.kuchanov.scpreaderapi.service.users
 
 import org.springframework.security.core.userdetails.UserDetailsService
 import ru.kuchanov.scpreaderapi.bean.users.User
+import javax.transaction.Transactional
 
 interface UserService : UserDetailsService {
     fun findAll(): List<User>
     fun getById(id: Long): User
+    fun getByUsername(username: String): User?
     fun update(user: User): User
 
-    fun insert(users: List<User>): MutableList<User>?
+    @Transactional
+    fun insert(user: User): User
 
-//    fun getAllByLangId(langId:String):List<User>
+    fun insert(users: List<User>): List<User>
 }

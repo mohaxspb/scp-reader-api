@@ -17,11 +17,13 @@ class UserServiceImpl : UserService {
 
     override fun getById(id: Long) = repository.getOne(id) ?: throw UserNotFoundException()
 
+    override fun getByUsername(username: String) = repository.findOneByMyUsername(username)
+
     override fun update(user: User): User = repository.save(user)
 
     override fun loadUserByUsername(username: String) = repository.findOneByMyUsername(username)
 
-    override fun insert(users: List<User>): MutableList<User> = repository.saveAll(users)
+    override fun insert(user: User): User = repository.save(user)
 
-//    override fun getAllByLangId(langId: String): List<User> = repository.
+    override fun insert(users: List<User>): List<User> = repository.saveAll(users)
 }

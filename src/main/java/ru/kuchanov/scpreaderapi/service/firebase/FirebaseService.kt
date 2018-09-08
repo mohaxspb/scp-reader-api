@@ -22,6 +22,7 @@ import ru.kuchanov.scpreaderapi.service.auth.AuthorityService
 import ru.kuchanov.scpreaderapi.service.users.LangService
 import ru.kuchanov.scpreaderapi.service.users.UserService
 import ru.kuchanov.scpreaderapi.service.users.UsersLangsService
+import javax.transaction.Transactional
 
 @Service
 class FirebaseService {
@@ -70,38 +71,56 @@ class FirebaseService {
                 )
     }
 
+    @Transactional
     private fun insertUsers(firebaseUsers: List<FirebaseUser>, lang: Lang) {
         println(firebaseUsers.size)
 
-        val users = firebaseUsers
+        var newUsersInserted = 0
+        var newLangForExistedUsers = 0
+
+        firebaseUsers
                 .distinctBy { it.email }
                 .map {
-                    User(
-                            myUsername = it.email!!,
-                            myPassword = it.email!!,
-                            avatar = it.avatar,
-                            userAuthorities = setOf(),
-                            firebaseUid = it.uid,
-                            fullName = it.fullName,
-                            signInRewardGained = it.signInRewardGained,
-                            score = it.score
+                    Pair(
+                            User(
+                                    myUsername = it.email!!,
+                                    myPassword = it.email!!,
+                                    avatar = it.avatar,
+                                    userAuthorities = setOf(),
+                                    fullName = it.fullName,
+                                    signInRewardGained = it.signInRewardGained,
+                                    score = it.score
+                            ),
+                            it.uid!!
                     )
                 }
+                .forEach { userAndUid ->
+                    //check if user already exists and update just some values
+                    val userInDb = userService.getByUsername(userAndUid.first.myUsername)
+                    if (userInDb != null) {
+                        //increase score if need
+                        val firebaseUser = userAndUid.first
+                        if (userInDb.score!! <= firebaseUser.score!!) {
+                            userInDb.score = firebaseUser.score
+                        }
+                        //add user-lang connection if need
+                        if (usersLangsService.getByUserIdAndLangId(userInDb.id!!, lang.id) == null) {
+                            usersLangsService.insert(UsersLangs(userInDb.id, lang.id, userAndUid.second))
+                            newLangForExistedUsers++
+                        }
 
-        val usersInserted = userService.insert(users)
+                        //todo insert read/favorite articles if need
+                    } else {
+                        val userInserted = userService.insert(userAndUid.first)
+                        authorityService.insert(Authority(userInserted.id, "USER"))
+                        usersLangsService.insert(UsersLangs(userInserted.id!!, lang.id, userAndUid.second))
+                        newUsersInserted++
 
-        usersInserted?.forEach {
-            authorityService.insert(Authority(it.id, "USER"))
-        }
+                        //todo insert read/favorite articles if need
+                    }
+                }
 
-        val usersLangs = usersInserted?.map {
-            UsersLangs(
-                    userId = it.id!!,
-                    langId = lang.id
-            )
-        }
-
-        usersLangsService.insert(usersLangs!!)
+        println("newUsersInserted = $newUsersInserted, newLangForExistedUsers = $newLangForExistedUsers")
     }
 
     private fun usersObservable(

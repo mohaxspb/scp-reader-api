@@ -15,6 +15,8 @@ data class UsersLangs(
         @Id
         @Column(name = "lang_id")
         var langId: String,
+        @Column(name = "firebase_uid")
+        var firebaseUid: String,
         @field:CreationTimestamp
         val created: Timestamp? = null,
         @field:UpdateTimestamp
