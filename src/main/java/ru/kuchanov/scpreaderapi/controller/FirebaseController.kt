@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController
 import ru.kuchanov.scpreaderapi.Constants
 import ru.kuchanov.scpreaderapi.network.ApiClient
 import ru.kuchanov.scpreaderapi.network.ModelConverter
-import ru.kuchanov.scpreaderapi.service.FirebaseService
+import ru.kuchanov.scpreaderapi.service.firebase.FirebaseService
 
 
 @RestController
@@ -53,4 +53,8 @@ class FirebaseController {
     @GetMapping("/{lang}/users/all")
     fun getAllUsersForLang(@PathVariable(value = "lang") lang: Constants.Firebase.FirebaseInstance) =
             firebaseService.getAllUsersForLang(lang.lang)
+
+    @GetMapping("/{lang}/users/count")
+    fun getUsersCountForLang(@PathVariable(value = "lang") lang: Constants.Firebase.FirebaseInstance) =
+            firebaseService.getAllUsersForLang(lang.lang).size
 }

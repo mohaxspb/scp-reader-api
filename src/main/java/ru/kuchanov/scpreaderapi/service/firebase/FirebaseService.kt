@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.service
+package ru.kuchanov.scpreaderapi.service.firebase
 
 import com.google.firebase.FirebaseApp
 import com.google.firebase.database.DataSnapshot
@@ -73,18 +73,20 @@ class FirebaseService {
     private fun insertUsers(firebaseUsers: List<FirebaseUser>, lang: Lang) {
         println(firebaseUsers.size)
 
-        val users = firebaseUsers.map {
-            User(
-                    myUsername = it.email!!,
-                    myPassword = it.email!!,
-                    avatar = it.avatar,
-                    userAuthorities = setOf(),
-                    firebaseUid = it.uid,
-                    fullName = it.fullName,
-                    signInRewardGained = it.signInRewardGained,
-                    score = it.score
-            )
-        }
+        val users = firebaseUsers
+                .distinctBy { it.email }
+                .map {
+                    User(
+                            myUsername = it.email!!,
+                            myPassword = it.email!!,
+                            avatar = it.avatar,
+                            userAuthorities = setOf(),
+                            firebaseUid = it.uid,
+                            fullName = it.fullName,
+                            signInRewardGained = it.signInRewardGained,
+                            score = it.score
+                    )
+                }
 
         val usersInserted = userService.insert(users)
 
