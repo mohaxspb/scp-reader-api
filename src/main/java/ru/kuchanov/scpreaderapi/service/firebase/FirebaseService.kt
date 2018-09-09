@@ -46,7 +46,7 @@ class FirebaseService {
     @Autowired
     private lateinit var usersLangsService: UsersLangsService
 
-    fun getAllUsersForLang(langId: String) = langService.getAllUsersByLangId(langId)
+    fun getAllUsersForLang(langId: String) = userService.getAllUsersByLangId(langId)
 
     @Async
     fun test(lang: Constants.Firebase.FirebaseInstance) {

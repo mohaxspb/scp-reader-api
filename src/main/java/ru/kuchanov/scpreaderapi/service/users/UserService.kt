@@ -14,4 +14,8 @@ interface UserService : UserDetailsService {
     fun insert(user: User): User
 
     fun insert(users: List<User>): List<User>
+
+    fun getAllUsersByLangId(langId: String): List<User>
+
+    fun getUsersByLangWithOffsetAndLimitSortedByScore(langId: String, offset: Int, limit: Int): List<User>
 }

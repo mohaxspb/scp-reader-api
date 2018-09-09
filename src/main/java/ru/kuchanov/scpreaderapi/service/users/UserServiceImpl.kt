@@ -26,4 +26,9 @@ class UserServiceImpl : UserService {
     override fun insert(user: User): User = repository.save(user)
 
     override fun insert(users: List<User>): List<User> = repository.saveAll(users)
+
+    override fun getAllUsersByLangId(langId: String): List<User> = repository.getUsersByLang(langId)
+
+    override fun getUsersByLangWithOffsetAndLimitSortedByScore(langId: String, offset: Int, limit: Int) =
+            repository.getUsersByLangWithOffsetAndLimitSortedByScore(langId, offset, limit)
 }

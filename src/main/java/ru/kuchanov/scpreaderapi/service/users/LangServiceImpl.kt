@@ -3,7 +3,6 @@ package ru.kuchanov.scpreaderapi.service.users
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.users.Lang
-import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
 import ru.kuchanov.scpreaderapi.repository.users.LangsRepository
 
@@ -21,6 +20,4 @@ class LangServiceImpl : LangService {
     override fun insert(langs: List<Lang>): MutableList<Lang> = repository.saveAll(langs)
 
     override fun update(lang: Lang): Lang = repository.save(lang)
-
-    override fun getAllUsersByLangId(langId: String): List<User> = repository.getUsersByLang(langId)
 }

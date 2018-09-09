@@ -2,14 +2,13 @@ package ru.kuchanov.scpreaderapi.controller
 
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.Constants
+import ru.kuchanov.scpreaderapi.model.user.LeaderboardUser
 import ru.kuchanov.scpreaderapi.network.ApiClient
 import ru.kuchanov.scpreaderapi.network.ModelConverter
 import ru.kuchanov.scpreaderapi.service.firebase.FirebaseService
+import ru.kuchanov.scpreaderapi.service.users.UserService
 
 
 @RestController
@@ -28,6 +27,9 @@ class FirebaseController {
     @Autowired
     private lateinit var firebaseService: FirebaseService
 
+    @Autowired
+    private lateinit var usersService: UserService
+
     @GetMapping("/{lang}/users/updateFromFirebase")
     fun test(@PathVariable(value = "lang") lang: Constants.Firebase.FirebaseInstance) {
         firebaseService.test(lang)
@@ -40,4 +42,18 @@ class FirebaseController {
     @GetMapping("/{lang}/users/count")
     fun getUsersCountForLang(@PathVariable(value = "lang") lang: Constants.Firebase.FirebaseInstance) =
             firebaseService.getAllUsersForLang(lang.lang).size
+
+    @GetMapping("/{lang}/users/leaderboard")
+    fun getUsersForLangWithLimitAndOffsetSortedByScore(
+            @PathVariable(value = "lang") lang: Constants.Firebase.FirebaseInstance,
+            @RequestParam(value = "offset") offset: Int,
+            @RequestParam(value = "limit") limit: Int
+    ) = usersService.getUsersByLangWithOffsetAndLimitSortedByScore(lang.lang, offset, limit).map {
+        LeaderboardUser(
+                it.id!!,
+                it.avatar!!,
+                it.fullName!!,
+                it.score!!
+        )
+    }
 }
