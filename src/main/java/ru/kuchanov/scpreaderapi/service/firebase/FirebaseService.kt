@@ -81,10 +81,13 @@ class FirebaseService {
 
         val levelsJson = LevelsJson.getLevelsJson()
 
+//        println("levelsJson: $levelsJson")
+
         firebaseUsers
                 .distinctBy { it.email }
                 .map {
                     //set level info
+//                    println("it.score: ${it.score}/${it.uid}")
                     val curLevel = levelsJson.getLevelForScore(it.score)!!
                     Pair(
                             User(

@@ -1,16 +1,16 @@
 package ru.kuchanov.scpreaderapi.model.user
 
+import org.codehaus.jackson.annotate.JsonProperty
 import org.codehaus.jackson.map.ObjectMapper
 import ru.kuchanov.scpreaderapi.utils.FileUtils
 
 
 data class Level(
-        val id: Int,
-        var title: String,
-        var score: Int
+        @JsonProperty var id: Int? = null,
+        @JsonProperty var score: Int? = null
 )
 
-data class LevelsJson(val levels: List<Level>) {
+data class LevelsJson(@JsonProperty var levels: List<Level>? = null) {
 
     /**
      * returns NO_SCORE_TO_MAX_LEVEL if level is already MAX_LEVEL_ID
@@ -26,14 +26,14 @@ data class LevelsJson(val levels: List<Level>) {
         if (curLevel.id == MAX_LEVEL_ID) {
             return NO_SCORE_TO_MAX_LEVEL
         }
-        val nextLevel = levels[curLevel.id + 1]
+        val nextLevel = levels!![curLevel.id!! + 1]
 
         val nextLevelScore = nextLevel.score
 
-        return nextLevelScore
+        return nextLevelScore!!
     }
 
-    fun getLevelForScore(score: Int): Level? = levels.findLast { score > it.score }
+    fun getLevelForScore(score: Int): Level? = levels!!.findLast { score >= it.score!! }
 
     companion object {
 
@@ -41,7 +41,6 @@ data class LevelsJson(val levels: List<Level>) {
         const val MAX_LEVEL_ID = 5
         const val NO_SCORE_TO_MAX_LEVEL = -1
 
-        @JvmStatic
         fun getLevelsJson(): LevelsJson = ObjectMapper().readValue(
                 FileUtils.getFileAsStringFromResources(FILE_PATH),
                 LevelsJson::class.java
