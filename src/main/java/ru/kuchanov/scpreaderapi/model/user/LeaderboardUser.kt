@@ -5,5 +5,9 @@ data class LeaderboardUser(
         val id: Long,
         val avatar: String,
         var fullName: String,
-        var score: Int
+        var score: Int,
+        //level
+        var levelNum: Int,
+        var scoreToNextLevel: Int,
+        var curLevelScore: Int
 )

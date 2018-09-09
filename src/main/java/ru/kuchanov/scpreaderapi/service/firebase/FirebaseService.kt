@@ -18,6 +18,7 @@ import ru.kuchanov.scpreaderapi.bean.firebase.FirebaseUser
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.UsersLangs
+import ru.kuchanov.scpreaderapi.model.user.LevelsJson
 import ru.kuchanov.scpreaderapi.service.auth.AuthorityService
 import ru.kuchanov.scpreaderapi.service.users.LangService
 import ru.kuchanov.scpreaderapi.service.users.UserService
@@ -78,18 +79,27 @@ class FirebaseService {
         var newUsersInserted = 0
         var newLangForExistedUsers = 0
 
+        val levelsJson = LevelsJson.getLevelsJson()
+
         firebaseUsers
                 .distinctBy { it.email }
                 .map {
+                    //set level info
+                    val curLevel = levelsJson.getLevelForScore(it.score)!!
                     Pair(
                             User(
                                     myUsername = it.email!!,
                                     myPassword = it.email!!,
                                     avatar = it.avatar,
                                     userAuthorities = setOf(),
+                                    //firebase
                                     fullName = it.fullName,
                                     signInRewardGained = it.signInRewardGained,
-                                    score = it.score
+                                    score = it.score,
+                                    //level
+                                    levelNum = curLevel.id,
+                                    curLevelScore = curLevel.score,
+                                    scoreToNextLevel = levelsJson.scoreToNextLevel(it.score, curLevel)
                             ),
                             it.uid!!
                     )
@@ -102,6 +112,13 @@ class FirebaseService {
                         val firebaseUser = userAndUid.first
                         if (userInDb.score!! <= firebaseUser.score!!) {
                             userInDb.score = firebaseUser.score
+                            //set level info
+                            val curLevel = levelsJson.getLevelForScore(userInDb.score!!)!!
+                            userInDb.levelNum = curLevel.id
+                            userInDb.curLevelScore = curLevel.score
+                            userInDb.scoreToNextLevel = levelsJson.scoreToNextLevel(userInDb.score!!, curLevel)
+                            //update user in DB
+                            userService.update(userInDb)
                         }
                         //add user-lang connection if need
                         if (usersLangsService.getByUserIdAndLangId(userInDb.id!!, lang.id) == null) {

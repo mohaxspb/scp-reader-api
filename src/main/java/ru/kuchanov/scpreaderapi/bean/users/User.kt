@@ -39,13 +39,16 @@ data class User(
         //firebase
         var fullName: String? = null,
         var signInRewardGained: Boolean? = null,
-        var score: Int? = null
-//        @ManyToMany()
-//        val userLangs:Set<Lang>
+        var score: Int? = null,
+        //level
+        @Column(name = "level_num")
+        var levelNum: Int? = null,
+        @Column(name = "score_to_next_level")
+        var scoreToNextLevel: Int? = null,
+        @Column(name = "cur_level_score")
+        var curLevelScore: Int? = null
+        //articles
 //        var numOfReadArticles: Int = 0,
-//        var levelNum: Int = 0,
-//        var scoreToNextLevel: Int = 0,
-//        var curLevelScore: Int = 0
 ) : UserDetails {
     override fun getAuthorities(): MutableCollection<out GrantedAuthority> =
             userAuthorities.map { SimpleGrantedAuthority(it.authority) }.toMutableList()

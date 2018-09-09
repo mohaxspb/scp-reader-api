@@ -50,10 +50,14 @@ class FirebaseController {
             @RequestParam(value = "limit") limit: Int
     ) = usersService.getUsersByLangWithOffsetAndLimitSortedByScore(lang.lang, offset, limit).map {
         LeaderboardUser(
-                it.id!!,
-                it.avatar!!,
-                it.fullName!!,
-                it.score!!
+                id = it.id!!,
+                avatar = it.avatar!!,
+                fullName = it.fullName!!,
+                score = it.score!!,
+                //level
+                levelNum = it.levelNum!!,
+                scoreToNextLevel = it.scoreToNextLevel!!,
+                curLevelScore = it.curLevelScore!!
         )
     }
 }
