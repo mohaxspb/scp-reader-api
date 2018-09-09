@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.bean.firebase
+package ru.kuchanov.scpreaderapi.model.firebase
 
 import com.google.firebase.database.IgnoreExtraProperties
 
@@ -9,7 +9,7 @@ class FirebaseUser(
         var avatar: String? = null,
         var email: String? = null,
         var signInRewardGained: Boolean = false,
-        var articles: Map<String, @JvmSuppressWildcards ArticleInFirebase>? = null,
+        var articles: Map<String, @JvmSuppressWildcards FirebaseArticle>? = null,
         var vkGroups: Map<String, @JvmSuppressWildcards Any?>? = null,
         var apps: Map<String, @JvmSuppressWildcards Any?>? = null,
         var score: Int = 0,

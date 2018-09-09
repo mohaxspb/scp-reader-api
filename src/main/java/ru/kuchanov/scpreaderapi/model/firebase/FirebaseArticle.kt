@@ -1,9 +1,9 @@
-package ru.kuchanov.scpreaderapi.bean.firebase
+package ru.kuchanov.scpreaderapi.model.firebase
 
 import com.google.firebase.database.IgnoreExtraProperties
 
 @IgnoreExtraProperties
-data class ArticleInFirebase(
+data class FirebaseArticle(
         var isFavorite: Boolean = false,
         var isRead: Boolean = false,
         var title: String? = null,

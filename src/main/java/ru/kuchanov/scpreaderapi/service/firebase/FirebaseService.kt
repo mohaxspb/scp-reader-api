@@ -14,10 +14,11 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.Constants
 import ru.kuchanov.scpreaderapi.bean.auth.Authority
-import ru.kuchanov.scpreaderapi.bean.firebase.FirebaseUser
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.UsersLangs
+import ru.kuchanov.scpreaderapi.model.firebase.FirebaseUser
+import ru.kuchanov.scpreaderapi.model.firebase.UserUidArticles
 import ru.kuchanov.scpreaderapi.model.user.LevelsJson
 import ru.kuchanov.scpreaderapi.service.auth.AuthorityService
 import ru.kuchanov.scpreaderapi.service.users.LangService
@@ -64,6 +65,7 @@ class FirebaseService {
                         subject.onNext(users.last().uid)
                     }
                 }
+                .doOnNext { println("users size: ${it.size}") }
                 .toList()
                 .map { it.flatten() }
                 .subscribeBy(
@@ -89,7 +91,7 @@ class FirebaseService {
                     //set level info
 //                    println("it.score: ${it.score}/${it.uid}")
                     val curLevel = levelsJson.getLevelForScore(it.score)!!
-                    Pair(
+                    UserUidArticles(
                             User(
                                     myUsername = it.email!!,
                                     myPassword = it.email!!,
@@ -104,15 +106,16 @@ class FirebaseService {
                                     curLevelScore = curLevel.score,
                                     scoreToNextLevel = levelsJson.scoreToNextLevel(it.score, curLevel)
                             ),
-                            it.uid!!
+                            it.uid!!,
+                            it.articles?.values?.toList() ?: listOf()
                     )
                 }
-                .forEach { userAndUid ->
+                .forEach { userUidArticles ->
                     //check if user already exists and update just some values
-                    val userInDb = userService.getByUsername(userAndUid.first.myUsername)
+                    val userInDb = userService.getByUsername(userUidArticles.user.myUsername)
                     if (userInDb != null) {
                         //increase score if need
-                        val firebaseUser = userAndUid.first
+                        val firebaseUser = userUidArticles.user
                         if (userInDb.score!! <= firebaseUser.score!!) {
                             userInDb.score = firebaseUser.score
                             //set level info
@@ -125,15 +128,15 @@ class FirebaseService {
                         }
                         //add user-lang connection if need
                         if (usersLangsService.getByUserIdAndLangId(userInDb.id!!, lang.id) == null) {
-                            usersLangsService.insert(UsersLangs(userInDb.id, lang.id, userAndUid.second))
+                            usersLangsService.insert(UsersLangs(userInDb.id, lang.id, userUidArticles.uid))
                             newLangForExistedUsers++
                         }
 
                         //todo insert read/favorite articles if need
                     } else {
-                        val userInserted = userService.insert(userAndUid.first)
+                        val userInserted = userService.insert(userUidArticles.user)
                         authorityService.insert(Authority(userInserted.id, "USER"))
-                        usersLangsService.insert(UsersLangs(userInserted.id!!, lang.id, userAndUid.second))
+                        usersLangsService.insert(UsersLangs(userInserted.id!!, lang.id, userUidArticles.uid))
                         newUsersInserted++
 
                         //todo insert read/favorite articles if need
