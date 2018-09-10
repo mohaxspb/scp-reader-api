@@ -20,6 +20,7 @@ import ru.kuchanov.scpreaderapi.bean.users.UsersLangs
 import ru.kuchanov.scpreaderapi.model.firebase.FirebaseUser
 import ru.kuchanov.scpreaderapi.model.firebase.UserUidArticles
 import ru.kuchanov.scpreaderapi.model.user.LevelsJson
+import ru.kuchanov.scpreaderapi.service.article.ArticleService
 import ru.kuchanov.scpreaderapi.service.auth.AuthorityService
 import ru.kuchanov.scpreaderapi.service.users.LangService
 import ru.kuchanov.scpreaderapi.service.users.UserService
@@ -47,6 +48,9 @@ class FirebaseService {
 
     @Autowired
     private lateinit var usersLangsService: UsersLangsService
+
+    @Autowired
+    private lateinit var articleService: ArticleService
 
     fun getAllUsersForLang(langId: String) = userService.getAllUsersByLangId(langId)
 
@@ -133,6 +137,19 @@ class FirebaseService {
                         }
 
                         //todo insert read/favorite articles if need
+                        userUidArticles.articles.forEach { articleinFirebase ->
+                            val urlRelative = articleinFirebase.url!!
+                            var articleInDb = articleService.getOneByUrlRelativeUrlAndLang(urlRelative, lang.id)
+                            var articleForLang = //todo
+                            if (articleInDb == null) {
+                                //todo insert new article and article-lang connection
+
+                                articleInDb = //todo
+
+                            }
+                            //already exists...
+                            //todo update if need read/favorite
+                        }
                     } else {
                         val userInserted = userService.insert(userUidArticles.user)
                         authorityService.insert(Authority(userInserted.id, "USER"))
