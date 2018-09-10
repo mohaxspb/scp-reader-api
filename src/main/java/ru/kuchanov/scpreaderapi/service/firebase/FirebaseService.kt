@@ -17,6 +17,7 @@ import ru.kuchanov.scpreaderapi.bean.articles.Article
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.FavoriteArticlesByLang
 import ru.kuchanov.scpreaderapi.bean.auth.Authority
+import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.UsersLangs
@@ -131,7 +132,7 @@ class FirebaseService {
                     var userInDb = userService.getByUsername(userUidArticles.user.myUsername)
                     if (userInDb == null) {
                         userInDb = userService.insert(userUidArticles.user)
-                        authorityService.insert(Authority(userInDb.id, "USER"))
+                        authorityService.insert(Authority(userInDb.id, AuthorityType.USER.name))
                         newUsersInserted++
                     }
 

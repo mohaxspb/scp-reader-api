@@ -22,3 +22,7 @@ data class Authority(
         @Version
         val updated: Timestamp? = null
 ) : Serializable
+
+enum class AuthorityType {
+    USER, ADMIN
+}
