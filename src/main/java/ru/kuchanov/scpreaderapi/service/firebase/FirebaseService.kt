@@ -13,14 +13,20 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.Constants
+import ru.kuchanov.scpreaderapi.bean.articles.Article
+import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
+import ru.kuchanov.scpreaderapi.bean.articles.FavoriteArticlesByLang
 import ru.kuchanov.scpreaderapi.bean.auth.Authority
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.UsersLangs
+import ru.kuchanov.scpreaderapi.model.firebase.FirebaseArticle
 import ru.kuchanov.scpreaderapi.model.firebase.FirebaseUser
 import ru.kuchanov.scpreaderapi.model.firebase.UserUidArticles
 import ru.kuchanov.scpreaderapi.model.user.LevelsJson
+import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.ArticleService
+import ru.kuchanov.scpreaderapi.service.article.FavoriteArticleForLangService
 import ru.kuchanov.scpreaderapi.service.auth.AuthorityService
 import ru.kuchanov.scpreaderapi.service.users.LangService
 import ru.kuchanov.scpreaderapi.service.users.UserService
@@ -51,6 +57,12 @@ class FirebaseService {
 
     @Autowired
     private lateinit var articleService: ArticleService
+
+    @Autowired
+    private lateinit var articleForLangService: ArticleForLangService
+
+    @Autowired
+    private lateinit var favoriteArticleForLangService: FavoriteArticleForLangService
 
     fun getAllUsersForLang(langId: String) = userService.getAllUsersByLangId(langId)
 
@@ -116,51 +128,130 @@ class FirebaseService {
                 }
                 .forEach { userUidArticles ->
                     //check if user already exists and update just some values
-                    val userInDb = userService.getByUsername(userUidArticles.user.myUsername)
-                    if (userInDb != null) {
-                        //increase score if need
-                        val firebaseUser = userUidArticles.user
-                        if (userInDb.score!! <= firebaseUser.score!!) {
-                            userInDb.score = firebaseUser.score
-                            //set level info
-                            val curLevel = levelsJson.getLevelForScore(userInDb.score!!)!!
-                            userInDb.levelNum = curLevel.id
-                            userInDb.curLevelScore = curLevel.score
-                            userInDb.scoreToNextLevel = levelsJson.scoreToNextLevel(userInDb.score!!, curLevel)
-                            //update user in DB
-                            userService.update(userInDb)
-                        }
-                        //add user-lang connection if need
-                        if (usersLangsService.getByUserIdAndLangId(userInDb.id!!, lang.id) == null) {
-                            usersLangsService.insert(UsersLangs(userInDb.id, lang.id, userUidArticles.uid))
-                            newLangForExistedUsers++
-                        }
-
-                        //todo insert read/favorite articles if need
-                        userUidArticles.articles.forEach { articleinFirebase ->
-                            val urlRelative = articleinFirebase.url!!
-                            var articleInDb = articleService.getOneByUrlRelativeUrlAndLang(urlRelative, lang.id)
-                            var articleForLang = //todo
-                            if (articleInDb == null) {
-                                //todo insert new article and article-lang connection
-
-                                articleInDb = //todo
-
-                            }
-                            //already exists...
-                            //todo update if need read/favorite
-                        }
-                    } else {
-                        val userInserted = userService.insert(userUidArticles.user)
-                        authorityService.insert(Authority(userInserted.id, "USER"))
-                        usersLangsService.insert(UsersLangs(userInserted.id!!, lang.id, userUidArticles.uid))
+                    var userInDb = userService.getByUsername(userUidArticles.user.myUsername)
+                    if (userInDb == null) {
+                        userInDb = userService.insert(userUidArticles.user)
+                        authorityService.insert(Authority(userInDb.id, "USER"))
                         newUsersInserted++
-
-                        //todo insert read/favorite articles if need
                     }
+
+                    //add user-lang connection if need
+                    if (usersLangsService.getByUserIdAndLangId(userInDb.id!!, lang.id) == null) {
+                        usersLangsService.insert(UsersLangs(userInDb.id!!, lang.id, userUidArticles.uid))
+                        newLangForExistedUsers++
+                    }
+
+                    //increase score if need
+                    val firebaseUser = userUidArticles.user
+                    if (userInDb.score!! <= firebaseUser.score!!) {
+                        userInDb.score = firebaseUser.score
+                        //set level info
+                        val curLevel = levelsJson.getLevelForScore(userInDb.score!!)!!
+                        userInDb.levelNum = curLevel.id
+                        userInDb.curLevelScore = curLevel.score
+                        userInDb.scoreToNextLevel = levelsJson.scoreToNextLevel(userInDb.score!!, curLevel)
+                        //update user in DB
+                        userService.update(userInDb)
+                    }
+
+                    //insert read/favorite articles if need
+                    manageFirebaseArticlesForUser(userUidArticles.articles, userInDb, lang)
                 }
 
         println("newUsersInserted = $newUsersInserted, newLangForExistedUsers = $newLangForExistedUsers")
+    }
+
+    private fun manageFirebaseArticlesForUser(
+            articlesInFirebase: List<FirebaseArticle>,
+            user: User,
+            lang: Lang
+    ) {
+        articlesInFirebase.forEach { articleInFirebase ->
+            val urlRelative = articleInFirebase.url!!
+            var articleInDb = articleService.getArticleByUrlRelativeAndLang(urlRelative, lang.id)
+            //insert new article and article-lang connection if need
+            if (articleInDb == null) {
+                articleInDb = articleService.insert(Article())
+                articleForLangService.insert(ArticleForLang(
+                        articleId = articleInDb.id!!,
+                        langId = lang.id,
+                        urlRelative = articleInFirebase.url!!.replace("${lang.siteBaseUrl}/", ""),//todo
+                        title = articleInFirebase.title
+                ))
+            }
+            //update favorite if need
+            manageFavoriteArticlesForUserForLang(user, articleInFirebase, articleInDb, lang)
+
+            //update read if need
+            manageReadArticlesForUserForLang(user, articleInFirebase, articleInDb, lang)
+        }
+    }
+
+    private fun manageFavoriteArticlesForUserForLang(
+            user: User,
+            articleInFirebase: FirebaseArticle,
+            articleInDb: Article,
+            lang: Lang
+    ) {
+        var favoriteArticleForLang = favoriteArticleForLangService.getFavoriteArticleForArticleIdLangIdAndUserId(
+                userId = user.id!!,
+                articleId = articleInDb.id!!,
+                langId = lang.id
+        )
+
+        if (favoriteArticleForLang == null) {
+            favoriteArticleForLang = favoriteArticleForLangService.insert(FavoriteArticlesByLang(
+                    userId = user.id,
+                    articleId = articleInDb.id,
+                    langId = lang.id
+            ))
+        }
+
+        val dateInFirebase = articleInFirebase.updated
+        val dateInDb = favoriteArticleForLang.updated!!.time
+
+        //check timestamp and update if need
+        if (dateInDb < dateInFirebase) {
+            //outdated info in DB, so update it if value changed
+            if (favoriteArticleForLang.isFavorite != articleInFirebase.isFavorite) {
+                favoriteArticleForLang.isFavorite = articleInFirebase.isFavorite
+                favoriteArticleForLangService.update(favoriteArticleForLang)
+            }
+        }
+    }
+
+    //todo create service and repository
+    private fun manageReadArticlesForUserForLang(
+            user: User,
+            articleInFirebase: FirebaseArticle,
+            articleInDb: Article,
+            lang: Lang
+    ) {
+        var readArticleForLang = readArticleForLangService.getReadArticleForArticleIdLangIdAndUserId(
+                userId = user.id!!,
+                articleId = articleInDb.id!!,
+                langId = lang.id
+        )
+
+        if (readArticleForLang == null) {
+            readArticleForLang = readArticleForLangService.insert(FavoriteArticlesByLang(
+                    userId = user.id,
+                    articleId = articleInDb.id,
+                    langId = lang.id
+            ))
+        }
+
+        val dateInFirebase = articleInFirebase.updated
+        val dateInDb = readArticleForLang.updated!!.time
+
+        //check timestamp and update if need
+        if (dateInDb < dateInFirebase) {
+            //outdated info in DB, so update it if value changed
+            if (readArticleForLang.isRead != articleInFirebase.isRead) {
+                readArticleForLang.isFavorite = articleInFirebase.isRead
+                readArticleForLangService.update(readArticleForLang)
+            }
+        }
     }
 
     private fun usersObservable(

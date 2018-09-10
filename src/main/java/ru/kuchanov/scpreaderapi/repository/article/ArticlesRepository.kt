@@ -9,7 +9,11 @@ interface ArticlesRepository : JpaRepository<Article, Long> {
     fun findOneById(id: Long): Lang
 
     @Query("SELECT a FROM Article a " +
-            "JOIN ArticlesLangs al ON a.id = al.articleId " +
+            "JOIN ArticleForLang al ON a.id = al.articleId " +
             "WHERE al.urlRelative = :urlRelative AND al.langId = :langId")
     fun getOneByUrlRelativeUrlAndLang(urlRelative: String, langId: String): Article?
+
+//    @Query("SELECT al FROM ArticleForLang al " +
+//            "WHERE al.urlRelative = :urlRelative AND al.langId = :langId")
+//    fun getArticleForLangByUrlRelativeAndLang(urlRelative: String, langId: String): ArticleForLang?
 }

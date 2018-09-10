@@ -20,6 +20,8 @@ data class FavoriteArticlesByLang(
         @Id
         @Column(name = "lang_id")
         var langId: String,
+        @Column(name = "is_favorite")
+        var isFavorite: Boolean = false,
         @field:CreationTimestamp
         val created: Timestamp? = null,
         @field:UpdateTimestamp
@@ -29,7 +31,7 @@ data class FavoriteArticlesByLang(
 
 @NoArgConstructor
 data class KeyFavoriteArticleByLang(
-        val userId: String,
+        val userId: Long,
         val articleId: Long,
         val langId: String
 ) : Serializable

@@ -20,6 +20,8 @@ data class ReadArticlesByLang(
         @Id
         @Column(name = "lang_id")
         var langId: String,
+        @Column(name = "is_read")
+        var isRead: Boolean = false,
         @field:CreationTimestamp
         val created: Timestamp? = null,
         @field:UpdateTimestamp
