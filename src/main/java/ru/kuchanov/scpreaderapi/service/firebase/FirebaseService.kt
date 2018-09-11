@@ -16,6 +16,7 @@ import ru.kuchanov.scpreaderapi.Constants
 import ru.kuchanov.scpreaderapi.bean.articles.Article
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.FavoriteArticlesByLang
+import ru.kuchanov.scpreaderapi.bean.articles.ReadArticlesByLang
 import ru.kuchanov.scpreaderapi.bean.auth.Authority
 import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
 import ru.kuchanov.scpreaderapi.bean.users.Lang
@@ -28,6 +29,7 @@ import ru.kuchanov.scpreaderapi.model.user.LevelsJson
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.ArticleService
 import ru.kuchanov.scpreaderapi.service.article.FavoriteArticleForLangService
+import ru.kuchanov.scpreaderapi.service.article.ReadArticleForLangService
 import ru.kuchanov.scpreaderapi.service.auth.AuthorityService
 import ru.kuchanov.scpreaderapi.service.users.LangService
 import ru.kuchanov.scpreaderapi.service.users.UserService
@@ -64,6 +66,9 @@ class FirebaseService {
 
     @Autowired
     private lateinit var favoriteArticleForLangService: FavoriteArticleForLangService
+
+    @Autowired
+    private lateinit var readArticleForLangService: ReadArticleForLangService
 
     fun getAllUsersForLang(langId: String) = userService.getAllUsersByLangId(langId)
 
@@ -176,7 +181,7 @@ class FirebaseService {
                 articleForLangService.insert(ArticleForLang(
                         articleId = articleInDb.id!!,
                         langId = lang.id,
-                        urlRelative = articleInFirebase.url!!.replace("${lang.siteBaseUrl}/", ""),//todo
+                        urlRelative = articleInFirebase.url!!.replace("${lang.siteBaseUrl}/", ""),
                         title = articleInFirebase.title
                 ))
             }
@@ -221,7 +226,6 @@ class FirebaseService {
         }
     }
 
-    //todo create service and repository
     private fun manageReadArticlesForUserForLang(
             user: User,
             articleInFirebase: FirebaseArticle,
@@ -235,7 +239,7 @@ class FirebaseService {
         )
 
         if (readArticleForLang == null) {
-            readArticleForLang = readArticleForLangService.insert(FavoriteArticlesByLang(
+            readArticleForLang = readArticleForLangService.insert(ReadArticlesByLang(
                     userId = user.id,
                     articleId = articleInDb.id,
                     langId = lang.id
@@ -249,7 +253,7 @@ class FirebaseService {
         if (dateInDb < dateInFirebase) {
             //outdated info in DB, so update it if value changed
             if (readArticleForLang.isRead != articleInFirebase.isRead) {
-                readArticleForLang.isFavorite = articleInFirebase.isRead
+                readArticleForLang.isRead = articleInFirebase.isRead
                 readArticleForLangService.update(readArticleForLang)
             }
         }
