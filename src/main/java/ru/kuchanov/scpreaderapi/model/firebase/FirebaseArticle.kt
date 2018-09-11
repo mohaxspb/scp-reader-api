@@ -4,9 +4,9 @@ import com.google.firebase.database.IgnoreExtraProperties
 
 @IgnoreExtraProperties
 data class FirebaseArticle(
-        var isFavorite: Boolean = false,
-        var isRead: Boolean = false,
+        @field:JvmField var isFavorite: Boolean? = null,
+        @field:JvmField var isRead: Boolean? = null,
         var title: String? = null,
         var url: String? = null,
-        var updated: Long = 0
+        var updated: Long? = null
 )

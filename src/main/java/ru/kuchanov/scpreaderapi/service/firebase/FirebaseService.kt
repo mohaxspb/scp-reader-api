@@ -209,7 +209,8 @@ class FirebaseService {
             favoriteArticleForLang = favoriteArticleForLangService.insert(FavoriteArticlesByLang(
                     userId = user.id,
                     articleId = articleInDb.id,
-                    langId = lang.id
+                    langId = lang.id,
+                    isFavorite = articleInFirebase.isFavorite!!
             ))
         }
 
@@ -217,10 +218,10 @@ class FirebaseService {
         val dateInDb = favoriteArticleForLang.updated!!.time
 
         //check timestamp and update if need
-        if (dateInDb < dateInFirebase) {
+        if (dateInDb < dateInFirebase!!) {
             //outdated info in DB, so update it if value changed
             if (favoriteArticleForLang.isFavorite != articleInFirebase.isFavorite) {
-                favoriteArticleForLang.isFavorite = articleInFirebase.isFavorite
+                favoriteArticleForLang.isFavorite = articleInFirebase.isFavorite!!
                 favoriteArticleForLangService.update(favoriteArticleForLang)
             }
         }
@@ -242,7 +243,8 @@ class FirebaseService {
             readArticleForLang = readArticleForLangService.insert(ReadArticlesByLang(
                     userId = user.id,
                     articleId = articleInDb.id,
-                    langId = lang.id
+                    langId = lang.id,
+                    isRead = articleInFirebase.isRead!!
             ))
         }
 
@@ -250,10 +252,10 @@ class FirebaseService {
         val dateInDb = readArticleForLang.updated!!.time
 
         //check timestamp and update if need
-        if (dateInDb < dateInFirebase) {
+        if (dateInDb < dateInFirebase!!) {
             //outdated info in DB, so update it if value changed
             if (readArticleForLang.isRead != articleInFirebase.isRead) {
-                readArticleForLang.isRead = articleInFirebase.isRead
+                readArticleForLang.isRead = articleInFirebase.isRead!!
                 readArticleForLangService.update(readArticleForLang)
             }
         }
