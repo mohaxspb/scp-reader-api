@@ -11,7 +11,8 @@ interface ArticlesRepository : JpaRepository<Article, Long> {
             "WHERE al.urlRelative = :urlRelative AND al.langId = :langId")
     fun getOneByUrlRelativeUrlAndLang(urlRelative: String, langId: String): Article?
 
-    @Query("SELECT al FROM ArticleForLang al " +
+    @Query("SELECT a FROM Article a  " +
+            "JOIN ArticleForLang al ON a.id = al.articleId " +
             "WHERE al.urlRelative = :urlRelative")
     fun getArticleByUrlRelative(urlRelative: String): Article?
 
