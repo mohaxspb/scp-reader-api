@@ -1,5 +1,6 @@
 package ru.kuchanov.scpreaderapi.service.article
 
+import org.springframework.data.jpa.repository.Query
 import ru.kuchanov.scpreaderapi.bean.articles.Article
 import javax.transaction.Transactional
 
@@ -13,7 +14,7 @@ interface ArticleService {
 
     fun insert(articles: List<Article>): List<Article>
 
-    fun getArticleByUrlRelativeAndLang(urlRelative: String, langId: String): Article?
+    fun getArticleByUrlRelative(urlRelative: String): Article?
 
-//    fun getArticleForLangByUrlRelativeAndLang(urlRelative: String, langId: String): ArticleForLang?
+    fun getArticleByUrlRelativeAndLang(urlRelative: String, langId: String): Article?
 }

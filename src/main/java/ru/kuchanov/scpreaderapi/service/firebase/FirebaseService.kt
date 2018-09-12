@@ -172,12 +172,18 @@ class FirebaseService {
             user: User,
             lang: Lang
     ) {
-        articlesInFirebase.forEach { articleInFirebase ->
+        articlesInFirebase.forEachIndexed { index, articleInFirebase ->
+            //            if (index == 1) return@forEachIndexed
             val urlRelative = articleInFirebase.url!!.replace("${lang.siteBaseUrl}/", "")
-            var articleInDb = articleService.getArticleByUrlRelativeAndLang(urlRelative, lang.id)
+            //for other langs we should not pass urlRelative
+            var articleInDb = articleService.getArticleByUrlRelative(urlRelative)
+            println("articleInDb: $articleInDb $urlRelative")
             //insert new article and article-lang connection if need
             if (articleInDb == null) {
                 articleInDb = articleService.insert(Article())
+            }
+            //check if we do not have article-lang connection for given article
+            if (articleForLangService.getArticleForLang(articleInDb.id!!, lang.id) == null) {
                 articleForLangService.insert(ArticleForLang(
                         articleId = articleInDb.id!!,
                         langId = lang.id,

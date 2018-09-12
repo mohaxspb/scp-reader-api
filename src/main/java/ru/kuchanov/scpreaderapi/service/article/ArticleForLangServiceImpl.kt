@@ -20,6 +20,10 @@ class ArticleForLangServiceImpl : ArticleForLangService {
 
     override fun insert(articleForLang: List<ArticleForLang>): List<ArticleForLang> = repository.saveAll(articleForLang)
 
+    override fun getArticleForLangByUrlRelative(urlRelative: String) = repository.getArticleForLangByUrlRelative(urlRelative)
+
     override fun getArticleForLangByUrlRelativeAndLang(urlRelative: String, langId: String) =
             repository.getArticleForLangByUrlRelativeAndLang(urlRelative, langId)
+
+    override fun getArticleForLang(articleId: Long, langId: String) = repository.getArticleForLang(articleId, langId)
 }

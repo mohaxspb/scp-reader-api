@@ -9,4 +9,9 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, KeyArticleLa
     @Query("SELECT al FROM ArticleForLang al " +
             "WHERE al.urlRelative = :urlRelative AND al.langId = :langId")
     fun getArticleForLangByUrlRelativeAndLang(urlRelative: String, langId: String): ArticleForLang?
+
+    @Query(
+            "SELECT al FROM ArticleForLang al " +
+                    "WHERE al.articleId = :articleId AND al.langId = :langId")
+    fun getArticleForLang(articleId: Long, langId: String): ArticleForLang?
 }

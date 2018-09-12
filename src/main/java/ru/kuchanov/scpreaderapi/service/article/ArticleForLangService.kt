@@ -13,5 +13,7 @@ interface ArticleForLangService {
 
     fun insert(articleForLang: List<ArticleForLang>): List<ArticleForLang>
 
+    fun getArticleForLangByUrlRelative(urlRelative: String): ArticleForLang?
     fun getArticleForLangByUrlRelativeAndLang(urlRelative: String, langId: String): ArticleForLang?
+    fun getArticleForLang(articleId: Long, langId: String): ArticleForLang?
 }
