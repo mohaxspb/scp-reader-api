@@ -8,6 +8,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.bind.annotation.ResponseStatus
 import ru.kuchanov.scpreaderapi.bean.auth.Authority
+import ru.kuchanov.scpreaderapi.utils.EncryptionConverter
 import java.sql.Timestamp
 import javax.persistence.*
 
@@ -25,6 +26,7 @@ data class User(
         var nameThird: String? = null,
         @Column(name = "username", unique = true)
         var myUsername: String,
+        @Convert(converter = EncryptionConverter::class)
         @Column(name = "password")
         var myPassword: String,
         var avatar: String? = null,
