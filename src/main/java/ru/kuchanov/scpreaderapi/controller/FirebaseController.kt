@@ -48,16 +48,17 @@ class FirebaseController {
             @PathVariable(value = "lang") lang: Constants.Firebase.FirebaseInstance,
             @RequestParam(value = "offset") offset: Int,
             @RequestParam(value = "limit") limit: Int
-    ) = usersService.getUsersByLangWithOffsetAndLimitSortedByScore(lang.lang, offset, limit).map {
-        LeaderboardUser(
-                id = it.id!!,
-                avatar = it.avatar!!,
-                fullName = it.fullName!!,
-                score = it.score!!,
-                //level
-                levelNum = it.levelNum!!,
-                scoreToNextLevel = it.scoreToNextLevel!!,
-                curLevelScore = it.curLevelScore!!
-        )
-    }
+//    ) = usersService.getUsersByLangWithOffsetAndLimitSortedByScore(lang.lang, offset, limit).map {
+//        LeaderboardUser(
+//                id = it.id!!,
+//                avatar = it.avatar!!,
+//                fullName = it.fullName!!,
+//                score = it.score!!,
+//                //level
+//                levelNum = it.levelNum!!,
+//                scoreToNextLevel = it.scoreToNextLevel!!,
+//                curLevelScore = it.curLevelScore!!
+//        )
+//    }
+    ) = usersService.getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(lang.lang, offset, limit)
 }

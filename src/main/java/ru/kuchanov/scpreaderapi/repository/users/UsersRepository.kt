@@ -3,6 +3,7 @@ package ru.kuchanov.scpreaderapi.repository.users
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import ru.kuchanov.scpreaderapi.bean.users.User
+import ru.kuchanov.scpreaderapi.model.user.LeaderboardUser
 
 interface UsersRepository : JpaRepository<User, Long> {
 
@@ -16,4 +17,17 @@ interface UsersRepository : JpaRepository<User, Long> {
             " WHERE ul.lang_id = :langId" +
             " ORDER BY u.score DESC OFFSET :offset LIMIT :limit", nativeQuery = true)
     fun getUsersByLangWithOffsetAndLimitSortedByScore(langId: String, offset: Int, limit: Int): List<User>
+
+    @Query("SELECT " +
+            "id, " +
+            "full_name as fullName, " +
+            "avatar, score, " +
+            "level_num as levelNum, " +
+            "score_to_next_level as scoreToNextLevel, " +
+            "cur_level_score as curLevelScore " +
+            "FROM users u" +
+            " JOIN users_langs ul ON u.id = ul.user_id" +
+            " WHERE ul.lang_id = :langId" +
+            " ORDER BY u.score DESC OFFSET :offset LIMIT :limit", nativeQuery = true)
+    fun getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(langId: String, offset: Int, limit: Int): List<LeaderboardUser>
 }

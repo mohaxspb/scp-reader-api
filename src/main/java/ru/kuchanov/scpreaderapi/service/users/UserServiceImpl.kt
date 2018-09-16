@@ -4,11 +4,16 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
+import ru.kuchanov.scpreaderapi.model.user.LeaderboardUser
 import ru.kuchanov.scpreaderapi.repository.users.UsersRepository
+import javax.persistence.EntityManager
 
 
 @Service
 class UserServiceImpl : UserService {
+
+    @Autowired
+    private lateinit var entityManager: EntityManager
 
     @Autowired
     private lateinit var repository: UsersRepository
@@ -31,4 +36,33 @@ class UserServiceImpl : UserService {
 
     override fun getUsersByLangWithOffsetAndLimitSortedByScore(langId: String, offset: Int, limit: Int) =
             repository.getUsersByLangWithOffsetAndLimitSortedByScore(langId, offset, limit)
+
+//    override fun getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(langId: String, offset: Int, limit: Int) =
+//            repository.getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(langId, offset, limit)
+
+    override fun getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(langId: String, offset: Int, limit: Int): List<LeaderboardUser> {
+
+        val query = entityManager.createNativeQuery(
+                "SELECT " +
+                        "id, " +
+                        "full_name as fullName, " +
+                        "avatar, score, " +
+                        "level_num as levelNum, " +
+                        "score_to_next_level as scoreToNextLevel, " +
+                        "cur_level_score as curLevelScore " +
+                        "FROM users u" +
+                        " JOIN users_langs ul ON u.id = ul.user_id" +
+                        " WHERE ul.lang_id = :langId" +
+                        " ORDER BY u.score DESC OFFSET :offset LIMIT :limit",
+                "LeaderBoardResult"
+        )
+
+        query.setParameter("offset", offset)
+        query.setParameter("limit", limit)
+        query.setParameter("langId", langId)
+
+        val result = query.resultList
+
+        return result as List<LeaderboardUser>
+    }
 }

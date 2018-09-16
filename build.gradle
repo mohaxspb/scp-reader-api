@@ -1,7 +1,7 @@
 buildscript {
     ext.app_version = "1.0.0"
 
-    ext.kotlin_version = '1.2.61'
+    ext.kotlin_version = '1.2.70'
     ext.spring_boot_version = '2.0.4.RELEASE'
 
     ext['netty.version'] = '4.1.29.Final'

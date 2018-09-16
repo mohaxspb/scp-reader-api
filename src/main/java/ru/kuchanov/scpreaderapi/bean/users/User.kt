@@ -8,12 +8,25 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.bind.annotation.ResponseStatus
 import ru.kuchanov.scpreaderapi.bean.auth.Authority
+import ru.kuchanov.scpreaderapi.model.user.LeaderboardUser
 import ru.kuchanov.scpreaderapi.utils.EncryptionConverter
 import java.sql.Timestamp
 import javax.persistence.*
 
 @Entity
 @Table(name = "users")
+@SqlResultSetMapping(name = "LeaderBoardResult", classes = [
+    ConstructorResult(targetClass = LeaderboardUser::class,
+            columns = [
+                ColumnResult(name = "id", type = Long::class),
+                ColumnResult(name = "avatar"),
+                ColumnResult(name = "fullName"),
+                ColumnResult(name = "score", type = Int::class),
+                ColumnResult(name = "levelNum", type = Int::class),
+                ColumnResult(name = "scoreToNextLevel", type = Int::class),
+                ColumnResult(name = "curLevelScore", type = Int::class)
+            ])
+])
 data class User(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,7 +52,9 @@ data class User(
         @Version
         val updated: Timestamp? = null,
         //firebase
+        @Column(name = "full_name")
         var fullName: String? = null,
+        @Column(name = "sign_in_reward_gained")
         var signInRewardGained: Boolean? = null,
         var score: Int? = null,
         //level
@@ -49,8 +64,6 @@ data class User(
         var scoreToNextLevel: Int? = null,
         @Column(name = "cur_level_score")
         var curLevelScore: Int? = null
-        //articles
-//        var numOfReadArticles: Int = 0,
 ) : UserDetails {
     override fun getAuthorities(): MutableCollection<out GrantedAuthority> =
             userAuthorities.map { SimpleGrantedAuthority(it.authority) }.toMutableList()
