@@ -44,16 +44,19 @@ class UserServiceImpl : UserService {
 
         val query = entityManager.createNativeQuery(
                 "SELECT " +
-                        "id, " +
-                        "full_name as fullName, " +
-                        "avatar, score, " +
-                        "level_num as levelNum, " +
-                        "score_to_next_level as scoreToNextLevel, " +
-                        "cur_level_score as curLevelScore " +
-                        "FROM users u" +
-                        " JOIN users_langs ul ON u.id = ul.user_id" +
-                        " WHERE ul.lang_id = :langId" +
-                        " ORDER BY u.score DESC OFFSET :offset LIMIT :limit",
+                        "u.id, " +
+                        "u.full_name as fullName, " +
+                        "u.avatar, score, " +
+                        "u.level_num as levelNum, " +
+                        "u.score_to_next_level as scoreToNextLevel, " +
+                        "u.cur_level_score as curLevelScore, " +
+                        "COUNT(ar.user_id) " +
+                        "FROM users u " +
+                        "JOIN users_langs ul ON u.id = ul.user_id " +
+                        "LEFT OUTER JOIN read_articles_by_lang ra ON ar.user_id = u.id AND ar.lang_id = :langId " +
+                        "WHERE ul.lang_id = :langId " +
+                        "GROUP BY u.id " +
+                        "ORDER BY u.score DESC OFFSET :offset LIMIT :limit ",
                 "LeaderBoardResult"
         )
 
