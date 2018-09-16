@@ -73,27 +73,34 @@ class FirebaseService {
     fun getAllUsersForLang(langId: String) = userService.getAllUsersByLangId(langId)
 
     @Async
-    fun test(lang: Constants.Firebase.FirebaseInstance) {
-        val firebaseDatabase = FirebaseDatabase.getInstance(FirebaseApp.getInstance(lang.lang))
+    fun updateDataFromFirebase() {
+        Constants.Firebase.FirebaseInstance.values()
+                .filter { it == Constants.Firebase.FirebaseInstance.IT || it == Constants.Firebase.FirebaseInstance.PT }
+                .forEach { lang ->
+                    println("query for lang: $lang")
+                    val firebaseDatabase = FirebaseDatabase.getInstance(FirebaseApp.getInstance(lang.lang))
 
-        val subject = BehaviorProcessor.createDefault("")
+                    val subject = BehaviorProcessor.createDefault("")
 
-        subject
-                .concatMap { startKey -> usersObservable(firebaseDatabase, startKey).toFlowable() }
-                .doOnNext { users ->
-                    if (users.size != QUERY_LIMIT) {
-                        subject.onComplete()
-                    } else {
-                        subject.onNext(users.last().uid)
-                    }
+                    subject
+                            .concatMap { startKey -> usersObservable(firebaseDatabase, startKey).toFlowable() }
+                            .doOnNext { users ->
+                                if (users.size != QUERY_LIMIT) {
+                                    subject.onComplete()
+                                } else {
+                                    subject.onNext(users.last().uid)
+                                }
+                            }
+                            .doOnNext { println("users size: ${it.size}") }
+                            .toList()
+                            .map { it.flatten() }
+                            .subscribeBy(
+                                    onSuccess = { insertUsers(it, langService.getById(lang.lang)) },
+                                    onError = { println(it.message) }
+                            )
+
+                    //todo insert update time date to special table
                 }
-                .doOnNext { println("users size: ${it.size}") }
-                .toList()
-                .map { it.flatten() }
-                .subscribeBy(
-                        onSuccess = { insertUsers(it, langService.getById(lang.lang)) },
-                        onError = { println(it.message) }
-                )
     }
 
     @Transactional
