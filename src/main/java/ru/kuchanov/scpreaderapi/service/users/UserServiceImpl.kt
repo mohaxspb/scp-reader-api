@@ -37,11 +37,7 @@ class UserServiceImpl : UserService {
     override fun getUsersByLangWithOffsetAndLimitSortedByScore(langId: String, offset: Int, limit: Int) =
             repository.getUsersByLangWithOffsetAndLimitSortedByScore(langId, offset, limit)
 
-//    override fun getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(langId: String, offset: Int, limit: Int) =
-//            repository.getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(langId, offset, limit)
-
     override fun getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(langId: String, offset: Int, limit: Int): List<LeaderboardUser> {
-
         val query = entityManager.createNativeQuery(
                 "SELECT " +
                         "u.id, " +
@@ -50,10 +46,10 @@ class UserServiceImpl : UserService {
                         "u.level_num as levelNum, " +
                         "u.score_to_next_level as scoreToNextLevel, " +
                         "u.cur_level_score as curLevelScore, " +
-                        "COUNT(ar.user_id) " +
+                        "COUNT(ra.user_id) as numOfReadArticles " +
                         "FROM users u " +
                         "JOIN users_langs ul ON u.id = ul.user_id " +
-                        "LEFT OUTER JOIN read_articles_by_lang ra ON ar.user_id = u.id AND ar.lang_id = :langId " +
+                        "LEFT OUTER JOIN read_articles_by_lang ra ON ra.user_id = u.id AND ra.lang_id = :langId " +
                         "WHERE ul.lang_id = :langId " +
                         "GROUP BY u.id " +
                         "ORDER BY u.score DESC OFFSET :offset LIMIT :limit ",

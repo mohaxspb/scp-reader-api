@@ -24,7 +24,8 @@ import javax.persistence.*
                 ColumnResult(name = "score", type = Int::class),
                 ColumnResult(name = "levelNum", type = Int::class),
                 ColumnResult(name = "scoreToNextLevel", type = Int::class),
-                ColumnResult(name = "curLevelScore", type = Int::class)
+                ColumnResult(name = "curLevelScore", type = Int::class),
+                ColumnResult(name = "numOfReadArticles", type = Int::class)
             ])
 ])
 data class User(

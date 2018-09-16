@@ -8,5 +8,7 @@ data class LeaderboardUser(
         //level
         var levelNum: Int,
         var scoreToNextLevel: Int,
-        var curLevelScore: Int
+        var curLevelScore: Int,
+        //articles
+        var numOfReadArticles: Int
 )
