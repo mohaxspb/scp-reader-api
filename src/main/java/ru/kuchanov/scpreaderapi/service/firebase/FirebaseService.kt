@@ -341,6 +341,8 @@ class FirebaseService {
                         } catch (e: Exception) {
                             println("error while parse user: $e")
                             println("KEY IS: ${it.key}")
+                            log.error("error while parse user: ", e)
+                            log.error("KEY IS: ${it.key}")
                             throw RuntimeException("error convert data")
                         }
                     }
