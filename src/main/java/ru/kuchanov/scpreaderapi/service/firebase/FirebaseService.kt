@@ -335,14 +335,13 @@ class FirebaseService {
                 }
 
                 override fun onDataChange(snapshot: DataSnapshot?) {
-                    val firebaseUsers = snapshot?.children?.map {
+                    val firebaseUsers = snapshot?.children?.filter { it.hasChildren() }?.map {
                         try {
                             it.getValue(FirebaseUser::class.java)
                         } catch (e: Exception) {
                             println("error while parse user: $e")
                             println("KEY IS: ${it.key}")
-//                            throw RuntimeException("error convert data")
-                            return@map
+                            throw RuntimeException("error convert data")
                         }
                     }
                     println("firebaseUsers: ${firebaseUsers?.map { it.email }}")
