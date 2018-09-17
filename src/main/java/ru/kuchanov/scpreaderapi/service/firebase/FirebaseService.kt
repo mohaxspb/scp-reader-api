@@ -79,8 +79,8 @@ class FirebaseService {
     fun updateDataFromFirebase() {
         println("updateDataFromFirebase")
         Constants.Firebase.FirebaseInstance.values()
-//                //fixme remove filter in prod
-                .filter { it == Constants.Firebase.FirebaseInstance.IT || it == Constants.Firebase.FirebaseInstance.PT }
+//                //fix me remove filter in prod
+//                .filter { it == Constants.Firebase.FirebaseInstance.IT || it == Constants.Firebase.FirebaseInstance.PT }
                 .forEach { lang ->
                     println("query for lang: $lang")
                     val firebaseDatabase = FirebaseDatabase.getInstance(FirebaseApp.getInstance(lang.lang))
@@ -104,7 +104,7 @@ class FirebaseService {
                             .toList()
                             .map { it.flatten() }
                             .subscribeBy(
-                                    onSuccess = { println("done updating users: ${it.size}") },
+                                    onSuccess = { println("done updating users for lang: ${lang.lang}, totalCount: ${it.size}") },
                                     onError = { println(it.message) }
                             )
 

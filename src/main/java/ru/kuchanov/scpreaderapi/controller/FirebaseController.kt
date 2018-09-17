@@ -1,6 +1,7 @@
 package ru.kuchanov.scpreaderapi.controller
 
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.Constants
 import ru.kuchanov.scpreaderapi.service.firebase.FirebaseService
@@ -17,6 +18,10 @@ class FirebaseController {
     @Autowired
     private lateinit var usersService: UserService
 
+    @Scheduled(
+            fixedDelay = Constants.FIREBASE_USERS_DATA_UPDATE_RATE_MILLIS,
+            initialDelay = Constants.FIREBASE_USERS_DATA_UPDATE_RATE_MILLIS
+    )
     @GetMapping("/users/updateFromFirebase")
     fun updateDataFromFirebase() = firebaseService.updateDataFromFirebase()
 
