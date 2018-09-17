@@ -1,18 +1,15 @@
 package ru.kuchanov.scpreaderapi.bean.articles
 
-import org.springframework.http.HttpStatus
-import org.springframework.web.bind.annotation.ResponseStatus
+import java.sql.Timestamp
 import javax.persistence.*
 
 @Entity
-@Table(name = "articles")
-data class Article(
+@Table(name = "firebase_data_update_date")
+data class FirebaseDataUpdateDate(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long? = null,
-        @Column(name = "article_type_id")
-        val articleTypeId: Long? = null
+        @Column(name = "lang_id")
+        val langId: String? = null,
+        var updated: Timestamp? = null
 )
-
-@ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "No such article")
-class ArticleNotFoundException : RuntimeException()

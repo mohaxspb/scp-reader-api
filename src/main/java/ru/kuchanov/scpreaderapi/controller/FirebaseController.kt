@@ -46,4 +46,7 @@ class FirebaseController {
             @RequestParam(value = "offset") offset: Int,
             @RequestParam(value = "limit") limit: Int
     ) = usersService.getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(lang.lang, offset, limit)
+
+    @GetMapping("/updateDataDates")
+    fun getUpdateDataDates() = firebaseService.getAllFirebaseUpdatedDataDates()
 }

@@ -1,10 +1,8 @@
-package ru.kuchanov.scpreaderapi.repository.users
+package ru.kuchanov.scpreaderapi.repository.firebase
 
 import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Query
-import ru.kuchanov.scpreaderapi.bean.users.Lang
-import ru.kuchanov.scpreaderapi.bean.users.User
+import ru.kuchanov.scpreaderapi.bean.articles.FirebaseDataUpdateDate
 
-interface LangsRepository : JpaRepository<Lang, String> {
-    fun findOneById(id: String): Lang
+interface FirebaseDataUpdateDateRepository : JpaRepository<FirebaseDataUpdateDate, Long> {
+    fun findOneByLangId(langId: String): FirebaseDataUpdateDate?
 }

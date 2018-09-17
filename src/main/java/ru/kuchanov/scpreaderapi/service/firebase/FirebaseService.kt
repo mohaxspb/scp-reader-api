@@ -13,10 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.Constants
-import ru.kuchanov.scpreaderapi.bean.articles.Article
-import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
-import ru.kuchanov.scpreaderapi.bean.articles.FavoriteArticlesByLang
-import ru.kuchanov.scpreaderapi.bean.articles.ReadArticlesByLang
+import ru.kuchanov.scpreaderapi.bean.articles.*
 import ru.kuchanov.scpreaderapi.bean.auth.Authority
 import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
 import ru.kuchanov.scpreaderapi.bean.users.Lang
@@ -26,6 +23,7 @@ import ru.kuchanov.scpreaderapi.model.firebase.FirebaseArticle
 import ru.kuchanov.scpreaderapi.model.firebase.FirebaseUser
 import ru.kuchanov.scpreaderapi.model.firebase.UserUidArticles
 import ru.kuchanov.scpreaderapi.model.user.LevelsJson
+import ru.kuchanov.scpreaderapi.repository.firebase.FirebaseDataUpdateDateRepository
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.ArticleService
 import ru.kuchanov.scpreaderapi.service.article.FavoriteArticleForLangService
@@ -34,6 +32,8 @@ import ru.kuchanov.scpreaderapi.service.auth.AuthorityService
 import ru.kuchanov.scpreaderapi.service.users.LangService
 import ru.kuchanov.scpreaderapi.service.users.UserService
 import ru.kuchanov.scpreaderapi.service.users.UsersLangsService
+import java.sql.Timestamp
+import java.time.Instant
 import javax.transaction.Transactional
 
 @Service
@@ -70,11 +70,15 @@ class FirebaseService {
     @Autowired
     private lateinit var readArticleForLangService: ReadArticleForLangService
 
+    @Autowired
+    private lateinit var firebaseDataUpdateDateRepository: FirebaseDataUpdateDateRepository
+
     fun getAllUsersForLang(langId: String) = userService.getAllUsersByLangId(langId)
 
     @Async
     fun updateDataFromFirebase() {
         Constants.Firebase.FirebaseInstance.values()
+                //fixme remove filter in prod
                 .filter { it == Constants.Firebase.FirebaseInstance.IT || it == Constants.Firebase.FirebaseInstance.PT }
                 .forEach { lang ->
                     println("query for lang: $lang")
@@ -100,8 +104,23 @@ class FirebaseService {
                             )
 
                     //todo insert update time date to special table
+                    updateDataFromFirebase()
                 }
     }
+
+    private fun updateFirebaseUpdateDate(langId: String) {
+        var firebaseUpdateDate = firebaseDataUpdateDateRepository.findOneByLangId(langId)
+
+        if (firebaseUpdateDate == null) {
+            firebaseUpdateDate = FirebaseDataUpdateDate(langId = langId, updated = Timestamp.from(Instant.now()))
+            firebaseDataUpdateDateRepository.save(firebaseUpdateDate)
+        } else {
+            firebaseUpdateDate.updated = Timestamp.from(Instant.now())
+            firebaseDataUpdateDateRepository.save(firebaseUpdateDate)
+        }
+    }
+
+    fun getAllFirebaseUpdatedDataDates() = firebaseDataUpdateDateRepository.findAll()
 
     @Transactional
     private fun insertUsers(firebaseUsers: List<FirebaseUser>, lang: Lang) {
