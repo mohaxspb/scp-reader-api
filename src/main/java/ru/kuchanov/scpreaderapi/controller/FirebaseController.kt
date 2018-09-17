@@ -1,11 +1,8 @@
 package ru.kuchanov.scpreaderapi.controller
 
-import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.Constants
-import ru.kuchanov.scpreaderapi.network.ApiClient
-import ru.kuchanov.scpreaderapi.network.ModelConverter
 import ru.kuchanov.scpreaderapi.service.firebase.FirebaseService
 import ru.kuchanov.scpreaderapi.service.users.UserService
 
@@ -13,15 +10,6 @@ import ru.kuchanov.scpreaderapi.service.users.UserService
 @RestController
 @RequestMapping("/${Constants.FIREBASE_PATH}")
 class FirebaseController {
-
-    @Autowired
-    private lateinit var log: Logger
-
-    @Autowired
-    private lateinit var apiClient: ApiClient
-
-    @Autowired
-    private lateinit var modelConverter: ModelConverter
 
     @Autowired
     private lateinit var firebaseService: FirebaseService

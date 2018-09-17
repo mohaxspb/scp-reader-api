@@ -78,10 +78,9 @@ class FirebaseService {
     @Async
     fun updateDataFromFirebase() {
         println("updateDataFromFirebase")
-//        Constants.Firebase.FirebaseInstance.values()
+        Constants.Firebase.FirebaseInstance.values()
 //                //fixme remove filter in prod
-//                .filter { it == Constants.Firebase.FirebaseInstance.IT || it == Constants.Firebase.FirebaseInstance.PT }
-        listOf(Constants.Firebase.FirebaseInstance.IT, Constants.Firebase.FirebaseInstance.PT)
+                .filter { it == Constants.Firebase.FirebaseInstance.IT || it == Constants.Firebase.FirebaseInstance.PT }
                 .forEach { lang ->
                     println("query for lang: $lang")
                     val firebaseDatabase = FirebaseDatabase.getInstance(FirebaseApp.getInstance(lang.lang))
@@ -90,6 +89,10 @@ class FirebaseService {
 
                     subject
                             .concatMap { startKey -> usersObservable(firebaseDatabase, startKey).toFlowable() }
+                            .map {
+                                insertUsers(it, langService.getById(lang.lang))
+                                it
+                            }
                             .doOnNext { users ->
                                 if (users.size != QUERY_LIMIT) {
                                     subject.onComplete()
@@ -101,7 +104,7 @@ class FirebaseService {
                             .toList()
                             .map { it.flatten() }
                             .subscribeBy(
-                                    onSuccess = { insertUsers(it, langService.getById(lang.lang)) },
+                                    onSuccess = { println("done updating users: ${it.size}") },
                                     onError = { println(it.message) }
                             )
 
@@ -125,7 +128,7 @@ class FirebaseService {
 
     @Transactional
     private fun insertUsers(firebaseUsers: List<FirebaseUser>, lang: Lang) {
-        println(firebaseUsers.size)
+        println("insertUsers: ${firebaseUsers.size}")
 
         var newUsersInserted = 0
         var newLangForExistedUsers = 0
@@ -204,7 +207,7 @@ class FirebaseService {
             val urlRelative = articleInFirebase.url!!.replace("${lang.siteBaseUrl}/", "")
             //for other langs we should not pass urlRelative
             var articleInDb = articleService.getArticleByUrlRelative(urlRelative)
-            println("articleInDb: $articleInDb $urlRelative")
+//            println("articleInDb: $articleInDb $urlRelative")
             //insert new article and article-lang connection if need
             if (articleInDb == null) {
                 articleInDb = articleService.insert(Article())
