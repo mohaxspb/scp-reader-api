@@ -77,9 +77,11 @@ class FirebaseService {
 
     @Async
     fun updateDataFromFirebase() {
-        Constants.Firebase.FirebaseInstance.values()
-                //fixme remove filter in prod
-                .filter { it == Constants.Firebase.FirebaseInstance.IT || it == Constants.Firebase.FirebaseInstance.PT }
+        println("updateDataFromFirebase")
+//        Constants.Firebase.FirebaseInstance.values()
+//                //fixme remove filter in prod
+//                .filter { it == Constants.Firebase.FirebaseInstance.IT || it == Constants.Firebase.FirebaseInstance.PT }
+        listOf(Constants.Firebase.FirebaseInstance.IT, Constants.Firebase.FirebaseInstance.PT)
                 .forEach { lang ->
                     println("query for lang: $lang")
                     val firebaseDatabase = FirebaseDatabase.getInstance(FirebaseApp.getInstance(lang.lang))
@@ -103,8 +105,7 @@ class FirebaseService {
                                     onError = { println(it.message) }
                             )
 
-                    //todo insert update time date to special table
-                    updateDataFromFirebase()
+                    updateFirebaseUpdateDate(lang.lang)
                 }
     }
 
