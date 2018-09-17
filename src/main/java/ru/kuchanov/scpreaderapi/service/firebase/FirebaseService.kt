@@ -78,9 +78,11 @@ class FirebaseService {
     @Async
     fun updateDataFromFirebase() {
         println("updateDataFromFirebase")
+        //todo use rx for whole method
         Constants.Firebase.FirebaseInstance.values()
-//                //fix me remove filter in prod
+                //fixme remove filter in prod
 //                .filter { it == Constants.Firebase.FirebaseInstance.IT || it == Constants.Firebase.FirebaseInstance.PT }
+                .filter { it == Constants.Firebase.FirebaseInstance.RU }
                 .forEach { lang ->
                     println("query for lang: $lang")
                     val firebaseDatabase = FirebaseDatabase.getInstance(FirebaseApp.getInstance(lang.lang))
@@ -105,7 +107,10 @@ class FirebaseService {
                             .map { it.flatten() }
                             .subscribeBy(
                                     onSuccess = { println("done updating users for lang: ${lang.lang}, totalCount: ${it.size}") },
-                                    onError = { println(it.message) }
+                                    onError = {
+                                        println("error in update users observable: $it")
+                                        log.error("error in update users observable: ", it)
+                                    }
                             )
 
                     updateFirebaseUpdateDate(lang.lang)
@@ -128,7 +133,7 @@ class FirebaseService {
 
     @Transactional
     private fun insertUsers(firebaseUsers: List<FirebaseUser>, lang: Lang) {
-        println("insertUsers: ${firebaseUsers.size}")
+        println("insertUsers: ${lang.id}/${firebaseUsers.size}")
 
         var newUsersInserted = 0
         var newLangForExistedUsers = 0
@@ -139,9 +144,14 @@ class FirebaseService {
 
         firebaseUsers
                 .distinctBy { it.email }
+                .filter { it.email != null }
                 .map {
                     //set level info
 //                    println("it.score: ${it.score}/${it.uid}")
+                    //there are users with negative score, so just set it to 0
+                    if (it.score < 0) {
+                        it.score = 0
+                    }
                     val curLevel = levelsJson.getLevelForScore(it.score)!!
                     UserUidArticles(
                             User(
@@ -202,8 +212,14 @@ class FirebaseService {
             user: User,
             lang: Lang
     ) {
+//        println("manageFirebaseArticlesForUser: ${lang.id}/${user.username}")
         articlesInFirebase.forEachIndexed { index, articleInFirebase ->
             //            if (index == 1) return@forEachIndexed
+            if (articleInFirebase.url == null) {
+                println("manageFirebaseArticlesForUser: ${lang.id}/${user.username}")
+                println("articleInFirebase: $index/$articleInFirebase")
+                return@forEachIndexed
+            }
             val urlRelative = articleInFirebase.url!!.replace("${lang.siteBaseUrl}/", "")
             //for other langs we should not pass urlRelative
             var articleInDb = articleService.getArticleByUrlRelative(urlRelative)
@@ -323,9 +339,10 @@ class FirebaseService {
                         try {
                             it.getValue(FirebaseUser::class.java)
                         } catch (e: Exception) {
-                            println(e)
-                            print("\nKEY IS: ${it.key}\n")
-                            throw RuntimeException("error convert data")
+                            println("error while parse user: $e")
+                            println("KEY IS: ${it.key}")
+//                            throw RuntimeException("error convert data")
+                            return@map
                         }
                     }
                     println("firebaseUsers: ${firebaseUsers?.map { it.email }}")
