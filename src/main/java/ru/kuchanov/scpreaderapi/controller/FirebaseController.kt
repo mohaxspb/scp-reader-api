@@ -23,7 +23,14 @@ class FirebaseController {
             initialDelay = Constants.FIREBASE_USERS_DATA_UPDATE_RATE_MILLIS
     )
     @GetMapping("/users/updateFromFirebase")
-    fun updateDataFromFirebase() = firebaseService.updateDataFromFirebase()
+    fun updateDataFromFirebase() =
+            firebaseService.updateDataFromFirebase()
+
+    @GetMapping("/users/updateFromFirebaseFromStartKeyForLang")
+    fun updateDataFromFirebaseFromStartKeyForLang(
+            @RequestParam(value = "startKey", defaultValue = "") startKey: String,
+            @RequestParam(value = "lang") lang: Constants.Firebase.FirebaseInstance
+    ) = firebaseService.updateDataFromFirebase(startKey, lang)
 
     @GetMapping("/{lang}/users/all")
     fun getAllUsersForLang(@PathVariable(value = "lang") lang: Constants.Firebase.FirebaseInstance) =

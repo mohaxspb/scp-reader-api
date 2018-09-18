@@ -76,18 +76,16 @@ class FirebaseService {
     fun getAllUsersForLang(langId: String) = userService.getAllUsersByLangId(langId)
 
     @Async
-    fun updateDataFromFirebase() {
+    fun updateDataFromFirebase(startKey: String = "", langToParse: Constants.Firebase.FirebaseInstance? = null) {
         println("updateDataFromFirebase")
         //todo use rx for whole method
         Constants.Firebase.FirebaseInstance.values()
-                //fixme remove filter in prod
-//                .filter { it == Constants.Firebase.FirebaseInstance.IT || it == Constants.Firebase.FirebaseInstance.PT }
-                .filter { it == Constants.Firebase.FirebaseInstance.RU }
+                .filter { if (langToParse == null) true else it == langToParse }
                 .forEach { lang ->
                     println("query for lang: $lang")
                     val firebaseDatabase = FirebaseDatabase.getInstance(FirebaseApp.getInstance(lang.lang))
 
-                    val subject = BehaviorProcessor.createDefault("")
+                    val subject = BehaviorProcessor.createDefault(startKey)
 
                     subject
                             .concatMap { startKey -> usersObservable(firebaseDatabase, startKey).toFlowable() }
@@ -176,6 +174,7 @@ class FirebaseService {
                     //check if user already exists and update just some values
                     var userInDb = userService.getByUsername(userUidArticles.user.myUsername)
                     if (userInDb == null) {
+                        println("insert user: ${userUidArticles.user}")
                         userInDb = userService.insert(userUidArticles.user)
                         authorityService.insert(Authority(userInDb.id, AuthorityType.USER.name))
                         newUsersInserted++
