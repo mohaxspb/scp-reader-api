@@ -127,7 +127,7 @@ class FirebaseService {
         }
     }
 
-    fun getAllFirebaseUpdatedDataDates() = firebaseDataUpdateDateRepository.findAll()
+    fun getAllFirebaseUpdatedDataDates(): MutableList<FirebaseDataUpdateDate> = firebaseDataUpdateDateRepository.findAll()
 
     @Transactional
     private fun insertUsers(firebaseUsers: List<FirebaseUser>, lang: Lang) {
@@ -174,7 +174,10 @@ class FirebaseService {
                     //check if user already exists and update just some values
                     var userInDb = userService.getByUsername(userUidArticles.user.myUsername)
                     if (userInDb == null) {
-                        println("insert user: ${userUidArticles.user}")
+                        if (userUidArticles.user.avatar?.startsWith("data:image") == true) {
+                            userUidArticles.user.avatar = Constants.DEFAULT_AVATAR_URL
+                            println("insert user with base64 avatar: ${userUidArticles.user}")
+                        }
                         userInDb = userService.insert(userUidArticles.user)
                         authorityService.insert(Authority(userInDb.id, AuthorityType.USER.name))
                         newUsersInserted++
