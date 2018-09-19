@@ -7,7 +7,11 @@ import javax.persistence.*
 
 @Entity
 @IdClass(KeyUserLang::class)
-@Table(name = "users_langs")
+@Table(name = "users_langs",
+        indexes = [
+            Index(name = "index_users_langs_ids", columnList = "user_id,lang_id", unique = true)
+        ]
+)
 data class UsersLangs(
         @Id
         @Column(name = "user_id")

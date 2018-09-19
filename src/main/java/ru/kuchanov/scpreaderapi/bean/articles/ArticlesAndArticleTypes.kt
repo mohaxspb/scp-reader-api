@@ -9,7 +9,15 @@ import javax.persistence.*
 
 @Entity
 @IdClass(KeyArticleAndArticleType::class)
-@Table(name = "articles_article_types")
+@Table(name = "articles_article_types",
+        indexes = [
+            Index(
+                    name = "index_articles_article_types_ids",
+                    columnList = "article_id,article_type_id",
+                    unique = true
+            )
+        ]
+)
 data class ArticlesAndArticleTypes(
         @Id
         @Column(name = "article_id")

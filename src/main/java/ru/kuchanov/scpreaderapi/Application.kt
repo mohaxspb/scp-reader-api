@@ -15,7 +15,6 @@ import org.springframework.core.task.TaskExecutor
 
 
 
-
 @SpringBootApplication
 @EnableScheduling
 @EnableAsync
