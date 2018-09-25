@@ -27,3 +27,4 @@ hs_err_pid*
 /logs
 /gallery/
 /src/main/resources/firebase/keys/serviceAccountKey**
+/*.sql

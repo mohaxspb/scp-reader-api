@@ -14,12 +14,7 @@ import java.sql.Timestamp
 import javax.persistence.*
 
 @Entity
-@Table(name = "users",
-        indexes = [
-            Index(name = "index_users_id", columnList = "id", unique = true),
-            Index(name = "index_users_username", columnList = "username", unique = true)
-        ]
-)
+@Table(name = "users")
 @SqlResultSetMapping(name = "LeaderBoardResult", classes = [
     ConstructorResult(targetClass = LeaderboardUser::class,
             columns = [

@@ -5,13 +5,7 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import javax.persistence.*
 
 @Entity
-@Table(
-        name = "articles",
-        indexes = [
-                Index(name = "index_articles_id", columnList = "id", unique = true),
-                Index(name = "index_articles_articleTypeId", columnList = "article_type_id")
-        ]
-)
+@Table(name = "articles")
 data class Article(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)

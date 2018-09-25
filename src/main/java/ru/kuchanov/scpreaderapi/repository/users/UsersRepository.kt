@@ -12,6 +12,9 @@ interface UsersRepository : JpaRepository<User, Long> {
     @Query("SELECT u from User u JOIN UsersLangs ul ON u.id = ul.userId WHERE ul.langId = :langId")
     fun getUsersByLang(langId: String): List<User>
 
+    @Query("SELECT COUNT(*) from users u JOIN users_langs ul ON u.id = ul.user_id WHERE ul.lang_id = :langId", nativeQuery = true)
+    fun getUsersByLangCount(langId: String): Long
+
     @Query("SELECT * FROM users u" +
             " JOIN users_langs ul ON u.id = ul.user_id" +
             " WHERE ul.lang_id = :langId" +
@@ -25,9 +28,9 @@ interface UsersRepository : JpaRepository<User, Long> {
             "level_num as levelNum, " +
             "score_to_next_level as scoreToNextLevel, " +
             "cur_level_score as curLevelScore " +
-            "FROM users u" +
-            " JOIN users_langs ul ON u.id = ul.user_id" +
-            " WHERE ul.lang_id = :langId" +
-            " ORDER BY u.score DESC OFFSET :offset LIMIT :limit", nativeQuery = true)
+            "FROM users u " +
+            "JOIN users_langs ul ON u.id = ul.user_id " +
+            "WHERE ul.lang_id = :langId " +
+            "ORDER BY u.score DESC OFFSET :offset LIMIT :limit", nativeQuery = true)
     fun getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(langId: String, offset: Int, limit: Int): List<LeaderboardUser>
 }

@@ -12,15 +12,7 @@ import javax.persistence.*
 
 @Entity
 @IdClass(KeyArticleLangs::class)
-@Table(name = "articles_langs",
-        indexes = [
-                Index(
-                        name = "index_articles_langs_ids",
-                        columnList = "article_id,lang_id,url_relative",
-                        unique = true
-                )
-        ]
-)
+@Table(name = "articles_langs")
 data class ArticleForLang(
         @Id
         @Column(name = "article_id")

@@ -6,28 +6,22 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.builder.SpringApplicationBuilder
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 import org.springframework.context.annotation.Bean
+import org.springframework.core.task.TaskExecutor
 import org.springframework.scheduling.annotation.EnableAsync
 import org.springframework.scheduling.annotation.EnableScheduling
-import ru.kuchanov.scpreaderapi.network.ApiClient
-import ru.kuchanov.scpreaderapi.network.ModelConverter
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
-import org.springframework.core.task.TaskExecutor
-
+import ru.kuchanov.scpreaderapi.network.ModelConverter
 
 
 @SpringBootApplication
 @EnableScheduling
 @EnableAsync
 class Application : SpringBootServletInitializer() {
-    override fun configure(application: SpringApplicationBuilder): SpringApplicationBuilder {
-        return application.sources(Application::class.java)
-    }
+
+    override fun configure(application: SpringApplicationBuilder) = application.sources(Application::class.java)
 
     @Bean
     fun logger() = LoggerFactory.getLogger("application")
-
-//    @Bean
-//    fun apiClient() = ApiClient()
 
     @Bean
     fun modelConverter() = ModelConverter()
@@ -40,7 +34,6 @@ class Application : SpringBootServletInitializer() {
         threadPoolTaskExecutor.maxPoolSize = 3
         threadPoolTaskExecutor.setQueueCapacity(600)
         threadPoolTaskExecutor.afterPropertiesSet()
-//        logger.info("ThreadPoolTaskExecutor set")
         return threadPoolTaskExecutor
     }
 

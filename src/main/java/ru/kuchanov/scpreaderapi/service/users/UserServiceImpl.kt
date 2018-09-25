@@ -34,6 +34,8 @@ class UserServiceImpl : UserService {
 
     override fun getAllUsersByLangId(langId: String): List<User> = repository.getUsersByLang(langId)
 
+    override fun getUsersByLangIdCount(langId: String):Long = repository.getUsersByLangCount(langId)
+
     override fun getUsersByLangWithOffsetAndLimitSortedByScore(langId: String, offset: Int, limit: Int) =
             repository.getUsersByLangWithOffsetAndLimitSortedByScore(langId, offset, limit)
 
