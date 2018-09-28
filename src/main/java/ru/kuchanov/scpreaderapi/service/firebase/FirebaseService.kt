@@ -75,6 +75,8 @@ class FirebaseService {
 
     fun getAllUsersForLang(langId: String) = userService.getAllUsersByLangId(langId)
 
+    fun getUsersByLangIdCount(langId: String) = userService.getUsersByLangIdCount(langId)
+
     @Async
     fun updateDataFromFirebase(startKey: String = "", langToParse: Constants.Firebase.FirebaseInstance? = null) {
         println("updateDataFromFirebase")

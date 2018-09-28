@@ -38,7 +38,7 @@ class FirebaseController {
 
     @GetMapping("/{lang}/users/count")
     fun getUsersCountForLang(@PathVariable(value = "lang") lang: Constants.Firebase.FirebaseInstance) =
-            firebaseService.getAllUsersForLang(lang.lang).size
+            firebaseService.getUsersByLangIdCount(lang.lang)
 
     @GetMapping("/{lang}/users/leaderboard")
     fun getUsersForLangWithLimitAndOffsetSortedByScore(
