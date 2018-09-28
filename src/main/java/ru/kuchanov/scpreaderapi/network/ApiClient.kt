@@ -5,8 +5,10 @@ import com.vk.api.sdk.client.actors.ServiceActor
 import com.vk.api.sdk.httpclient.HttpTransportClient
 import com.vk.api.sdk.objects.photos.responses.GetResponse
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 import javax.annotation.PostConstruct
 
+@Service
 class ApiClient {
 
     //vk

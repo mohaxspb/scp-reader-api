@@ -23,7 +23,7 @@ import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 import ru.kuchanov.scpreaderapi.service.auth.ClientServiceImpl
-import ru.kuchanov.scpreaderapi.service.auth.UserServiceImpl
+import ru.kuchanov.scpreaderapi.service.users.UserServiceImpl
 import javax.servlet.Filter
 
 
@@ -123,7 +123,7 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
     }
 
     override fun configure(web: WebSecurity) {
-        web.ignoring().antMatchers("/gallery/files/**", "/gallery/all")
+        web.ignoring().antMatchers("/gallery/files/**", "/gallery/all", "/firebase/**/**/**")
     }
 
     @Bean
