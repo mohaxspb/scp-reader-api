@@ -32,21 +32,16 @@ data class User(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long? = null,
-        @Column(name = "name_first")
-        var nameFirst: String? = null,
-        @Column(name = "name_second")
-        var nameSecond: String? = null,
-        @Column(name = "name_third")
-        var nameThird: String? = null,
+        //spring security user details
         @Column(name = "username", unique = true)
         var myUsername: String,
         @Convert(converter = EncryptionConverter::class)
         @Column(name = "password")
         var myPassword: String,
-        var avatar: String? = null,
         val enabled: Boolean = true,
         @OneToMany(cascade = [CascadeType.ALL], mappedBy = "userId", fetch = FetchType.EAGER)
         var userAuthorities: Set<Authority>,
+        //dates
         @field:CreationTimestamp
         val created: Timestamp? = null,
         @field:UpdateTimestamp
@@ -64,8 +59,26 @@ data class User(
         @Column(name = "score_to_next_level")
         var scoreToNextLevel: Int? = null,
         @Column(name = "cur_level_score")
-        var curLevelScore: Int? = null
+        var curLevelScore: Int? = null,
+        //social login fields
+        @Column(name = "facebook_id")
+        var facebookId: String? = null,
+        @Column(name = "google_id")
+        var googleId: String? = null,
+        @Column(name = "vk_id")
+        var vkId: String? = null,
+        //misc
+        @Column(name = "name_first")
+        var nameFirst: String? = null,
+        @Column(name = "name_second")
+        var nameSecond: String? = null,
+        @Column(name = "name_third")
+        var nameThird: String? = null,
+        var avatar: String? = null,
+        @Column(name = "main_lang_id")
+        var mainLangId: String
 ) : UserDetails {
+
     override fun getAuthorities(): MutableCollection<out GrantedAuthority> =
             userAuthorities.map { SimpleGrantedAuthority(it.authority) }.toMutableList()
 
