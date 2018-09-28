@@ -106,14 +106,16 @@ class FirebaseService {
                             .toList()
                             .map { it.flatten() }
                             .subscribeBy(
-                                    onSuccess = { println("done updating users for lang: ${lang.lang}, totalCount: ${it.size}") },
+                                    onSuccess = {
+                                        updateFirebaseUpdateDate(lang.lang)
+
+                                        println("done updating users for lang: ${lang.lang}, totalCount: ${it.size}")
+                                    },
                                     onError = {
                                         println("error in update users observable: $it")
                                         log.error("error in update users observable: ", it)
                                     }
                             )
-
-                    updateFirebaseUpdateDate(lang.lang)
                 }
     }
 

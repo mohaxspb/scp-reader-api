@@ -11,7 +11,7 @@ class ModelConverter {
         GalleryImage(
                 imageUrl = it.sizes.last().src,
                 galleryImageTranslations = mutableSetOf(GalleryImageTranslation(
-                        langCode = Constants.LangCodes.RU,
+                        langCode = Constants.Firebase.FirebaseInstance.RU.lang,
                         translation = it.text,
                         authorId = 1
                 )),

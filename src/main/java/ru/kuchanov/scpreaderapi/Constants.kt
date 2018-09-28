@@ -20,11 +20,6 @@ object Constants {
     const val FIREBASE_PATH = "firebase"
     const val DEFAULT_AVATAR_URL = "https://pp.userapi.com/c604519/v604519296/46a5/cRsRzeBpbGE.jpg"
 
-    object LangCodes {
-        const val RU = "ru"
-        const val EN = "en"
-    }
-
     object Firebase {
         enum class FirebaseInstance(val lang: String) {
             EN("en"),
