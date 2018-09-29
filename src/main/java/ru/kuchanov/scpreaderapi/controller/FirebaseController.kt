@@ -9,7 +9,7 @@ import ru.kuchanov.scpreaderapi.service.users.UserService
 
 
 @RestController
-@RequestMapping("/${Constants.FIREBASE_PATH}")
+@RequestMapping("/${Constants.Path.FIREBASE}")
 class FirebaseController {
 
     @Autowired

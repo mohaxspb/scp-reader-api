@@ -23,7 +23,7 @@ import java.nio.file.Paths
 
 
 @RestController
-@RequestMapping("/${Constants.GALLERY_PATH}")
+@RequestMapping("/${Constants.Path.GALLERY}")
 class GalleryController {
 
     @Autowired

@@ -42,19 +42,15 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
     fun passwordEncoder() = BCryptPasswordEncoder()
 
     @Bean
-    fun authenticationProvider(): DaoAuthenticationProvider {
-        val authenticationProvider = DaoAuthenticationProvider()
-        authenticationProvider.setUserDetailsService(userDetailsService)
-        authenticationProvider.setPasswordEncoder(passwordEncoder())
-
-        return authenticationProvider
+    fun authenticationProvider(): DaoAuthenticationProvider = DaoAuthenticationProvider().apply {
+        setUserDetailsService(userDetailsService)
+        setPasswordEncoder(passwordEncoder())
     }
 
     @Primary
     @Bean
-    override fun authenticationManagerBean(): AuthenticationManager {
-        return super.authenticationManagerBean()
-    }
+    override fun authenticationManagerBean(): AuthenticationManager = super.authenticationManagerBean()
+
 
     @Autowired
     lateinit var userDetailsService: UserServiceImpl
@@ -68,22 +64,16 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
     }
 
     @Bean
-    fun oauth2authenticationManager(): OAuth2AuthenticationManager {
-        val authManager = OAuth2AuthenticationManager()
-        authManager.setClientDetailsService(clientDetailsService)
-        authManager.setTokenServices(tokenServices)
-
-        return authManager
+    fun oauth2authenticationManager(): OAuth2AuthenticationManager = OAuth2AuthenticationManager().apply {
+        setClientDetailsService(clientDetailsService)
+        setTokenServices(tokenServices)
     }
 
     @Bean
-    fun myOAuth2Filter(): Filter {
-        val filter = OAuth2AuthenticationProcessingFilter()
-        filter.setAuthenticationManager(oauth2authenticationManager())
+    fun myOAuth2Filter(): Filter = OAuth2AuthenticationProcessingFilter().apply {
+        setAuthenticationManager(oauth2authenticationManager())
         //allow auth with cookies (not only with token)
-        filter.setStateless(false)
-
-        return filter
+        setStateless(false)
     }
 
     @Value("\${angular.port}")
@@ -126,6 +116,7 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
         web.ignoring().antMatchers("/gallery/files/**", "/gallery/all", "/firebase/**/**/**")
     }
 
+    //todo check if we really need it
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration()
