@@ -7,6 +7,7 @@ import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.bind.annotation.ResponseStatus
+import ru.kuchanov.scpreaderapi.Constants
 import ru.kuchanov.scpreaderapi.bean.auth.Authority
 import ru.kuchanov.scpreaderapi.model.user.LeaderboardUser
 import ru.kuchanov.scpreaderapi.utils.EncryptionConverter
@@ -76,7 +77,7 @@ data class User(
         var nameThird: String? = null,
         var avatar: String? = null,
         @Column(name = "main_lang_id")
-        var mainLangId: String
+        var mainLangId: String = Constants.Firebase.FirebaseInstance.EN.lang
 ) : UserDetails {
 
     override fun getAuthorities(): MutableCollection<out GrantedAuthority> =

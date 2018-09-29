@@ -92,14 +92,14 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
         http
                 .formLogin()
                 .successHandler { request, response, authentication ->
-                    println("angular.port: ${angularServerPort}")
+                    println("angular.port: $angularServerPort")
                     println("request: ${request.localName}/${request.localAddr}/${request.localPort}/${request.serverName}")
                     DefaultRedirectStrategy().sendRedirect(request, response, "http://${request.serverName}:$angularServerPort");
                 }
                 .and()
                 .logout()
                 .logoutSuccessHandler { request, response, authentication ->
-                    println("angular.port: ${angularServerPort}")
+                    println("angular.port: $angularServerPort")
                     println("request: ${request.localName}/${request.localAddr}/${request.localPort}/${request.serverName}")
                     DefaultRedirectStrategy().sendRedirect(request, response, "http://${request.serverName}:$angularServerPort");
                 }
@@ -113,7 +113,7 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
     }
 
     override fun configure(web: WebSecurity) {
-        web.ignoring().antMatchers("/gallery/files/**", "/gallery/all", "/firebase/**/**/**")
+        web.ignoring().antMatchers("/gallery/files/**", "/gallery/all", "/firebase/**/**/**", "/auth/**")
     }
 
     //todo check if we really need it
