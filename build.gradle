@@ -16,7 +16,7 @@ buildscript {
         // Required for Kotlin integration for spring
         // See https://kotlinlang.org/docs/reference/compiler-plugins.html#kotlin-spring-compiler-plugin
         classpath "org.jetbrains.kotlin:kotlin-allopen:$kotlin_version"
-        //fixes no-arg construcor errors
+        //fixes no-arg constructor errors
         classpath "org.jetbrains.kotlin:kotlin-noarg:$kotlin_version"
     }
 }
@@ -31,7 +31,7 @@ version "$app_version"
 
 apply plugin: 'java'
 apply plugin: 'kotlin'
-// See https://kotlinlang.org/docs/reference/compiler-plugins.html#kotlin-spring-compiler-plugin
+//See https://kotlinlang.org/docs/reference/compiler-plugins.html#kotlin-spring-compiler-plugin
 apply plugin: "kotlin-spring"
 //use entities with data classes
 apply plugin: "kotlin-jpa"
@@ -62,6 +62,7 @@ repositories {
 }
 
 dependencies {
+    //need as spring version of netty conflicts with one in firebase libs
     compile 'io.netty:netty-all:4.1.29.Final'
 
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
