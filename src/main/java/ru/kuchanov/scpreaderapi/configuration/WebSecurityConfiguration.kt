@@ -42,6 +42,8 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
     @Bean
     fun tokenServices() = DefaultTokenServices().apply {
         setTokenStore(tokenStore)
+        setClientDetailsService(clientDetailsService)
+        setAuthenticationManager(authenticationManager())
     }
 
     @Bean
