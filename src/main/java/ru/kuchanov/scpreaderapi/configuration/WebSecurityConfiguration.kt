@@ -16,7 +16,9 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationManager
 import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationProcessingFilter
+import org.springframework.security.oauth2.provider.token.DefaultTokenServices
 import org.springframework.security.oauth2.provider.token.ResourceServerTokenServices
+import org.springframework.security.oauth2.provider.token.TokenStore
 import org.springframework.security.web.DefaultRedirectStrategy
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter
 import org.springframework.web.cors.CorsConfiguration
@@ -35,8 +37,16 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
     @Autowired
     lateinit var clientDetailsService: ClientServiceImpl
 
+//    @Autowired
+//    lateinit var tokenServices: ResourceServerTokenServices
+
     @Autowired
-    lateinit var tokenServices: ResourceServerTokenServices
+    private lateinit var tokenStore: TokenStore
+
+    @Bean
+    fun tokenServices() = DefaultTokenServices().apply {
+        setTokenStore(tokenStore)
+    }
 
     @Bean
     fun passwordEncoder() = BCryptPasswordEncoder()
@@ -50,7 +60,6 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
     @Primary
     @Bean
     override fun authenticationManagerBean(): AuthenticationManager = super.authenticationManagerBean()
-
 
     @Autowired
     lateinit var userDetailsService: UserServiceImpl
@@ -66,7 +75,7 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
     @Bean
     fun oauth2authenticationManager(): OAuth2AuthenticationManager = OAuth2AuthenticationManager().apply {
         setClientDetailsService(clientDetailsService)
-        setTokenServices(tokenServices)
+        setTokenServices(tokenServices())
     }
 
     @Bean
@@ -85,6 +94,10 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
         http
                 .csrf()
                 .disable()
+        http
+                .authorizeRequests()
+                .antMatchers("/", "/login**", "/error**")
+                .permitAll()
         http
                 .authorizeRequests()
                 .anyRequest()

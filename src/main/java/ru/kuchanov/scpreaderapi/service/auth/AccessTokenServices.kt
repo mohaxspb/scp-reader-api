@@ -7,7 +7,7 @@ import org.springframework.security.oauth2.provider.token.ResourceServerTokenSer
 import org.springframework.security.oauth2.provider.token.TokenStore
 import org.springframework.stereotype.Service
 
-@Service
+//@Service
 class AccessTokenServices : ResourceServerTokenServices {
 
     @Autowired
