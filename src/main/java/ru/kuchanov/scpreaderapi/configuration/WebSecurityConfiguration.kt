@@ -17,7 +17,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationManager
 import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationProcessingFilter
 import org.springframework.security.oauth2.provider.token.DefaultTokenServices
-import org.springframework.security.oauth2.provider.token.ResourceServerTokenServices
 import org.springframework.security.oauth2.provider.token.TokenStore
 import org.springframework.security.web.DefaultRedirectStrategy
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter
@@ -36,9 +35,6 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
 
     @Autowired
     lateinit var clientDetailsService: ClientServiceImpl
-
-//    @Autowired
-//    lateinit var tokenServices: ResourceServerTokenServices
 
     @Autowired
     private lateinit var tokenStore: TokenStore
