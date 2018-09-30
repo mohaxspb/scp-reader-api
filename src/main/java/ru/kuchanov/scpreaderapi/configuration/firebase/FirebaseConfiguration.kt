@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.io.ClassPathResource
 import org.springframework.util.StreamUtils
-import ru.kuchanov.scpreaderapi.Constants
+import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.model.firebase.FirebaseAccountKey
 import java.nio.charset.Charset
 
@@ -22,7 +22,7 @@ class FirebaseConfiguration {
 
     @Bean
     fun provideFirebase(): FirebaseApp? {
-        Constants.Firebase.FirebaseInstance.values().forEachIndexed { index, firebaseInstance ->
+        ScpReaderConstants.Firebase.FirebaseInstance.values().forEachIndexed { index, firebaseInstance ->
             val accountKeyFileName = "firebase/keys/serviceAccountKey${firebaseInstance.lang.capitalize()}.json"
             val accountKeyFileAsStream = ClassPathResource(accountKeyFileName).inputStream
             val accountKeyFileAsString = StreamUtils.copyToString(

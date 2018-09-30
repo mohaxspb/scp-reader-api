@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import ru.kuchanov.scpreaderapi.Constants.BACK_UP_RATE_MILLIS
+import ru.kuchanov.scpreaderapi.ScpReaderConstants.BACK_UP_RATE_MILLIS
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.service.auth.AuthorityService
 import ru.kuchanov.scpreaderapi.service.users.UserService

@@ -2,56 +2,38 @@ package ru.kuchanov.scpreaderapi.controller
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier
+import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.oauth2.common.OAuth2AccessToken
+import org.springframework.security.oauth2.provider.OAuth2Authentication
 import org.springframework.security.oauth2.provider.OAuth2Request
-import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationManager
-import org.springframework.security.oauth2.provider.endpoint.TokenEndpoint
 import org.springframework.security.oauth2.provider.token.DefaultTokenServices
-import org.springframework.security.oauth2.provider.token.store.JdbcTokenStore
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import ru.kuchanov.scpreaderapi.Constants
+import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.service.firebase.FirebaseService
 import ru.kuchanov.scpreaderapi.service.users.UserService
 import java.io.Serializable
 import java.util.*
-import java.util.HashSet
-import org.springframework.security.core.GrantedAuthority
-import org.springframework.security.oauth2.provider.OAuth2Authentication
-import java.util.HashMap
-
-
+import javax.security.auth.message.AuthException
 
 
 @RestController
-@RequestMapping("/${Constants.Path.AUTH}")
+@RequestMapping("/${ScpReaderConstants.Path.AUTH}")
 class AuthController {
+
+    @Autowired
+    private lateinit var log: Logger
 
     @Autowired
     private lateinit var firebaseService: FirebaseService
 
     @Autowired
     private lateinit var usersService: UserService
-
-    @Autowired
-    private lateinit var oauth2authenticationManager: OAuth2AuthenticationManager
-
-    //todo think if we need it
-    @Autowired
-    private lateinit var authenticationProvider: DaoAuthenticationProvider
-
-    @Autowired
-    private lateinit var tokenStore: JdbcTokenStore
-
-    @Autowired
-    private lateinit var tokenEndpoint: TokenEndpoint
-
 
     @Autowired
     private lateinit var tokenServices: DefaultTokenServices
@@ -61,45 +43,55 @@ class AuthController {
 
     @PostMapping("/socialLogin")
     fun authorize(
-            @RequestParam(value = "provider") provider: Constants.SocialProvider,
-            @RequestParam(value = "token") token: String
+            @RequestParam(value = "provider") provider: ScpReaderConstants.SocialProvider,
+            @RequestParam(value = "token") token: String,
+            @RequestParam(value = "langId") lang: ScpReaderConstants.Firebase.FirebaseInstance
     ): OAuth2AccessToken? {
         println("authorize called")
 
         when (provider) {
-            Constants.SocialProvider.GOOGLE -> {
+            ScpReaderConstants.SocialProvider.GOOGLE -> {
                 val googleIdToken: GoogleIdToken? = googleIdTokenVerifier.verify(token)
                 println(googleIdToken)
-
-                return googleIdToken?.let { getAccessToken(it.payload.email) }
-                        ?: throw IllegalStateException("Failed to verify idToken")
+                if (googleIdToken == null) {
+                    throw IllegalStateException("Failed to verify idToken")
+                }
+                val email = googleIdToken.payload.email ?: throw AuthException("no email found!")
+                var userInDb = usersService.getByUsername(email)
+                if (userInDb != null) {
+                    //add google id to user object if need
+                    if (userInDb.googleId.isNullOrEmpty()) {
+                        userInDb.googleId = googleIdToken.payload.subject
+                        usersService.update(userInDb)
+                    } else if (userInDb.googleId != googleIdToken.payload.subject) {
+                        log.error("login with ${googleIdToken.payload.subject}/${googleIdToken.payload.email} " +
+                                "for user with missmatched googleId: ${userInDb.googleId}")
+                    }
+                    return getAccessToken(googleIdToken.payload.email)
+                } else {
+                    //try to find by providers id as email may be changed
+                    userInDb = usersService.getByProviderId(googleIdToken.payload.subject, provider)
+                    if (userInDb != null) {
+                        return getAccessToken(userInDb.username)
+                    } else {
+                        //search in firebase auth api for all apps
+                        val userDataFromFirebase = firebaseService.getUsersDataFromFirebaseByEmail(email)
+                        if(userDataFromFirebase.isNotEmpty()){
+                            //todo collect user data from all apps (score and read/favorite articles)
+                            //todo register user with max score and save his read/favorite articles and providerId
+                        } else {
+                            //todo if cant find - register new user and give it initial score
+                        }
+                    }
+                }
             }
             //todo add facebook and VK
+            //todo add VK
             else -> throw IllegalArgumentException("Unexpected provider: $provider")
         }
     }
 
     fun getAccessToken(email: String): OAuth2AccessToken? {
-
-//        val authorizationParameters = HashMap<String, String>()
-//        authorizationParameters["scope"] = "read"
-//        authorizationParameters["username"] = "mobile_client"
-//        authorizationParameters["client_id"] = "mobile-client"
-//        authorizationParameters["grant"] = "password"
-//
-//        val authorizationRequest = OAuth2Request(authorizationParameters)
-//        authorizationRequest.setApproved(true)
-//
-//        val authorities = HashSet<GrantedAuthority>()
-//        authorities.add(SimpleGrantedAuthority("ROLE_UNTRUSTED_CLIENT"))
-//        authorizationRequest.setAuthorities(authorities)
-//
-//        val resourceIds = HashSet<String>()
-//        resourceIds.add("mobile-public")
-//        authorizationRequest.setResourceIds(resourceIds)
-
-
-        //this works
         val requestParameters = mapOf<String, String>()
         //todo move to constants
         val clientId = "client_id"
@@ -132,14 +124,5 @@ class AuthController {
         val auth = OAuth2Authentication(oAuth2Request, authenticationToken)
         println("${tokenServices.getAccessToken(auth)}")
         return tokenServices.createAccessToken(auth)
-        //this works END
-
-
-//        val authenticationToken = UsernamePasswordAuthenticationToken(usersService.loadUserByUsername(email), null, authorities)
-//        val auth = oauth2authenticationManager.authenticate(authenticationToken.principal )
-//        println("auth: $auth")
-//        println("auth.principal: ${auth.principal}")
-//        val auth2 = tokenServices.loadAuthentication(auth.principal as String)
-//        return tokenServices.createAccessToken(auth2)
     }
 }

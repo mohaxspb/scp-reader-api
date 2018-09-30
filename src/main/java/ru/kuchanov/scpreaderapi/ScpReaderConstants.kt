@@ -1,6 +1,6 @@
 package ru.kuchanov.scpreaderapi
 
-object Constants {
+object ScpReaderConstants {
     /**
      * 12 hours
      */
