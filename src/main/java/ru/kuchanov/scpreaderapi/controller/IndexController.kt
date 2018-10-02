@@ -46,7 +46,10 @@ class IndexController {
     fun showUsers() = userService.findAll()
 
     @GetMapping("/me")
-    fun showMe(@AuthenticationPrincipal user: User) = user
+    fun showMe(
+            @AuthenticationPrincipal user: User,
+            @RequestParam(value = "showFull") showFull: Boolean = false
+    ) = if (showFull) userService.getById(user.id!!) else user
 
     @GetMapping("/showAuthorities")
     fun showAuthorities() = authoritiesService.findAll()

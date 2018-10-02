@@ -87,7 +87,11 @@ class FirebaseService {
                     println("query for lang: $lang")
                     val firebaseApp = FirebaseApp.getInstance(lang.lang)
                     val firebaseAuth = FirebaseAuth.getInstance(firebaseApp)
-                    val firebaseAuthUser = firebaseAuth.getUserByEmail(email) ?: return@forEach
+                    val firebaseAuthUser = try {
+                        firebaseAuth.getUserByEmail(email)
+                    } catch (e: Exception) {
+                        return@forEach
+                    } ?: return@forEach
                     val firebaseDatabase = FirebaseDatabase.getInstance(firebaseApp)
                     val firebaseDatabaseUser: FirebaseUser
                     //todo wrap to nullable fun
@@ -140,11 +144,16 @@ class FirebaseService {
     @Async
     fun updateDataFromFirebase(startKey: String = "", langToParse: ScpReaderConstants.Firebase.FirebaseInstance? = null) {
         println("updateDataFromFirebase")
+
         //todo use rx for whole method
         ScpReaderConstants.Firebase.FirebaseInstance.values()
                 .filter { if (langToParse == null) true else it == langToParse }
                 .forEach { lang ->
                     println("query for lang: $lang")
+
+                    val langInDb = langToParse?.let { langService.getById(it.lang) }
+                            ?: throw IllegalArgumentException("Unknown lang: $lang")
+
                     val firebaseDatabase = FirebaseDatabase.getInstance(FirebaseApp.getInstance(lang.lang))
 
                     val subject = BehaviorProcessor.createDefault(startKey)
@@ -152,7 +161,7 @@ class FirebaseService {
                     subject
                             .concatMap { startKey -> usersObservable(firebaseDatabase, startKey).toFlowable() }
                             .map {
-                                insertUsers(it, langService.getById(lang.lang))
+                                insertUsers(it, langInDb)
                                 it
                             }
                             .doOnNext { users ->
@@ -274,7 +283,10 @@ class FirebaseService {
         println("newUsersInserted = $newUsersInserted, newLangForExistedUsers = $newLangForExistedUsers")
     }
 
-    private fun manageFirebaseArticlesForUser(
+    /**
+     * inserts/updates read and favorite articles from firebase for user
+     */
+    public fun manageFirebaseArticlesForUser(
             articlesInFirebase: List<FirebaseArticle>,
             user: User,
             lang: Lang
