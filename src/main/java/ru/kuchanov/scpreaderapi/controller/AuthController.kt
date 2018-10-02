@@ -15,6 +15,11 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
+import ru.kuchanov.scpreaderapi.bean.auth.Authority
+import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
+import ru.kuchanov.scpreaderapi.bean.users.User
+import ru.kuchanov.scpreaderapi.model.user.LevelsJson
+import ru.kuchanov.scpreaderapi.service.auth.AuthorityService
 import ru.kuchanov.scpreaderapi.service.firebase.FirebaseService
 import ru.kuchanov.scpreaderapi.service.users.UserService
 import java.io.Serializable
@@ -28,6 +33,9 @@ class AuthController {
 
     @Autowired
     private lateinit var log: Logger
+
+    @Autowired
+    private lateinit var authorityService: AuthorityService
 
     @Autowired
     private lateinit var firebaseService: FirebaseService
@@ -49,6 +57,8 @@ class AuthController {
     ): OAuth2AccessToken? {
         println("authorize called")
 
+        val levelsJson = LevelsJson.getLevelsJson()
+
         when (provider) {
             ScpReaderConstants.SocialProvider.GOOGLE -> {
                 val googleIdToken: GoogleIdToken? = googleIdTokenVerifier.verify(token)
@@ -65,7 +75,7 @@ class AuthController {
                         usersService.update(userInDb)
                     } else if (userInDb.googleId != googleIdToken.payload.subject) {
                         log.error("login with ${googleIdToken.payload.subject}/${googleIdToken.payload.email} " +
-                                "for user with missmatched googleId: ${userInDb.googleId}")
+                                "for user with mismatched googleId: ${userInDb.googleId}")
                     }
                     return getAccessToken(googleIdToken.payload.email)
                 } else {
@@ -75,10 +85,31 @@ class AuthController {
                         return getAccessToken(userInDb.username)
                     } else {
                         //search in firebase auth api for all apps
+                        //and collect user data from all apps (score and read/favorite articles)
                         val userDataFromFirebase = firebaseService.getUsersDataFromFirebaseByEmail(email)
-                        if(userDataFromFirebase.isNotEmpty()){
-                            //todo collect user data from all apps (score and read/favorite articles)
-                            //todo register user with max score and save his read/favorite articles and providerId
+                        if (userDataFromFirebase.isNotEmpty()) {
+                            //register user with max score and providerId
+                            val maxScore = userDataFromFirebase.maxBy { it.firebaseUser.score }!!.firebaseUser.score
+                            val curLevel = levelsJson.getLevelForScore(maxScore)!!
+                            val firebaseUser = userDataFromFirebase.first().firebaseUser
+                            userInDb = usersService.insert(User(
+                                    myUsername = email,
+                                    myPassword = email,
+                                    avatar = firebaseUser.avatar,
+                                    userAuthorities = setOf(),
+                                    //firebase
+                                    fullName = firebaseUser.fullName,
+                                    signInRewardGained = firebaseUser.signInRewardGained,
+                                    score = maxScore,
+                                    //level
+                                    levelNum = curLevel.id,
+                                    curLevelScore = curLevel.score,
+                                    scoreToNextLevel = levelsJson.scoreToNextLevel(maxScore, curLevel),
+                                    googleId = googleIdToken.payload.subject
+                            ))
+                            authorityService.insert(Authority(userInDb.id, AuthorityType.USER.name))
+
+                            //todo and save his read/favorite articles (check if we can use firebase service from 237 line)
                         } else {
                             //todo if cant find - register new user and give it initial score
                         }

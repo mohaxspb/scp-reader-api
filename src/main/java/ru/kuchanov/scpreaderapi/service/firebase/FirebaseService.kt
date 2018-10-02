@@ -243,6 +243,7 @@ class FirebaseService {
                             println("insert user with base64 avatar: ${userUidArticles.user}")
                         }
                         userInDb = userService.insert(userUidArticles.user)
+
                         authorityService.insert(Authority(userInDb.id, AuthorityType.USER.name))
                         newUsersInserted++
                     }
@@ -280,7 +281,6 @@ class FirebaseService {
     ) {
 //        println("manageFirebaseArticlesForUser: ${lang.id}/${user.username}")
         articlesInFirebase.forEachIndexed { index, articleInFirebase ->
-            //            if (index == 1) return@forEachIndexed
             if (articleInFirebase.url == null) {
                 println("manageFirebaseArticlesForUser: ${lang.id}/${user.username}")
                 println("articleInFirebase: $index/$articleInFirebase")
