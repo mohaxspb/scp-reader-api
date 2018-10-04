@@ -70,8 +70,10 @@ class AuthController {
 
         val levelsJson = LevelsJson.getLevelsJson()
 
+        //todo move switch to api client method
         when (provider) {
             ScpReaderConstants.SocialProvider.GOOGLE -> {
+                //todo move to api client
                 val googleIdToken: GoogleIdToken? = googleIdTokenVerifier.verify(token)
                 println(googleIdToken)
                 if (googleIdToken == null) {
@@ -187,6 +189,9 @@ class AuthController {
                 }
             }
             //todo add facebook
+            ScpReaderConstants.SocialProvider.FACEBOOK -> {
+
+            }
             //todo add VK
             else -> throw IllegalArgumentException("Unexpected provider: $provider")
         }
