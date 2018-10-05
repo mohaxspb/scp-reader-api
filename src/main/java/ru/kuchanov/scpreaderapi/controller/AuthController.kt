@@ -55,8 +55,8 @@ class AuthController {
     @Autowired
     private lateinit var tokenServices: DefaultTokenServices
 
-    @Autowired
-    private lateinit var googleIdTokenVerifier: GoogleIdTokenVerifier
+//    @Autowired
+//    private lateinit var googleIdTokenVerifier: GoogleIdTokenVerifier
 
     @PostMapping("/socialLogin")
     fun authorize(
@@ -144,7 +144,6 @@ class AuthController {
                             return getAccessToken(userInDb.username)
                         } else {
                             //if cant find - register new user and give it initial score
-
                             val avatar = googleIdToken.payload["picture"] as? String
                                     ?: ScpReaderConstants.DEFAULT_AVATAR_URL
                             println(avatar)

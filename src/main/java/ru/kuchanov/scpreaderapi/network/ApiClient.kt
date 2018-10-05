@@ -1,16 +1,22 @@
 package ru.kuchanov.scpreaderapi.network
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier
 import com.vk.api.sdk.client.VkApiClient
 import com.vk.api.sdk.client.actors.ServiceActor
 import com.vk.api.sdk.httpclient.HttpTransportClient
 import com.vk.api.sdk.objects.photos.responses.GetResponse
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.stereotype.Service
+import org.springframework.web.bind.annotation.RequestParam
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory
+import ru.kuchanov.scpreaderapi.ScpReaderConstants
+import ru.kuchanov.scpreaderapi.model.dto.auth.CommonUserData
 import ru.kuchanov.scpreaderapi.model.facebook.FacebookApi
 import java.util.concurrent.TimeUnit
 import javax.annotation.PostConstruct
@@ -39,6 +45,9 @@ class ApiClient {
             .client(okHttpClient())
             .addCallAdapterFactory(callAdapterFactory())
             .build()
+
+    @Autowired
+    private lateinit var googleIdTokenVerifier: GoogleIdTokenVerifier
 
     //vk
     @Value("\${my.api.vk.app_id}")
@@ -76,4 +85,43 @@ class ApiClient {
             .albumId(artScpVkAlbumId.toString())
             .photoSizes(true)
             .execute()
+
+    fun getUserDataFromProvider(
+            provider: ScpReaderConstants.SocialProvider,
+            token: String
+    ): CommonUserData = when (provider) {
+        ScpReaderConstants.SocialProvider.GOOGLE -> {
+            val googleIdToken: GoogleIdToken? = googleIdTokenVerifier.verify(token)
+            println(googleIdToken)
+            googleIdToken?.let {
+                val avatar = googleIdToken.payload["picture"] as? String
+                        ?: ScpReaderConstants.DEFAULT_AVATAR_URL
+                println(avatar)
+                val fullName = googleIdToken.payload["name"] as? String
+                        ?: ScpReaderConstants.DEFAULT_FULL_NAME
+                println(fullName)
+                val firstName = googleIdToken.payload["given_name"] as? String
+                        ?: ScpReaderConstants.DEFAULT_FULL_NAME
+                println(firstName)
+                val secondName = googleIdToken.payload["family_name"] as? String
+                        ?: ScpReaderConstants.DEFAULT_FULL_NAME
+                println(secondName)
+                CommonUserData(
+                        email = googleIdToken.payload.email,
+                        firstName = firstName,
+                        secondName = secondName,
+                        fullName = fullName,
+                        avatarUrl = avatar
+
+                )
+            } ?: throw IllegalStateException("Failed to verify idToken")
+        }
+        ScpReaderConstants.SocialProvider.FACEBOOK -> {
+
+        }
+        ScpReaderConstants.SocialProvider.VK -> {
+
+        }
+        else -> throw IllegalArgumentException("Unexpected provider: $provider")
+    }
 }
