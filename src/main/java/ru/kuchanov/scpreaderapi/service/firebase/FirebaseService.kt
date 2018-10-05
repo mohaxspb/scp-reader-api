@@ -23,7 +23,7 @@ import ru.kuchanov.scpreaderapi.bean.users.UsersLangs
 import ru.kuchanov.scpreaderapi.model.dto.firebase.FirebaseUserData
 import ru.kuchanov.scpreaderapi.model.firebase.FirebaseArticle
 import ru.kuchanov.scpreaderapi.model.firebase.FirebaseUser
-import ru.kuchanov.scpreaderapi.model.firebase.UserUidArticles
+import ru.kuchanov.scpreaderapi.model.dto.firebase.UserUidArticles
 import ru.kuchanov.scpreaderapi.model.user.LevelsJson
 import ru.kuchanov.scpreaderapi.repository.firebase.FirebaseDataUpdateDateRepository
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService

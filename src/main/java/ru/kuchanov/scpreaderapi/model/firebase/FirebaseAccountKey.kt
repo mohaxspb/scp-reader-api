@@ -5,5 +5,5 @@ import org.codehaus.jackson.annotate.JsonProperty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class FirebaseAccountKey(
-        @JsonProperty var project_id: String? = null
+        @JsonProperty("project_id") var projectId: String? = null
 )

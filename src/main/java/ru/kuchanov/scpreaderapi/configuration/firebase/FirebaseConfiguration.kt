@@ -33,7 +33,7 @@ class FirebaseConfiguration {
 
             log.debug("accountKey: $accountKey")
 
-            val databaseUrl = "https://${accountKey.project_id}.firebaseio.com"
+            val databaseUrl = "https://${accountKey.projectId}.firebaseio.com"
             log.debug("databaseUrl: $databaseUrl")
             println("databaseUrl: $databaseUrl")
             val options = FirebaseOptions.Builder()
