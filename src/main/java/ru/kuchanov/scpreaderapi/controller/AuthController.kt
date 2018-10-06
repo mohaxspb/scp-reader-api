@@ -162,21 +162,7 @@ class AuthController {
                     return getAccessToken(userInDb.username)
                 } else {
                     //if cant find - register new user and give it initial score
-//                    val avatar = googleIdToken.payload["picture"] as? String
-//                            ?: ScpReaderConstants.DEFAULT_AVATAR_URL
-//                    println(avatar)
-//                    val fullName = googleIdToken.payload["name"] as? String
-//                            ?: ScpReaderConstants.DEFAULT_FULL_NAME
-//                    println(fullName)
-//                    val firstName = googleIdToken.payload["given_name"] as? String
-//                            ?: ScpReaderConstants.DEFAULT_FULL_NAME
-//                    println(firstName)
-//                    val secondName = googleIdToken.payload["family_name"] as? String
-//                            ?: ScpReaderConstants.DEFAULT_FULL_NAME
-//                    println(secondName)
-
                     val score = ScpReaderConstants.DEFAULT_NEW_USER_SCORE
-
                     val curLevel = levelsJson.getLevelForScore(score)!!
 
                     val newUserInDb = usersService.insert(User(
