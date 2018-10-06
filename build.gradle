@@ -63,54 +63,56 @@ repositories {
 
 dependencies {
     //need as spring version of netty conflicts with one in firebase libs
-    compile 'io.netty:netty-all:4.1.29.Final'
+    implementation 'io.netty:netty-all:4.1.29.Final'
 
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    compile 'com.fasterxml.jackson.module:jackson-module-kotlin'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'
     //fix classNotFound
-    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
 
     //spring
-    compile "org.springframework.boot:spring-boot-starter-web"
+    implementation "org.springframework.boot:spring-boot-starter-web"
     providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
     //info
-    compile "org.springframework.boot:spring-boot-starter-actuator"
+    implementation "org.springframework.boot:spring-boot-starter-actuator"
     //data
-    compile "org.springframework.boot:spring-boot-starter-data-jpa"
+    implementation "org.springframework.boot:spring-boot-starter-data-jpa"
     //security
-    compile "org.springframework.boot:spring-boot-starter-security"
+    implementation "org.springframework.boot:spring-boot-starter-security"
     //oauth2
-    compile 'org.springframework.security.oauth:spring-security-oauth2:2.3.0.RELEASE'
+    implementation 'org.springframework.security.oauth:spring-security-oauth2:2.3.0.RELEASE'
     //spring END
 
     //postgresql
-    compile 'org.postgresql:postgresql:42.2.1'
+    implementation 'org.postgresql:postgresql:42.2.1'
 
     //db migrations
-    compile "org.flywaydb:flyway-core:5.1.4"
+    implementation "org.flywaydb:flyway-core:5.1.4"
 
     //apache
-    compile 'commons-io:commons-io:2.6'
+    implementation 'commons-io:commons-io:2.6'
 
     //rx
     implementation "io.reactivex.rxjava2:rxjava:2.2.1"
     implementation 'io.reactivex.rxjava2:rxkotlin:2.2.0'
 
     //google
-    compile 'com.google.api-client:google-api-client:1.24.1'
+    implementation 'com.google.api-client:google-api-client:1.24.1'
 
     //firebase
-    compile 'com.google.firebase:firebase-admin:6.4.0'
+    implementation 'com.google.firebase:firebase-admin:6.4.0'
 
     //vk
-    compile 'com.vk.api:sdk:0.5.12'
+    implementation 'com.vk.api:sdk:0.5.12'
 
     //Retrofit
-    api('com.squareup.retrofit2:retrofit:2.4.0') { exclude module: 'okhttp' }
-    api 'com.squareup.okhttp3:okhttp:3.11.0'
-    api 'com.squareup.okhttp3:logging-interceptor:3.11.0'
-    api 'com.squareup.retrofit2:converter-jackson:2.4.0'
-    api 'com.squareup.retrofit2:adapter-rxjava:2.4.0'
+    implementation('com.squareup.retrofit2:retrofit:2.4.0') { exclude module: 'okhttp' }
+    implementation 'com.squareup.okhttp3:okhttp:3.11.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:3.11.0'
+    implementation 'com.squareup.retrofit2:converter-jackson:2.4.0'
+    implementation 'com.squareup.retrofit2:adapter-rxjava2:2.4.0'
+
+    implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.6'
 }
 
 compileKotlin {

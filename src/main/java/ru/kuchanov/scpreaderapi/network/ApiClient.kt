@@ -1,5 +1,7 @@
 package ru.kuchanov.scpreaderapi.network
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier
 import com.vk.api.sdk.client.VkApiClient
@@ -8,13 +10,14 @@ import com.vk.api.sdk.httpclient.HttpTransportClient
 import com.vk.api.sdk.objects.photos.responses.GetResponse
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
-import org.codehaus.jackson.map.ObjectMapper
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.stereotype.Service
+import retrofit2.Converter
 import retrofit2.Retrofit
-import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
+import retrofit2.converter.jackson.JacksonConverterFactory
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.model.dto.auth.CommonUserData
 import java.util.concurrent.TimeUnit
@@ -36,12 +39,19 @@ class ApiClient {
             .build()
 
     @Bean
-    fun callAdapterFactory(): RxJavaCallAdapterFactory = RxJavaCallAdapterFactory.create()
+    fun callAdapterFactory(): RxJava2CallAdapterFactory = RxJava2CallAdapterFactory.create()
+
+    @Bean
+    fun objectMapper(): ObjectMapper = ObjectMapper().registerKotlinModule()
+
+    @Bean
+    fun converterFactory(): Converter.Factory = JacksonConverterFactory.create(objectMapper())
 
     @Bean
     fun retrofit(): Retrofit = Retrofit.Builder()
             .baseUrl(FacebookApi.BASE_API_URL)
             .client(okHttpClient())
+            .addConverterFactory(converterFactory())
             .addCallAdapterFactory(callAdapterFactory())
             .build()
 
@@ -145,7 +155,7 @@ class ApiClient {
         }
         ScpReaderConstants.SocialProvider.VK -> {
             val commonUserData = ObjectMapper().readValue(token, CommonUserData::class.java)
-            if(commonUserData.email==null){
+            if (commonUserData.email == null) {
                 throw IllegalStateException("Can't login without email!")
             }
 
