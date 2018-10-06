@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.stereotype.Service
 import retrofit2.Converter
-import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.jackson.JacksonConverterFactory
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
@@ -26,6 +25,13 @@ import javax.annotation.PostConstruct
 @Service
 class ApiClient {
 
+    companion object {
+        const val OK_HTTP_CONNECT_TIMEOUT = 30L
+        const val OK_HTTP_READ_TIMEOUT = 30L
+        const val OK_HTTP_WRITE_TIMEOUT = 30L
+    }
+
+    //okhttp + retrofit
     @Bean
     fun loggingInterceptor(): HttpLoggingInterceptor = HttpLoggingInterceptor { println(it) }
             .setLevel(HttpLoggingInterceptor.Level.BODY)
@@ -33,9 +39,9 @@ class ApiClient {
     @Bean
     fun okHttpClient(): OkHttpClient = OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor())
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
+            .connectTimeout(OK_HTTP_CONNECT_TIMEOUT, TimeUnit.SECONDS)
+            .readTimeout(OK_HTTP_READ_TIMEOUT, TimeUnit.SECONDS)
+            .writeTimeout(OK_HTTP_WRITE_TIMEOUT, TimeUnit.SECONDS)
             .build()
 
     @Bean
@@ -47,21 +53,26 @@ class ApiClient {
     @Bean
     fun converterFactory(): Converter.Factory = JacksonConverterFactory.create(objectMapper())
 
-    @Bean
-    fun retrofit(): Retrofit = Retrofit.Builder()
-            .baseUrl(FacebookApi.BASE_API_URL)
-            .client(okHttpClient())
-            .addConverterFactory(converterFactory())
-            .addCallAdapterFactory(callAdapterFactory())
-            .build()
+    //facebook
+    @Autowired
+    private lateinit var facebookApi: FacebookApi
 
-    @Bean
-    fun facebookApi(): FacebookApi = retrofit().create(FacebookApi::class.java)
+//    @Bean
+//    fun retrofit(): Retrofit = Retrofit.Builder()
+//            .baseUrl(FacebookApi.BASE_API_URL)
+//            .client(okHttpClient())
+//            .addConverterFactory(converterFactory())
+//            .addCallAdapterFactory(callAdapterFactory())
+//            .build()
+//
+//    @Bean
+//    fun facebookApi(): FacebookApi = retrofit().create(FacebookApi::class.java)
 
+    //google auth
     @Autowired
     private lateinit var googleIdTokenVerifier: GoogleIdTokenVerifier
 
-    //vk
+    //vk values //todo move to separate service...
     @Value("\${my.api.vk.app_id}")
     var vkAppId: Int? = null
 
@@ -81,7 +92,7 @@ class ApiClient {
     lateinit var vk: VkApiClient
     lateinit var actor: ServiceActor
 
-    //facebook
+    //facebook values
     @Value("\${my.api.facebook.client_id}")
     var facebookClientId: Long? = null
 
@@ -134,7 +145,7 @@ class ApiClient {
             } ?: throw IllegalStateException("Failed to verify idToken")
         }
         ScpReaderConstants.SocialProvider.FACEBOOK -> {
-            val verifiedToken = facebookApi()
+            val verifiedToken = facebookApi
                     .debugToken(token, "$facebookClientId|$facebookClientSecret")
                     .blockingGet()
 
@@ -142,7 +153,7 @@ class ApiClient {
                 throw IllegalArgumentException("Facebook appId not equals correct one!")
             }
 
-            val facebookProfile = facebookApi().profile(token).blockingGet()
+            val facebookProfile = facebookApi.profile(token).blockingGet()
             val email = facebookProfile.email ?: throw IllegalStateException("Can't login without email!")
             CommonUserData(
                     id = facebookProfile.id.toString(),

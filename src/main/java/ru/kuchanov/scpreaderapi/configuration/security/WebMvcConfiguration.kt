@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.configuration
+package ru.kuchanov.scpreaderapi.configuration.security
 
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.servlet.config.annotation.CorsRegistry
