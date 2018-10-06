@@ -8,7 +8,7 @@ import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.web.bind.annotation.*
-import ru.kuchanov.scpreaderapi.Constants
+import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.network.ApiClient
 import ru.kuchanov.scpreaderapi.network.ModelConverter
 import ru.kuchanov.scpreaderapi.service.gallery.GalleryService
@@ -23,7 +23,7 @@ import java.nio.file.Paths
 
 
 @RestController
-@RequestMapping("/${Constants.GALLERY_PATH}")
+@RequestMapping("/${ScpReaderConstants.Path.GALLERY}")
 class GalleryController {
 
     @Autowired
@@ -42,8 +42,8 @@ class GalleryController {
     lateinit var galleryTranslationService: GalleryTranslationService
 
     @Scheduled(
-            fixedDelay = Constants.GALLERY_UPDATE_FROM_VK_RATE_MILLIS,
-            initialDelay = Constants.GALLERY_UPDATE_FROM_VK_RATE_MILLIS
+            fixedDelay = ScpReaderConstants.GALLERY_UPDATE_FROM_VK_RATE_MILLIS,
+            initialDelay = ScpReaderConstants.GALLERY_UPDATE_FROM_VK_RATE_MILLIS
     )
     @GetMapping("/updateFromVk")
     fun updateFromVk(): ResponseEntity<String> {

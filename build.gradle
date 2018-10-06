@@ -1,7 +1,7 @@
 buildscript {
     ext.app_version = "1.0.0"
 
-    ext.kotlin_version = '1.2.70'
+    ext.kotlin_version = '1.2.71'
     ext.spring_boot_version = '2.0.4.RELEASE'
 
     ext['netty.version'] = '4.1.29.Final'
@@ -16,7 +16,7 @@ buildscript {
         // Required for Kotlin integration for spring
         // See https://kotlinlang.org/docs/reference/compiler-plugins.html#kotlin-spring-compiler-plugin
         classpath "org.jetbrains.kotlin:kotlin-allopen:$kotlin_version"
-        //fixes no-arg construcor errors
+        //fixes no-arg constructor errors
         classpath "org.jetbrains.kotlin:kotlin-noarg:$kotlin_version"
     }
 }
@@ -31,7 +31,7 @@ version "$app_version"
 
 apply plugin: 'java'
 apply plugin: 'kotlin'
-// See https://kotlinlang.org/docs/reference/compiler-plugins.html#kotlin-spring-compiler-plugin
+//See https://kotlinlang.org/docs/reference/compiler-plugins.html#kotlin-spring-compiler-plugin
 apply plugin: "kotlin-spring"
 //use entities with data classes
 apply plugin: "kotlin-jpa"
@@ -62,6 +62,7 @@ repositories {
 }
 
 dependencies {
+    //need as spring version of netty conflicts with one in firebase libs
     compile 'io.netty:netty-all:4.1.29.Final'
 
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
@@ -88,18 +89,28 @@ dependencies {
     //db migrations
     compile "org.flywaydb:flyway-core:5.1.4"
 
-    //vk
-    compile 'com.vk.api:sdk:0.5.12'
-
-    //firebase
-    compile 'com.google.firebase:firebase-admin:6.4.0'
-
     //apache
     compile 'commons-io:commons-io:2.6'
 
     //rx
     implementation "io.reactivex.rxjava2:rxjava:2.2.1"
     implementation 'io.reactivex.rxjava2:rxkotlin:2.2.0'
+
+    //google
+    compile 'com.google.api-client:google-api-client:1.24.1'
+
+    //firebase
+    compile 'com.google.firebase:firebase-admin:6.4.0'
+
+    //vk
+    compile 'com.vk.api:sdk:0.5.12'
+
+    //Retrofit
+    api('com.squareup.retrofit2:retrofit:2.4.0') { exclude module: 'okhttp' }
+    api 'com.squareup.okhttp3:okhttp:3.11.0'
+    api 'com.squareup.okhttp3:logging-interceptor:3.11.0'
+    api 'com.squareup.retrofit2:converter-jackson:2.4.0'
+    api 'com.squareup.retrofit2:adapter-rxjava:2.4.0'
 }
 
 compileKotlin {

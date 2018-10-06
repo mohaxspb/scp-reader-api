@@ -9,6 +9,10 @@ interface UsersRepository : JpaRepository<User, Long> {
 
     fun findOneByMyUsername(username: String): User?
 
+    fun findOneByGoogleId(id: String): User?
+    fun findOneByFacebookId(id: String): User?
+    fun findOneByVkId(id: String): User?
+
     @Query("SELECT u from User u JOIN UsersLangs ul ON u.id = ul.userId WHERE ul.langId = :langId")
     fun getUsersByLang(langId: String): List<User>
 

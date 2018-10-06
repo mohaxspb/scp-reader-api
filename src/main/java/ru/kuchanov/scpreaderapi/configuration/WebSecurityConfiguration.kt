@@ -16,7 +16,8 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationManager
 import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationProcessingFilter
-import org.springframework.security.oauth2.provider.token.ResourceServerTokenServices
+import org.springframework.security.oauth2.provider.token.DefaultTokenServices
+import org.springframework.security.oauth2.provider.token.TokenStore
 import org.springframework.security.web.DefaultRedirectStrategy
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter
 import org.springframework.web.cors.CorsConfiguration
@@ -36,25 +37,27 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
     lateinit var clientDetailsService: ClientServiceImpl
 
     @Autowired
-    lateinit var tokenServices: ResourceServerTokenServices
+    private lateinit var tokenStore: TokenStore
+
+    @Bean
+    fun tokenServices() = DefaultTokenServices().apply {
+        setTokenStore(tokenStore)
+        setClientDetailsService(clientDetailsService)
+        setAuthenticationManager(authenticationManager())
+    }
 
     @Bean
     fun passwordEncoder() = BCryptPasswordEncoder()
 
     @Bean
-    fun authenticationProvider(): DaoAuthenticationProvider {
-        val authenticationProvider = DaoAuthenticationProvider()
-        authenticationProvider.setUserDetailsService(userDetailsService)
-        authenticationProvider.setPasswordEncoder(passwordEncoder())
-
-        return authenticationProvider
+    fun authenticationProvider(): DaoAuthenticationProvider = DaoAuthenticationProvider().apply {
+        setUserDetailsService(userDetailsService)
+        setPasswordEncoder(passwordEncoder())
     }
 
     @Primary
     @Bean
-    override fun authenticationManagerBean(): AuthenticationManager {
-        return super.authenticationManagerBean()
-    }
+    override fun authenticationManagerBean(): AuthenticationManager = super.authenticationManagerBean()
 
     @Autowired
     lateinit var userDetailsService: UserServiceImpl
@@ -68,22 +71,16 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
     }
 
     @Bean
-    fun oauth2authenticationManager(): OAuth2AuthenticationManager {
-        val authManager = OAuth2AuthenticationManager()
-        authManager.setClientDetailsService(clientDetailsService)
-        authManager.setTokenServices(tokenServices)
-
-        return authManager
+    fun oauth2authenticationManager(): OAuth2AuthenticationManager = OAuth2AuthenticationManager().apply {
+        setClientDetailsService(clientDetailsService)
+        setTokenServices(tokenServices())
     }
 
     @Bean
-    fun myOAuth2Filter(): Filter {
-        val filter = OAuth2AuthenticationProcessingFilter()
-        filter.setAuthenticationManager(oauth2authenticationManager())
+    fun myOAuth2Filter(): Filter = OAuth2AuthenticationProcessingFilter().apply {
+        setAuthenticationManager(oauth2authenticationManager())
         //allow auth with cookies (not only with token)
-        filter.setStateless(false)
-
-        return filter
+        setStateless(false)
     }
 
     @Value("\${angular.port}")
@@ -97,19 +94,23 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
                 .disable()
         http
                 .authorizeRequests()
+                .antMatchers("/", "/login**", "/error**")
+                .permitAll()
+        http
+                .authorizeRequests()
                 .anyRequest()
                 .authenticated()
         http
                 .formLogin()
                 .successHandler { request, response, authentication ->
-                    println("angular.port: ${angularServerPort}")
+                    println("angular.port: $angularServerPort")
                     println("request: ${request.localName}/${request.localAddr}/${request.localPort}/${request.serverName}")
                     DefaultRedirectStrategy().sendRedirect(request, response, "http://${request.serverName}:$angularServerPort");
                 }
                 .and()
                 .logout()
                 .logoutSuccessHandler { request, response, authentication ->
-                    println("angular.port: ${angularServerPort}")
+                    println("angular.port: $angularServerPort")
                     println("request: ${request.localName}/${request.localAddr}/${request.localPort}/${request.serverName}")
                     DefaultRedirectStrategy().sendRedirect(request, response, "http://${request.serverName}:$angularServerPort");
                 }
@@ -123,9 +124,10 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
     }
 
     override fun configure(web: WebSecurity) {
-        web.ignoring().antMatchers("/gallery/files/**", "/gallery/all", "/firebase/**/**/**")
+        web.ignoring().antMatchers("/gallery/files/**", "/gallery/all", "/firebase/**/**/**", "/auth/**")
     }
 
+    //todo check if we really need it
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration()

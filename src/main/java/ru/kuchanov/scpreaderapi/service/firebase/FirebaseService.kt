@@ -1,6 +1,7 @@
 package ru.kuchanov.scpreaderapi.service.firebase
 
 import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -12,16 +13,17 @@ import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
-import ru.kuchanov.scpreaderapi.Constants
+import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.articles.*
 import ru.kuchanov.scpreaderapi.bean.auth.Authority
 import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.UsersLangs
+import ru.kuchanov.scpreaderapi.model.dto.firebase.FirebaseUserData
 import ru.kuchanov.scpreaderapi.model.firebase.FirebaseArticle
 import ru.kuchanov.scpreaderapi.model.firebase.FirebaseUser
-import ru.kuchanov.scpreaderapi.model.firebase.UserUidArticles
+import ru.kuchanov.scpreaderapi.model.dto.firebase.UserUidArticles
 import ru.kuchanov.scpreaderapi.model.user.LevelsJson
 import ru.kuchanov.scpreaderapi.repository.firebase.FirebaseDataUpdateDateRepository
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
@@ -77,14 +79,81 @@ class FirebaseService {
 
     fun getUsersByLangIdCount(langId: String) = userService.getUsersByLangIdCount(langId)
 
+    fun getUsersDataFromFirebaseByEmail(email: String): List<FirebaseUserData> {
+        val firebaseUsersData = mutableListOf<FirebaseUserData>()
+
+        ScpReaderConstants.Firebase.FirebaseInstance.values()
+                .forEach { lang ->
+                    println("query for lang: $lang")
+                    val firebaseApp = FirebaseApp.getInstance(lang.lang)
+                    val firebaseAuth = FirebaseAuth.getInstance(firebaseApp)
+                    val firebaseAuthUser = try {
+                        firebaseAuth.getUserByEmail(email)
+                    } catch (e: Exception) {
+                        return@forEach
+                    } ?: return@forEach
+                    val firebaseDatabase = FirebaseDatabase.getInstance(firebaseApp)
+                    val firebaseDatabaseUser: FirebaseUser
+                    //todo wrap to nullable fun
+                    try {
+                        firebaseDatabaseUser = Single.create<FirebaseUser> { subscriber ->
+                            val userQuery = firebaseDatabase
+                                    .getReference("users")
+                                    .child(firebaseAuthUser.uid)
+                            userQuery.addListenerForSingleValueEvent(object : ValueEventListener {
+                                override fun onCancelled(error: DatabaseError?) {
+                                    println("error?.message: ${error?.message}")
+                                    subscriber.onError(error?.toException()!!)
+                                }
+
+                                override fun onDataChange(snapshot: DataSnapshot?) {
+                                    try {
+                                        val firebaseUser = snapshot?.getValue(FirebaseUser::class.java)
+                                        println("firebaseUser: ${firebaseUser?.email}")
+                                        if (firebaseUser != null) {
+                                            subscriber.onSuccess(firebaseUser)
+                                        } else {
+                                            subscriber.onError(IllegalStateException("Failed to parse user: ${snapshot?.key}"))
+                                        }
+                                    } catch (e: Exception) {
+                                        println("error while parse user: $e")
+                                        println("KEY IS: ${snapshot?.key}")
+                                        log.error("error while parse user: ", e)
+                                        log.error("KEY IS: ${snapshot?.key}")
+                                        subscriber.onError(e)
+                                    }
+                                }
+                            })
+                        }.blockingGet()
+                    } catch (e: Exception) {
+                        log.error("Error while get user data from firebase: ${firebaseAuthUser.uid}", e)
+                        println(e)
+                        return@forEach
+                    }
+
+                    firebaseUsersData += FirebaseUserData(
+                            firebaseAuthUser,
+                            firebaseDatabaseUser,
+                            lang
+                    )
+                }
+
+        return firebaseUsersData
+    }
+
     @Async
-    fun updateDataFromFirebase(startKey: String = "", langToParse: Constants.Firebase.FirebaseInstance? = null) {
+    fun updateDataFromFirebase(startKey: String = "", langToParse: ScpReaderConstants.Firebase.FirebaseInstance? = null) {
         println("updateDataFromFirebase")
+
         //todo use rx for whole method
-        Constants.Firebase.FirebaseInstance.values()
+        ScpReaderConstants.Firebase.FirebaseInstance.values()
                 .filter { if (langToParse == null) true else it == langToParse }
                 .forEach { lang ->
                     println("query for lang: $lang")
+
+                    val langInDb = langToParse?.let { langService.getById(it.lang) }
+                            ?: throw IllegalArgumentException("Unknown lang: $lang")
+
                     val firebaseDatabase = FirebaseDatabase.getInstance(FirebaseApp.getInstance(lang.lang))
 
                     val subject = BehaviorProcessor.createDefault(startKey)
@@ -92,7 +161,7 @@ class FirebaseService {
                     subject
                             .concatMap { startKey -> usersObservable(firebaseDatabase, startKey).toFlowable() }
                             .map {
-                                insertUsers(it, langService.getById(lang.lang))
+                                insertUsers(it, langInDb)
                                 it
                             }
                             .doOnNext { users ->
@@ -179,10 +248,11 @@ class FirebaseService {
                     var userInDb = userService.getByUsername(userUidArticles.user.myUsername)
                     if (userInDb == null) {
                         if (userUidArticles.user.avatar?.startsWith("data:image") == true) {
-                            userUidArticles.user.avatar = Constants.DEFAULT_AVATAR_URL
+                            userUidArticles.user.avatar = ScpReaderConstants.DEFAULT_AVATAR_URL
                             println("insert user with base64 avatar: ${userUidArticles.user}")
                         }
                         userInDb = userService.insert(userUidArticles.user)
+
                         authorityService.insert(Authority(userInDb.id, AuthorityType.USER.name))
                         newUsersInserted++
                     }
@@ -213,14 +283,16 @@ class FirebaseService {
         println("newUsersInserted = $newUsersInserted, newLangForExistedUsers = $newLangForExistedUsers")
     }
 
-    private fun manageFirebaseArticlesForUser(
+    /**
+     * inserts/updates read and favorite articles from firebase for user
+     */
+    public fun manageFirebaseArticlesForUser(
             articlesInFirebase: List<FirebaseArticle>,
             user: User,
             lang: Lang
     ) {
 //        println("manageFirebaseArticlesForUser: ${lang.id}/${user.username}")
         articlesInFirebase.forEachIndexed { index, articleInFirebase ->
-            //            if (index == 1) return@forEachIndexed
             if (articleInFirebase.url == null) {
                 println("manageFirebaseArticlesForUser: ${lang.id}/${user.username}")
                 println("articleInFirebase: $index/$articleInFirebase")

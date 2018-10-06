@@ -2,6 +2,7 @@ package ru.kuchanov.scpreaderapi.service.users
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
 import ru.kuchanov.scpreaderapi.model.user.LeaderboardUser
@@ -34,7 +35,7 @@ class UserServiceImpl : UserService {
 
     override fun getAllUsersByLangId(langId: String): List<User> = repository.getUsersByLang(langId)
 
-    override fun getUsersByLangIdCount(langId: String):Long = repository.getUsersByLangCount(langId)
+    override fun getUsersByLangIdCount(langId: String): Long = repository.getUsersByLangCount(langId)
 
     override fun getUsersByLangWithOffsetAndLimitSortedByScore(langId: String, offset: Int, limit: Int) =
             repository.getUsersByLangWithOffsetAndLimitSortedByScore(langId, offset, limit)
@@ -65,5 +66,11 @@ class UserServiceImpl : UserService {
         val result = query.resultList
 
         return result as List<LeaderboardUser>
+    }
+
+    override fun getByProviderId(id: String, provider: ScpReaderConstants.SocialProvider) = when (provider) {
+        ScpReaderConstants.SocialProvider.GOOGLE -> repository.findOneByGoogleId(id)
+        ScpReaderConstants.SocialProvider.FACEBOOK -> repository.findOneByFacebookId(id)
+        ScpReaderConstants.SocialProvider.VK -> repository.findOneByVkId(id)
     }
 }

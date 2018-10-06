@@ -1,7 +1,7 @@
 package ru.kuchanov.scpreaderapi.network
 
 import com.vk.api.sdk.objects.photos.Photo
-import ru.kuchanov.scpreaderapi.Constants
+import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.gallery.GalleryImage
 import ru.kuchanov.scpreaderapi.bean.gallery.GalleryImageTranslation
 
@@ -11,7 +11,7 @@ class ModelConverter {
         GalleryImage(
                 imageUrl = it.sizes.last().src,
                 galleryImageTranslations = mutableSetOf(GalleryImageTranslation(
-                        langCode = Constants.Firebase.FirebaseInstance.RU.lang,
+                        langCode = ScpReaderConstants.Firebase.FirebaseInstance.RU.lang,
                         translation = it.text,
                         authorId = 1
                 )),

@@ -1,6 +1,6 @@
 package ru.kuchanov.scpreaderapi
 
-object Constants {
+object ScpReaderConstants {
     /**
      * 12 hours
      */
@@ -15,10 +15,19 @@ object Constants {
     const val FIREBASE_USERS_DATA_UPDATE_RATE_MILLIS = 1000L * 60 * 60 * 12
 //    const val FIREBASE_USERS_DATA_UPDATE_RATE_MILLIS = 1000L * 30 //30 sec for test
 
-    const val GALLERY_PATH = "gallery"
-
-    const val FIREBASE_PATH = "firebase"
     const val DEFAULT_AVATAR_URL = "https://pp.userapi.com/c604519/v604519296/46a5/cRsRzeBpbGE.jpg"
+    const val DEFAULT_FULL_NAME = "N/A"
+    const val DEFAULT_NEW_USER_SCORE = 50
+
+    object Path {
+        const val GALLERY = "gallery"
+        const val FIREBASE = "firebase"
+        const val AUTH = "auth"
+    }
+
+    enum class SocialProvider {
+        GOOGLE, FACEBOOK, VK
+    }
 
     object Firebase {
         enum class FirebaseInstance(val lang: String) {
