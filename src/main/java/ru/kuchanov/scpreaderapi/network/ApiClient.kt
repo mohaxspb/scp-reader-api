@@ -103,6 +103,7 @@ class ApiClient {
         ScpReaderConstants.SocialProvider.GOOGLE -> {
             val googleIdToken: GoogleIdToken? = googleIdTokenVerifier.verify(token)
             googleIdToken?.let {
+                val email = googleIdToken.payload.email ?: throw IllegalStateException("Can't login without email!")
                 val avatar = googleIdToken.payload["picture"] as? String
                         ?: ScpReaderConstants.DEFAULT_AVATAR_URL
                 val fullName = googleIdToken.payload["name"] as? String
@@ -113,7 +114,7 @@ class ApiClient {
                         ?: ScpReaderConstants.DEFAULT_FULL_NAME
                 CommonUserData(
                         id = googleIdToken.payload.subject,
-                        email = googleIdToken.payload.email,
+                        email = email,
                         firstName = firstName,
                         secondName = secondName,
                         fullName = fullName,
@@ -132,16 +133,23 @@ class ApiClient {
             }
 
             val facebookProfile = facebookApi().profile(token).blockingGet()
+            val email = facebookProfile.email ?: throw IllegalStateException("Can't login without email!")
             CommonUserData(
                     id = facebookProfile.id.toString(),
-                    email = facebookProfile.email!!,
+                    email = email,
                     fullName = "${facebookProfile.firstName} ${facebookProfile.lastName}",
                     firstName = facebookProfile.firstName,
                     lastName = facebookProfile.lastName,
                     avatarUrl = facebookProfile.picture?.data?.url
             )
         }
-        ScpReaderConstants.SocialProvider.VK -> ObjectMapper().readValue(token, CommonUserData::class.java)
-        else -> throw IllegalArgumentException("Unexpected provider: $provider")
+        ScpReaderConstants.SocialProvider.VK -> {
+            val commonUserData = ObjectMapper().readValue(token, CommonUserData::class.java)
+            if(commonUserData.email==null){
+                throw IllegalStateException("Can't login without email!")
+            }
+
+            commonUserData
+        }
     }
 }

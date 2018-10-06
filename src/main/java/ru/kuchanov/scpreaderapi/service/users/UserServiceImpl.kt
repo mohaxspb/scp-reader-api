@@ -70,6 +70,7 @@ class UserServiceImpl : UserService {
 
     override fun getByProviderId(id: String, provider: ScpReaderConstants.SocialProvider) = when (provider) {
         ScpReaderConstants.SocialProvider.GOOGLE -> repository.findOneByGoogleId(id)
-        else -> throw IllegalArgumentException("Unexpected social provider: $provider")
+        ScpReaderConstants.SocialProvider.FACEBOOK -> repository.findOneByFacebookId(id)
+        ScpReaderConstants.SocialProvider.VK -> repository.findOneByVkId(id)
     }
 }
