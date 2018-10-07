@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.users.User
+import ru.kuchanov.scpreaderapi.model.dto.purchase.AndroidProductResponse
+import ru.kuchanov.scpreaderapi.model.dto.purchase.AndroidSubscriptionResponse
+import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
 import ru.kuchanov.scpreaderapi.service.purchase.PurchaseAndroidService
 
 
@@ -29,11 +32,18 @@ class PurchaseController {
             @RequestParam(value = "sku") sku: String,
             @RequestParam(value = "token") token: String,
             @AuthenticationPrincipal user: User?
-    ) = purchaseAndroidService.validateProductPurchase(
-            packageName = androidPackage,
-            sku = sku,
-            purchaseToken = token
-    )
+    ): ValidationResponse {
+        val productResponse = purchaseAndroidService.validateProductPurchase(
+                packageName = androidPackage,
+                sku = sku,
+                purchaseToken = token
+        ) as AndroidProductResponse
+
+        //todo write purchase to DB
+        //todo write connection to user if it is
+
+        return ValidationResponse(productResponse.status)
+    }
 
     @GetMapping("/validateAndroidSubscription")
     fun validateAndroidSubscription(
@@ -41,9 +51,16 @@ class PurchaseController {
             @RequestParam(value = "sku") sku: String,
             @RequestParam(value = "token") token: String,
             @AuthenticationPrincipal user: User?
-    ) = purchaseAndroidService.validateSubscriptionPurchase(
-            packageName = androidPackage,
-            sku = sku,
-            purchaseToken = token
-    )
+    ): ValidationResponse {
+        val subscriptionResponse = purchaseAndroidService.validateSubscriptionPurchase(
+                packageName = androidPackage,
+                sku = sku,
+                purchaseToken = token
+        ) as AndroidSubscriptionResponse
+
+        //todo write purchase to DB
+        //todo write connection to user if it iso
+
+        return ValidationResponse(subscriptionResponse.status)
+    }
 }
