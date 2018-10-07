@@ -14,7 +14,7 @@ import ru.kuchanov.scpreaderapi.utils.FileUtils
 class AndroidPurchaseConfiguration {
 
     companion object {
-        const val ANDROID_DEVELOPER_SERVICE_KEY = "googlePlayAndroidDeveloperServiceKey.json"
+        const val ANDROID_DEVELOPER_SERVICE_KEY = "googlePlay/googlePlayAndroidDeveloperServiceKey.json"
         const val APPLICATION_NAME = "web-app"
     }
 
