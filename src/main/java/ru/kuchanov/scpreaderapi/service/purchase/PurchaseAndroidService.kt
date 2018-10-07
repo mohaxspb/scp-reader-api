@@ -1,6 +1,18 @@
 package ru.kuchanov.scpreaderapi.service.purchase
 
+import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
+
 interface PurchaseAndroidService {
 
-    //todo methods for validating subscriptions and inapps
+    fun validateProductPurchase(
+            packageName: String,
+            sku: String,
+            purchaseToken: String
+    ): ValidationResponse
+
+    fun validateSubscriptionPurchase(
+            packageName: String,
+            sku: String,
+            purchaseToken: String
+    ): ValidationResponse
 }
