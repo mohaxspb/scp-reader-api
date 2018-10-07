@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.configuration
+package ru.kuchanov.scpreaderapi.configuration.security
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -23,6 +23,7 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
+import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.service.auth.ClientServiceImpl
 import ru.kuchanov.scpreaderapi.service.users.UserServiceImpl
 import javax.servlet.Filter
@@ -124,7 +125,13 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
     }
 
     override fun configure(web: WebSecurity) {
-        web.ignoring().antMatchers("/gallery/files/**", "/gallery/all", "/firebase/**/**/**", "/auth/**")
+        web.ignoring().antMatchers(
+                "/${ScpReaderConstants.Path.GALLERY}/files/**",
+                "/${ScpReaderConstants.Path.GALLERY}/all",
+                "/${ScpReaderConstants.Path.FIREBASE}/**/**/**",
+                "/${ScpReaderConstants.Path.AUTH}/**",
+                "/${ScpReaderConstants.Path.PURCHASE}/**"
+        )
     }
 
     //todo check if we really need it

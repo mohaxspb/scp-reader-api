@@ -98,6 +98,9 @@ dependencies {
 
     //google
     implementation 'com.google.api-client:google-api-client:1.24.1'
+    //purchases
+    implementation 'com.google.apis:google-api-services-androidpublisher:v3-rev29-1.25.0'
+    implementation 'com.google.api-client:google-api-client-jackson2:1.25.0'
 
     //firebase
     implementation 'com.google.firebase:firebase-admin:6.4.0'
