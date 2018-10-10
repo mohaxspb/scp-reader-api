@@ -12,6 +12,7 @@ import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.model.dto.purchase.AndroidProductResponse
 import ru.kuchanov.scpreaderapi.model.dto.purchase.AndroidSubscriptionResponse
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
+import ru.kuchanov.scpreaderapi.service.purchase.AndroidProductService
 import ru.kuchanov.scpreaderapi.service.purchase.PurchaseAndroidService
 
 
@@ -25,6 +26,8 @@ class PurchaseController {
     @Autowired
     private lateinit var purchaseAndroidService: PurchaseAndroidService
 
+    @Autowired
+    private lateinit var productService: AndroidProductService
 
     @GetMapping("/validateAndroidProduct")
     fun validateAndroidProduct(
@@ -40,6 +43,7 @@ class PurchaseController {
         ) as AndroidProductResponse
 
         //todo write purchase to DB
+
         //todo write connection to user if it is
 
         return ValidationResponse(productResponse.status)

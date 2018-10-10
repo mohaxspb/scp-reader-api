@@ -19,8 +19,6 @@ class GalleryServiceImpl : GalleryService {
 
     override fun getByVkId(vkId: Long): GalleryImage? = repository.getOneByVkId(vkId)
 
-    override fun update(galleryImage: GalleryImage): GalleryImage = repository.save(galleryImage)
-
     override fun save(galleryImage: GalleryImage): GalleryImage = repository.save(galleryImage)
 
     override fun saveAll(images: List<GalleryImage>): MutableList<GalleryImage> = repository.saveAll(images)
