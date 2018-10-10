@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
+import ru.kuchanov.scpreaderapi.bean.purchase.AndroidProduct
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.model.dto.purchase.AndroidProductResponse
 import ru.kuchanov.scpreaderapi.model.dto.purchase.AndroidSubscriptionResponse
@@ -43,6 +44,9 @@ class PurchaseController {
         ) as AndroidProductResponse
 
         //todo write purchase to DB
+        productService.save(AndroidProduct(
+
+        ))
 
         //todo write connection to user if it is
 

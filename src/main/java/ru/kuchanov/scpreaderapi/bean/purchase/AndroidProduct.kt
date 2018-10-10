@@ -20,4 +20,7 @@ data class AndroidProduct(
         val consumptionState: Int? = null,
         @Column(name = "purchase_state")
         val purchaseState: Int? = null
+        //todo add dates
+        //add token
+        //add user id
 )

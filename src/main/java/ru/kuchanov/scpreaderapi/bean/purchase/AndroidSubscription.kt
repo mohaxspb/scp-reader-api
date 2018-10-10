@@ -26,4 +26,8 @@ data class AndroidSubscription(
         val priceCurrencyCode: String? = null,
         @Column(name = "order_id")
         val orderId: String? = null
+
+        //todo add dates
+        //add tokens list
+        //add user id
 )
