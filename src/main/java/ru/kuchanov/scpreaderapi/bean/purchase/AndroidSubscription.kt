@@ -41,7 +41,5 @@ data class AndroidSubscription(
          * token of previously canceled subscription or one from witch this one was upgraded
          */
         @Column(name = "linked_purchase_token")
-        val linkedPurchaseToken: String? = null,
-        @Column(name = "user_id")
-        var userId: Long? = null
+        val linkedPurchaseToken: String? = null
 )

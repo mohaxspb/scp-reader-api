@@ -30,7 +30,5 @@ data class AndroidProduct(
         val updated: Timestamp? = null,
         //
         @Column(name = "purchase_token")
-        val purchaseToken: String,
-        @Column(name = "user_id")
-        var userId: Long? = null
+        val purchaseToken: String
 )

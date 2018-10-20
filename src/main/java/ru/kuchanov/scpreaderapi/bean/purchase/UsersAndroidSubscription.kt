@@ -9,15 +9,15 @@ import javax.persistence.*
 
 
 @Entity
-@IdClass(KeyUsersAndroidProducts::class)
-@Table(name = "users_android_products")
-data class UsersAndroidProducts(
+@IdClass(KeyUsersAndroidSubscriptions::class)
+@Table(name = "users_android_subscriptions")
+data class UsersAndroidSubscription(
         @Id
         @Column(name = "user_id")
         var userId: Long,
         @Id
-        @Column(name = "android_product_id")
-        var androidProductId: Long,
+        @Column(name = "android_subscription_id")
+        var androidSubscriptionId: Long,
         //dates
         @field:CreationTimestamp
         val created: Timestamp? = null,
@@ -27,7 +27,7 @@ data class UsersAndroidProducts(
 )
 
 @NoArgConstructor
-data class KeyUsersAndroidProducts(
+data class KeyUsersAndroidSubscriptions(
         val userId: Long,
-        val androidProductId: Long
+        val androidSubscriptionId: Long
 ) : Serializable

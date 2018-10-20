@@ -10,10 +10,14 @@ import org.springframework.web.bind.annotation.RestController
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.purchase.AndroidProduct
 import ru.kuchanov.scpreaderapi.bean.purchase.AndroidSubscription
+import ru.kuchanov.scpreaderapi.bean.purchase.UsersAndroidProduct
+import ru.kuchanov.scpreaderapi.bean.purchase.UsersAndroidSubscription
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.model.dto.purchase.AndroidProductResponse
 import ru.kuchanov.scpreaderapi.model.dto.purchase.AndroidSubscriptionResponse
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
+import ru.kuchanov.scpreaderapi.repository.purchase.UserAndroidProductRepository
+import ru.kuchanov.scpreaderapi.repository.purchase.UserAndroidSubscriptionRepository
 import ru.kuchanov.scpreaderapi.service.purchase.AndroidProductService
 import ru.kuchanov.scpreaderapi.service.purchase.AndroidSubscriptionService
 import ru.kuchanov.scpreaderapi.service.purchase.PurchaseAndroidService
@@ -36,6 +40,12 @@ class PurchaseController {
     @Autowired
     private lateinit var androidSubscriptionService: AndroidSubscriptionService
 
+    @Autowired
+    private lateinit var userAndroidProductRepository: UserAndroidProductRepository
+
+    @Autowired
+    private lateinit var userAndroidSubscriptionRepository: UserAndroidSubscriptionRepository
+
     @GetMapping("/validateAndroidProduct")
     fun validateAndroidProduct(
             @RequestParam(value = "package") androidPackage: String,
@@ -50,14 +60,20 @@ class PurchaseController {
         ) as AndroidProductResponse
 
         val product = productResponse.androidProduct
-        androidProductService.save(AndroidProduct(
+        val androidProduct = androidProductService.save(AndroidProduct(
                 purchaseToken = token,
                 orderId = product.orderId,
                 purchaseState = product.purchaseState,
                 consumptionState = product.consumptionState,
-                purchaseTimeMillis = Timestamp(product.purchaseTimeMillis),
-                userId = user?.id
+                purchaseTimeMillis = Timestamp(product.purchaseTimeMillis)
         ))
+
+        user?.let {
+            userAndroidProductRepository.save(UsersAndroidProduct(
+                    userId = user.id!!,
+                    androidProductId = androidProduct.id!!
+            ))
+        }
 
         return ValidationResponse(productResponse.status)
     }
@@ -76,7 +92,7 @@ class PurchaseController {
         ) as AndroidSubscriptionResponse
 
         val subscription = subscriptionResponse.androidSubscription
-        androidSubscriptionService.save(AndroidSubscription(
+        val androidSubscription = androidSubscriptionService.save(AndroidSubscription(
                 orderId = subscription.orderId,
                 purchaseToken = token,
                 linkedPurchaseToken = subscription.linkedPurchaseToken,
@@ -85,9 +101,15 @@ class PurchaseController {
                 autoRenewing = subscription.autoRenewing,
                 startTimeMillis = Timestamp(subscription.startTimeMillis),
                 expiryTimeMillis = Timestamp(subscription.expiryTimeMillis),
-                userCancellationTimeMillis = Timestamp(subscription.userCancellationTimeMillis),
-                userId = user?.id
+                userCancellationTimeMillis = Timestamp(subscription.userCancellationTimeMillis)
         ))
+
+        user?.let {
+            userAndroidSubscriptionRepository.save(UsersAndroidSubscription(
+                    userId = user.id!!,
+                    androidSubscriptionId = androidSubscription.id!!
+            ))
+        }
 
         return ValidationResponse(subscriptionResponse.status)
     }
