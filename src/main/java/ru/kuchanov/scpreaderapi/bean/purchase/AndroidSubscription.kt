@@ -27,7 +27,7 @@ data class AndroidSubscription(
         @Column(name = "price_currency_code")
         val priceCurrencyCode: String? = null,
         @Column(name = "order_id")
-        val orderId: String? = null,
+        val orderId: String,
         //dates
         @field:CreationTimestamp
         val created: Timestamp? = null,
@@ -37,6 +37,11 @@ data class AndroidSubscription(
         //
         @Column(name = "purchase_token")
         val purchaseToken: String,
+        /**
+         * token of previously canceled subscription or one from witch this one was upgraded
+         */
+        @Column(name = "linked_purchase_token")
+        val linkedPurchaseToken: String? = null,
         @Column(name = "user_id")
         var userId: Long? = null
 )

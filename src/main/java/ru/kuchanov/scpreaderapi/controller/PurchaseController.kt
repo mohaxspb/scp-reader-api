@@ -17,6 +17,7 @@ import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
 import ru.kuchanov.scpreaderapi.service.purchase.AndroidProductService
 import ru.kuchanov.scpreaderapi.service.purchase.AndroidSubscriptionService
 import ru.kuchanov.scpreaderapi.service.purchase.PurchaseAndroidService
+import java.sql.Timestamp
 
 
 @RestController
@@ -48,11 +49,15 @@ class PurchaseController {
                 purchaseToken = token
         ) as AndroidProductResponse
 
-        //todo write purchase to DB
+        val product = productResponse.androidProduct
         androidProductService.save(AndroidProduct(
-
+                purchaseToken = token,
+                orderId = product.orderId,
+                purchaseState = product.purchaseState,
+                consumptionState = product.consumptionState,
+                purchaseTimeMillis = Timestamp(product.purchaseTimeMillis),
+                userId = user?.id
         ))
-        //todo write connection to user if it is
 
         return ValidationResponse(productResponse.status)
     }
@@ -70,11 +75,19 @@ class PurchaseController {
                 purchaseToken = token
         ) as AndroidSubscriptionResponse
 
-        //todo write purchase to DB
+        val subscription = subscriptionResponse.androidSubscription
         androidSubscriptionService.save(AndroidSubscription(
-
+                orderId = subscription.orderId,
+                purchaseToken = token,
+                linkedPurchaseToken = subscription.linkedPurchaseToken,
+                priceAmountMicros = subscription.priceAmountMicros,
+                priceCurrencyCode = subscription.priceCurrencyCode,
+                autoRenewing = subscription.autoRenewing,
+                startTimeMillis = Timestamp(subscription.startTimeMillis),
+                expiryTimeMillis = Timestamp(subscription.expiryTimeMillis),
+                userCancellationTimeMillis = Timestamp(subscription.userCancellationTimeMillis),
+                userId = user?.id
         ))
-        //todo write connection to user if it iso
 
         return ValidationResponse(subscriptionResponse.status)
     }

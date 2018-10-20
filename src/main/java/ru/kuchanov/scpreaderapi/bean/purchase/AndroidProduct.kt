@@ -17,7 +17,7 @@ data class AndroidProduct(
         @Column(name = "purchase_time_millis")
         val purchaseTimeMillis: Timestamp? = null,
         @Column(name = "order_id")
-        val orderId: String? = null,
+        val orderId: String,
         @Column(name = "consumption_state")
         val consumptionState: Int? = null,
         @Column(name = "purchase_state")
