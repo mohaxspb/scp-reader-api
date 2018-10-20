@@ -40,9 +40,12 @@ class PurchaseController {
     @Autowired
     private lateinit var androidSubscriptionService: AndroidSubscriptionService
 
+    //todo move to service
     @Autowired
     private lateinit var userAndroidProductRepository: UserAndroidProductRepository
 
+
+    //todo move to service
     @Autowired
     private lateinit var userAndroidSubscriptionRepository: UserAndroidSubscriptionRepository
 
@@ -113,4 +116,10 @@ class PurchaseController {
 
         return ValidationResponse(subscriptionResponse.status)
     }
+
+    @GetMapping("/android/subscription/all")
+    fun showAndroidSubscriptions() = androidSubscriptionService.findAll()
+
+    @GetMapping("/android/product/all")
+    fun showAndroidProducts() = androidProductService.findAll()
 }
