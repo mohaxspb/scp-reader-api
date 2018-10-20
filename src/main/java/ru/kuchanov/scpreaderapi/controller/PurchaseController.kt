@@ -9,11 +9,13 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.purchase.AndroidProduct
+import ru.kuchanov.scpreaderapi.bean.purchase.AndroidSubscription
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.model.dto.purchase.AndroidProductResponse
 import ru.kuchanov.scpreaderapi.model.dto.purchase.AndroidSubscriptionResponse
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
 import ru.kuchanov.scpreaderapi.service.purchase.AndroidProductService
+import ru.kuchanov.scpreaderapi.service.purchase.AndroidSubscriptionService
 import ru.kuchanov.scpreaderapi.service.purchase.PurchaseAndroidService
 
 
@@ -28,7 +30,10 @@ class PurchaseController {
     private lateinit var purchaseAndroidService: PurchaseAndroidService
 
     @Autowired
-    private lateinit var productService: AndroidProductService
+    private lateinit var androidProductService: AndroidProductService
+
+    @Autowired
+    private lateinit var androidSubscriptionService: AndroidSubscriptionService
 
     @GetMapping("/validateAndroidProduct")
     fun validateAndroidProduct(
@@ -44,10 +49,9 @@ class PurchaseController {
         ) as AndroidProductResponse
 
         //todo write purchase to DB
-        productService.save(AndroidProduct(
+        androidProductService.save(AndroidProduct(
 
         ))
-
         //todo write connection to user if it is
 
         return ValidationResponse(productResponse.status)
@@ -67,6 +71,9 @@ class PurchaseController {
         ) as AndroidSubscriptionResponse
 
         //todo write purchase to DB
+        androidSubscriptionService.save(AndroidSubscription(
+
+        ))
         //todo write connection to user if it iso
 
         return ValidationResponse(subscriptionResponse.status)

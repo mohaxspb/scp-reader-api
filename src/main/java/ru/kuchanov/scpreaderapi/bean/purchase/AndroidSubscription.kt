@@ -1,5 +1,7 @@
 package ru.kuchanov.scpreaderapi.bean.purchase
 
+import org.hibernate.annotations.CreationTimestamp
+import org.hibernate.annotations.UpdateTimestamp
 import java.sql.Timestamp
 import javax.persistence.*
 
@@ -25,9 +27,16 @@ data class AndroidSubscription(
         @Column(name = "price_currency_code")
         val priceCurrencyCode: String? = null,
         @Column(name = "order_id")
-        val orderId: String? = null
-
-        //todo add dates
-        //add tokens list
-        //add user id
+        val orderId: String? = null,
+        //dates
+        @field:CreationTimestamp
+        val created: Timestamp? = null,
+        @field:UpdateTimestamp
+        @Version
+        val updated: Timestamp? = null,
+        //
+        @Column(name = "purchase_token")
+        val purchaseToken: String,
+        @Column(name = "user_id")
+        var userId: Long? = null
 )
