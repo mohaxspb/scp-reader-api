@@ -1,6 +1,7 @@
 package ru.kuchanov.scpreaderapi.configuration
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -32,7 +33,7 @@ class NetworkConfiguration {
     fun callAdapterFactory(): RxJava2CallAdapterFactory = RxJava2CallAdapterFactory.create()
 
     @Bean
-    fun objectMapper(): ObjectMapper = ObjectMapper().registerKotlinModule()
+    fun objectMapper(): ObjectMapper = ObjectMapper().registerKotlinModule().enable(SerializationFeature.INDENT_OUTPUT)
 
     @Bean
     fun converterFactory(): Converter.Factory = JacksonConverterFactory.create(objectMapper())
