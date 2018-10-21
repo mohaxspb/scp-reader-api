@@ -35,6 +35,8 @@ data class AndroidSubscription(
         @Version
         val updated: Timestamp? = null,
         //
+        @Column(name = "android_package")
+        val androidPackage: String,
         @Column(name = "purchase_token")
         val purchaseToken: String,
         /**

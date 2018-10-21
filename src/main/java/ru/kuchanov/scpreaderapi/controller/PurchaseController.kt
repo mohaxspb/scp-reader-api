@@ -58,6 +58,7 @@ class PurchaseController {
         val product = productResponse.androidProduct
         val androidProduct = androidProductService.save(AndroidProduct(
                 purchaseToken = token,
+                androidPackage = androidPackage,
                 orderId = product.orderId,
                 purchaseState = product.purchaseState,
                 consumptionState = product.consumptionState,
@@ -91,13 +92,14 @@ class PurchaseController {
         val androidSubscription = androidSubscriptionService.save(AndroidSubscription(
                 orderId = subscription.orderId,
                 purchaseToken = token,
+                androidPackage = androidPackage,
                 linkedPurchaseToken = subscription.linkedPurchaseToken,
                 priceAmountMicros = subscription.priceAmountMicros,
                 priceCurrencyCode = subscription.priceCurrencyCode,
                 autoRenewing = subscription.autoRenewing,
                 startTimeMillis = Timestamp(subscription.startTimeMillis),
                 expiryTimeMillis = Timestamp(subscription.expiryTimeMillis),
-                userCancellationTimeMillis = Timestamp(subscription.userCancellationTimeMillis)
+                userCancellationTimeMillis = subscription.userCancellationTimeMillis?.let { Timestamp(it) }
         ))
 
         user?.let {

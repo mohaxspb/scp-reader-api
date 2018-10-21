@@ -35,4 +35,8 @@ class UserController {
     @GetMapping("/android/product/all")
     fun showAndroidProducts(@AuthenticationPrincipal user: User) =
             userAndroidPurchaseService.findAllProducts(user.id!!)
+
+    @GetMapping("/android/subscription/all")
+    fun showAndroidSubscriptions(@AuthenticationPrincipal user: User) =
+            userAndroidPurchaseService.findAllSubscriptions(user.id!!)
 }
