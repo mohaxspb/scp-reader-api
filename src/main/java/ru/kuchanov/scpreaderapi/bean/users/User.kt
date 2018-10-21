@@ -9,6 +9,8 @@ import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.bind.annotation.ResponseStatus
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.auth.Authority
+import ru.kuchanov.scpreaderapi.bean.purchase.UsersAndroidProduct
+import ru.kuchanov.scpreaderapi.bean.purchase.UsersAndroidSubscription
 import ru.kuchanov.scpreaderapi.model.user.LeaderboardUser
 import ru.kuchanov.scpreaderapi.utils.EncryptionConverter
 import java.sql.Timestamp
@@ -77,7 +79,11 @@ data class User(
         var nameThird: String? = null,
         var avatar: String? = null,
         @Column(name = "main_lang_id")
-        var mainLangId: String = ScpReaderConstants.Firebase.FirebaseInstance.EN.lang
+        var mainLangId: String = ScpReaderConstants.Firebase.FirebaseInstance.EN.lang,
+        @OneToMany(cascade = [CascadeType.ALL], mappedBy = "userId", fetch = FetchType.EAGER)
+        var userAndroidSubscriptions: Set<UsersAndroidSubscription> = setOf(),
+        @OneToMany(cascade = [CascadeType.ALL], mappedBy = "userId", fetch = FetchType.EAGER)
+        var userAndroidProduct: Set<UsersAndroidProduct> = setOf()
 ) : UserDetails {
 
     override fun getAuthorities(): MutableCollection<out GrantedAuthority> =

@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.service.purchase
+package ru.kuchanov.scpreaderapi.service.purchase.android
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.services.androidpublisher.AndroidPublisher
@@ -12,7 +12,7 @@ import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationStatus
 import javax.servlet.http.HttpServletResponse
 
 @Service
-class PurchaseAndroidServiceImpl : PurchaseAndroidService {
+class AndroidPurchaseServiceImpl : AndroidPurchaseService {
 
     @Autowired
     private lateinit var androidPublisher: AndroidPublisher

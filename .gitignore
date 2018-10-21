@@ -28,4 +28,4 @@ hs_err_pid*
 /gallery/
 /src/main/resources/firebase/keys/serviceAccountKey**
 /*.sql
-/src/main/resources/googlePlay/**
+/src/main/resources/googlePlay/googlePlayAndroidDeveloperServiceKey.json

@@ -1,6 +1,7 @@
 package ru.kuchanov.scpreaderapi.configuration
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -10,6 +11,7 @@ import retrofit2.Converter
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.jackson.JacksonConverterFactory
 import ru.kuchanov.scpreaderapi.network.ApiClient
+import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
 
 @Configuration
@@ -32,7 +34,10 @@ class NetworkConfiguration {
     fun callAdapterFactory(): RxJava2CallAdapterFactory = RxJava2CallAdapterFactory.create()
 
     @Bean
-    fun objectMapper(): ObjectMapper = ObjectMapper().registerKotlinModule()
+    fun objectMapper(): ObjectMapper = ObjectMapper()
+            .registerKotlinModule()
+            .enable(SerializationFeature.INDENT_OUTPUT)
+            .setDateFormat(SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"));
 
     @Bean
     fun converterFactory(): Converter.Factory = JacksonConverterFactory.create(objectMapper())
