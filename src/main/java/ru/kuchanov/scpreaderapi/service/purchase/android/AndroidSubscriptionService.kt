@@ -5,6 +5,8 @@ import ru.kuchanov.scpreaderapi.bean.purchase.AndroidSubscription
 interface AndroidSubscriptionService {
 
     fun getById(id: Long): AndroidSubscription?
+    fun getByPurchaseToken(purchaseToken: String): AndroidSubscription?
+    fun getByOrderId(orderId: String): AndroidSubscription?
 
     fun findAll(): List<AndroidSubscription>
 

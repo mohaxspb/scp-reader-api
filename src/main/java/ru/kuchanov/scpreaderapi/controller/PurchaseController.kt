@@ -56,20 +56,32 @@ class PurchaseController {
         ) as AndroidProductResponse
 
         val product = productResponse.androidProduct
-        val androidProduct = androidProductService.save(AndroidProduct(
-                purchaseToken = token,
-                androidPackage = androidPackage,
-                orderId = product.orderId,
-                purchaseState = product.purchaseState,
-                consumptionState = product.consumptionState,
-                purchaseTimeMillis = Timestamp(product.purchaseTimeMillis)
-        ))
+
+        var androidProduct = androidProductService.getByPurchaseToken(token)
+
+        if (androidProduct == null) {
+            androidProduct = androidProductService.save(AndroidProduct(
+                    purchaseToken = token,
+                    androidPackage = androidPackage,
+                    orderId = product.orderId,
+                    purchaseState = product.purchaseState,
+                    consumptionState = product.consumptionState,
+                    purchaseTimeMillis = Timestamp(product.purchaseTimeMillis),
+                    purchaseType = product.purchaseType
+            ))
+        } else {
+            androidProduct.purchaseState = product.purchaseState
+            androidProduct.consumptionState = product.consumptionState
+            androidProductService.save(androidProduct)
+        }
 
         user?.let {
-            userAndroidPurchaseService.save(UsersAndroidProduct(
-                    userId = user.id!!,
-                    androidProductId = androidProduct.id!!
-            ))
+            if (userAndroidPurchaseService.getByUserIdAndAndroidProductId(user.id!!, androidProduct.id!!) == null) {
+                userAndroidPurchaseService.save(UsersAndroidProduct(
+                        userId = user.id,
+                        androidProductId = androidProduct.id!!
+                ))
+            }
         }
 
         return ValidationResponse(productResponse.status)
@@ -89,24 +101,38 @@ class PurchaseController {
         ) as AndroidSubscriptionResponse
 
         val subscription = subscriptionResponse.androidSubscription
-        val androidSubscription = androidSubscriptionService.save(AndroidSubscription(
-                orderId = subscription.orderId,
-                purchaseToken = token,
-                androidPackage = androidPackage,
-                linkedPurchaseToken = subscription.linkedPurchaseToken,
-                priceAmountMicros = subscription.priceAmountMicros,
-                priceCurrencyCode = subscription.priceCurrencyCode,
-                autoRenewing = subscription.autoRenewing,
-                startTimeMillis = Timestamp(subscription.startTimeMillis),
-                expiryTimeMillis = Timestamp(subscription.expiryTimeMillis),
-                userCancellationTimeMillis = subscription.userCancellationTimeMillis?.let { Timestamp(it) }
-        ))
+
+        var androidSubscription = androidSubscriptionService.getByPurchaseToken(token)
+
+        if (androidSubscription == null) {
+            androidSubscription = androidSubscriptionService.save(AndroidSubscription(
+                    orderId = subscription.orderId,
+                    purchaseToken = token,
+                    androidPackage = androidPackage,
+                    linkedPurchaseToken = subscription.linkedPurchaseToken,
+                    priceAmountMicros = subscription.priceAmountMicros,
+                    priceCurrencyCode = subscription.priceCurrencyCode,
+                    autoRenewing = subscription.autoRenewing,
+                    startTimeMillis = Timestamp(subscription.startTimeMillis),
+                    expiryTimeMillis = Timestamp(subscription.expiryTimeMillis),
+                    userCancellationTimeMillis = subscription.userCancellationTimeMillis?.let { Timestamp(it) }
+            ))
+        } else {
+            androidSubscription.orderId = subscription.orderId
+            androidSubscription.linkedPurchaseToken = subscription.linkedPurchaseToken
+            androidSubscription.startTimeMillis = Timestamp(subscription.startTimeMillis)
+            androidSubscription.expiryTimeMillis = Timestamp(subscription.expiryTimeMillis)
+            androidSubscription.userCancellationTimeMillis = subscription.userCancellationTimeMillis?.let { Timestamp(it) }
+            androidSubscriptionService.save(androidSubscription)
+        }
 
         user?.let {
-            userAndroidPurchaseService.save(UsersAndroidSubscription(
-                    userId = user.id!!,
-                    androidSubscriptionId = androidSubscription.id!!
-            ))
+            if (userAndroidPurchaseService.getByUserIdAndAndroidSubscriptionId(user.id!!, androidSubscription.id!!) == null) {
+                userAndroidPurchaseService.save(UsersAndroidSubscription(
+                        userId = user.id,
+                        androidSubscriptionId = androidSubscription.id!!
+                ))
+            }
         }
 
         return ValidationResponse(subscriptionResponse.status)

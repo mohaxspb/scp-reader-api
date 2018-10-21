@@ -18,6 +18,12 @@ class UserAndroidPurchaseServerImpl : UserAndroidPurchaseService {
     @Autowired
     private lateinit var userAndroidSubscriptionRepository: UserAndroidSubscriptionRepository
 
+    override fun getByUserIdAndAndroidProductId(userId: Long, androidProductId: Long): UsersAndroidProduct? =
+            userAndroidProductRepository.getOneByUserIdAndAndroidProductId(userId, androidProductId)
+
+    override fun getByUserIdAndAndroidSubscriptionId(userId: Long, androidSubscriptionId: Long): UsersAndroidSubscription? =
+            userAndroidSubscriptionRepository.getOneByUserIdAndAndroidSubscriptionId(userId, androidSubscriptionId)
+
     override fun save(usersAndroidSubscription: UsersAndroidSubscription): UsersAndroidSubscription =
             userAndroidSubscriptionRepository.save(usersAndroidSubscription)
 

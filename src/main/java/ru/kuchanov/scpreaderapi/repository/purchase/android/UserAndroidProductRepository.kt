@@ -13,4 +13,6 @@ interface UserAndroidProductRepository : JpaRepository<UsersAndroidProduct, Long
     fun getAndroidProductsByUserId(userId: Long): List<AndroidProduct>
 
     fun findAllByUserId(userId: Long): List<UsersAndroidProduct>
+
+    fun getOneByUserIdAndAndroidProductId(userId: Long, androidProductId: Long): UsersAndroidProduct?
 }

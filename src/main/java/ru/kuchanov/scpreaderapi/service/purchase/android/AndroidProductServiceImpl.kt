@@ -13,6 +13,12 @@ class AndroidProductServiceImpl : AndroidProductService {
 
     override fun getById(id: Long) = androidProductRepository.getOneById(id)
 
+    override fun getByPurchaseToken(purchaseToken: String): AndroidProduct? =
+            androidProductRepository.getOneByPurchaseToken(purchaseToken)
+
+    override fun getByOrderId(orderId: String): AndroidProduct? =
+            androidProductRepository.getOneByOrderId(orderId)
+
     override fun findAll(): List<AndroidProduct> = androidProductRepository.findAll()
 
     override fun saveAll(androidProducts: List<AndroidProduct>): List<AndroidProduct> =

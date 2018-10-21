@@ -17,17 +17,17 @@ data class AndroidSubscription(
         @Column(name = "auto_renewing")
         val autoRenewing: Boolean? = null,
         @Column(name = "expiry_time_millis")
-        val expiryTimeMillis: Timestamp? = null,
+        var expiryTimeMillis: Timestamp? = null,
         @Column(name = "start_time_millis")
-        val startTimeMillis: Timestamp? = null,
+        var startTimeMillis: Timestamp? = null,
         @Column(name = "user_cancellation_time_millis")
-        val userCancellationTimeMillis: Timestamp? = null,
+        var userCancellationTimeMillis: Timestamp? = null,
         @Column(name = "price_amount_micros")
         val priceAmountMicros: Long? = null,
         @Column(name = "price_currency_code")
         val priceCurrencyCode: String? = null,
         @Column(name = "order_id")
-        val orderId: String,
+        var orderId: String,
         //dates
         @field:CreationTimestamp
         val created: Timestamp? = null,
@@ -43,5 +43,5 @@ data class AndroidSubscription(
          * token of previously canceled subscription or one from witch this one was upgraded
          */
         @Column(name = "linked_purchase_token")
-        val linkedPurchaseToken: String? = null
+        var linkedPurchaseToken: String? = null
 )

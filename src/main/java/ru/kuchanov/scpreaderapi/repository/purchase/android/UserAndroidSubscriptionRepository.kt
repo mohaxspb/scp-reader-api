@@ -13,4 +13,6 @@ interface UserAndroidSubscriptionRepository : JpaRepository<UsersAndroidSubscrip
     fun getAndroidSubscriptionByUserId(userId: Long): List<AndroidSubscription>
 
     fun findAllByUserId(userId: Long): List<UsersAndroidSubscription>
+
+    fun getOneByUserIdAndAndroidSubscriptionId(userId: Long, androidSubscriptionId: Long): UsersAndroidSubscription?
 }

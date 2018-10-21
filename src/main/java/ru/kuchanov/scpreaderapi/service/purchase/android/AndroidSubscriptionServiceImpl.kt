@@ -13,6 +13,12 @@ class AndroidSubscriptionServiceImpl : AndroidSubscriptionService {
 
     override fun getById(id: Long) = androidSubscriptionRepository.getOneById(id)
 
+    override fun getByPurchaseToken(purchaseToken: String): AndroidSubscription? =
+            androidSubscriptionRepository.getOneByPurchaseToken(purchaseToken)
+
+    override fun getByOrderId(orderId: String): AndroidSubscription? =
+            androidSubscriptionRepository.getOneByOrderId(orderId)
+
     override fun findAll(): List<AndroidSubscription> = androidSubscriptionRepository.findAll()
 
     override fun saveAll(subscriptions: List<AndroidSubscription>): List<AndroidSubscription> =
