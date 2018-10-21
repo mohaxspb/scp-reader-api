@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.service.purchase
+package ru.kuchanov.scpreaderapi.service.purchase.android
 
 import ru.kuchanov.scpreaderapi.bean.purchase.AndroidProduct
 

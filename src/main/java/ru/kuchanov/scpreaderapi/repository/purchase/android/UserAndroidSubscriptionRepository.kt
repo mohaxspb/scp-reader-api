@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.repository.purchase
+package ru.kuchanov.scpreaderapi.repository.purchase.android
 
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
@@ -11,4 +11,6 @@ interface UserAndroidSubscriptionRepository : JpaRepository<UsersAndroidSubscrip
             "JOIN UsersAndroidSubscription uas ON s.id = uas.androidSubscriptionId " +
             "WHERE uas.userId = :userId")
     fun getAndroidSubscriptionByUserId(userId: Long): List<AndroidSubscription>
+
+    fun findAllByUserId(userId: Long): List<UsersAndroidSubscription>
 }

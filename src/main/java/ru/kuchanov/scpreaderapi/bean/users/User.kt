@@ -81,9 +81,9 @@ data class User(
         @Column(name = "main_lang_id")
         var mainLangId: String = ScpReaderConstants.Firebase.FirebaseInstance.EN.lang,
         @OneToMany(cascade = [CascadeType.ALL], mappedBy = "userId", fetch = FetchType.EAGER)
-        var userAndroidSubscriptions: Set<UsersAndroidSubscription>,
+        var userAndroidSubscriptions: Set<UsersAndroidSubscription> = setOf(),
         @OneToMany(cascade = [CascadeType.ALL], mappedBy = "userId", fetch = FetchType.EAGER)
-        var userAndroidProduct: Set<UsersAndroidProduct>
+        var userAndroidProduct: Set<UsersAndroidProduct> = setOf()
 ) : UserDetails {
 
     override fun getAuthorities(): MutableCollection<out GrantedAuthority> =

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.users.User
+import ru.kuchanov.scpreaderapi.service.purchase.android.UserAndroidPurchaseService
 import ru.kuchanov.scpreaderapi.service.users.UserService
 
 
@@ -22,6 +23,9 @@ class UserController {
     @Autowired
     lateinit var userService: UserService
 
+    @Autowired
+    lateinit var userAndroidPurchaseService: UserAndroidPurchaseService
+
     @GetMapping("/me")
     fun showMe(
             @AuthenticationPrincipal user: User,
@@ -29,5 +33,6 @@ class UserController {
     ) = if (showFull) userService.getById(user.id!!) else user
 
     @GetMapping("/android/product/all")
-    fun showAndroidProducts() = .findAll()
+    fun showAndroidProducts(@AuthenticationPrincipal user: User) =
+            userAndroidPurchaseService.findAllProducts(user.id!!)
 }

@@ -16,11 +16,10 @@ import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.model.dto.purchase.AndroidProductResponse
 import ru.kuchanov.scpreaderapi.model.dto.purchase.AndroidSubscriptionResponse
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
-import ru.kuchanov.scpreaderapi.repository.purchase.UserAndroidProductRepository
-import ru.kuchanov.scpreaderapi.repository.purchase.UserAndroidSubscriptionRepository
-import ru.kuchanov.scpreaderapi.service.purchase.AndroidProductService
-import ru.kuchanov.scpreaderapi.service.purchase.AndroidSubscriptionService
-import ru.kuchanov.scpreaderapi.service.purchase.PurchaseAndroidService
+import ru.kuchanov.scpreaderapi.service.purchase.android.AndroidProductService
+import ru.kuchanov.scpreaderapi.service.purchase.android.AndroidPurchaseService
+import ru.kuchanov.scpreaderapi.service.purchase.android.AndroidSubscriptionService
+import ru.kuchanov.scpreaderapi.service.purchase.android.UserAndroidPurchaseService
 import java.sql.Timestamp
 
 
@@ -32,7 +31,7 @@ class PurchaseController {
     private lateinit var log: Logger
 
     @Autowired
-    private lateinit var purchaseAndroidService: PurchaseAndroidService
+    private lateinit var androidPurchaseService: AndroidPurchaseService
 
     @Autowired
     private lateinit var androidProductService: AndroidProductService
@@ -40,14 +39,8 @@ class PurchaseController {
     @Autowired
     private lateinit var androidSubscriptionService: AndroidSubscriptionService
 
-    //todo move to service
     @Autowired
-    private lateinit var userAndroidProductRepository: UserAndroidProductRepository
-
-
-    //todo move to service
-    @Autowired
-    private lateinit var userAndroidSubscriptionRepository: UserAndroidSubscriptionRepository
+    private lateinit var userAndroidPurchaseService: UserAndroidPurchaseService
 
     @GetMapping("/validateAndroidProduct")
     fun validateAndroidProduct(
@@ -56,7 +49,7 @@ class PurchaseController {
             @RequestParam(value = "token") token: String,
             @AuthenticationPrincipal user: User?
     ): ValidationResponse {
-        val productResponse = purchaseAndroidService.validateProductPurchase(
+        val productResponse = androidPurchaseService.validateProductPurchase(
                 packageName = androidPackage,
                 sku = sku,
                 purchaseToken = token
@@ -72,7 +65,7 @@ class PurchaseController {
         ))
 
         user?.let {
-            userAndroidProductRepository.save(UsersAndroidProduct(
+            userAndroidPurchaseService.save(UsersAndroidProduct(
                     userId = user.id!!,
                     androidProductId = androidProduct.id!!
             ))
@@ -88,7 +81,7 @@ class PurchaseController {
             @RequestParam(value = "token") token: String,
             @AuthenticationPrincipal user: User?
     ): ValidationResponse {
-        val subscriptionResponse = purchaseAndroidService.validateSubscriptionPurchase(
+        val subscriptionResponse = androidPurchaseService.validateSubscriptionPurchase(
                 packageName = androidPackage,
                 sku = sku,
                 purchaseToken = token
@@ -108,7 +101,7 @@ class PurchaseController {
         ))
 
         user?.let {
-            userAndroidSubscriptionRepository.save(UsersAndroidSubscription(
+            userAndroidPurchaseService.save(UsersAndroidSubscription(
                     userId = user.id!!,
                     androidSubscriptionId = androidSubscription.id!!
             ))

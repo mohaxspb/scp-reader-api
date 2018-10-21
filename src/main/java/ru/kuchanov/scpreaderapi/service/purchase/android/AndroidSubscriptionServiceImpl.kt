@@ -1,9 +1,9 @@
-package ru.kuchanov.scpreaderapi.service.purchase
+package ru.kuchanov.scpreaderapi.service.purchase.android
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.purchase.AndroidSubscription
-import ru.kuchanov.scpreaderapi.repository.purchase.AndroidSubscriptionRepository
+import ru.kuchanov.scpreaderapi.repository.purchase.android.AndroidSubscriptionRepository
 
 @Service
 class AndroidSubscriptionServiceImpl : AndroidSubscriptionService {
