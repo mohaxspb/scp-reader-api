@@ -18,8 +18,6 @@ class FirebaseUser(
         var scoreToNextLevel: Int = 0,
         var curLevelScore: Int = 0
 ) {
-//    var socialProviders: List<@JvmSuppressWildcards SocialProviderModel>? = null
-//    var inapp: Map<String,@JvmSuppressWildcards String>? = null
 
     companion object {
         const val FIELD_SCORE = "score"

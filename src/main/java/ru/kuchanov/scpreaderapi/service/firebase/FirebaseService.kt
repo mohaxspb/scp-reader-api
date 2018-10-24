@@ -151,7 +151,7 @@ class FirebaseService {
                 .forEach { lang ->
                     println("query for lang: $lang")
 
-                    val langInDb = langToParse?.let { langService.getById(it.lang) }
+                    val langInDb = lang.let { langService.getById(it.lang) }
                             ?: throw IllegalArgumentException("Unknown lang: $lang")
 
                     val firebaseDatabase = FirebaseDatabase.getInstance(FirebaseApp.getInstance(lang.lang))
