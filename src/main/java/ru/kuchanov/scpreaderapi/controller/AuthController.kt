@@ -3,8 +3,12 @@ package ru.kuchanov.scpreaderapi.controller
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
-import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.core.GrantedAuthority
+import org.springframework.security.core.userdetails.UserDetails
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.oauth2.common.OAuth2AccessToken
+import org.springframework.security.oauth2.provider.ClientDetails
+import org.springframework.security.oauth2.provider.ClientDetailsService
 import org.springframework.security.oauth2.provider.OAuth2Authentication
 import org.springframework.security.oauth2.provider.OAuth2Request
 import org.springframework.security.oauth2.provider.token.DefaultTokenServices
@@ -37,6 +41,12 @@ class AuthController {
     private lateinit var log: Logger
 
     @Autowired
+    private lateinit var passwordEncoder: PasswordEncoder
+
+    @Autowired
+    private lateinit var clientDetailsService: ClientDetailsService
+
+    @Autowired
     private lateinit var authorityService: AuthorityService
 
     @Autowired
@@ -61,9 +71,18 @@ class AuthController {
     fun authorize(
             @RequestParam(value = "provider") provider: ScpReaderConstants.SocialProvider,
             @RequestParam(value = "token") token: String,
-            @RequestParam(value = "langId") langEnum: ScpReaderConstants.Firebase.FirebaseInstance
+            @RequestParam(value = "langId") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
+            @RequestParam(value = "clientId") clientId: String,
+            @RequestParam(value = "clientSecret") clientSecret: String
     ): OAuth2AccessToken? {
         println("authorize called")
+
+        val clientDetails: ClientDetails = clientDetailsService.loadClientByClientId(clientId)
+        println("clientSecret: $clientSecret")
+        println("clientDetails.clientSecret: ${clientDetails.clientSecret}")
+        if (clientDetails.clientSecret == passwordEncoder.encode(clientSecret)) {
+            throw IllegalArgumentException("Wrong clientSecret! Check your settings.")
+        }
 
         val lang = langService.getById(langEnum.lang) ?: throw IllegalArgumentException("Unknown lang: $langEnum")
 
@@ -102,12 +121,12 @@ class AuthController {
                     }
                 }
             }
-            return getAccessToken(email)
+            return getAccessToken(email, clientId)
         } else {
             //try to find by providers id as email may be changed
             userInDb = usersService.getByProviderId(commonUserData.id!!, provider)
             if (userInDb != null) {
-                return getAccessToken(userInDb.username)
+                return getAccessToken(userInDb.username, clientId)
             } else {
                 //search in firebase auth api for all apps
                 //and collect user data from all apps (score and read/favorite articles)
@@ -159,7 +178,7 @@ class AuthController {
                         )
                     }
 
-                    return getAccessToken(userInDb.username)
+                    return getAccessToken(userInDb.username, clientId)
                 } else {
                     //if cant find - register new user and give it initial score
                     val score = ScpReaderConstants.DEFAULT_NEW_USER_SCORE
@@ -191,22 +210,21 @@ class AuthController {
                     authorityService.insert(Authority(newUserInDb.id, AuthorityType.USER.name))
                     usersLangsService.insert(UsersLangs(newUserInDb.id!!, lang.id))
 
-                    return getAccessToken(newUserInDb.username)
+                    return getAccessToken(newUserInDb.username, clientId)
                 }
             }
         }
     }
 
-    fun getAccessToken(email: String): OAuth2AccessToken? {
+    fun getAccessToken(email: String, clientId: String): OAuth2AccessToken {
+        val clientDetails: ClientDetails = clientDetailsService.loadClientByClientId(clientId)
+
         val requestParameters = mapOf<String, String>()
-        //todo move to constants
-        val clientId = "client_id"
-        //todo move to constants
-        val authorities = setOf(SimpleGrantedAuthority("USER"))
+        val authorities: MutableCollection<GrantedAuthority> = clientDetails.authorities
         val approved = true
-        //todo move to constants
-        val scope = setOf("read write")
-        val resourceIds = setOf<String>()
+        val scope: MutableSet<String> = clientDetails.scope
+        val resourceIds: MutableSet<String> = clientDetails.resourceIds
+        val redirectUri = null
         val responseTypes = setOf("code")
         val extensionProperties = HashMap<String, Serializable>()
 
@@ -217,17 +235,20 @@ class AuthController {
                 approved,
                 scope,
                 resourceIds,
-                null,
+                redirectUri,
                 responseTypes,
                 extensionProperties
         )
 
+        val user: UserDetails = usersService.loadUserByUsername(email)
         val authenticationToken = UsernamePasswordAuthenticationToken(
-                usersService.loadUserByUsername(email),
-                null,
+                user,
+                user.password,
                 authorities
         )
+
         val auth = OAuth2Authentication(oAuth2Request, authenticationToken)
+
         return tokenServices.createAccessToken(auth)
     }
 }
