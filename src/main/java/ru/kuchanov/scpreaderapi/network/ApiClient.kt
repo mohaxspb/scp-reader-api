@@ -9,8 +9,11 @@ import com.vk.api.sdk.objects.photos.responses.GetResponse
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import retrofit2.HttpException
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.model.dto.auth.CommonUserData
+import ru.kuchanov.scpreaderapi.model.facebook.FacebookProfileResponse
+import ru.kuchanov.scpreaderapi.model.facebook.ValidatedTokenWrapper
 
 @Service
 class ApiClient {
@@ -49,7 +52,7 @@ class ApiClient {
     @Value("\${my.api.facebook.client_secret}")
     lateinit var facebookClientSecret: String
 
-    fun getVkAppAccessToken() = vkApiClient.oauth()
+    fun getVkAppAccessToken(): String = vkApiClient.oauth()
             .serviceClientCredentialsFlow(serviceActor.id, serviceActor.clientSecret)
             .execute().accessToken
 
@@ -87,15 +90,28 @@ class ApiClient {
             } ?: throw IllegalStateException("Failed to verify idToken")
         }
         ScpReaderConstants.SocialProvider.FACEBOOK -> {
-            val verifiedToken = facebookApi
+            val validatedTokenWrapper: ValidatedTokenWrapper = facebookApi
                     .debugToken(token, "$facebookClientId|$facebookClientSecret")
+                    .map { ValidatedTokenWrapper(it, null) }
+                    .onErrorReturn { ValidatedTokenWrapper(null, it) }
                     .blockingGet()
 
-            if (verifiedToken.data?.appId != facebookClientId) {
+            validatedTokenWrapper.exception?.let {
+                throw Exception(
+                        if (it is HttpException) {
+                            it.response()?.errorBody()?.string()
+                        } else {
+                            it.message
+                        } ?: "unexpected error",
+                        it
+                )
+            }
+
+            if (validatedTokenWrapper.verifiedToken?.data?.appId != facebookClientId) {
                 throw IllegalArgumentException("Facebook appId not equals correct one!")
             }
 
-            val facebookProfile = facebookApi.profile(token).blockingGet()
+            val facebookProfile: FacebookProfileResponse = facebookApi.profile(token).blockingGet()
             val email = facebookProfile.email ?: throw IllegalStateException("Can't login without email!")
             CommonUserData(
                     id = facebookProfile.id.toString(),

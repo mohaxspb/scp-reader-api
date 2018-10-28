@@ -17,9 +17,9 @@ import java.util.concurrent.TimeUnit
 @Configuration
 class NetworkConfiguration {
 
-    //okhttp + retrofit
+    //okHttp + retrofit
     @Bean
-    fun loggingInterceptor(): HttpLoggingInterceptor = HttpLoggingInterceptor { println(it) }
+    fun loggingInterceptor(): HttpLoggingInterceptor = HttpLoggingInterceptor { println("OkHttp: $it") }
             .setLevel(HttpLoggingInterceptor.Level.BODY)
 
     @Bean
@@ -41,4 +41,5 @@ class NetworkConfiguration {
 
     @Bean
     fun converterFactory(): Converter.Factory = JacksonConverterFactory.create(objectMapper())
+    //okHttp + retrofit END
 }
