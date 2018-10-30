@@ -8,6 +8,7 @@ import org.springframework.security.oauth2.config.annotation.configurers.ClientD
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer
+import org.springframework.security.oauth2.provider.token.TokenStore
 import org.springframework.security.oauth2.provider.token.store.JdbcTokenStore
 import ru.kuchanov.scpreaderapi.service.auth.ClientServiceImpl
 import ru.kuchanov.scpreaderapi.service.users.UserServiceImpl
@@ -22,7 +23,7 @@ class AuthorizationServerConfiguration() : AuthorizationServerConfigurerAdapter(
     private lateinit var dataSource: DataSource
 
     @Bean
-    fun tokenStore() = JdbcTokenStore(dataSource)
+    fun tokenStore(): TokenStore = JdbcTokenStore(dataSource)
 
     @Autowired
     private lateinit var clientDetailsService: ClientServiceImpl

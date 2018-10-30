@@ -7,6 +7,9 @@ import ru.kuchanov.scpreaderapi.model.user.LeaderboardUser
 import javax.transaction.Transactional
 
 interface UserService : UserDetailsService {
+
+    override fun loadUserByUsername(username: String): User?
+
     fun findAll(): List<User>
 
     fun getById(id: Long): User

@@ -4,7 +4,6 @@ import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.GrantedAuthority
-import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.oauth2.common.OAuth2AccessToken
 import org.springframework.security.oauth2.provider.ClientDetails
@@ -12,6 +11,7 @@ import org.springframework.security.oauth2.provider.ClientDetailsService
 import org.springframework.security.oauth2.provider.OAuth2Authentication
 import org.springframework.security.oauth2.provider.OAuth2Request
 import org.springframework.security.oauth2.provider.token.DefaultTokenServices
+import org.springframework.security.oauth2.provider.token.TokenStore
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -20,6 +20,7 @@ import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.auth.Authority
 import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
 import ru.kuchanov.scpreaderapi.bean.users.User
+import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.UsersLangs
 import ru.kuchanov.scpreaderapi.model.user.LevelsJson
 import ru.kuchanov.scpreaderapi.network.ApiClient
@@ -62,6 +63,9 @@ class AuthController {
     private lateinit var usersLangsService: UsersLangsService
 
     @Autowired
+    private lateinit var tokenStore: TokenStore
+
+    @Autowired
     private lateinit var tokenServices: DefaultTokenServices
 
     @Autowired
@@ -100,6 +104,8 @@ class AuthController {
                     if (userInDb.googleId.isNullOrEmpty()) {
                         userInDb.googleId = commonUserData.id
                         usersService.update(userInDb)
+
+                        revokeUserTokens(email, clientId)
                     } else if (userInDb.googleId != commonUserData.id) {
                         log.error("login with ${commonUserData.id}/$email for user with mismatched googleId: ${userInDb.googleId}")
                     }
@@ -108,6 +114,8 @@ class AuthController {
                     if (userInDb.facebookId.isNullOrEmpty()) {
                         userInDb.facebookId = commonUserData.id
                         usersService.update(userInDb)
+
+                        revokeUserTokens(email, clientId)
                     } else if (userInDb.facebookId != commonUserData.id) {
                         log.error("login with ${commonUserData.id}/$email for user with mismatched facebookId: ${userInDb.facebookId}")
                     }
@@ -116,6 +124,8 @@ class AuthController {
                     if (userInDb.vkId.isNullOrEmpty()) {
                         userInDb.vkId = commonUserData.id
                         usersService.update(userInDb)
+
+                        revokeUserTokens(email, clientId)
                     } else if (userInDb.vkId != commonUserData.id) {
                         log.error("login with ${commonUserData.id}/$email for user with mismatched vkId: ${userInDb.vkId}")
                     }
@@ -216,6 +226,12 @@ class AuthController {
         }
     }
 
+    private fun revokeUserTokens(email: String, clientId: String) =
+            tokenStore.findTokensByClientIdAndUserName(clientId, email).forEach {
+                tokenServices.revokeToken(it.value)
+            }
+
+
     fun getAccessToken(email: String, clientId: String): OAuth2AccessToken {
         val clientDetails: ClientDetails = clientDetailsService.loadClientByClientId(clientId)
 
@@ -240,7 +256,7 @@ class AuthController {
                 extensionProperties
         )
 
-        val user: UserDetails = usersService.loadUserByUsername(email)
+        val user: User = usersService.loadUserByUsername(email) ?: throw UserNotFoundException()
         val authenticationToken = UsernamePasswordAuthenticationToken(
                 user,
                 user.password,

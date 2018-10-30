@@ -48,7 +48,6 @@ data class User(
         @field:CreationTimestamp
         val created: Timestamp? = null,
         @field:UpdateTimestamp
-        @Version
         val updated: Timestamp? = null,
         //firebase
         @Column(name = "full_name")

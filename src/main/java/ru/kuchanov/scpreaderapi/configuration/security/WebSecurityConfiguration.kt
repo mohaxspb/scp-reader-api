@@ -103,14 +103,14 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
                 .authenticated()
         http
                 .formLogin()
-                .successHandler { request, response, authentication ->
+                .successHandler { request, response, _ ->
                     println("angular.port: $angularServerPort")
                     println("request: ${request.localName}/${request.localAddr}/${request.localPort}/${request.serverName}")
                     DefaultRedirectStrategy().sendRedirect(request, response, "http://${request.serverName}:$angularServerPort");
                 }
                 .and()
                 .logout()
-                .logoutSuccessHandler { request, response, authentication ->
+                .logoutSuccessHandler { request, response, _ ->
                     println("angular.port: $angularServerPort")
                     println("request: ${request.localName}/${request.localAddr}/${request.localPort}/${request.serverName}")
                     DefaultRedirectStrategy().sendRedirect(request, response, "http://${request.serverName}:$angularServerPort");
