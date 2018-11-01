@@ -15,7 +15,6 @@ data class OAuthRefreshToken(
         @field:CreationTimestamp
         val created: Timestamp,
         @field:UpdateTimestamp
-        @Version
         @Column(insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
         val updated: Timestamp
 ) {

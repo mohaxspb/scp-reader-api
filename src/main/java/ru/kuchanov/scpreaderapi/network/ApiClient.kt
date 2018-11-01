@@ -14,6 +14,7 @@ import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.model.dto.auth.CommonUserData
 import ru.kuchanov.scpreaderapi.model.facebook.FacebookProfileResponse
 import ru.kuchanov.scpreaderapi.model.facebook.ValidatedTokenWrapper
+import javax.annotation.PostConstruct
 
 @Service
 class ApiClient {
@@ -46,11 +47,80 @@ class ApiClient {
     private lateinit var serviceActor: ServiceActor
 
     //facebook values
-    @Value("\${my.api.facebook.client_id}")
-    var facebookClientId: Long? = null
+    @Value("\${my.api.ru.facebook.client_id}")
+    private var facebookClientIdRu: Long? = null
+    @Value("\${my.api.ru.facebook.client_secret}")
+    private lateinit var facebookClientSecretRu: String
 
-    @Value("\${my.api.facebook.client_secret}")
-    lateinit var facebookClientSecret: String
+    @Value("\${my.api.en.facebook.client_id}")
+    private var facebookClientIdEn: Long? = null
+    @Value("\${my.api.en.facebook.client_secret}")
+    private lateinit var facebookClientSecretEn: String
+
+    @Value("\${my.api.pl.facebook.client_id}")
+    private var facebookClientIdPl: Long? = null
+    @Value("\${my.api.pl.facebook.client_secret}")
+    private lateinit var facebookClientSecretPl: String
+
+    @Value("\${my.api.de.facebook.client_id}")
+    private var facebookClientIdDe: Long? = null
+    @Value("\${my.api.de.facebook.client_secret}")
+    private lateinit var facebookClientSecretDe: String
+
+    @Value("\${my.api.fr.facebook.client_id}")
+    private var facebookClientIdFr: Long? = null
+    @Value("\${my.api.fr.facebook.client_secret}")
+    private lateinit var facebookClientSecretFr: String
+
+    @Value("\${my.api.es.facebook.client_id}")
+    private var facebookClientIdEs: Long? = null
+    @Value("\${my.api.es.facebook.client_secret}")
+    private lateinit var facebookClientSecretEs: String
+
+    @Value("\${my.api.it.facebook.client_id}")
+    private var facebookClientIdIt: Long? = null
+    @Value("\${my.api.it.facebook.client_secret}")
+    private lateinit var facebookClientSecretIt: String
+
+    @Value("\${my.api.pt.facebook.client_id}")
+    private var facebookClientIdPt: Long? = null
+    @Value("\${my.api.pt.facebook.client_secret}")
+    private lateinit var facebookClientSecretPt: String
+
+    @Value("\${my.api.ch.facebook.client_id}")
+    private var facebookClientIdCh: Long? = null
+    @Value("\${my.api.ch.facebook.client_secret}")
+    private lateinit var facebookClientSecretCh: String
+
+    private lateinit var facebookClientIds: Map<ScpReaderConstants.Firebase.FirebaseInstance, Long>
+    private lateinit var facebookClientSecrets: Map<ScpReaderConstants.Firebase.FirebaseInstance, String>
+
+    @PostConstruct
+    fun initClassMembers() {
+        facebookClientIds = mapOf(
+                ScpReaderConstants.Firebase.FirebaseInstance.RU to facebookClientIdRu!!,
+                ScpReaderConstants.Firebase.FirebaseInstance.EN to facebookClientIdEn!!,
+                ScpReaderConstants.Firebase.FirebaseInstance.PL to facebookClientIdPl!!,
+                ScpReaderConstants.Firebase.FirebaseInstance.DE to facebookClientIdDe!!,
+                ScpReaderConstants.Firebase.FirebaseInstance.FR to facebookClientIdFr!!,
+                ScpReaderConstants.Firebase.FirebaseInstance.ES to facebookClientIdEs!!,
+                ScpReaderConstants.Firebase.FirebaseInstance.IT to facebookClientIdIt!!,
+                ScpReaderConstants.Firebase.FirebaseInstance.PT to facebookClientIdPt!!,
+                ScpReaderConstants.Firebase.FirebaseInstance.CH to facebookClientIdCh!!
+        )
+
+        facebookClientSecrets = mapOf(
+                ScpReaderConstants.Firebase.FirebaseInstance.RU to facebookClientSecretRu,
+                ScpReaderConstants.Firebase.FirebaseInstance.EN to facebookClientSecretEn,
+                ScpReaderConstants.Firebase.FirebaseInstance.PL to facebookClientSecretPl,
+                ScpReaderConstants.Firebase.FirebaseInstance.DE to facebookClientSecretDe,
+                ScpReaderConstants.Firebase.FirebaseInstance.FR to facebookClientSecretFr,
+                ScpReaderConstants.Firebase.FirebaseInstance.ES to facebookClientSecretEs,
+                ScpReaderConstants.Firebase.FirebaseInstance.IT to facebookClientSecretIt,
+                ScpReaderConstants.Firebase.FirebaseInstance.PT to facebookClientSecretPt,
+                ScpReaderConstants.Firebase.FirebaseInstance.CH to facebookClientSecretCh
+        )
+    }
 
     fun getVkAppAccessToken(): String = vkApiClient.oauth()
             .serviceClientCredentialsFlow(serviceActor.id, serviceActor.clientSecret)
@@ -64,7 +134,8 @@ class ApiClient {
 
     fun getUserDataFromProvider(
             provider: ScpReaderConstants.SocialProvider,
-            token: String
+            token: String,
+            lang: ScpReaderConstants.Firebase.FirebaseInstance
     ): CommonUserData = when (provider) {
         ScpReaderConstants.SocialProvider.GOOGLE -> {
             val googleIdToken: GoogleIdToken? = googleIdTokenVerifier.verify(token)
@@ -90,6 +161,8 @@ class ApiClient {
             } ?: throw IllegalStateException("Failed to verify idToken")
         }
         ScpReaderConstants.SocialProvider.FACEBOOK -> {
+            val facebookClientId = facebookClientIds[lang]
+            val facebookClientSecret = facebookClientSecrets[lang]
             val validatedTokenWrapper: ValidatedTokenWrapper = facebookApi
                     .debugToken(token, "$facebookClientId|$facebookClientSecret")
                     .map { ValidatedTokenWrapper(it, null) }

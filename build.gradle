@@ -22,7 +22,7 @@ buildscript {
 }
 
 plugins {
-    //db migrations
+//db migrations
     id "org.flywaydb.flyway" version "5.1.4"
 }
 
