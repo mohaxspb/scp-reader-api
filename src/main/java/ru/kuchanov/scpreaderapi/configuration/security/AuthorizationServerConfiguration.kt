@@ -17,7 +17,7 @@ import javax.sql.DataSource
 
 @Configuration
 @EnableAuthorizationServer
-class AuthorizationServerConfiguration() : AuthorizationServerConfigurerAdapter() {
+class AuthorizationServerConfiguration : AuthorizationServerConfigurerAdapter() {
 
     @Autowired
     private lateinit var dataSource: DataSource

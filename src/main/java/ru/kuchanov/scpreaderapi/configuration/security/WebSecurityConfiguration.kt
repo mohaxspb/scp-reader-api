@@ -51,14 +51,16 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
     fun passwordEncoder() = BCryptPasswordEncoder()
 
     @Bean
-    fun authenticationProvider(): DaoAuthenticationProvider = DaoAuthenticationProvider().apply {
-        setUserDetailsService(userDetailsService)
-        setPasswordEncoder(passwordEncoder())
-    }
+    fun authenticationProvider(): DaoAuthenticationProvider =
+            DaoAuthenticationProvider().apply {
+                setUserDetailsService(userDetailsService)
+                setPasswordEncoder(passwordEncoder())
+            }
 
     @Primary
     @Bean
-    override fun authenticationManagerBean(): AuthenticationManager = super.authenticationManagerBean()
+    override fun authenticationManagerBean(): AuthenticationManager =
+            super.authenticationManagerBean()
 
     @Autowired
     lateinit var userDetailsService: UserServiceImpl
@@ -72,17 +74,19 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
     }
 
     @Bean
-    fun oauth2authenticationManager(): OAuth2AuthenticationManager = OAuth2AuthenticationManager().apply {
-        setClientDetailsService(clientDetailsService)
-        setTokenServices(tokenServices())
-    }
+    fun oauth2authenticationManager(): OAuth2AuthenticationManager =
+            OAuth2AuthenticationManager().apply {
+                setClientDetailsService(clientDetailsService)
+                setTokenServices(tokenServices())
+            }
 
     @Bean
-    fun myOAuth2Filter(): Filter = OAuth2AuthenticationProcessingFilter().apply {
-        setAuthenticationManager(oauth2authenticationManager())
-        //allow auth with cookies (not only with token)
-        setStateless(false)
-    }
+    fun myOAuth2Filter(): Filter =
+            OAuth2AuthenticationProcessingFilter().apply {
+                setAuthenticationManager(oauth2authenticationManager())
+                //allow auth with cookies (not only with token)
+                setStateless(false)
+            }
 
     @Value("\${angular.port}")
     lateinit var angularServerPort: String

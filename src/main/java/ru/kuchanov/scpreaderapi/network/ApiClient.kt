@@ -46,10 +46,9 @@ class ApiClient {
     private lateinit var serviceActor: ServiceActor
 
     //facebook values
-    @Value("\${my.api.facebook.client_id}")
+    @Value("\${my.api.ru.facebook.client_id}")
     var facebookClientId: Long? = null
-
-    @Value("\${my.api.facebook.client_secret}")
+    @Value("\${my.api.ru.facebook.client_secret}")
     lateinit var facebookClientSecret: String
 
     fun getVkAppAccessToken(): String = vkApiClient.oauth()

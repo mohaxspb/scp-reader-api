@@ -24,12 +24,38 @@ class SocialAuthConfiguration {
     private lateinit var log: Logger
 
     //google auth
-    @Value("\${my.api.google.client_id}")
-    private lateinit var googleClientId: String
+    @Value("\${my.api.ru.google.client_id}")
+    private lateinit var googleClientIdRu: String
+    @Value("\${my.api.en.google.client_id}")
+    private lateinit var googleClientIdEn: String
+    @Value("\${my.api.pl.google.client_id}")
+    private lateinit var googleClientIdPl: String
+    @Value("\${my.api.de.google.client_id}")
+    private lateinit var googleClientIdDe: String
+    @Value("\${my.api.fr.google.client_id}")
+    private lateinit var googleClientIdFr: String
+    @Value("\${my.api.es.google.client_id}")
+    private lateinit var googleClientIdEs: String
+    @Value("\${my.api.it.google.client_id}")
+    private lateinit var googleClientIdIt: String
+    @Value("\${my.api.pt.google.client_id}")
+    private lateinit var googleClientIdPt: String
+    @Value("\${my.api.ch.google.client_id}")
+    private lateinit var googleClientIdCh: String
 
     @Bean
     fun googleIdTokenVerifier(): GoogleIdTokenVerifier = GoogleIdTokenVerifier.Builder(NetHttpTransport(), JacksonFactory())
-            .setAudience(listOf(googleClientId))
+            .setAudience(listOf(
+                    googleClientIdRu,
+                    googleClientIdEn,
+                    googleClientIdPl,
+                    googleClientIdDe,
+                    googleClientIdFr,
+                    googleClientIdEs,
+                    googleClientIdIt,
+                    googleClientIdPt,
+                    googleClientIdCh
+            ))
             .build()
 
     //facebook
