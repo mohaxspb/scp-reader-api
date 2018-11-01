@@ -92,7 +92,7 @@ class AuthController {
 
         val levelsJson = LevelsJson.getLevelsJson()
 
-        val commonUserData = apiClient.getUserDataFromProvider(provider, token)
+        val commonUserData = apiClient.getUserDataFromProvider(provider, token, langEnum)
 
         val email = commonUserData.email ?: throw AuthException("no email found!")
 
