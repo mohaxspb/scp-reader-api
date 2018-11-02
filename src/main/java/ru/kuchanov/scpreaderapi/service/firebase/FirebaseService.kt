@@ -84,7 +84,7 @@ class FirebaseService {
 
         ScpReaderConstants.Firebase.FirebaseInstance.values()
                 .forEach { lang ->
-                    println("query for lang: $lang")
+//                    println("query for lang: $lang")
                     val firebaseApp = FirebaseApp.getInstance(lang.lang)
                     val firebaseAuth = FirebaseAuth.getInstance(firebaseApp)
                     val firebaseAuthUser = try {
@@ -109,7 +109,7 @@ class FirebaseService {
                                 override fun onDataChange(snapshot: DataSnapshot?) {
                                     try {
                                         val firebaseUser = snapshot?.getValue(FirebaseUser::class.java)
-                                        println("firebaseUser: ${firebaseUser?.email}")
+//                                        println("firebaseUser: ${firebaseUser?.email}")
                                         if (firebaseUser != null) {
                                             subscriber.onSuccess(firebaseUser)
                                         } else {
@@ -149,7 +149,7 @@ class FirebaseService {
         ScpReaderConstants.Firebase.FirebaseInstance.values()
                 .filter { if (langToParse == null) true else it == langToParse }
                 .forEach { lang ->
-                    println("query for lang: $lang")
+//                    println("query for lang: $lang")
 
                     val langInDb = lang.let { langService.getById(it.lang) }
                             ?: throw IllegalArgumentException("Unknown lang: $lang")
@@ -171,7 +171,7 @@ class FirebaseService {
                                     subject.onNext(users.last().uid)
                                 }
                             }
-                            .doOnNext { println("users size: ${it.size}") }
+//                            .doOnNext { println("users size: ${it.size}") }
                             .toList()
                             .map { it.flatten() }
                             .subscribeBy(
@@ -249,7 +249,7 @@ class FirebaseService {
                     if (userInDb == null) {
                         if (userUidArticles.user.avatar?.startsWith("data:image") == true) {
                             userUidArticles.user.avatar = ScpReaderConstants.DEFAULT_AVATAR_URL
-                            println("insert user with base64 avatar: ${userUidArticles.user}")
+//                            println("insert user with base64 avatar: ${userUidArticles.user}")
                         }
                         userInDb = userService.insert(userUidArticles.user)
 
@@ -286,7 +286,7 @@ class FirebaseService {
     /**
      * inserts/updates read and favorite articles from firebase for user
      */
-    public fun manageFirebaseArticlesForUser(
+    fun manageFirebaseArticlesForUser(
             articlesInFirebase: List<FirebaseArticle>,
             user: User,
             lang: Lang
@@ -294,8 +294,8 @@ class FirebaseService {
 //        println("manageFirebaseArticlesForUser: ${lang.id}/${user.username}")
         articlesInFirebase.forEachIndexed { index, articleInFirebase ->
             if (articleInFirebase.url == null) {
-                println("manageFirebaseArticlesForUser: ${lang.id}/${user.username}")
-                println("articleInFirebase: $index/$articleInFirebase")
+//                println("manageFirebaseArticlesForUser: ${lang.id}/${user.username}")
+//                println("articleInFirebase: $index/$articleInFirebase")
                 return@forEachIndexed
             }
             val urlRelative = articleInFirebase.url!!.replace("${lang.siteBaseUrl}/", "")
@@ -424,7 +424,7 @@ class FirebaseService {
                             throw RuntimeException("error convert data")
                         }
                     }
-                    println("firebaseUsers: ${firebaseUsers?.map { it.email }}")
+//                    println("firebaseUsers: ${firebaseUsers?.map { it.email }}")
                     subscriber.onSuccess(firebaseUsers!!)
                 }
             })

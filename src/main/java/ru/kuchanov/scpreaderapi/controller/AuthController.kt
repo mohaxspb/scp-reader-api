@@ -79,11 +79,11 @@ class AuthController {
             @RequestParam(value = "clientId") clientId: String,
             @RequestParam(value = "clientSecret") clientSecret: String
     ): OAuth2AccessToken? {
-        println("authorize called")
+//        println("authorize called")
 
         val clientDetails: ClientDetails = clientDetailsService.loadClientByClientId(clientId)
-        println("clientSecret: $clientSecret")
-        println("clientDetails.clientSecret: ${clientDetails.clientSecret}")
+//        println("clientSecret: $clientSecret")
+//        println("clientDetails.clientSecret: ${clientDetails.clientSecret}")
         if (clientDetails.clientSecret == passwordEncoder.encode(clientSecret)) {
             throw IllegalArgumentException("Wrong clientSecret! Check your settings.")
         }
