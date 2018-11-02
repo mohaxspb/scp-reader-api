@@ -18,10 +18,10 @@ interface FacebookApi {
      */
     @GET("debug_token")
     fun debugToken(
-            @Query("access_token") inputToken: String,
-            @Query("input_token") accessToken: String
+            @Query("input_token") inputToken: String,
+            @Query("access_token") accessToken: String
     ): Single<DebugTokenResponse>
 
     @GET("me?fields=email,name,first_name,middle_name,last_name,picture.width(500).height(500){url,height,width}")
-    fun profile(@Query("access_token") accessToken: String) : Single<FacebookProfileResponse>
+    fun profile(@Query("access_token") accessToken: String): Single<FacebookProfileResponse>
 }

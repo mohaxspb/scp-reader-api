@@ -24,10 +24,10 @@ data class UsersAndroidProduct(
         @field:UpdateTimestamp
         @Version
         val updated: Timestamp? = null
-)
+) : Serializable
 
 @NoArgConstructor
 data class KeyUsersAndroidProducts(
-        val userId: Long,
-        val androidProductId: Long
+        val userId: Long? = null,
+        val androidProductId: Long? = null
 ) : Serializable

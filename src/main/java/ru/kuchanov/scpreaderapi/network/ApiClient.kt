@@ -164,7 +164,7 @@ class ApiClient {
             val facebookClientId = facebookClientIds[lang]
             val facebookClientSecret = facebookClientSecrets[lang]
             val validatedTokenWrapper: ValidatedTokenWrapper = facebookApi
-                    .debugToken(token, "$facebookClientId|$facebookClientSecret")
+                    .debugToken(inputToken = token, accessToken = "$facebookClientId|$facebookClientSecret")
                     .map { ValidatedTokenWrapper(it, null) }
                     .onErrorReturn { ValidatedTokenWrapper(null, it) }
                     .blockingGet()
