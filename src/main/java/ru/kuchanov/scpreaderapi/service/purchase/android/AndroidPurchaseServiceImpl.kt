@@ -31,11 +31,14 @@ class AndroidPurchaseServiceImpl : AndroidPurchaseService {
             val productPurchase = productRequest.execute()
             AndroidProductResponse(ValidationStatus.VALID, productPurchase)
         } catch (e: GoogleJsonResponseException) {
-            ValidationResponse(if (e.details.code == HttpServletResponse.SC_BAD_REQUEST) {
-                ValidationStatus.INVALID
-            } else {
-                ValidationStatus.GOOGLE_SERVER_ERROR
-            })
+            AndroidProductResponse(
+                    if (e.details.code == HttpServletResponse.SC_BAD_REQUEST) {
+                        ValidationStatus.INVALID
+                    } else {
+                        ValidationStatus.GOOGLE_SERVER_ERROR
+                    },
+                    null
+            )
         }
     }
 
@@ -53,11 +56,14 @@ class AndroidPurchaseServiceImpl : AndroidPurchaseService {
             val subscription: SubscriptionPurchase = subscriptionRequest.execute()
             AndroidSubscriptionResponse(ValidationStatus.VALID, subscription)
         } catch (e: GoogleJsonResponseException) {
-            ValidationResponse(if (e.details.code == HttpServletResponse.SC_BAD_REQUEST) {
-                ValidationStatus.INVALID
-            } else {
-                ValidationStatus.GOOGLE_SERVER_ERROR
-            })
+            AndroidSubscriptionResponse(
+                    if (e.details.code == HttpServletResponse.SC_BAD_REQUEST) {
+                        ValidationStatus.INVALID
+                    } else {
+                        ValidationStatus.GOOGLE_SERVER_ERROR
+                    },
+                    null
+            )
         }
     }
 }

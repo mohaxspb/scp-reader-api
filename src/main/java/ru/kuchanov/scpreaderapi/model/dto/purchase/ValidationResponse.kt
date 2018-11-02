@@ -15,10 +15,10 @@ open class ValidationResponse(open val status: ValidationStatus)
 
 data class AndroidProductResponse(
         override val status: ValidationStatus,
-        val androidProduct: ProductPurchase
+        val androidProduct: ProductPurchase?
 ) : ValidationResponse(status)
 
 data class AndroidSubscriptionResponse(
         override val status: ValidationStatus,
-        val androidSubscription: SubscriptionPurchase
+        val androidSubscription: SubscriptionPurchase?
 ) : ValidationResponse(status)

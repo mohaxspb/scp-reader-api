@@ -1,5 +1,7 @@
 package ru.kuchanov.scpreaderapi.controller
 
+import com.google.api.services.androidpublisher.model.ProductPurchase
+import com.google.api.services.androidpublisher.model.SubscriptionPurchase
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -16,6 +18,7 @@ import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.model.dto.purchase.AndroidProductResponse
 import ru.kuchanov.scpreaderapi.model.dto.purchase.AndroidSubscriptionResponse
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
+import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationStatus
 import ru.kuchanov.scpreaderapi.service.purchase.android.AndroidProductService
 import ru.kuchanov.scpreaderapi.service.purchase.android.AndroidPurchaseService
 import ru.kuchanov.scpreaderapi.service.purchase.android.AndroidSubscriptionService
@@ -55,32 +58,34 @@ class PurchaseController {
                 purchaseToken = token
         ) as AndroidProductResponse
 
-        val product = productResponse.androidProduct
+        if (productResponse.status == ValidationStatus.VALID) {
+            val product: ProductPurchase = productResponse.androidProduct!!
 
-        var androidProduct = androidProductService.getByPurchaseToken(token)
+            var androidProduct = androidProductService.getByPurchaseToken(token)
 
-        if (androidProduct == null) {
-            androidProduct = androidProductService.save(AndroidProduct(
-                    purchaseToken = token,
-                    androidPackage = androidPackage,
-                    orderId = product.orderId,
-                    purchaseState = product.purchaseState,
-                    consumptionState = product.consumptionState,
-                    purchaseTimeMillis = Timestamp(product.purchaseTimeMillis),
-                    purchaseType = product.purchaseType
-            ))
-        } else {
-            androidProduct.purchaseState = product.purchaseState
-            androidProduct.consumptionState = product.consumptionState
-            androidProductService.save(androidProduct)
-        }
-
-        user?.let {
-            if (userAndroidPurchaseService.getByUserIdAndAndroidProductId(user.id!!, androidProduct.id!!) == null) {
-                userAndroidPurchaseService.save(UsersAndroidProduct(
-                        userId = user.id,
-                        androidProductId = androidProduct.id!!
+            if (androidProduct == null) {
+                androidProduct = androidProductService.save(AndroidProduct(
+                        purchaseToken = token,
+                        androidPackage = androidPackage,
+                        orderId = product.orderId,
+                        purchaseState = product.purchaseState,
+                        consumptionState = product.consumptionState,
+                        purchaseTimeMillis = Timestamp(product.purchaseTimeMillis),
+                        purchaseType = product.purchaseType
                 ))
+            } else {
+                androidProduct.purchaseState = product.purchaseState
+                androidProduct.consumptionState = product.consumptionState
+                androidProductService.save(androidProduct)
+            }
+
+            user?.let {
+                if (userAndroidPurchaseService.getByUserIdAndAndroidProductId(user.id!!, androidProduct.id!!) == null) {
+                    userAndroidPurchaseService.save(UsersAndroidProduct(
+                            userId = user.id,
+                            androidProductId = androidProduct.id!!
+                    ))
+                }
             }
         }
 
@@ -100,38 +105,40 @@ class PurchaseController {
                 purchaseToken = token
         ) as AndroidSubscriptionResponse
 
-        val subscription = subscriptionResponse.androidSubscription
+        if (subscriptionResponse.status == ValidationStatus.VALID) {
+            val subscription: SubscriptionPurchase = subscriptionResponse.androidSubscription!!
 
-        var androidSubscription = androidSubscriptionService.getByPurchaseToken(token)
+            var androidSubscription = androidSubscriptionService.getByPurchaseToken(token)
 
-        if (androidSubscription == null) {
-            androidSubscription = androidSubscriptionService.save(AndroidSubscription(
-                    orderId = subscription.orderId,
-                    purchaseToken = token,
-                    androidPackage = androidPackage,
-                    linkedPurchaseToken = subscription.linkedPurchaseToken,
-                    priceAmountMicros = subscription.priceAmountMicros,
-                    priceCurrencyCode = subscription.priceCurrencyCode,
-                    autoRenewing = subscription.autoRenewing,
-                    startTimeMillis = Timestamp(subscription.startTimeMillis),
-                    expiryTimeMillis = Timestamp(subscription.expiryTimeMillis),
-                    userCancellationTimeMillis = subscription.userCancellationTimeMillis?.let { Timestamp(it) }
-            ))
-        } else {
-            androidSubscription.orderId = subscription.orderId
-            androidSubscription.linkedPurchaseToken = subscription.linkedPurchaseToken
-            androidSubscription.startTimeMillis = Timestamp(subscription.startTimeMillis)
-            androidSubscription.expiryTimeMillis = Timestamp(subscription.expiryTimeMillis)
-            androidSubscription.userCancellationTimeMillis = subscription.userCancellationTimeMillis?.let { Timestamp(it) }
-            androidSubscriptionService.save(androidSubscription)
-        }
-
-        user?.let {
-            if (userAndroidPurchaseService.getByUserIdAndAndroidSubscriptionId(user.id!!, androidSubscription.id!!) == null) {
-                userAndroidPurchaseService.save(UsersAndroidSubscription(
-                        userId = user.id,
-                        androidSubscriptionId = androidSubscription.id!!
+            if (androidSubscription == null) {
+                androidSubscription = androidSubscriptionService.save(AndroidSubscription(
+                        orderId = subscription.orderId,
+                        purchaseToken = token,
+                        androidPackage = androidPackage,
+                        linkedPurchaseToken = subscription.linkedPurchaseToken,
+                        priceAmountMicros = subscription.priceAmountMicros,
+                        priceCurrencyCode = subscription.priceCurrencyCode,
+                        autoRenewing = subscription.autoRenewing,
+                        startTimeMillis = Timestamp(subscription.startTimeMillis),
+                        expiryTimeMillis = Timestamp(subscription.expiryTimeMillis),
+                        userCancellationTimeMillis = subscription.userCancellationTimeMillis?.let { Timestamp(it) }
                 ))
+            } else {
+                androidSubscription.orderId = subscription.orderId
+                androidSubscription.linkedPurchaseToken = subscription.linkedPurchaseToken
+                androidSubscription.startTimeMillis = Timestamp(subscription.startTimeMillis)
+                androidSubscription.expiryTimeMillis = Timestamp(subscription.expiryTimeMillis)
+                androidSubscription.userCancellationTimeMillis = subscription.userCancellationTimeMillis?.let { Timestamp(it) }
+                androidSubscriptionService.save(androidSubscription)
+            }
+
+            user?.let {
+                if (userAndroidPurchaseService.getByUserIdAndAndroidSubscriptionId(user.id!!, androidSubscription.id!!) == null) {
+                    userAndroidPurchaseService.save(UsersAndroidSubscription(
+                            userId = user.id,
+                            androidSubscriptionId = androidSubscription.id!!
+                    ))
+                }
             }
         }
 
