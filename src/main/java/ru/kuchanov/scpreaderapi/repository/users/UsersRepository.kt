@@ -42,17 +42,19 @@ interface UsersRepository : JpaRepository<User, Long> {
      * @see {https://stackoverflow.com/a/3644640/3212712}
      */
     @Query(
-            "SELECT position " +
-                    "FROM ( " +
-                    "   select *, " +
-                    "        row_number() over( " +
-                    "           order by score DESC " +
-                    "        ) as position " +
-                    "   FROM users u " +
-                    "JOIN users_langs ul ON u.id = ul.user_id " +
-                    "WHERE ul.lang_id = :langId " +
-                    ") result " +
-                    "where id = :userId",
+            """
+                SELECT position
+                    FROM (
+                       select *,
+                            row_number() over(
+                               ORDER BY score DESC
+                            ) as position
+                       FROM users u
+                       JOIN users_langs ul ON u.id = ul.user_id
+                       WHERE ul.lang_id = :langId
+                    ) result
+                    where id = :userId
+                    """,
             nativeQuery = true
     )
     fun getUserPositionInLeaderboard(userId: Long, langId: String): Int
