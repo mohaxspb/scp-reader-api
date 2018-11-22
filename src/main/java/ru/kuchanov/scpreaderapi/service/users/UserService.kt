@@ -29,4 +29,6 @@ interface UserService : UserDetailsService {
 
     fun getUsersByLangWithOffsetAndLimitSortedByScore(langId: String, offset: Int, limit: Int): List<User>
     fun getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(langId: String, offset: Int, limit: Int): List<LeaderboardUser>
+
+    fun getUserPositionInLeaderboard(userId: Long, langId: String): Int
 }

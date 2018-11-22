@@ -37,4 +37,25 @@ interface UsersRepository : JpaRepository<User, Long> {
             "WHERE ul.lang_id = :langId " +
             "ORDER BY u.score DESC OFFSET :offset LIMIT :limit", nativeQuery = true)
     fun getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(langId: String, offset: Int, limit: Int): List<LeaderboardUser>
+
+    /**
+     * @see {https://stackoverflow.com/a/3644640/3212712}
+     */
+    @Query(
+            """
+                SELECT position
+                    FROM (
+                       select *,
+                            row_number() over(
+                               ORDER BY score DESC
+                            ) as position
+                       FROM users u
+                       JOIN users_langs ul ON u.id = ul.user_id
+                       WHERE ul.lang_id = :langId
+                    ) result
+                    where id = :userId
+                    """,
+            nativeQuery = true
+    )
+    fun getUserPositionInLeaderboard(userId: Long, langId: String): Int
 }
