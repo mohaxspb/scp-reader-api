@@ -46,6 +46,12 @@ class FirebaseController {
             @RequestParam(value = "limit") limit: Int
     ) = usersService.getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(lang.lang, offset, limit)
 
+    @GetMapping("/{lang}/users/leaderboard/{userId}")
+    fun getUserPositionInLeaderboardForLang(
+            @PathVariable(value = "lang") lang: ScpReaderConstants.Firebase.FirebaseInstance,
+            @PathVariable(value = "userId") userId: Long
+    ): Int = usersService.getUserPositionInLeaderboard(userId, lang.lang)
+
     @GetMapping("/updateDataDates")
     fun getUpdateDataDates() = firebaseService.getAllFirebaseUpdatedDataDates()
 }

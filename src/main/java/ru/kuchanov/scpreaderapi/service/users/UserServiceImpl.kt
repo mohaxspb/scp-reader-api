@@ -37,10 +37,17 @@ class UserServiceImpl : UserService {
 
     override fun getUsersByLangIdCount(langId: String): Long = repository.getUsersByLangCount(langId)
 
-    override fun getUsersByLangWithOffsetAndLimitSortedByScore(langId: String, offset: Int, limit: Int) =
-            repository.getUsersByLangWithOffsetAndLimitSortedByScore(langId, offset, limit)
+    override fun getUsersByLangWithOffsetAndLimitSortedByScore(
+            langId: String,
+            offset: Int,
+            limit: Int
+    ) = repository.getUsersByLangWithOffsetAndLimitSortedByScore(langId, offset, limit)
 
-    override fun getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(langId: String, offset: Int, limit: Int): List<LeaderboardUser> {
+    override fun getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(
+            langId: String,
+            offset: Int,
+            limit: Int
+    ): List<LeaderboardUser> {
         val query = entityManager.createNativeQuery(
                 "SELECT " +
                         "u.id, " +
@@ -73,4 +80,7 @@ class UserServiceImpl : UserService {
         ScpReaderConstants.SocialProvider.FACEBOOK -> repository.findOneByFacebookId(id)
         ScpReaderConstants.SocialProvider.VK -> repository.findOneByVkId(id)
     }
+
+    override fun getUserPositionInLeaderboard(userId: Long, langId: String): Int =
+            repository.getUserPositionInLeaderboard(userId, langId)
 }
