@@ -231,7 +231,6 @@ class AuthController {
                 tokenServices.revokeToken(it.value)
             }
 
-
     fun getAccessToken(email: String, clientId: String): OAuth2AccessToken {
         val clientDetails: ClientDetails = clientDetailsService.loadClientByClientId(clientId)
 

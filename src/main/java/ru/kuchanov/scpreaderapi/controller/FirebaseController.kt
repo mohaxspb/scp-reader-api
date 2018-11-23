@@ -2,8 +2,10 @@ package ru.kuchanov.scpreaderapi.controller
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
+import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.service.firebase.FirebaseService
 import ru.kuchanov.scpreaderapi.service.users.UserService
 
@@ -51,6 +53,12 @@ class FirebaseController {
             @PathVariable(value = "lang") lang: ScpReaderConstants.Firebase.FirebaseInstance,
             @PathVariable(value = "userId") userId: Long
     ): Int = usersService.getUserPositionInLeaderboard(userId, lang.lang)
+
+    @GetMapping("/{lang}/users/leaderboard/position")
+    fun getCurrentUserPositionInLeaderboardForLang(
+            @PathVariable(value = "lang") lang: ScpReaderConstants.Firebase.FirebaseInstance,
+            @AuthenticationPrincipal user: User
+    ): Int = usersService.getUserPositionInLeaderboard(user.id!!, lang.lang)
 
     @GetMapping("/updateDataDates")
     fun getUpdateDataDates() = firebaseService.getAllFirebaseUpdatedDataDates()
