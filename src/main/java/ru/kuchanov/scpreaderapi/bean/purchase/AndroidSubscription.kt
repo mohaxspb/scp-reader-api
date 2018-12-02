@@ -32,7 +32,6 @@ data class AndroidSubscription(
         @field:CreationTimestamp
         val created: Timestamp? = null,
         @field:UpdateTimestamp
-        @Version
         val updated: Timestamp? = null,
         //
         @Column(name = "android_package")
