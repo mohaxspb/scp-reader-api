@@ -19,7 +19,6 @@ data class OAuthAccessToken(
         @field:CreationTimestamp
         val created: Timestamp,
         @field:UpdateTimestamp
-        @Version
         val updated: Timestamp
 ) {
         override fun equals(other: Any?): Boolean {

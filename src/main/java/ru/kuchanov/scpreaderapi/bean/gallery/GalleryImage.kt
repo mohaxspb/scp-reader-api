@@ -35,6 +35,5 @@ data class GalleryImage(
         @field:CreationTimestamp
         val created: Timestamp? = null,
         @field:UpdateTimestamp
-        @Version
         val updated: Timestamp? = null
 )

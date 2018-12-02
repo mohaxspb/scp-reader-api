@@ -25,7 +25,6 @@ data class OAuthClientDetails(
         @field:CreationTimestamp
         val created: Timestamp,
         @field:UpdateTimestamp
-        @Version
         val updated: Timestamp
 ) : ClientDetails {
     override fun isSecretRequired() = true
