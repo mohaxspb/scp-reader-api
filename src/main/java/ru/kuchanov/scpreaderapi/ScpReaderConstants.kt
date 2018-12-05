@@ -25,6 +25,7 @@ object ScpReaderConstants {
         const val AUTH = "auth"
         const val PURCHASE = "purchase"
         const val USER = "user"
+        const val ARTICLE = "article"
     }
 
     enum class SocialProvider {

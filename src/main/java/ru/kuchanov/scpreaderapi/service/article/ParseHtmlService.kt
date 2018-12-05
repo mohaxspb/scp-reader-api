@@ -8,7 +8,7 @@ import org.jsoup.nodes.Node
 import org.jsoup.parser.Tag
 import org.jsoup.select.Elements
 import org.springframework.stereotype.Service
-import ru.kuchanov.scpreaderapi.bean.articles.Article
+import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 import ru.kuchanov.scpreaderapi.utils.isDigistOnly
 import java.util.*
@@ -22,7 +22,7 @@ class ParseHtmlService {
             doc: Document,
             pageContent: Element,
             lang: Lang
-    ): Article {
+    ): ArticleForLang {
         //some article are in div... I.e. http://scp-wiki-cn.wikidot.com/taboo
         //so check it and extract text
         if (pageContent.children().size == 1 && pageContent.children().first().tagName() == TAG_DIV) {
@@ -275,17 +275,19 @@ class ParseHtmlService {
             textPartsTypes.add(value)
         }
 
-        var commentsUrl = doc.getElementById("discuss-button").attr("href")?.let {
+        val commentsUrl = doc.getElementById("discuss-button").attr("href")?.let {
             "${lang.siteBaseUrl}$it"
         }
 
-        //finally fill article info
-        val article = Article()
-
-        //todo
 //            article.url = url
 //            article.text = rawText
 //            article.title = title
+//            //rating
+//            if (rating != 0) {
+//                article.rating = rating
+//            }
+//            article.commentsUrl = commentsUrl
+        //todo
 //            //textParts
 //            article.textParts = textParts
 //            article.textPartsTypes = textPartsTypes
@@ -295,14 +297,16 @@ class ParseHtmlService {
 //            article.innerArticlesUrls = innerArticlesUrls
 //            //tags
 //            article.tags = articleTags
-//            //rating
-//            if (rating != 0) {
-//                article.rating = rating
-//            }
-//
-//            article.commentsUrl = commentsUrl
 
-        return article
+        //finally fill article info
+        return ArticleForLang(
+                langId = lang.id,
+                urlRelative = url,
+                title = title,
+                text = rawText,
+                rating = if (rating != 0) rating else null,
+                commentsUrl = commentsUrl
+        )
     }
 
     /**

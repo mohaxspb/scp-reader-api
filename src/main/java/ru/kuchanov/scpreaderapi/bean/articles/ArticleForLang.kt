@@ -16,7 +16,7 @@ import javax.persistence.*
 data class ArticleForLang(
         @Id
         @Column(name = "article_id")
-        var articleId: Long,
+        var articleId: Long? = null,
         @Id
         @Column(name = "lang_id")
         var langId: String,
@@ -24,6 +24,13 @@ data class ArticleForLang(
         @Id
         @Column(name = "url_relative")
         var urlRelative: String,
+        //new ones
+        var text: String? = null,
+        var rating: Int? = null,
+        @Column(name = "comments_url")
+        var commentsUrl: String? = null,
+        //todo add fields
+
         //dates
         @field:CreationTimestamp
         val created: Timestamp? = null,
@@ -33,9 +40,9 @@ data class ArticleForLang(
 
 @NoArgConstructor
 data class KeyArticleLangs(
-        val articleId: Long,
-        val langId: String,
-        val urlRelative: String
+        val articleId: Long? = null,
+        val langId: String? = null,
+        val urlRelative: String? = null
 ) : Serializable
 
 

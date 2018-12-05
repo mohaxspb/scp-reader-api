@@ -1,5 +1,7 @@
 package ru.kuchanov.scpreaderapi.bean.users
 
+import org.springframework.http.HttpStatus
+import org.springframework.web.bind.annotation.ResponseStatus
 import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.Id
@@ -15,3 +17,8 @@ data class Lang(
         @Column(name = "site_base_url")
         var siteBaseUrl: String
 )
+
+
+
+@ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "No such lang")
+class LangNotFoundException : RuntimeException()

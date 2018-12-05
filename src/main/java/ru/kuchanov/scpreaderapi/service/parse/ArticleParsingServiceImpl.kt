@@ -13,11 +13,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
-import ru.kuchanov.scpreaderapi.bean.articles.Article
+import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 import ru.kuchanov.scpreaderapi.service.article.ParseHtmlService
 import java.io.IOException
-import java.util.*
 
 
 @Service
@@ -27,16 +26,16 @@ class ArticleParsingServiceImpl : ArticleParsingService {
     private lateinit var okHttpClient: OkHttpClient
 
     @Autowired
-    private lateinit var parseHtmlService:ParseHtmlService
+    private lateinit var parseHtmlService: ParseHtmlService
 
     @Async
-    override fun parseMostRecentArticlesForLang(lang: Lang) {
-        val articles = mutableListOf<Article>()
+    override fun parseMostRecentArticlesForLang(lang: Lang, maxPageCount: Int?) {
+//        val articles = mutableListOf<Article>()
 
         when (lang.id) {
             ScpReaderConstants.Firebase.FirebaseInstance.RU.lang -> {
                 val subscription = getRecentArticlesPageCountObservable()
-                        .flatMapObservable { Observable.range(1, it) }
+                        .flatMapObservable { Observable.range(1, maxPageCount ?: it) }
                         .flatMap { page ->
                             getRecentArticlesForPage(lang, page)
                                     .flatMapObservable { Observable.fromIterable(it) }
@@ -46,8 +45,13 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                         .subscribeOn(Schedulers.io())
                         .observeOn(Schedulers.io())
                         .subscribeBy(
-                                {
+                                onSuccess = {
                                     println("download complete")
+                                    println(it.joinToString(separator = "\n\n"))
+                                    println("download complete")
+                                },
+                                onError = {
+                                    println(it)
                                 }
                         )
             }
@@ -56,8 +60,8 @@ class ArticleParsingServiceImpl : ArticleParsingService {
         }
     }
 
-    private fun getRecentArticlesForPage(lang: Lang, page: Int): Single<List<Article>> {
-        return Single.create<List<Article>> { subscriber ->
+    private fun getRecentArticlesForPage(lang: Lang, page: Int): Single<List<ArticleForLang>> {
+        return Single.create<List<ArticleForLang>> { subscriber ->
             val request = Request.Builder()
                     //todo pass somehow
                     .url("http://scpfoundation.ru/most-recently-created" + "/p/" + page)
@@ -69,15 +73,11 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                     .body()
                     ?.string()
                     ?: throw IOException("error while getRecentArticlesForPage: $page")
-            try {
-                val doc = Jsoup.parse(responseBody)
+            val doc = Jsoup.parse(responseBody)
 
-                val articles = parseForRecentArticles(lang, doc)
+            val articles = parseForRecentArticles(lang, doc)
 
-                subscriber.onSuccess(articles)
-            } catch (e: Exception) {
-                subscriber.onError(e)
-            }
+            subscriber.onSuccess(articles)
         }
     }
 
@@ -103,32 +103,28 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                 return@create
             }
 
-            try {
-                val doc = Jsoup.parse(responseBody)
+            val doc = Jsoup.parse(responseBody)
 
-                //get num of pages
-                val spanWithNumber = doc.getElementsByClass("pager-no").first()
-                val text = spanWithNumber.text()
-                val numOfPages = Integer.valueOf(text.substring(text.lastIndexOf(" ") + 1))
+            //get num of pages
+            val spanWithNumber = doc.getElementsByClass("pager-no").first()
+            val text = spanWithNumber.text()
+            val numOfPages = Integer.valueOf(text.substring(text.lastIndexOf(" ") + 1))
 
-                subscriber.onSuccess(numOfPages)
-            } catch (e: Exception) {
-                e.printStackTrace()
-                subscriber.onError(e)
-            }
+            subscriber.onSuccess(numOfPages)
         }
     }
 
-    private fun downloadAndSaveArticles(articlesToDownload: List<Article>, lang: Lang): Single<List<Article>> {
+    private fun downloadAndSaveArticles(articlesToDownload: List<ArticleForLang>, lang: Lang): Single<List<ArticleForLang>> {
         return Single.just(articlesToDownload)
                 .flatMap { articles ->
                     for (articleToDownload in articles) {
                         try {
-                            val articleDownloaded = getArticleFromApi(articleToDownload.getUrl(), lang)
+                            val articleDownloaded = getArticleFromApi(articleToDownload.urlRelative, lang)
                             if (articleDownloaded != null) {
-                                saveArticle(articleDownloaded)
+                                //todo save article, relative etc
+//                                saveArticle(articleDownloaded)
 
-                                //todo
+                                //todo parse inner
 //                                if (mMyPreferenceManager.isHasSubscription() && mInnerArticlesDepth !== 0) {
 //                                    getAndSaveInnerArticles(dbProvider, getApiClient(), articleDownloaded, 0, mInnerArticlesDepth)
 //                                }
@@ -136,7 +132,7 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                                 //todo log error in articles parsing
                             }
                         } catch (e: Exception) {
-                            e.printStackTrace()
+                            println(e)
                         }
                     }
                     Single.just(articles)
@@ -145,11 +141,11 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                 .observeOn(Schedulers.io())
     }
 
-    protected fun parseForRecentArticles(lang: Lang, doc: Document): List<Article> {
+    protected fun parseForRecentArticles(lang: Lang, doc: Document): List<ArticleForLang> {
         val pageContent = doc.getElementsByClass("wiki-content-table").first()
                 ?: throw NullPointerException("Can't find element for class \"wiki-content-table\"")
 
-        val articles = ArrayList<Article>()
+        val articles = mutableListOf<ArticleForLang>()
         val listOfElements = pageContent.getElementsByTag("tr")
         for (i in 1/*start from 1 as first row is tables header*/ until listOfElements.size) {
             val tableRow = listOfElements[i]
@@ -175,7 +171,11 @@ class ArticleParsingServiceImpl : ArticleParsingService {
             val updatedDateNode = listOfTd[4]
             val updatedDate = updatedDateNode.text().trim()
 
-            val article = Article()
+            val article = ArticleForLang(
+                    langId = lang.id,
+                    urlRelative = url.trim(),
+                    title = title
+            )
             //todo
 //            article.title = title
 //            article.url = url.trim { it <= ' ' }
@@ -190,7 +190,7 @@ class ArticleParsingServiceImpl : ArticleParsingService {
         return articles
     }
 
-    fun getArticleFromApi(url: String, lang: Lang): Article? {
+    fun getArticleFromApi(url: String, lang: Lang): ArticleForLang? {
         val request = Request.Builder()
                 .url(url)
                 .build()
@@ -206,20 +206,15 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                 ?: throw ScpParseException("pageContent is NULL for: $url")
         val p404 = pageContent.getElementById("404-message")
         if (p404 != null) {
-            val article = Article()
-            //todo
-//            article.url = url
-//            article.text = p404!!.outerHtml()
-//            article.title = "404"
-
-            return article
+            return ArticleForLang(
+                    langId = lang.id,
+                    urlRelative = url,
+                    title = "404",
+                    text = p404.outerHtml()
+            )
         }
 
-        try {
-            return parseHtmlService.parseArticle(url, doc, pageContent, lang)
-        } catch (e: Exception) {
-            throw e
-        }
+        return parseHtmlService.parseArticle(url, doc, pageContent, lang)
     }
 
     /**
