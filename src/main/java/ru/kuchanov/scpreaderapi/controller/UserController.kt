@@ -17,6 +17,7 @@ import ru.kuchanov.scpreaderapi.service.users.UserService
 @RequestMapping("/${ScpReaderConstants.Path.USER}")
 class UserController {
 
+    @Suppress("unused")
     @Autowired
     private lateinit var log: Logger
 

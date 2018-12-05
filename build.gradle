@@ -116,6 +116,9 @@ dependencies {
     implementation 'com.squareup.retrofit2:adapter-rxjava2:2.4.0'
 
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.6'
+
+    //jsoup
+    api 'org.jsoup:jsoup:1.11.3'
 }
 
 compileKotlin {
