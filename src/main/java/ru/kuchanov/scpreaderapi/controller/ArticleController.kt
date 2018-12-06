@@ -28,7 +28,7 @@ class ArticleController {
     @Autowired
     private lateinit var langService: LangService
 
-    @GetMapping("/{langEnum}/product/all")
+    @GetMapping("/{langEnum}/recent/all")
     fun showAndroidProducts(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
             @AuthenticationPrincipal user: User?

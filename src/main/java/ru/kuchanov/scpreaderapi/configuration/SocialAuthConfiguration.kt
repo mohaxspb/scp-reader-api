@@ -17,6 +17,7 @@ import retrofit2.Converter
 import retrofit2.Retrofit
 import ru.kuchanov.scpreaderapi.network.FacebookApi
 
+@Suppress("unused")
 @Configuration
 class SocialAuthConfiguration {
 

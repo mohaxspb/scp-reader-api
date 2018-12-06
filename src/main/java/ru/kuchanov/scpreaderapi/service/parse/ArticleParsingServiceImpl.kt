@@ -9,20 +9,28 @@ import okhttp3.Request
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
+import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
+import ru.kuchanov.scpreaderapi.configuration.NetworkConfiguration
 import ru.kuchanov.scpreaderapi.service.article.ParseHtmlService
 import java.io.IOException
 
 
+@Suppress("unused")
 @Service
 class ArticleParsingServiceImpl : ArticleParsingService {
 
     @Autowired
+    private lateinit var logger: Logger
+
+    @Autowired
+    @Qualifier(NetworkConfiguration.QUALIFIER_OK_HTTP_CLIENT_NOT_LOGGING)
     private lateinit var okHttpClient: OkHttpClient
 
     @Autowired
@@ -34,7 +42,7 @@ class ArticleParsingServiceImpl : ArticleParsingService {
 
         when (lang.id) {
             ScpReaderConstants.Firebase.FirebaseInstance.RU.lang -> {
-                val subscription = getRecentArticlesPageCountObservable()
+                getRecentArticlesPageCountObservable()
                         .flatMapObservable { Observable.range(1, maxPageCount ?: it) }
                         .flatMap { page ->
                             getRecentArticlesForPage(lang, page)
@@ -51,7 +59,7 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                                     println("download complete")
                                 },
                                 onError = {
-                                    println(it)
+                                    it.printStackTrace()
                                 }
                         )
             }
@@ -132,7 +140,7 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                                 //todo log error in articles parsing
                             }
                         } catch (e: Exception) {
-                            println(e)
+                            e.printStackTrace()
                         }
                     }
                     Single.just(articles)
@@ -156,8 +164,7 @@ class ArticleParsingServiceImpl : ArticleParsingService {
             val title = tagA.text()
             val url = lang.siteBaseUrl + tagA.attr("href")
             //rating
-            val ratingNode = listOfTd[1]
-            val rating = Integer.parseInt(ratingNode.text())
+            val rating = Integer.parseInt(listOfTd[1].text())
             //author
             val spanWithAuthor = listOfTd[2]
                     .getElementsByAttributeValueContaining("class", "printuser").first()
@@ -165,15 +172,13 @@ class ArticleParsingServiceImpl : ArticleParsingService {
             val authorUrl = spanWithAuthor.getElementsByTag("a").first()?.attr("href")
 
             //createdDate
-            val createdDateNode = listOfTd[3]
-            val createdDate = createdDateNode.text().trim()
+            val createdDate = listOfTd[3].text().trim()
             //updatedDate
-            val updatedDateNode = listOfTd[4]
-            val updatedDate = updatedDateNode.text().trim()
+            val updatedDate = listOfTd[4].text().trim()
 
             val article = ArticleForLang(
                     langId = lang.id,
-                    urlRelative = url.trim(),
+                    urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
                     title = title
             )
             //todo
@@ -192,7 +197,7 @@ class ArticleParsingServiceImpl : ArticleParsingService {
 
     fun getArticleFromApi(url: String, lang: Lang): ArticleForLang? {
         val request = Request.Builder()
-                .url(url)
+                .url(lang.siteBaseUrl + url)
                 .build()
 
         var responseBody = okHttpClient.newCall(request).execute().body()?.string()

@@ -77,7 +77,7 @@ class ParseHtmlService {
             aTag.attr(ATTR_HREF, id)
         }
         //remove rating bar
-        var rating = 0
+        var rating:Int? = null
         val rateDiv = pageContent.getElementsByClass("page-rate-widget-box").first()
         if (rateDiv != null) {
             val spanWithRating = rateDiv.getElementsByClass("rate-points").first()
@@ -85,10 +85,11 @@ class ParseHtmlService {
                 val ratingSpan = spanWithRating.getElementsByClass("number").first()
                 if (ratingSpan != null && !TextUtils.isEmpty(ratingSpan.text())) {
                     try {
-                        rating = Integer.parseInt(ratingSpan.text().substring(1, ratingSpan.text().length))
+//                        rating = Integer.parseInt(ratingSpan.text().substring(1, ratingSpan.text().length))
+                        rating = Integer.parseInt(ratingSpan.text())
                         //                            Timber.d("rating: %s", rating);
                     } catch (e: Exception) {
-                        println(e)
+                        e.printStackTrace()
                     }
                 }
             }
@@ -304,7 +305,7 @@ class ParseHtmlService {
                 urlRelative = url,
                 title = title,
                 text = rawText,
-                rating = if (rating != 0) rating else null,
+                rating = rating,
                 commentsUrl = commentsUrl
         )
     }
