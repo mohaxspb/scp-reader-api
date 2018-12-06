@@ -15,9 +15,12 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
+import ru.kuchanov.scpreaderapi.bean.articles.Article
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 import ru.kuchanov.scpreaderapi.configuration.NetworkConfiguration
+import ru.kuchanov.scpreaderapi.repository.article.ArticlesForLangRepository
+import ru.kuchanov.scpreaderapi.repository.article.ArticlesRepository
 import ru.kuchanov.scpreaderapi.service.article.ParseHtmlService
 import java.io.IOException
 
@@ -35,6 +38,12 @@ class ArticleParsingServiceImpl : ArticleParsingService {
 
     @Autowired
     private lateinit var parseHtmlService: ParseHtmlService
+
+    @Autowired
+    private lateinit var articlesRepository: ArticlesRepository
+
+    @Autowired
+    private lateinit var articlesForLangRepository: ArticlesForLangRepository
 
     @Async
     override fun parseMostRecentArticlesForLang(lang: Lang, maxPageCount: Int?) {
@@ -129,8 +138,30 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                         try {
                             val articleDownloaded = getArticleFromApi(articleToDownload.urlRelative, lang)
                             if (articleDownloaded != null) {
-                                //todo save article, relative etc
-//                                saveArticle(articleDownloaded)
+                                var articleInDb = articlesRepository.getArticleByUrlRelative(articleDownloaded.urlRelative)
+                                if (articleInDb == null) {
+                                    articleInDb = articlesRepository.save(Article())
+                                }
+                                val articleForLangInDb = articlesForLangRepository
+                                        .getArticleForLangByUrlRelativeAndLang(
+                                                articleDownloaded.urlRelative,
+                                                lang.id
+                                        )
+                                if (articleForLangInDb == null) {
+                                    articlesForLangRepository.save(articleDownloaded.apply {
+                                        articleId = articleInDb!!.id
+                                    })
+                                } else {
+                                    articlesForLangRepository.save(
+                                            articleForLangInDb.apply {
+                                                commentsUrl = articleDownloaded.commentsUrl
+                                                rating = articleDownloaded.rating
+                                                title = articleDownloaded.title
+                                                text = articleDownloaded.text
+                                                //todo add fields
+                                            }
+                                    )
+                                }
 
                                 //todo parse inner
 //                                if (mMyPreferenceManager.isHasSubscription() && mInnerArticlesDepth !== 0) {
