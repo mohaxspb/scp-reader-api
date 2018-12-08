@@ -29,7 +29,12 @@ data class ArticleForLang(
         var rating: Int? = null,
         @Column(name = "comments_url")
         var commentsUrl: String? = null,
+        @Column(name = "created_on_site")
+        var createdOnSite: Timestamp? = null,
+        @Column(name = "updated_on_site")
+        var updatedOnSite: Timestamp? = null,
         //todo add fields
+
 
         //dates
         @field:CreationTimestamp

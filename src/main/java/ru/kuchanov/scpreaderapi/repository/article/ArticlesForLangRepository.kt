@@ -4,8 +4,10 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.KeyArticleLangs
+import ru.kuchanov.scpreaderapi.bean.users.Lang
 
 interface ArticlesForLangRepository : JpaRepository<ArticleForLang, KeyArticleLangs> {
+
     @Query("SELECT al FROM ArticleForLang al " +
             "WHERE al.urlRelative = :urlRelative AND al.langId = :langId")
     fun getArticleForLangByUrlRelativeAndLang(urlRelative: String, langId: String): ArticleForLang?
@@ -14,4 +16,15 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, KeyArticleLa
             "SELECT al FROM ArticleForLang al " +
                     "WHERE al.articleId = :articleId AND al.langId = :langId")
     fun getArticleForLang(articleId: Long, langId: String): ArticleForLang?
+
+
+    @Query(
+            """
+            SELECT * FROM articles_langs a
+            WHERE a.lang_id = :langId AND created_on_site IS NOT NULL
+            ORDER BY a.created_on_site DESC OFFSET :offset LIMIT :limit
+             """,
+            nativeQuery = true
+    )
+    fun getMostRecentArticlesForLang(langId: String, offset: Int, limit: Int): List<ArticleForLang>
 }

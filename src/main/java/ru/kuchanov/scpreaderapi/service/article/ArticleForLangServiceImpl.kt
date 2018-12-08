@@ -6,6 +6,7 @@ import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.repository.article.ArticlesForLangRepository
 
 
+@Suppress("unused")
 @Service
 class ArticleForLangServiceImpl : ArticleForLangService {
 
@@ -24,4 +25,7 @@ class ArticleForLangServiceImpl : ArticleForLangService {
             repository.getArticleForLangByUrlRelativeAndLang(urlRelative, langId)
 
     override fun getArticleForLang(articleId: Long, langId: String) = repository.getArticleForLang(articleId, langId)
+
+    override fun getMostRecentArticlesForLang(langId: String, offset: Int, limit: Int) =
+            repository.getMostRecentArticlesForLang(langId, offset, limit)
 }

@@ -4,5 +4,5 @@ import ru.kuchanov.scpreaderapi.bean.users.Lang
 
 interface ArticleParsingService {
 
-    fun parseMostRecentArticlesForLang(lang: Lang, maxPageCount : Int? = null)
+    fun parseMostRecentArticlesForLang(lang: Lang, maxPageCount: Int? = null)
 }

@@ -23,6 +23,8 @@ import ru.kuchanov.scpreaderapi.repository.article.ArticlesForLangRepository
 import ru.kuchanov.scpreaderapi.repository.article.ArticlesRepository
 import ru.kuchanov.scpreaderapi.service.article.ParseHtmlService
 import java.io.IOException
+import java.sql.Timestamp
+import java.text.SimpleDateFormat
 
 
 @Suppress("unused")
@@ -90,7 +92,7 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                     .body()
                     ?.string()
                     ?: throw IOException("error while getRecentArticlesForPage: $page")
-            val doc = Jsoup.parse(responseBody)
+            val doc: Document = Jsoup.parse(responseBody)
 
             val articles = parseForRecentArticles(lang, doc)
 
@@ -150,6 +152,8 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                                 if (articleForLangInDb == null) {
                                     articlesForLangRepository.save(articleDownloaded.apply {
                                         articleId = articleInDb!!.id
+                                        createdOnSite = articleToDownload.createdOnSite
+                                        updatedOnSite = articleToDownload.updatedOnSite
                                     })
                                 } else {
                                     articlesForLangRepository.save(
@@ -158,6 +162,8 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                                                 rating = articleDownloaded.rating
                                                 title = articleDownloaded.title
                                                 text = articleDownloaded.text
+                                                createdOnSite = articleToDownload.createdOnSite
+                                                updatedOnSite = articleToDownload.updatedOnSite
                                                 //todo add fields
                                             }
                                     )
@@ -202,24 +208,20 @@ class ArticleParsingServiceImpl : ArticleParsingService {
             val authorName = spanWithAuthor.text()
             val authorUrl = spanWithAuthor.getElementsByTag("a").first()?.attr("href")
 
-            //createdDate
             val createdDate = listOfTd[3].text().trim()
-            //updatedDate
             val updatedDate = listOfTd[4].text().trim()
 
             val article = ArticleForLang(
                     langId = lang.id,
                     urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
-                    title = title
+                    title = title,
+                    createdOnSite = Timestamp(DATE_FORMAT.parse(createdDate).time),
+                    updatedOnSite = Timestamp(DATE_FORMAT.parse(updatedDate).time)
             )
             //todo
-//            article.title = title
-//            article.url = url.trim { it <= ' ' }
 //            article.rating = rating
 //            article.authorName = authorName
 //            article.authorUrl = authorUrl
-//            article.createdDate = createdDate
-//            article.updatedDate = updatedDate
             articles.add(article)
         }
 
@@ -264,6 +266,11 @@ class ArticleParsingServiceImpl : ArticleParsingService {
 
     companion object {
         const val HTML_ID_PAGE_CONTENT = "page-content"
+        /**
+         * i.e. 05:33 02.12.2018`
+         */
+//        private val DATE_FORMAT = SimpleDateFormat("HH:mm dd.MM.yyyy")
+        private val DATE_FORMAT = SimpleDateFormat("dd MMM yyyy HH:mm")
     }
 }
 
