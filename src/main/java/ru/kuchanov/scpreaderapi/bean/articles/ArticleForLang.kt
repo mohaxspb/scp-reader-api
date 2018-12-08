@@ -4,6 +4,7 @@ import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.ResponseStatus
+import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInList
 import ru.kuchanov.scpreaderapi.utils.NoArgConstructor
 import java.io.Serializable
 import java.sql.Timestamp
@@ -13,6 +14,38 @@ import javax.persistence.*
 @Entity
 @IdClass(KeyArticleLangs::class)
 @Table(name = "articles_langs")
+
+@SqlResultSetMapping(name = "ArticleInListDtoResult", classes = [
+    ConstructorResult(targetClass = ArticleInList::class,
+            columns = [
+                ColumnResult(name = "articleId", type = Long::class),
+                ColumnResult(name = "langId"),
+                ColumnResult(name = "urlRelative"),
+                ColumnResult(name = "title"),
+                ColumnResult(name = "rating", type = Int::class)
+//                ,
+//                ColumnResult(name = "imageUrls")
+            ])
+])
+@NamedNativeQuery(
+        name = "ArticleForLang.getMostRecentArticlesForLang",
+        resultSetMapping = "ArticleInListDtoResult",
+        //            image_urls as imageUrls,
+        //NULL as imageUrls,
+        query = """
+            SELECT
+            article_id as articleId,
+            lang_id as langId,
+            url_relative as urlRelative,
+            title,
+            rating
+            FROM articles_langs a
+            WHERE a.lang_id = :langId AND a.created_on_site IS NOT NULL
+            ORDER BY a.created_on_site DESC
+            OFFSET :offset LIMIT :limit
+             """
+)
+
 data class ArticleForLang(
         @Id
         @Column(name = "article_id")

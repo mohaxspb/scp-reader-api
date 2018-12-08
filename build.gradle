@@ -35,6 +35,8 @@ apply plugin: 'kotlin'
 apply plugin: "kotlin-spring"
 //use entities with data classes
 apply plugin: "kotlin-jpa"
+//no arg
+apply plugin: "kotlin-noarg"
 
 //spring boot
 apply plugin: 'eclipse'

@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.KeyArticleLangs
 import ru.kuchanov.scpreaderapi.bean.users.Lang
+import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInList
 
 interface ArticlesForLangRepository : JpaRepository<ArticleForLang, KeyArticleLangs> {
 
@@ -18,13 +19,6 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, KeyArticleLa
     fun getArticleForLang(articleId: Long, langId: String): ArticleForLang?
 
 
-    @Query(
-            """
-            SELECT * FROM articles_langs a
-            WHERE a.lang_id = :langId AND created_on_site IS NOT NULL
-            ORDER BY a.created_on_site DESC OFFSET :offset LIMIT :limit
-             """,
-            nativeQuery = true
-    )
-    fun getMostRecentArticlesForLang(langId: String, offset: Int, limit: Int): List<ArticleForLang>
+    @Query(nativeQuery = true)
+    fun getMostRecentArticlesForLang(langId: String, offset: Int, limit: Int): List<ArticleInList>
 }
