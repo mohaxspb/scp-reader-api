@@ -23,15 +23,11 @@ import javax.persistence.*
                 ColumnResult(name = "urlRelative"),
                 ColumnResult(name = "title"),
                 ColumnResult(name = "rating", type = Int::class)
-//                ,
-//                ColumnResult(name = "imageUrls")
             ])
 ])
 @NamedNativeQuery(
         name = "ArticleForLang.getMostRecentArticlesForLang",
         resultSetMapping = "ArticleInListDtoResult",
-        //            image_urls as imageUrls,
-        //NULL as imageUrls,
         query = """
             SELECT
             article_id as articleId,
@@ -44,6 +40,22 @@ import javax.persistence.*
             ORDER BY a.created_on_site DESC
             OFFSET :offset LIMIT :limit
              """
+        // try this:
+//        query = """
+//            SELECT
+//            article_id as articleId,
+//            lang_id as langId,
+//            url_relative as urlRelative,
+//            title,
+//            rating,
+//			jsonb_agg((SELECT art_id FROM (SELECT ar.id) art_id)) AS imageUrls
+//            FROM articles_langs a
+//			INNER JOIN articles ar ON a.article_id = ar.id
+//            WHERE a.lang_id = 'ru' AND a.created_on_site IS NOT NULL
+//			GROUP BY a.article_id, a.lang_id, url_relative
+//            ORDER BY a.created_on_site DESC
+//            OFFSET 0 LIMIT 1
+//        """
 )
 
 data class ArticleForLang(

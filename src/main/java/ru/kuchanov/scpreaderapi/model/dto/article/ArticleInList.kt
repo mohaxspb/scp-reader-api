@@ -13,13 +13,11 @@ import ru.kuchanov.scpreaderapi.utils.NoArgConstructor
  */
 @NoArgConstructor
 data class ArticleInList(
-        val articleId: Long? = null,
-        val langId: String? = null,
-        val urlRelative: String? = null,
-        val title: String? = null,
-        val rating: Int? = null
-//        val imageUrls: List<String>? = null
-//        val imageUrls: String? = null
+        val articleId: Long,
+        val langId: String,
+        val urlRelative: String,
+        val title: String,
+        val rating: Int
 ){
     val imageUrls: List<String>? = null
 }
