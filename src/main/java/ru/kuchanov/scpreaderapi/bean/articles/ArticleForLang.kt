@@ -65,10 +65,10 @@ data class ArticleForLang(
         @Id
         @Column(name = "lang_id")
         var langId: String,
-        var title: String?,
         @Id
         @Column(name = "url_relative")
         var urlRelative: String,
+        var title: String?,
         //new ones
         var text: String? = null,
         var rating: Int? = null,
@@ -80,7 +80,18 @@ data class ArticleForLang(
         var updatedOnSite: Timestamp? = null,
         //todo add fields
 
-        @OneToMany(cascade = [CascadeType.ALL], mappedBy = "articleId", fetch = FetchType.EAGER)
+        @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
+        @JoinColumns(
+                value = [
+//                    JoinColumn(name = "article_Id", referencedColumnName = "article_Id"),
+//                    JoinColumn(name = "lang_Id", referencedColumnName = "article_Lang_Id"),
+//                    JoinColumn(name = "url_Relative", referencedColumnName = "article_Url_Relative")
+
+                    JoinColumn(name = "article_Id", referencedColumnName = "article_id"),
+                    JoinColumn(name = "article_lang_Id", referencedColumnName = "lang_id"),
+                    JoinColumn(name = "article_Url_Relative", referencedColumnName = "url_relative")
+                ]
+        )
         var images: List<ArticlesImages>? = null,
 
         //dates

@@ -3,7 +3,6 @@ package ru.kuchanov.scpreaderapi.repository.article
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import ru.kuchanov.scpreaderapi.bean.articles.Article
-import ru.kuchanov.scpreaderapi.bean.users.Lang
 
 interface ArticlesRepository : JpaRepository<Article, Long> {
     @Query("SELECT a FROM Article a " +

@@ -28,4 +28,7 @@ class ArticleForLangServiceImpl : ArticleForLangService {
 
     override fun getMostRecentArticlesForLang(langId: String, offset: Int, limit: Int) =
             repository.getMostRecentArticlesForLang(langId, offset, limit)
+
+    override fun getOneByLangAndArticleId(articleId: Long, langId: String) =
+            repository.getOneByArticleIdAndLangId(articleId, langId)
 }

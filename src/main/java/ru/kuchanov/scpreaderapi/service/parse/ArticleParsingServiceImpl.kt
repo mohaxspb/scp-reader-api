@@ -20,6 +20,7 @@ import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 import ru.kuchanov.scpreaderapi.configuration.NetworkConfiguration
 import ru.kuchanov.scpreaderapi.repository.article.ArticlesForLangRepository
+import ru.kuchanov.scpreaderapi.repository.article.ArticlesImagesRepository
 import ru.kuchanov.scpreaderapi.repository.article.ArticlesRepository
 import ru.kuchanov.scpreaderapi.service.article.ParseHtmlService
 import java.io.IOException
@@ -46,6 +47,9 @@ class ArticleParsingServiceImpl : ArticleParsingService {
 
     @Autowired
     private lateinit var articlesForLangRepository: ArticlesForLangRepository
+
+    @Autowired
+    private lateinit var articlesImagesRepository: ArticlesImagesRepository
 
     @Async
     override fun parseMostRecentArticlesForLang(lang: Lang, maxPageCount: Int?) {
@@ -144,21 +148,22 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                                 if (articleInDb == null) {
                                     articleInDb = articlesRepository.save(Article())
                                 }
-                                val articleForLangInDb = articlesForLangRepository
+                                var articleForLangInDb = articlesForLangRepository
                                         .getArticleForLangByUrlRelativeAndLang(
                                                 articleDownloaded.urlRelative,
                                                 lang.id
                                         )
-                                //todo save images
+
+
 
                                 if (articleForLangInDb == null) {
-                                    articlesForLangRepository.save(articleDownloaded.apply {
+                                    articleForLangInDb =  articlesForLangRepository.save(articleDownloaded.apply {
                                         articleId = articleInDb!!.id
                                         createdOnSite = articleToDownload.createdOnSite
                                         updatedOnSite = articleToDownload.updatedOnSite
                                     })
                                 } else {
-                                    articlesForLangRepository.save(
+                                    articleForLangInDb =  articlesForLangRepository.save(
                                             articleForLangInDb.apply {
                                                 commentsUrl = articleDownloaded.commentsUrl
                                                 rating = articleDownloaded.rating
@@ -170,13 +175,24 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                                             }
                                     )
                                 }
+                                //todo save images
+                                if (articleDownloaded.images != null && articleDownloaded.images?.isNotEmpty() == true) {
+                                    articlesImagesRepository.saveAll(articleDownloaded.images!!.map {
+                                        it.apply {
+                                            articleUrlRelative = articleDownloaded.urlRelative
+                                            articleLangId = articleDownloaded.langId
+                                            articleId = articleInDb!!.id
+                                        }
+                                    })
+                                }
 
                                 //todo parse inner
 //                                if (mMyPreferenceManager.isHasSubscription() && mInnerArticlesDepth !== 0) {
 //                                    getAndSaveInnerArticles(dbProvider, getApiClient(), articleDownloaded, 0, mInnerArticlesDepth)
 //                                }
                             } else {
-                                //todo log error in articles parsing
+                                println("error in articles parsing: ${articleToDownload.urlRelative}")
+                                logger.warn("error in articles parsing: ${articleToDownload.urlRelative}")
                             }
                         } catch (e: Exception) {
                             e.printStackTrace()

@@ -18,7 +18,8 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, KeyArticleLa
                     "WHERE al.articleId = :articleId AND al.langId = :langId")
     fun getArticleForLang(articleId: Long, langId: String): ArticleForLang?
 
-
     @Query(nativeQuery = true)
     fun getMostRecentArticlesForLang(langId: String, offset: Int, limit: Int): List<ArticleInList>
+
+    fun getOneByArticleIdAndLangId(articleId: Long, langId: String):ArticleForLang?
 }

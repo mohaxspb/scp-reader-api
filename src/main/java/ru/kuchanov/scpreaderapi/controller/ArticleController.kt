@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
+import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.LangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
@@ -35,7 +36,7 @@ class ArticleController {
             @AuthenticationPrincipal user: User?
     ) {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
-        articleParsingService.parseMostRecentArticlesForLang(lang, 2)
+        articleParsingService.parseMostRecentArticlesForLang(lang, 1)
     }
 
     @GetMapping("/{langEnum}/recent")
@@ -45,4 +46,11 @@ class ArticleController {
             @RequestParam(value = "limit") limit: Int,
             @AuthenticationPrincipal user: User?
     ) = articleForLangService.getMostRecentArticlesForLang(langEnum.lang, offset, limit)
+
+    @GetMapping("{langEnum}/{id}")
+    fun showArticleForLangAndId(
+            @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
+            @PathVariable(value = "id") articleId: Long
+    ) = articleForLangService.getOneByLangAndArticleId(articleId, langEnum.lang)
+            ?: throw ArticleForLangNotFoundException()
 }

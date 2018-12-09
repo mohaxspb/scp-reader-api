@@ -310,7 +310,6 @@ class ParseHtmlService {
                 commentsUrl = commentsUrl,
                 images = imgsUrls.map {
                     ArticlesImages(
-                            langId = lang.id,
                             url = it
                     )
                 }
