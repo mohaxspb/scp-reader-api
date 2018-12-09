@@ -9,6 +9,7 @@ import org.jsoup.parser.Tag
 import org.jsoup.select.Elements
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
+import ru.kuchanov.scpreaderapi.bean.articles.ArticlesImages
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 import ru.kuchanov.scpreaderapi.utils.isDigistOnly
 import java.util.*
@@ -77,7 +78,7 @@ class ParseHtmlService {
             aTag.attr(ATTR_HREF, id)
         }
         //remove rating bar
-        var rating:Int? = null
+        var rating: Int? = null
         val rateDiv = pageContent.getElementsByClass("page-rate-widget-box").first()
         if (rateDiv != null) {
             val spanWithRating = rateDiv.getElementsByClass("rate-points").first()
@@ -240,9 +241,9 @@ class ParseHtmlService {
         }
 
         //search for images and add it to separate field to be able to show it in arts lists
+        val imgsUrls = mutableListOf<String>()
         val imgsOfArticle = pageContent.getElementsByTag(TAG_IMG)
         if (!imgsOfArticle.isEmpty()) {
-            val imgsUrls = mutableListOf<String>()
             for (img in imgsOfArticle) {
                 imgsUrls.add(img.attr(ATTR_SRC))
             }
@@ -259,8 +260,6 @@ class ParseHtmlService {
                 }
             }
         }
-
-        //type parsing TODO fucking unformatted info!
 
         //this we store as article text
         val rawText = pageContent.toString()
@@ -288,12 +287,14 @@ class ParseHtmlService {
 //                article.rating = rating
 //            }
 //            article.commentsUrl = commentsUrl
+
+        //todo
+//            //images
+//            article.imagesUrls = imgsUrls
         //todo
 //            //textParts
 //            article.textParts = textParts
 //            article.textPartsTypes = textPartsTypes
-//            //images
-//            article.imagesUrls = imgsUrls
 //            //inner articles
 //            article.innerArticlesUrls = innerArticlesUrls
 //            //tags
@@ -306,7 +307,13 @@ class ParseHtmlService {
                 title = title,
                 text = rawText,
                 rating = rating,
-                commentsUrl = commentsUrl
+                commentsUrl = commentsUrl,
+                images = imgsUrls.map {
+                    ArticlesImages(
+                            langId = lang.id,
+                            url = it
+                    )
+                }
         )
     }
 

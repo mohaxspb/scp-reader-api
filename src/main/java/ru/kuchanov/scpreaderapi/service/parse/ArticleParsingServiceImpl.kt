@@ -149,6 +149,8 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                                                 articleDownloaded.urlRelative,
                                                 lang.id
                                         )
+                                //todo save images
+
                                 if (articleForLangInDb == null) {
                                     articlesForLangRepository.save(articleDownloaded.apply {
                                         articleId = articleInDb!!.id

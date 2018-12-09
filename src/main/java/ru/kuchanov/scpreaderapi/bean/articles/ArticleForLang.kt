@@ -80,6 +80,8 @@ data class ArticleForLang(
         var updatedOnSite: Timestamp? = null,
         //todo add fields
 
+        @OneToMany(cascade = [CascadeType.ALL], mappedBy = "articleId", fetch = FetchType.EAGER)
+        var images: List<ArticlesImages>? = null,
 
         //dates
         @field:CreationTimestamp
