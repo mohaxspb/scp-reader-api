@@ -312,7 +312,7 @@ class ParseHtmlService {
                     ArticlesImages(
                             url = it
                     )
-                }
+                }.toMutableSet()
         )
     }
 

@@ -42,6 +42,20 @@ data class ArticlesImages(
         @Id
         var url: String,
 
+//        test
+//        @ManyToOne
+////        @JoinColumns(
+////                value = [
+//////                    JoinColumn(name = "articleId", referencedColumnName = "article_id"),
+//////                    JoinColumn(name = "articleLangId", referencedColumnName = "lang_id"),
+//////                    JoinColumn(name = "articleUrlRelative", referencedColumnName = "url_relative")
+////                    JoinColumn(name = "articleId"),
+////                    JoinColumn(name = "articleLangId"),
+////                    JoinColumn(name = "articleUrlRelative")
+////                ]
+////        )
+//        var articleForLang: ArticleForLang? = null,
+
         //dates
         @field:CreationTimestamp
         val created: Timestamp? = null,
@@ -51,8 +65,8 @@ data class ArticlesImages(
 
 @NoArgConstructor
 data class KeyArticlesImages(
-        val articleUrlRelative: String?=null,
-        val articleLangId: String?=null,
-        val articleId: Long?=null,
-        val url: String?=null
+        val articleUrlRelative: String? = null,
+        val articleLangId: String? = null,
+        val articleId: Long? = null,
+        val url: String? = null
 ) : Serializable

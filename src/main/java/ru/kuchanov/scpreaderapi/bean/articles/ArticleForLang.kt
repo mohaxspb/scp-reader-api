@@ -15,16 +15,20 @@ import javax.persistence.*
 @IdClass(KeyArticleLangs::class)
 @Table(name = "articles_langs")
 
-@SqlResultSetMapping(name = "ArticleInListDtoResult", classes = [
-    ConstructorResult(targetClass = ArticleInList::class,
-            columns = [
-                ColumnResult(name = "articleId", type = Long::class),
-                ColumnResult(name = "langId"),
-                ColumnResult(name = "urlRelative"),
-                ColumnResult(name = "title"),
-                ColumnResult(name = "rating", type = Int::class)
-            ])
-])
+@SqlResultSetMapping(
+        name = "ArticleInListDtoResult",
+        classes = [
+            ConstructorResult(
+                    targetClass = ArticleInList::class,
+                    columns = [
+                        ColumnResult(name = "articleId", type = Long::class),
+                        ColumnResult(name = "langId"),
+                        ColumnResult(name = "urlRelative"),
+                        ColumnResult(name = "title"),
+                        ColumnResult(name = "rating", type = Int::class)
+                    ])
+        ]
+)
 @NamedNativeQuery(
         name = "ArticleForLang.getMostRecentArticlesForLang",
         resultSetMapping = "ArticleInListDtoResult",
@@ -80,19 +84,25 @@ data class ArticleForLang(
         var updatedOnSite: Timestamp? = null,
         //todo add fields
 
+//        @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
+//        @JoinColumns(
+//                value = [
+//                    JoinColumn(name = "article_id", referencedColumnName = "article_id"),
+//                    JoinColumn(name = "article_lang_id", referencedColumnName = "lang_id"),
+//                    JoinColumn(name = "article_url_relative", referencedColumnName = "url_relative")
+//                ]
+//        )
+//        var images: MutableSet<ArticlesImages> = mutableSetOf(),
+
         @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
         @JoinColumns(
                 value = [
-//                    JoinColumn(name = "article_Id", referencedColumnName = "article_Id"),
-//                    JoinColumn(name = "lang_Id", referencedColumnName = "article_Lang_Id"),
-//                    JoinColumn(name = "url_Relative", referencedColumnName = "article_Url_Relative")
-
-                    JoinColumn(name = "article_Id", referencedColumnName = "article_id"),
-                    JoinColumn(name = "article_lang_Id", referencedColumnName = "lang_id"),
-                    JoinColumn(name = "article_Url_Relative", referencedColumnName = "url_relative")
+                    JoinColumn(name = "article_id", referencedColumnName = "article_id"),
+                    JoinColumn(name = "article_lang_id", referencedColumnName = "lang_id"),
+                    JoinColumn(name = "article_url_relative", referencedColumnName = "url_relative")
                 ]
         )
-        var images: List<ArticlesImages>? = null,
+        var images: MutableSet<ArticlesImages> = mutableSetOf(),
 
         //dates
         @field:CreationTimestamp

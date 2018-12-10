@@ -1,5 +1,6 @@
 package ru.kuchanov.scpreaderapi.model.dto.article
 
+import ru.kuchanov.scpreaderapi.bean.articles.ArticlesImages
 import ru.kuchanov.scpreaderapi.utils.NoArgConstructor
 
 
@@ -19,5 +20,5 @@ data class ArticleInList(
         val title: String,
         val rating: Int
 ){
-    val imageUrls: List<String>? = null
+    var imageUrls: List<ArticlesImages>? = null
 }
