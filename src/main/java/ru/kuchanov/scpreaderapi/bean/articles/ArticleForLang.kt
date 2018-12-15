@@ -44,22 +44,6 @@ import javax.persistence.*
             ORDER BY a.created_on_site DESC
             OFFSET :offset LIMIT :limit
              """
-        // try this:
-//        query = """
-//            SELECT
-//            article_id as articleId,
-//            lang_id as langId,
-//            url_relative as urlRelative,
-//            title,
-//            rating,
-//			jsonb_agg((SELECT art_id FROM (SELECT ar.id) art_id)) AS imageUrls
-//            FROM articles_langs a
-//			INNER JOIN articles ar ON a.article_id = ar.id
-//            WHERE a.lang_id = 'ru' AND a.created_on_site IS NOT NULL
-//			GROUP BY a.article_id, a.lang_id, url_relative
-//            ORDER BY a.created_on_site DESC
-//            OFFSET 0 LIMIT 1
-//        """
 )
 
 data class ArticleForLang(
@@ -83,16 +67,6 @@ data class ArticleForLang(
         @Column(name = "updated_on_site")
         var updatedOnSite: Timestamp? = null,
         //todo add fields
-
-//        @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
-//        @JoinColumns(
-//                value = [
-//                    JoinColumn(name = "article_id", referencedColumnName = "article_id"),
-//                    JoinColumn(name = "article_lang_id", referencedColumnName = "lang_id"),
-//                    JoinColumn(name = "article_url_relative", referencedColumnName = "url_relative")
-//                ]
-//        )
-//        var images: MutableSet<ArticlesImages> = mutableSetOf(),
 
         @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
         @JoinColumns(

@@ -31,6 +31,7 @@ class ArticleForLangServiceImpl : ArticleForLangService {
     override fun getArticleForLang(articleId: Long, langId: String) = repository.getArticleForLang(articleId, langId)
 
     //FUCKING SHIT!!!!!!!!!!!!!!!!!!!!
+    //todo try overrided pageable with offset/limit support
     override fun getMostRecentArticlesForLang(langId: String, offset: Int, limit: Int) =
             repository.getMostRecentArticlesForLang(langId, offset, limit).map {
                 //shit is here, blyat
@@ -42,14 +43,6 @@ class ArticleForLangServiceImpl : ArticleForLangService {
                     )
                 }
             }
-
-    //test
-    override fun getMostRecentTest(langId: String, offset: Int, limit: Int) =
-            repository.getMostRecentTest(langId, offset, limit)
-
-    //test
-    override fun getMostRecentTest2(langId: String, offset: Int, limit: Int) =
-            repository.getMostRecentTest2(langId, offset, limit)
 
     override fun getOneByLangAndArticleId(articleId: Long, langId: String) =
             repository.getOneByArticleIdAndLangId(articleId, langId)
