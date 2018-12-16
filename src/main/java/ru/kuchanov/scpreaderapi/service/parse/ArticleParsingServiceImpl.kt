@@ -53,12 +53,12 @@ class ArticleParsingServiceImpl : ArticleParsingService {
 
     @Async
     override fun parseMostRecentArticlesForLang(lang: Lang, maxPageCount: Int?) {
-//        val articles = mutableListOf<Article>()
-
         when (lang.id) {
             ScpReaderConstants.Firebase.FirebaseInstance.RU.lang -> {
                 getRecentArticlesPageCountObservable()
-                        .flatMapObservable { Observable.range(1, maxPageCount ?: it) }
+                        .flatMapObservable { recentArticlesPagesCount ->
+                            Observable.range(1, maxPageCount ?: recentArticlesPagesCount)
+                        }
                         .flatMap { page ->
                             getRecentArticlesForPage(lang, page)
                                     .flatMapObservable { Observable.fromIterable(it) }
@@ -157,13 +157,13 @@ class ArticleParsingServiceImpl : ArticleParsingService {
 
 
                                 if (articleForLangInDb == null) {
-                                    articleForLangInDb =  articlesForLangRepository.save(articleDownloaded.apply {
+                                    articleForLangInDb = articlesForLangRepository.save(articleDownloaded.apply {
                                         articleId = articleInDb!!.id
                                         createdOnSite = articleToDownload.createdOnSite
                                         updatedOnSite = articleToDownload.updatedOnSite
                                     })
                                 } else {
-                                    articleForLangInDb =  articlesForLangRepository.save(
+                                    articleForLangInDb = articlesForLangRepository.save(
                                             articleForLangInDb.apply {
                                                 commentsUrl = articleDownloaded.commentsUrl
                                                 rating = articleDownloaded.rating
@@ -175,9 +175,8 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                                             }
                                     )
                                 }
-                                //todo save images
-                                if (articleDownloaded.images != null && articleDownloaded.images?.isNotEmpty() == true) {
-                                    articlesImagesRepository.saveAll(articleDownloaded.images!!.map {
+                                if (articleDownloaded.images.isNotEmpty()) {
+                                    articlesImagesRepository.saveAll(articleDownloaded.images.map {
                                         it.apply {
                                             articleUrlRelative = articleDownloaded.urlRelative
                                             articleLangId = articleDownloaded.langId

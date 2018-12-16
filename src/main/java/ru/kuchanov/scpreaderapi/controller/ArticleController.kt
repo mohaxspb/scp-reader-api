@@ -1,7 +1,8 @@
 package ru.kuchanov.scpreaderapi.controller
 
-import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
@@ -17,10 +18,6 @@ import ru.kuchanov.scpreaderapi.service.users.LangService
 @RequestMapping("/${ScpReaderConstants.Path.ARTICLE}")
 class ArticleController {
 
-    @Suppress("unused")
-    @Autowired
-    private lateinit var log: Logger
-
     @Autowired
     private lateinit var articleParsingService: ArticleParsingService
 
@@ -33,10 +30,16 @@ class ArticleController {
     @GetMapping("/{langEnum}/recent/all")
     fun updateRecentArticles(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
+            @RequestParam(value = "maxPageCount") maxPageCount: Int?,
             @AuthenticationPrincipal user: User?
-    ) {
+    ): ResponseEntity<*> {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
-        articleParsingService.parseMostRecentArticlesForLang(lang, 1)
+        articleParsingService.parseMostRecentArticlesForLang(lang, maxPageCount)
+
+        return ResponseEntity(object {
+            @Suppress("unused")
+            val state = "parsing started"
+        }, HttpStatus.ACCEPTED)
     }
 
     //test
@@ -46,12 +49,14 @@ class ArticleController {
             @RequestParam(value = "offset") offset: Int,
             @RequestParam(value = "limit") limit: Int,
             @AuthenticationPrincipal user: User?
-    ) = articleForLangService.getMostRecentArticlesForLang(langEnum.lang, offset, limit)
+    ) =
+            articleForLangService.getMostRecentArticlesForLang(langEnum.lang, offset, limit)
 
     @GetMapping("{langEnum}/{id}")
     fun showArticleForLangAndId(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
             @PathVariable(value = "id") articleId: Long
-    ) = articleForLangService.getOneByLangAndArticleId(articleId, langEnum.lang)
-            ?: throw ArticleForLangNotFoundException()
+    ) =
+            articleForLangService.getOneByLangAndArticleId(articleId, langEnum.lang)
+                    ?: throw ArticleForLangNotFoundException()
 }
