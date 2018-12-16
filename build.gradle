@@ -6,6 +6,9 @@ buildscript {
 
     ext['netty.version'] = '4.1.29.Final'
 
+    //fix tomcat deploy error
+    ext.jaxb_api_version = '2.3.0'
+
     repositories {
         mavenCentral()
     }
@@ -121,6 +124,12 @@ dependencies {
 
     //jsoup
     api 'org.jsoup:jsoup:1.11.3'
+    
+    //fix tomcat deploy error
+    compile 'com.sun.activation:javax.activation:1.2.0'
+    compile 'javax.transaction:javax.transaction-api:1.2'
+    compile "javax.xml.bind:jaxb-api:$jaxb_api_version"
+    compile "org.glassfish.jaxb:jaxb-runtime:$jaxb_api_version"
 }
 
 compileKotlin {

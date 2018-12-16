@@ -56,6 +56,7 @@ data class ArticleForLang(
         @Id
         @Column(name = "url_relative")
         var urlRelative: String,
+        @Column(columnDefinition = "TEXT")
         var title: String?,
         //new ones
         var text: String? = null,
