@@ -154,7 +154,12 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                                                 lang.id
                                         )
 
-
+                                //set keys for article images.
+                                articleDownloaded.images.forEach {
+                                    it.articleUrlRelative = articleDownloaded.urlRelative
+                                    it.articleLangId = articleDownloaded.langId
+                                    it.articleId = articleInDb!!.id
+                                }
 
                                 if (articleForLangInDb == null) {
                                     articleForLangInDb = articlesForLangRepository.save(articleDownloaded.apply {
@@ -174,15 +179,6 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                                                 //todo add fields
                                             }
                                     )
-                                }
-                                if (articleDownloaded.images.isNotEmpty()) {
-                                    articlesImagesRepository.saveAll(articleDownloaded.images.map {
-                                        it.apply {
-                                            articleUrlRelative = articleDownloaded.urlRelative
-                                            articleLangId = articleDownloaded.langId
-                                            articleId = articleInDb!!.id
-                                        }
-                                    })
                                 }
 
                                 //todo parse inner
