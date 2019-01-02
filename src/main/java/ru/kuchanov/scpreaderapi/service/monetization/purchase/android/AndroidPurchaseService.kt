@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.service.purchase.android
+package ru.kuchanov.scpreaderapi.service.monetization.purchase.android
 
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
 
