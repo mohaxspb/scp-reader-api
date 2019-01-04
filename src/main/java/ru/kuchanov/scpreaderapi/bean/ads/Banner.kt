@@ -2,6 +2,8 @@ package ru.kuchanov.scpreaderapi.bean.ads
 
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
+import org.springframework.http.HttpStatus
+import org.springframework.web.bind.annotation.ResponseStatus
 import java.sql.Timestamp
 import javax.persistence.*
 
@@ -13,9 +15,9 @@ data class Banner(
         val id: Long? = null,
 
         @Column(name = "image_url")
-        val imageUrl: String,
+        var imageUrl: String? = null,
         @Column(name = "logo_url")
-        val logoUrl: String,
+        var logoUrl: String? = null,
 
         val title: String,
         @Column(name = "sub_title")
@@ -26,7 +28,7 @@ data class Banner(
         @Column(name = "redirect_url")
         val redirectUrl: String,
 
-        val enabled: Boolean,
+        var enabled: Boolean,
 
         //dates
         @field:CreationTimestamp
@@ -34,3 +36,6 @@ data class Banner(
         @field:UpdateTimestamp
         val updated: Timestamp? = null
 )
+
+@ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "No such banner")
+class BannerNotFoundException : RuntimeException()

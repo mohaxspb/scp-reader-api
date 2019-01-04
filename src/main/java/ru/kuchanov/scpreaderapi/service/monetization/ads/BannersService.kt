@@ -1,5 +1,6 @@
 package ru.kuchanov.scpreaderapi.service.monetization.ads
 
+import org.springframework.web.multipart.MultipartFile
 import ru.kuchanov.scpreaderapi.bean.ads.Banner
 
 interface BannersService {
@@ -12,4 +13,6 @@ interface BannersService {
     fun saveAll(banners: List<Banner>): List<Banner>
 
     fun deleteById(id: Long)
+
+    fun saveFile(image: MultipartFile, id: Long, name: String): String
 }

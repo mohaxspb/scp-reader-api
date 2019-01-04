@@ -28,6 +28,11 @@ object ScpReaderConstants {
         const val USER = "user"
     }
 
+    object FilesPaths {
+        const val GALLERY = "gallery"
+        const val BANNERS = "banners"
+    }
+
     enum class SocialProvider {
         GOOGLE, FACEBOOK, VK
     }

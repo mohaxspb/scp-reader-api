@@ -2,8 +2,14 @@ package ru.kuchanov.scpreaderapi.service.monetization.ads
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.web.multipart.MultipartFile
+import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.ads.Banner
 import ru.kuchanov.scpreaderapi.repository.monetization.ads.BannersRepository
+import java.io.FileOutputStream
+import java.nio.channels.Channels
+import java.nio.file.Files
+import java.nio.file.Paths
 
 
 @Service
@@ -20,4 +26,16 @@ class BannersServiceImpl : BannersService {
     override fun saveAll(banners: List<Banner>): List<Banner> = repository.saveAll(banners)
 
     override fun deleteById(id: Long) = repository.deleteById(id)
+
+    override fun saveFile(image: MultipartFile, id: Long, name: String): String {
+        val fileDir = "${ScpReaderConstants.FilesPaths.BANNERS}/$id"
+        val fileUrl = "$fileDir/$name"
+
+        val readableByteChannel = Channels.newChannel(image.inputStream)
+        Files.createDirectories(Paths.get(fileDir))
+        val fileOutputStream = FileOutputStream(fileUrl)
+        fileOutputStream.channel.transferFrom(readableByteChannel, 0, Long.MAX_VALUE)
+
+        return fileUrl
+    }
 }

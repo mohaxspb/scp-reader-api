@@ -1,11 +1,21 @@
 package ru.kuchanov.scpreaderapi.controller.monetization
 
+import org.apache.commons.io.IOUtils
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
+import ru.kuchanov.scpreaderapi.bean.ads.Banner
+import ru.kuchanov.scpreaderapi.bean.ads.BannerNotFoundException
+import ru.kuchanov.scpreaderapi.controller.GalleryController
 import ru.kuchanov.scpreaderapi.model.dto.monetization.BannerDto
+import ru.kuchanov.scpreaderapi.model.dto.monetization.toBanner
 import ru.kuchanov.scpreaderapi.service.monetization.ads.BannersService
+import java.io.FileInputStream
+import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.Paths
 
 
 @RestController
@@ -22,12 +32,53 @@ class AdsController {
     fun addBanner(
             @RequestParam("image") image: MultipartFile,
             @RequestParam("logo") logo: MultipartFile,
-            @ModelAttribute banner: BannerDto
-    ) {
+            @ModelAttribute bannerDto: BannerDto
+    ): Banner {
         println("image: ${image.originalFilename}")
         println("logo: ${logo.originalFilename}")
+        println("bannerDto: $bannerDto")
 
-        println("banner: $banner")
-        //todo
+        val banner = bannersService.save(bannerDto.toBanner())
+
+        banner.id?.let {
+            banner.imageUrl = bannersService.saveFile(image, it, "image")
+            banner.logoUrl = bannersService.saveFile(logo, it, "logo")
+
+            return bannersService.save(banner)
+        } ?: throw IllegalStateException("Error while create banner", NullPointerException())
+    }
+
+    @ResponseBody
+    @GetMapping(
+            value = ["/{id}/{name}"],
+            produces = [
+                MediaType.IMAGE_JPEG_VALUE,
+                MediaType.IMAGE_PNG_VALUE,
+                MediaType.IMAGE_GIF_VALUE
+            ]
+    )
+    fun getGalleryImageFileById(
+            @PathVariable(value = "id") id: Long,
+            @PathVariable(value = "name") name: String
+    ): ByteArray {
+        val fileName = "${ScpReaderConstants.FilesPaths.BANNERS}/$id/$name"
+        if (Files.exists(Paths.get(fileName))) {
+            val inputStream = FileInputStream(fileName)
+            return IOUtils.toByteArray(inputStream)
+        } else {
+            throw GalleryController.MyFileNotFoundException("File not found $fileName", IOException())
+        }
+    }
+
+    @PostMapping("/{id}/enable")
+    fun enableBanner(
+            @PathVariable(value = "id") id: Long,
+            @RequestParam("enable") enable: Boolean
+    ): Banner {
+        val banner = bannersService.getById(id) ?: throw BannerNotFoundException()
+
+        banner.enabled = enable
+
+        return bannersService.save(banner)
     }
 }

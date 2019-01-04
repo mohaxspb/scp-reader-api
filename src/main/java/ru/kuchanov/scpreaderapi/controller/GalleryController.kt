@@ -116,8 +116,8 @@ class GalleryController {
 
     private fun downloadImageFromUrl(url: String, id: Long) {
         val readableByteChannel = Channels.newChannel(URL(url).openStream())
-        Files.createDirectories(Paths.get("gallery"))
-        val fileOutputStream = FileOutputStream("gallery/$id.jpg")
+        Files.createDirectories(Paths.get(ScpReaderConstants.FilesPaths.GALLERY))
+        val fileOutputStream = FileOutputStream("${ScpReaderConstants.FilesPaths.GALLERY}/$id.jpg")
         fileOutputStream.channel.transferFrom(readableByteChannel, 0, Long.MAX_VALUE)
     }
 
