@@ -6,3 +6,4 @@
 /src/main/resources/firebase/keys/
 /*.sql
 /src/main/resources/googlePlay/googlePlayAndroidDeveloperServiceKey.json
+/banners/*

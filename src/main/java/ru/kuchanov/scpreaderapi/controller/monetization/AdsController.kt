@@ -89,4 +89,20 @@ class AdsController {
 
         return bannersService.save(banner)
     }
+
+    @PreAuthorize("hasAuthority('BANNER')")
+    @DeleteMapping("/delete/{id}")
+    fun deleteBanner(
+            @PathVariable(value = "id") id: Long,
+            @AuthenticationPrincipal user: User
+    ): Banner {
+        val banner = bannersService.getById(id) ?: throw BannerNotFoundException()
+
+        banner.id?.let {
+            bannersService.deleteById(it)
+            bannersService.deleteFilesById(it)
+        }
+
+        return banner
+    }
 }

@@ -15,4 +15,6 @@ interface BannersService {
     fun deleteById(id: Long)
 
     fun saveFile(image: MultipartFile, id: Long, name: String): String
+
+    fun deleteFilesById(id: Long)
 }

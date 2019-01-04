@@ -2,6 +2,7 @@ package ru.kuchanov.scpreaderapi.service.monetization.ads
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.util.FileSystemUtils
 import org.springframework.web.multipart.MultipartFile
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.ads.Banner
@@ -37,5 +38,10 @@ class BannersServiceImpl : BannersService {
         fileOutputStream.channel.transferFrom(readableByteChannel, 0, Long.MAX_VALUE)
 
         return "${ScpReaderConstants.Path.ADS}/$id/$name"
+    }
+
+    override fun deleteFilesById(id: Long) {
+        val fileDir = "${ScpReaderConstants.FilesPaths.BANNERS}/$id"
+        FileSystemUtils.deleteRecursively(Paths.get(fileDir))
     }
 }
