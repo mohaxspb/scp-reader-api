@@ -5,4 +5,5 @@ import ru.kuchanov.scpreaderapi.bean.ads.Banner
 
 interface BannersRepository : JpaRepository<Banner, Long> {
     fun getOneById(id: Long): Banner?
+    fun findAllByAuthorId(authorId: Long): List<Banner>
 }

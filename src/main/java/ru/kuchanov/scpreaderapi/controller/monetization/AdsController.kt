@@ -28,9 +28,13 @@ class AdsController {
     @Autowired
     private lateinit var bannersService: BannersService
 
-    //todo check auth and return only owned
+    @GetMapping("/allForUser")
+    fun getAllForUser(@AuthenticationPrincipal user: User) =
+            bannersService.findAllByAuthorId(user.id!!)
+
     @GetMapping("/all")
-    fun getAll() = bannersService.findAll()
+    fun getAll() =
+            bannersService.findAll()
 
     @PreAuthorize("hasAuthority('BANNER')")
     @PostMapping("/create")

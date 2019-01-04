@@ -1,6 +1,7 @@
 package ru.kuchanov.scpreaderapi.model.dto.monetization
 
 import ru.kuchanov.scpreaderapi.bean.ads.Banner
+import ru.kuchanov.scpreaderapi.bean.ads.BannerType
 
 
 data class BannerDto(
@@ -8,7 +9,7 @@ data class BannerDto(
         val subTitle: String,
         val ctaButtonText: String,
         val redirectUrl: String,
-
+        val bannerType: BannerType,
         val enabled: Boolean
 )
 
@@ -17,5 +18,6 @@ fun BannerDto.toBanner() = Banner(
         subTitle = subTitle,
         ctaButtonText = ctaButtonText,
         redirectUrl = redirectUrl,
+        bannerType = bannerType,
         enabled = enabled
 )

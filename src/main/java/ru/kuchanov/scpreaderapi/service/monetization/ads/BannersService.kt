@@ -9,6 +9,8 @@ interface BannersService {
 
     fun findAll(): List<Banner>
 
+    fun findAllByAuthorId(authorId: Long): List<Banner>
+
     fun save(banner: Banner): Banner
     fun saveAll(banners: List<Banner>): List<Banner>
 

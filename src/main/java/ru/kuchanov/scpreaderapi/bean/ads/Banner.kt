@@ -28,6 +28,10 @@ data class Banner(
         @Column(name = "redirect_url")
         val redirectUrl: String,
 
+        @Enumerated(EnumType.STRING)
+        @Column(name = "banner_type")
+        var bannerType: BannerType,
+
         var enabled: Boolean,
 
         @Column(name = "author_id")
@@ -39,6 +43,10 @@ data class Banner(
         @field:UpdateTimestamp
         val updated: Timestamp? = null
 )
+
+enum class BannerType {
+    QUIZ, ART
+}
 
 @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "No such banner")
 class BannerNotFoundException : RuntimeException()

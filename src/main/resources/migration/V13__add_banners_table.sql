@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS banners (
      sub_title                     character varying(255) not null,
      cta_button_text               character varying(255) not null,
      redirect_url                  character varying(255) not null,
+     banner_type                   character varying(255) not null,
      enabled                       boolean,
      author_id                     bigint,
      created                       timestamp,

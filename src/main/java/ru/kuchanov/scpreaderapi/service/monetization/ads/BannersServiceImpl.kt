@@ -23,6 +23,9 @@ class BannersServiceImpl : BannersService {
 
     override fun findAll(): List<Banner> = repository.findAll()
 
+    override fun findAllByAuthorId(authorId: Long): List<Banner> =
+            repository.findAllByAuthorId(authorId)
+
     override fun save(banner: Banner): Banner = repository.save(banner)
     override fun saveAll(banners: List<Banner>): List<Banner> = repository.saveAll(banners)
 
