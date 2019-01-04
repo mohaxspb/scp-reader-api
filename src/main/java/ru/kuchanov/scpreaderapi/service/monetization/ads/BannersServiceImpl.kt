@@ -29,13 +29,13 @@ class BannersServiceImpl : BannersService {
 
     override fun saveFile(image: MultipartFile, id: Long, name: String): String {
         val fileDir = "${ScpReaderConstants.FilesPaths.BANNERS}/$id"
-        val fileUrl = "$fileDir/$name"
+        val fileName = "$fileDir/$name"
 
         val readableByteChannel = Channels.newChannel(image.inputStream)
         Files.createDirectories(Paths.get(fileDir))
-        val fileOutputStream = FileOutputStream(fileUrl)
+        val fileOutputStream = FileOutputStream(fileName)
         fileOutputStream.channel.transferFrom(readableByteChannel, 0, Long.MAX_VALUE)
 
-        return fileUrl
+        return "${ScpReaderConstants.Path.ADS}/$id/$name"
     }
 }

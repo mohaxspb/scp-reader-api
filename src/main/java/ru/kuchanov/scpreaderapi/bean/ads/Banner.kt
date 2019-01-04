@@ -30,6 +30,9 @@ data class Banner(
 
         var enabled: Boolean,
 
+        @Column(name = "author_id")
+        var authorId: Long? = null,
+
         //dates
         @field:CreationTimestamp
         val created: Timestamp? = null,

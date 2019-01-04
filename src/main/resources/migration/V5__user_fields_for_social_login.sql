@@ -1,0 +1,5 @@
+alter table users
+ADD COLUMN IF NOT EXISTS facebook_id TEXT,
+ADD COLUMN IF NOT EXISTS google_id TEXT,
+ADD COLUMN IF NOT EXISTS vk_id TEXT,
+ADD COLUMN IF NOT EXISTS main_lang_id TEXT;
