@@ -26,6 +26,8 @@ data class Banner(
         @Column(name = "redirect_url")
         val redirectUrl: String,
 
+        val enabled: Boolean,
+
         //dates
         @field:CreationTimestamp
         val created: Timestamp? = null,

@@ -1,7 +1,6 @@
 package ru.kuchanov.scpreaderapi.controller
 
 import org.apache.commons.io.IOUtils
-import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -25,9 +24,6 @@ import java.nio.file.Paths
 @RestController
 @RequestMapping("/${ScpReaderConstants.Path.GALLERY}")
 class GalleryController {
-
-    @Autowired
-    private lateinit var log: Logger
 
     @Autowired
     private lateinit var apiClient: ApiClient
@@ -122,9 +118,12 @@ class GalleryController {
         val readableByteChannel = Channels.newChannel(URL(url).openStream())
         Files.createDirectories(Paths.get("gallery"))
         val fileOutputStream = FileOutputStream("gallery/$id.jpg")
-        fileOutputStream.channel.transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
+        fileOutputStream.channel.transferFrom(readableByteChannel, 0, Long.MAX_VALUE)
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    class MyFileNotFoundException(message: String, exception: Exception) : RuntimeException()
+    class MyFileNotFoundException(
+            message: String,
+            exception: Exception
+    ) : RuntimeException(message, exception)
 }
