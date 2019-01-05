@@ -24,7 +24,14 @@ object ScpReaderConstants {
         const val FIREBASE = "firebase"
         const val AUTH = "auth"
         const val PURCHASE = "purchase"
+        const val ADS = "ads"
+        const val ADS_FILES = "files"
         const val USER = "user"
+    }
+
+    object FilesPaths {
+        const val GALLERY = "gallery"
+        const val BANNERS = "banners"
     }
 
     enum class SocialProvider {

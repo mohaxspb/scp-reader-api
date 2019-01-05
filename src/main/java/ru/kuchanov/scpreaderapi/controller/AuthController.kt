@@ -104,8 +104,6 @@ class AuthController {
                     if (userInDb.googleId.isNullOrEmpty()) {
                         userInDb.googleId = commonUserData.id
                         usersService.update(userInDb)
-
-                        revokeUserTokens(email, clientId)
                     } else if (userInDb.googleId != commonUserData.id) {
                         log.error("login with ${commonUserData.id}/$email for user with mismatched googleId: ${userInDb.googleId}")
                     }
@@ -114,8 +112,6 @@ class AuthController {
                     if (userInDb.facebookId.isNullOrEmpty()) {
                         userInDb.facebookId = commonUserData.id
                         usersService.update(userInDb)
-
-                        revokeUserTokens(email, clientId)
                     } else if (userInDb.facebookId != commonUserData.id) {
                         log.error("login with ${commonUserData.id}/$email for user with mismatched facebookId: ${userInDb.facebookId}")
                     }
@@ -124,13 +120,12 @@ class AuthController {
                     if (userInDb.vkId.isNullOrEmpty()) {
                         userInDb.vkId = commonUserData.id
                         usersService.update(userInDb)
-
-                        revokeUserTokens(email, clientId)
                     } else if (userInDb.vkId != commonUserData.id) {
                         log.error("login with ${commonUserData.id}/$email for user with mismatched vkId: ${userInDb.vkId}")
                     }
                 }
             }
+            revokeUserTokens(email, clientId)
             return getAccessToken(email, clientId)
         } else {
             //try to find by providers id as email may be changed
@@ -172,7 +167,6 @@ class AuthController {
                     authorityService.insert(Authority(userInDb.id, AuthorityType.USER.name))
 
                     //and save his read/favorite articles
-
                     userDataFromFirebase.forEach { firebaseUserData ->
                         //add user-lang connection if need
                         if (usersLangsService.getByUserIdAndLangId(userInDb.id!!, lang.id) == null) {

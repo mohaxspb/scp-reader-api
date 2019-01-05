@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.repository.purchase.android
+package ru.kuchanov.scpreaderapi.repository.monetization.purchase.android
 
 import org.springframework.data.jpa.repository.JpaRepository
 import ru.kuchanov.scpreaderapi.bean.purchase.AndroidSubscription
