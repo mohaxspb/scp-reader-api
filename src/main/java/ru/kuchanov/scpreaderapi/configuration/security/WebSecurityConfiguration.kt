@@ -91,6 +91,9 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
     @Value("\${angular.port}")
     lateinit var angularServerPort: String
 
+    @Value("\${angular.href}")
+    lateinit var angularServerHref: String
+
     override fun configure(http: HttpSecurity) {
         http
                 .cors()
@@ -105,19 +108,47 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
                 .authorizeRequests()
                 .anyRequest()
                 .authenticated()
+//        http
+//                .formLogin()
+//                .successHandler { request, response, _ ->
+//                    println("angular.port: $angularServerPort")
+//                    println("request: ${request.localName}/${request.localAddr}/${request.localPort}/${request.serverName}")
+//                    DefaultRedirectStrategy().sendRedirect(request, response, "http://${request.serverName}:$angularServerPort");
+//                }
+//                .and()
+//                .logout()
+//                .logoutSuccessHandler { request, response, _ ->
+//                    println("angular.port: $angularServerPort")
+//                    println("request: ${request.localName}/${request.localAddr}/${request.localPort}/${request.serverName}")
+//                    DefaultRedirectStrategy().sendRedirect(request, response, "http://${request.serverName}:$angularServerPort");
+//                }
+//                .permitAll()
+
         http
                 .formLogin()
                 .successHandler { request, response, _ ->
                     println("angular.port: $angularServerPort")
                     println("request: ${request.localName}/${request.localAddr}/${request.localPort}/${request.serverName}")
-                    DefaultRedirectStrategy().sendRedirect(request, response, "http://${request.serverName}:$angularServerPort");
+                    println("request: ${request.protocol}")
+                    println("request: ${request.scheme}")
+                    DefaultRedirectStrategy().sendRedirect(
+                            request,
+                            response,
+                            "${request.scheme}://${request.serverName}:$angularServerPort$angularServerHref"
+                    );
                 }
                 .and()
                 .logout()
                 .logoutSuccessHandler { request, response, _ ->
                     println("angular.port: $angularServerPort")
                     println("request: ${request.localName}/${request.localAddr}/${request.localPort}/${request.serverName}")
-                    DefaultRedirectStrategy().sendRedirect(request, response, "http://${request.serverName}:$angularServerPort");
+                    println("request: ${request.protocol}")
+                    println("request: ${request.scheme}")
+                    DefaultRedirectStrategy().sendRedirect(
+                            request,
+                            response,
+                            "${request.scheme}://${request.serverName}:$angularServerPort$angularServerHref"
+                    );
                 }
                 .permitAll()
 
@@ -140,31 +171,31 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
         )
     }
 
-    //todo check if we really need it
-    @Bean
-    fun corsConfigurationSource(): CorsConfigurationSource {
-        val configuration = CorsConfiguration()
-        configuration.allowedOrigins = listOf("*")
-        configuration.allowedMethods = listOf(
-                "HEAD",
-                "GET",
-                "POST",
-                "PUT",
-                "DELETE",
-                "PATCH"
-        )
-        // setAllowCredentials(true) is important, otherwise:
-        // The value of the 'Access-Control-Allow-Origin' header in the response must not be the wildcard '*' when the request's credentials mode is 'include'.
-        configuration.allowCredentials = true
-        // setAllowedHeaders is important! Without it, OPTIONS preflight request
-        // will fail with 403 Invalid CORS request
-        configuration.allowedHeaders = listOf(
-                "Authorization",
-                "Cache-Control",
-                "Content-Type"
-        )
-        val source = UrlBasedCorsConfigurationSource()
-        source.registerCorsConfiguration("/**", configuration)
-        return source
-    }
+//    //todo check if we really need it
+//    @Bean
+//    fun corsConfigurationSource(): CorsConfigurationSource {
+//        val configuration = CorsConfiguration()
+//        configuration.allowedOrigins = listOf("*")
+//        configuration.allowedMethods = listOf(
+//                "HEAD",
+//                "GET",
+//                "POST",
+//                "PUT",
+//                "DELETE",
+//                "PATCH"
+//        )
+//        // setAllowCredentials(true) is important, otherwise:
+//        // The value of the 'Access-Control-Allow-Origin' header in the response must not be the wildcard '*' when the request's credentials mode is 'include'.
+//        configuration.allowCredentials = true
+//        // setAllowedHeaders is important! Without it, OPTIONS preflight request
+//        // will fail with 403 Invalid CORS request
+//        configuration.allowedHeaders = listOf(
+//                "Authorization",
+//                "Cache-Control",
+//                "Content-Type"
+//        )
+//        val source = UrlBasedCorsConfigurationSource()
+//        source.registerCorsConfiguration("/**", configuration)
+//        return source
+//    }
 }
