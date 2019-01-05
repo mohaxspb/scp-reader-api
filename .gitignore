@@ -2,7 +2,7 @@
 /src/main/resources/*.properties
 /src/main/resources/migration/V3__import_initial_data.sql
 /logs
-!/src/main/resources/firebase/keys/.gitkeep
+!src/main/resources/firebase/keys/.gitkeep
 /src/main/resources/firebase/keys/
 /*.sql
 /src/main/resources/googlePlay/googlePlayAndroidDeveloperServiceKey.json

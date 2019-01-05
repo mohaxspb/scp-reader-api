@@ -135,9 +135,8 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
                 "/${ScpReaderConstants.Path.FIREBASE}/**/**/**",
                 "/${ScpReaderConstants.Path.AUTH}/**",
                 "/${ScpReaderConstants.Path.PURCHASE}/**",
-                //fixme
                 "/${ScpReaderConstants.Path.ADS}/all",
-                "/${ScpReaderConstants.Path.ADS}/**"
+                "/${ScpReaderConstants.Path.ADS}/files/**"
         )
     }
 

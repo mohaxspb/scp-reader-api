@@ -21,6 +21,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 
+@CrossOrigin(origins = ["http://localhost:4200"])
 @RestController
 @RequestMapping("/${ScpReaderConstants.Path.ADS}")
 class AdsController {
@@ -28,13 +29,13 @@ class AdsController {
     @Autowired
     private lateinit var bannersService: BannersService
 
-    @GetMapping("/allForUser")
-    fun getAllForUser(@AuthenticationPrincipal user: User) =
-            bannersService.findAllByAuthorId(user.id!!)
-
     @GetMapping("/all")
     fun getAll() =
             bannersService.findAll()
+
+    @GetMapping("/allForUser")
+    fun getAllForUser(@AuthenticationPrincipal user: User) =
+            bannersService.findAllByAuthorId(user.id!!)
 
     @PreAuthorize("hasAuthority('BANNER')")
     @PostMapping("/create")
@@ -60,7 +61,7 @@ class AdsController {
 
     @ResponseBody
     @GetMapping(
-            value = ["/{id}/{name}"],
+            value = ["/${ScpReaderConstants.Path.ADS_FILES}/{id}/{name}"],
             produces = [
                 MediaType.IMAGE_JPEG_VALUE,
                 MediaType.IMAGE_PNG_VALUE,

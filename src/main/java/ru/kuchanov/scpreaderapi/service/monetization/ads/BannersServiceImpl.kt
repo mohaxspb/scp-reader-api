@@ -40,7 +40,7 @@ class BannersServiceImpl : BannersService {
         val fileOutputStream = FileOutputStream(fileName)
         fileOutputStream.channel.transferFrom(readableByteChannel, 0, Long.MAX_VALUE)
 
-        return "${ScpReaderConstants.Path.ADS}/$id/$name"
+        return "${ScpReaderConstants.Path.ADS}/${ScpReaderConstants.Path.ADS_FILES}/$id/$name"
     }
 
     override fun deleteFilesById(id: Long) {
