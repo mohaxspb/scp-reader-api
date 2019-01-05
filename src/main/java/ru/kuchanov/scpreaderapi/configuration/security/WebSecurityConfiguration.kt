@@ -20,9 +20,6 @@ import org.springframework.security.oauth2.provider.token.DefaultTokenServices
 import org.springframework.security.oauth2.provider.token.TokenStore
 import org.springframework.security.web.DefaultRedirectStrategy
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter
-import org.springframework.web.cors.CorsConfiguration
-import org.springframework.web.cors.CorsConfigurationSource
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.service.auth.ClientServiceImpl
 import ru.kuchanov.scpreaderapi.service.users.UserServiceImpl
@@ -108,47 +105,31 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
                 .authorizeRequests()
                 .anyRequest()
                 .authenticated()
-//        http
-//                .formLogin()
-//                .successHandler { request, response, _ ->
-//                    println("angular.port: $angularServerPort")
-//                    println("request: ${request.localName}/${request.localAddr}/${request.localPort}/${request.serverName}")
-//                    DefaultRedirectStrategy().sendRedirect(request, response, "http://${request.serverName}:$angularServerPort");
-//                }
-//                .and()
-//                .logout()
-//                .logoutSuccessHandler { request, response, _ ->
-//                    println("angular.port: $angularServerPort")
-//                    println("request: ${request.localName}/${request.localAddr}/${request.localPort}/${request.serverName}")
-//                    DefaultRedirectStrategy().sendRedirect(request, response, "http://${request.serverName}:$angularServerPort");
-//                }
-//                .permitAll()
 
         http
                 .formLogin()
                 .successHandler { request, response, _ ->
-                    println("angular.port: $angularServerPort")
-                    println("request: ${request.localName}/${request.localAddr}/${request.localPort}/${request.serverName}")
-                    println("request: ${request.protocol}")
+                    println("request data: ${request.localName}/${request.localAddr}/${request.localPort}/${request.serverName}")
+                    println("request: ${request.remotePort}")
+                    println("request: ${request.serverPort}")
                     println("request: ${request.scheme}")
                     DefaultRedirectStrategy().sendRedirect(
                             request,
                             response,
-                            "${request.scheme}://${request.serverName}:$angularServerPort$angularServerHref"
-                    );
+                            "${request.scheme}://${request.serverName}$angularServerPort$angularServerHref"
+                    )
                 }
                 .and()
                 .logout()
                 .logoutSuccessHandler { request, response, _ ->
-                    println("angular.port: $angularServerPort")
-                    println("request: ${request.localName}/${request.localAddr}/${request.localPort}/${request.serverName}")
+                    println("request data: ${request.localName}/${request.localAddr}/${request.localPort}/${request.serverName}")
                     println("request: ${request.protocol}")
                     println("request: ${request.scheme}")
                     DefaultRedirectStrategy().sendRedirect(
                             request,
                             response,
-                            "${request.scheme}://${request.serverName}:$angularServerPort$angularServerHref"
-                    );
+                            "${request.scheme}://${request.serverName}$angularServerPort$angularServerHref"
+                    )
                 }
                 .permitAll()
 
@@ -170,32 +151,4 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
                 "/${ScpReaderConstants.Path.ADS}/files/**"
         )
     }
-
-//    //todo check if we really need it
-//    @Bean
-//    fun corsConfigurationSource(): CorsConfigurationSource {
-//        val configuration = CorsConfiguration()
-//        configuration.allowedOrigins = listOf("*")
-//        configuration.allowedMethods = listOf(
-//                "HEAD",
-//                "GET",
-//                "POST",
-//                "PUT",
-//                "DELETE",
-//                "PATCH"
-//        )
-//        // setAllowCredentials(true) is important, otherwise:
-//        // The value of the 'Access-Control-Allow-Origin' header in the response must not be the wildcard '*' when the request's credentials mode is 'include'.
-//        configuration.allowCredentials = true
-//        // setAllowedHeaders is important! Without it, OPTIONS preflight request
-//        // will fail with 403 Invalid CORS request
-//        configuration.allowedHeaders = listOf(
-//                "Authorization",
-//                "Cache-Control",
-//                "Content-Type"
-//        )
-//        val source = UrlBasedCorsConfigurationSource()
-//        source.registerCorsConfiguration("/**", configuration)
-//        return source
-//    }
 }

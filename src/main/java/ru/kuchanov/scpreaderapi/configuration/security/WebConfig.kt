@@ -12,7 +12,17 @@ class WebConfig : WebMvcConfigurer {
         registry
                 .addMapping("/**")
                 .allowedMethods("HEAD", "GET", "PUT", "POST", "DELETE", "PATCH", "OPTIONS")
-                .allowedOrigins("http://localhost:4200", "http://localhost:80", "http://localhost:443")
+                .allowedOrigins(
+                        "http://localhost:4200",
+                        "http://localhost:80",
+                        "http://localhost:443",
+                        "https://scpfoundation.app:443",
+                        "https://scpfoundation.app",
+                        "http://scpfoundation.app:80",
+                        "http://scpfoundation.app",
+                        "http://37.143.14.68:80",
+                        "http://37.143.14.68"
+                )
                 .allowedHeaders("*")
                 .allowCredentials(true)
     }
