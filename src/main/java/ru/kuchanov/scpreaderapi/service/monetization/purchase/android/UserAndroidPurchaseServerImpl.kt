@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.service.purchase.android
+package ru.kuchanov.scpreaderapi.service.monetization.purchase.android
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -6,8 +6,8 @@ import ru.kuchanov.scpreaderapi.bean.purchase.AndroidProduct
 import ru.kuchanov.scpreaderapi.bean.purchase.AndroidSubscription
 import ru.kuchanov.scpreaderapi.bean.purchase.UsersAndroidProduct
 import ru.kuchanov.scpreaderapi.bean.purchase.UsersAndroidSubscription
-import ru.kuchanov.scpreaderapi.repository.purchase.android.UserAndroidProductRepository
-import ru.kuchanov.scpreaderapi.repository.purchase.android.UserAndroidSubscriptionRepository
+import ru.kuchanov.scpreaderapi.repository.monetization.purchase.android.UserAndroidProductRepository
+import ru.kuchanov.scpreaderapi.repository.monetization.purchase.android.UserAndroidSubscriptionRepository
 
 @Service
 class UserAndroidPurchaseServerImpl : UserAndroidPurchaseService {

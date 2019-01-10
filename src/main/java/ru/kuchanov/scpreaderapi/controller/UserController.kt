@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.users.User
-import ru.kuchanov.scpreaderapi.service.purchase.android.UserAndroidPurchaseService
+import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.UserAndroidPurchaseService
 import ru.kuchanov.scpreaderapi.service.users.UserService
 
 

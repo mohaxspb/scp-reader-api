@@ -1,8 +1,11 @@
 /.idea/
+/build
 /src/main/resources/*.properties
-/src/main/resources/migration/*.sql
+/src/main/resources/migration/V3__import_initial_data.sql
 /logs
 /build
-/src/main/resources/firebase/keys/serviceAccountKey**
+!src/main/resources/firebase/keys/.gitkeep
+/src/main/resources/firebase/keys/
 /*.sql
 /src/main/resources/googlePlay/googlePlayAndroidDeveloperServiceKey.json
+/banners/*

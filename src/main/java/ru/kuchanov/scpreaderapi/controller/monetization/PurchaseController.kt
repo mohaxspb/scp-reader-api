@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.controller
+package ru.kuchanov.scpreaderapi.controller.monetization
 
 import com.google.api.services.androidpublisher.model.ProductPurchase
 import com.google.api.services.androidpublisher.model.SubscriptionPurchase
@@ -19,10 +19,10 @@ import ru.kuchanov.scpreaderapi.model.dto.purchase.AndroidProductResponse
 import ru.kuchanov.scpreaderapi.model.dto.purchase.AndroidSubscriptionResponse
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationStatus
-import ru.kuchanov.scpreaderapi.service.purchase.android.AndroidProductService
-import ru.kuchanov.scpreaderapi.service.purchase.android.AndroidPurchaseService
-import ru.kuchanov.scpreaderapi.service.purchase.android.AndroidSubscriptionService
-import ru.kuchanov.scpreaderapi.service.purchase.android.UserAndroidPurchaseService
+import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.AndroidProductService
+import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.AndroidPurchaseService
+import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.AndroidSubscriptionService
+import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.UserAndroidPurchaseService
 import java.sql.Timestamp
 
 

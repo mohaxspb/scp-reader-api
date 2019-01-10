@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.service.purchase.android
+package ru.kuchanov.scpreaderapi.service.monetization.purchase.android
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.services.androidpublisher.AndroidPublisher

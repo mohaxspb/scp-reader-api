@@ -23,5 +23,5 @@ data class Authority(
 ) : Serializable
 
 enum class AuthorityType {
-    USER, ADMIN
+    USER, ADMIN, BANNER
 }
