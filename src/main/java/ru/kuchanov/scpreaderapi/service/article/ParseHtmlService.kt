@@ -250,9 +250,9 @@ class ParseHtmlService {
         }
 
         //search for inner articles
+        val innerArticlesUrls = mutableListOf<String>()
         val innerATags = pageContent.getElementsByTag(TAG_A)
         if (!innerATags.isEmpty()) {
-            val innerArticlesUrls = mutableListOf<String>()
             for (a in innerATags) {
                 val innerUrl = a.attr(ATTR_HREF)
                 if (LinkType.getLinkType(innerUrl, lang) === LinkType.INNER) {
@@ -287,8 +287,6 @@ class ParseHtmlService {
 //                article.rating = rating
 //            }
 //            article.commentsUrl = commentsUrl
-
-        //todo
 //            //images
 //            article.imagesUrls = imgsUrls
         //todo
@@ -429,10 +427,13 @@ class ParseHtmlService {
     }
 
     enum class TextType {
-        TEXT, SPOILER, IMAGE,
-        TABLE, TITLE, TAGS,
-        TABS,
-        NATIVE_ADS_APPODEAL, NATIVE_ADS_SCP_ART, NATIVE_ADS_SCP_QUIZ
+        TEXT,
+        SPOILER,
+        IMAGE,
+        TABLE,
+        TITLE,
+        TAGS,
+        TABS
     }
 
     enum class LinkType {

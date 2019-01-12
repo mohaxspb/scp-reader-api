@@ -41,11 +41,7 @@ class ArticleForLangServiceImpl : ArticleForLangService {
             repository.getMostRecentArticlesForLang(langId, offset, limit).map {
                 //shit is here, blyat
                 it.apply {
-                    imageUrls = imagesRepository.findAllByArticleUrlRelativeAndArticleLangIdAndArticleId(
-                            articleUrlRelative = it.urlRelative,
-                            articleLangId = it.langId,
-                            articleId = it.articleId
-                    )
+                    imageUrls = imagesRepository.findAllByArticleForLangId(articleForLangId = it.id)
                 }
             }
 

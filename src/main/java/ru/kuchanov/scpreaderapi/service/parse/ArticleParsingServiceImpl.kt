@@ -84,10 +84,10 @@ class ArticleParsingServiceImpl : ArticleParsingService {
     }
 
     private fun getRecentArticlesForPage(lang: Lang, page: Int): Single<List<ArticleForLang>> {
-        return Single.create<List<ArticleForLang>> { subscriber ->
+        return Single.create<List<ArticleForLang>> {
             val request = Request.Builder()
                     //todo pass somehow
-                    .url("http://scpfoundation.ru/most-recently-created" + "/p/" + page)
+                    .url("http://scpfoundation.ru/most-recently-created/p/$page")
                     .build()
 
             val responseBody = okHttpClient
@@ -100,7 +100,7 @@ class ArticleParsingServiceImpl : ArticleParsingService {
 
             val articles = parseForRecentArticles(lang, doc)
 
-            subscriber.onSuccess(articles)
+            it.onSuccess(articles)
         }
     }
 
@@ -108,7 +108,7 @@ class ArticleParsingServiceImpl : ArticleParsingService {
         return Single.create<Int> { subscriber ->
             val request = Request.Builder()
                     //todo pass somehow
-                    .url("http://scpfoundation.ru/most-recently-created" + "/p/1")
+                    .url("http://scpfoundation.ru/most-recently-created/p/1")
                     .build()
 
             val responseBody: String
@@ -156,9 +156,7 @@ class ArticleParsingServiceImpl : ArticleParsingService {
 
                                 //set keys for article images.
                                 articleDownloaded.images.forEach {
-                                    it.articleUrlRelative = articleDownloaded.urlRelative
-                                    it.articleLangId = articleDownloaded.langId
-                                    it.articleId = articleInDb!!.id
+                                    it.articleForLangId = articleDownloaded.id
                                 }
 
                                 if (articleForLangInDb == null) {
@@ -213,12 +211,14 @@ class ArticleParsingServiceImpl : ArticleParsingService {
             val tagA = firstTd.getElementsByTag("a").first()
             val title = tagA.text()
             val url = lang.siteBaseUrl + tagA.attr("href")
-            //rating
+            //todo rating
             val rating = Integer.parseInt(listOfTd[1].text())
             //author
             val spanWithAuthor = listOfTd[2]
                     .getElementsByAttributeValueContaining("class", "printuser").first()
+            //todo
             val authorName = spanWithAuthor.text()
+            //todo
             val authorUrl = spanWithAuthor.getElementsByTag("a").first()?.attr("href")
 
             val createdDate = listOfTd[3].text().trim()

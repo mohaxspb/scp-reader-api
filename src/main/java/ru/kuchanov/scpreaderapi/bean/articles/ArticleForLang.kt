@@ -5,14 +5,12 @@ import org.hibernate.annotations.UpdateTimestamp
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.ResponseStatus
 import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInList
-import ru.kuchanov.scpreaderapi.utils.NoArgConstructor
 import java.io.Serializable
 import java.sql.Timestamp
 import javax.persistence.*
 
 
 @Entity
-@IdClass(KeyArticleLangs::class)
 @Table(name = "articles_langs")
 
 @SqlResultSetMapping(
@@ -21,6 +19,7 @@ import javax.persistence.*
             ConstructorResult(
                     targetClass = ArticleInList::class,
                     columns = [
+                        ColumnResult(name = "id", type = Long::class),
                         ColumnResult(name = "articleId", type = Long::class),
                         ColumnResult(name = "langId"),
                         ColumnResult(name = "urlRelative"),
@@ -34,6 +33,7 @@ import javax.persistence.*
         resultSetMapping = "ArticleInListDtoResult",
         query = """
             SELECT
+            id,
             article_id as articleId,
             lang_id as langId,
             url_relative as urlRelative,
@@ -48,12 +48,13 @@ import javax.persistence.*
 
 data class ArticleForLang(
         @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        val id: Long? = null,
+
         @Column(name = "article_id")
         var articleId: Long? = null,
-        @Id
         @Column(name = "lang_id")
         var langId: String,
-        @Id
         @Column(name = "url_relative")
         var urlRelative: String,
         @Column(columnDefinition = "TEXT")
@@ -72,9 +73,7 @@ data class ArticleForLang(
         @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
         @JoinColumns(
                 value = [
-                    JoinColumn(name = "article_id", referencedColumnName = "article_id"),
-                    JoinColumn(name = "article_lang_id", referencedColumnName = "lang_id"),
-                    JoinColumn(name = "article_url_relative", referencedColumnName = "url_relative")
+                    JoinColumn(name = "article_for_lang_id", referencedColumnName = "id")
                 ]
         )
         var images: MutableSet<ArticlesImages> = mutableSetOf(),
@@ -84,13 +83,6 @@ data class ArticleForLang(
         val created: Timestamp? = null,
         @field:UpdateTimestamp
         val updated: Timestamp? = null
-)
-
-@NoArgConstructor
-data class KeyArticleLangs(
-        val articleId: Long? = null,
-        val langId: String? = null,
-        val urlRelative: String? = null
 ) : Serializable
 
 
