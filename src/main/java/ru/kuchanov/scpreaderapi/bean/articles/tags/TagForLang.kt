@@ -28,7 +28,7 @@ data class TagForLang(
 
         //content
         @Column(columnDefinition = "TEXT")
-        var title: String?,
+        var title: String,
 
         //dates
         @field:CreationTimestamp

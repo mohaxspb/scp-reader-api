@@ -179,6 +179,11 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                                     )
                                 }
 
+                                //todo tags
+                                //save tagsForLang if not exists
+                                //save tagsForArticleForLang
+                                //do not insert in Tag, as we'll do it manually later. Maybe...
+
                                 //todo parse inner
 //                                if (mMyPreferenceManager.isHasSubscription() && mInnerArticlesDepth !== 0) {
 //                                    getAndSaveInnerArticles(dbProvider, getApiClient(), articleDownloaded, 0, mInnerArticlesDepth)

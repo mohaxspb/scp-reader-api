@@ -10,6 +10,7 @@ import org.jsoup.select.Elements
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.ArticlesImages
+import ru.kuchanov.scpreaderapi.bean.articles.tags.TagForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 import ru.kuchanov.scpreaderapi.utils.isDigistOnly
 import java.util.*
@@ -289,14 +290,14 @@ class ParseHtmlService {
 //            article.commentsUrl = commentsUrl
 //            //images
 //            article.imagesUrls = imgsUrls
+//            //tags
+//            article.tags = articleTags
         //todo
 //            //textParts
 //            article.textParts = textParts
 //            article.textPartsTypes = textPartsTypes
 //            //inner articles
 //            article.innerArticlesUrls = innerArticlesUrls
-//            //tags
-//            article.tags = articleTags
 
         //finally fill article info
         return ArticleForLang(
@@ -306,7 +307,8 @@ class ParseHtmlService {
                 text = rawText,
                 rating = rating,
                 commentsUrl = commentsUrl,
-                images = imgsUrls.map { ArticlesImages(url = it) }.toMutableSet()
+                images = imgsUrls.map { ArticlesImages(url = it) }.toMutableSet(),
+                tags = articleTags.map { TagForLang(langId = lang.id, title = it) }.toMutableSet()
         )
     }
 

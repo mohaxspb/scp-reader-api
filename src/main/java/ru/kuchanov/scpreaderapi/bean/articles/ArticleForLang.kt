@@ -4,6 +4,7 @@ import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.ResponseStatus
+import ru.kuchanov.scpreaderapi.bean.articles.tags.TagForLang
 import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInList
 import java.io.Serializable
 import java.sql.Timestamp
@@ -75,7 +76,6 @@ data class ArticleForLang(
         var createdOnSite: Timestamp? = null,
         @Column(name = "updated_on_site")
         var updatedOnSite: Timestamp? = null,
-        //todo add fields
 
         @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
         @JoinColumns(
@@ -84,6 +84,12 @@ data class ArticleForLang(
                 ]
         )
         var images: MutableSet<ArticlesImages> = mutableSetOf(),
+
+        //todo add fields
+        @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
+        //todo
+        @JoinColumn()
+        var tags: MutableSet<TagForLang> = mutableSetOf(),
 
         //dates
         @field:CreationTimestamp
