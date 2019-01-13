@@ -306,11 +306,7 @@ class ParseHtmlService {
                 text = rawText,
                 rating = rating,
                 commentsUrl = commentsUrl,
-                images = imgsUrls.map {
-                    ArticlesImages(
-                            url = it
-                    )
-                }.toMutableSet()
+                images = imgsUrls.map { ArticlesImages(url = it) }.toMutableSet()
         )
     }
 

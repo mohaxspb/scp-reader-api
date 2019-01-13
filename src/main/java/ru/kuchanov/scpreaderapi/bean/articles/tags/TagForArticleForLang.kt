@@ -24,7 +24,7 @@ data class TagForArticleForLang(
         @Column(name = "tag_for_lang_id")
         var tagForLangId: Long,
         @Column(name = "article_for_lang_id")
-        var articleForLangId: String,
+        var articleForLangId: Long,
 
         //dates
         @field:CreationTimestamp
