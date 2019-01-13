@@ -12,6 +12,7 @@ data class Article(
         val id: Long? = null,
         @Column(name = "article_type_id")
         val articleTypeId: Long? = null
+        //todo add dates
 )
 
 @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "No such article")

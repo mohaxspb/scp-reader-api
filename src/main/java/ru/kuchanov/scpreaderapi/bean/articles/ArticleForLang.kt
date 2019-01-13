@@ -11,7 +11,14 @@ import javax.persistence.*
 
 
 @Entity
-@Table(name = "articles_langs")
+@Table(
+        name = "articles_langs",
+        uniqueConstraints = [
+            UniqueConstraint(
+                    columnNames = ["article_id", "lang_id", "url_relative"]
+            )
+        ]
+)
 
 @SqlResultSetMapping(
         name = "ArticleInListDtoResult",
