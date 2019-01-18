@@ -42,7 +42,6 @@ class ArticleController {
         }, HttpStatus.ACCEPTED)
     }
 
-    //test
     @GetMapping("/{langEnum}/recent")
     fun showRecentArticles(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
@@ -51,6 +50,15 @@ class ArticleController {
             @AuthenticationPrincipal user: User?
     ) =
             articleForLangService.getMostRecentArticlesForLang(langEnum.lang, offset, limit)
+
+    @GetMapping("/{langEnum}/recent/full")
+    fun showRecentArticlesFull(
+            @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
+            @RequestParam(value = "offset") offset: Int,
+            @RequestParam(value = "limit") limit: Int,
+            @AuthenticationPrincipal user: User?
+    ) =
+            articleForLangService.getMostRecentArticlesForLangFull(langEnum.lang, offset, limit)
 
     @GetMapping("{langEnum}/{id}")
     fun showArticleForLangAndId(

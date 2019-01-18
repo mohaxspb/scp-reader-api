@@ -19,10 +19,12 @@ import ru.kuchanov.scpreaderapi.bean.articles.Article
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 import ru.kuchanov.scpreaderapi.configuration.NetworkConfiguration
-import ru.kuchanov.scpreaderapi.repository.article.ArticlesForLangRepository
-import ru.kuchanov.scpreaderapi.repository.article.ArticlesImagesRepository
-import ru.kuchanov.scpreaderapi.repository.article.ArticlesRepository
+import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
+import ru.kuchanov.scpreaderapi.service.article.ArticleService
+import ru.kuchanov.scpreaderapi.service.article.ArticlesImagesService
 import ru.kuchanov.scpreaderapi.service.article.ParseHtmlService
+import ru.kuchanov.scpreaderapi.service.article.tags.TagForArticleForLangService
+import ru.kuchanov.scpreaderapi.service.article.tags.TagForLangService
 import java.io.IOException
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
@@ -43,13 +45,19 @@ class ArticleParsingServiceImpl : ArticleParsingService {
     private lateinit var parseHtmlService: ParseHtmlService
 
     @Autowired
-    private lateinit var articlesRepository: ArticlesRepository
+    private lateinit var articleService: ArticleService
 
     @Autowired
-    private lateinit var articlesForLangRepository: ArticlesForLangRepository
+    private lateinit var articleForLangService: ArticleForLangService
 
     @Autowired
-    private lateinit var articlesImagesRepository: ArticlesImagesRepository
+    private lateinit var articlesImagesService: ArticlesImagesService
+
+    @Autowired
+    private lateinit var tagForArticleForLangService: TagForArticleForLangService
+
+    @Autowired
+    private lateinit var tagForLangService: TagForLangService
 
     @Async
     override fun parseMostRecentArticlesForLang(lang: Lang, maxPageCount: Int?) {
@@ -144,11 +152,11 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                         try {
                             val articleDownloaded = getArticleFromApi(articleToDownload.urlRelative, lang)
                             if (articleDownloaded != null) {
-                                var articleInDb = articlesRepository.getArticleByUrlRelative(articleDownloaded.urlRelative)
+                                var articleInDb = articleService.getArticleByUrlRelative(articleDownloaded.urlRelative)
                                 if (articleInDb == null) {
-                                    articleInDb = articlesRepository.save(Article())
+                                    articleInDb = articleService.insert(Article())
                                 }
-                                var articleForLangInDb = articlesForLangRepository
+                                var articleForLangInDb = articleForLangService
                                         .getArticleForLangByUrlRelativeAndLang(
                                                 articleDownloaded.urlRelative,
                                                 lang.id
@@ -160,13 +168,13 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                                 }
 
                                 if (articleForLangInDb == null) {
-                                    articleForLangInDb = articlesForLangRepository.save(articleDownloaded.apply {
-                                        articleId = articleInDb!!.id
+                                    articleForLangInDb = articleForLangService.insert(articleDownloaded.apply {
+                                        articleId = articleInDb.id
                                         createdOnSite = articleToDownload.createdOnSite
                                         updatedOnSite = articleToDownload.updatedOnSite
                                     })
                                 } else {
-                                    articleForLangInDb = articlesForLangRepository.save(
+                                    articleForLangInDb = articleForLangService.insert(
                                             articleForLangInDb.apply {
                                                 commentsUrl = articleDownloaded.commentsUrl
                                                 rating = articleDownloaded.rating
@@ -179,10 +187,11 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                                     )
                                 }
 
-                                //todo tags
-                                //save tagsForLang if not exists
-                                //save tagsForArticleForLang
-                                //do not insert in Tag, as we'll do it manually later. Maybe...
+                                manageTagsForArticle(
+                                        lang.id,
+                                        articleDownloaded,
+                                        articleForLangInDb
+                                )
 
                                 //todo parse inner
 //                                if (mMyPreferenceManager.isHasSubscription() && mInnerArticlesDepth !== 0) {
@@ -280,6 +289,27 @@ class ArticleParsingServiceImpl : ArticleParsingService {
      */
     protected fun getArticlePageContentTag(doc: Document): Element? {
         return doc.getElementById(HTML_ID_PAGE_CONTENT)
+    }
+
+    private fun manageTagsForArticle(
+            langId: String,
+            articleDownloaded: ArticleForLang,
+            articleForLangInDb: ArticleForLang
+    ) {
+        //save tagsForLang if not exists
+        val tagsForLang = articleDownloaded.tags.map {
+            tagForLangService.getByLangIdAndTitleOrCreate(langId, it.title)
+        }
+
+        //save tagsForArticleForLang
+        tagsForLang.forEach {
+            tagForArticleForLangService.getOneByTagForLangIdAndArticleForLangIdOrCreate(
+                    tagForLangId = it.id!!,
+                    articleForLangId = articleForLangInDb.id!!
+            )
+        }
+
+        //do not insert in Tag, as we'll do it manually later. Maybe...
     }
 
     companion object {

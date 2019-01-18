@@ -13,4 +13,6 @@ interface TagForArticleForLangService {
     fun insert(data: TagForArticleForLang): TagForArticleForLang
 
     fun insert(data: List<TagForArticleForLang>): List<TagForArticleForLang>
+
+    fun getOneByTagForLangIdAndArticleForLangIdOrCreate(tagForLangId:Long, articleForLangId:Long):TagForArticleForLang
 }

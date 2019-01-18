@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.repository.article.ArticlesForLangRepository
 import ru.kuchanov.scpreaderapi.repository.article.ArticlesImagesRepository
+import ru.kuchanov.scpreaderapi.repository.article.tags.TagForLangRepository
 
 
 @Suppress("unused")
@@ -12,39 +13,53 @@ import ru.kuchanov.scpreaderapi.repository.article.ArticlesImagesRepository
 class ArticleForLangServiceImpl : ArticleForLangService {
 
     @Autowired
-    private lateinit var repository: ArticlesForLangRepository
+    private lateinit var articlesForLangRepository: ArticlesForLangRepository
 
     @Autowired
     private lateinit var imagesRepository: ArticlesImagesRepository
 
+    @Autowired
+    private lateinit var tagsForLangRepository: TagForLangRepository
+
     override fun findAll() =
-            repository.findAll().toList()
+            articlesForLangRepository.findAll().toList()
 
     override fun update(articleForLang: ArticleForLang): ArticleForLang =
-            repository.save(articleForLang)
+            articlesForLangRepository.save(articleForLang)
 
     override fun insert(articleForLang: ArticleForLang): ArticleForLang =
-            repository.save(articleForLang)
+            articlesForLangRepository.save(articleForLang)
 
     override fun insert(articleForLang: List<ArticleForLang>): List<ArticleForLang> =
-            repository.saveAll(articleForLang)
+            articlesForLangRepository.saveAll(articleForLang)
 
     override fun getArticleForLangByUrlRelativeAndLang(urlRelative: String, langId: String) =
-            repository.getArticleForLangByUrlRelativeAndLang(urlRelative, langId)
+            articlesForLangRepository.getArticleForLangByUrlRelativeAndLang(urlRelative, langId)
 
     override fun getArticleForLang(articleId: Long, langId: String) =
-            repository.getArticleForLang(articleId, langId)
+            articlesForLangRepository.getArticleForLang(articleId, langId)
 
     //FUCKING SHIT!!!!!!!!!!!!!!!!!!!!
     //todo try overrided pageable with offset/limit support
     override fun getMostRecentArticlesForLang(langId: String, offset: Int, limit: Int) =
-            repository.getMostRecentArticlesForLang(langId, offset, limit).map {
+            articlesForLangRepository.getMostRecentArticlesForLang(langId, offset, limit).map {
                 //shit is here, blyat
                 it.apply {
                     imageUrls = imagesRepository.findAllByArticleForLangId(articleForLangId = it.id)
                 }
             }
 
+    override fun getMostRecentArticlesForLangFull(langId: String, offset: Int, limit: Int) =
+            articlesForLangRepository.getMostRecentArticlesForLangFull(langId, offset, limit).map {
+                it.apply {
+                    images = imagesRepository.findAllByArticleForLangIdFull(articleForLangId = it.id!!).toMutableSet()
+                    tags = tagsForLangRepository.getAllForLangIdAndArticleForLangId(
+                            langId = langId,
+                            articleForLangId = it.id
+                    ).toMutableSet()
+                }
+            }
+
     override fun getOneByLangAndArticleId(articleId: Long, langId: String) =
-            repository.getOneByArticleIdAndLangId(articleId, langId)
+            articlesForLangRepository.getOneByArticleIdAndLangId(articleId, langId)
 }

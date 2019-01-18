@@ -24,4 +24,16 @@ class TagForArticleForLangServiceImpl : TagForArticleForLangService {
 
     override fun findOneById(id: Long) =
             repository.getOneById(id)
+
+    override fun getOneByTagForLangIdAndArticleForLangIdOrCreate(
+            tagForLangId: Long,
+            articleForLangId: Long
+    ): TagForArticleForLang =
+            repository.getOneByTagForLangIdAndArticleForLangId(tagForLangId, articleForLangId)
+                    ?: repository.save(
+                            TagForArticleForLang(
+                                    tagForLangId = tagForLangId,
+                                    articleForLangId = articleForLangId
+                            )
+                    )
 }

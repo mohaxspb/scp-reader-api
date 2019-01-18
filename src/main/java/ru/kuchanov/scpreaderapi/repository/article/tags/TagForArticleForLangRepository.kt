@@ -8,4 +8,6 @@ interface TagForArticleForLangRepository : JpaRepository<TagForArticleForLang, L
     fun getOneById(id: Long): TagForArticleForLang?
 
     fun getAllByArticleForLangId(articleForLangId: Long): List<TagForArticleForLang>
+
+    fun getOneByTagForLangIdAndArticleForLangId(tagForLangId: Long, articleForLangId: Long): TagForArticleForLang?
 }

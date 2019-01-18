@@ -15,7 +15,7 @@ data class ArticlesImages(
         val id: Long? = null,
 
         @Column(name = "article_for_lang_id")
-        var articleForLangId:Long? = null,
+        var articleForLangId: Long? = null,
 
         //content
         var url: String,

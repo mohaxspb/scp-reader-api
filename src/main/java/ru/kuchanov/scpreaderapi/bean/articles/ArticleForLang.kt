@@ -86,9 +86,19 @@ data class ArticleForLang(
         var images: MutableSet<ArticlesImages> = mutableSetOf(),
 
         //todo add fields
-        @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
-        //todo
-        @JoinColumn()
+
+        @ManyToMany(fetch = FetchType.EAGER)
+        @JoinTable(
+                name = "tags_articles_langs",
+                joinColumns = [
+                    JoinColumn(name = "article_for_lang_id", referencedColumnName = "id")
+                ],
+                inverseJoinColumns = [
+                    JoinColumn(name = "tag_for_lang_id", referencedColumnName = "id")
+                ]
+        )
+        //to not write on insert
+        @Transient
         var tags: MutableSet<TagForLang> = mutableSetOf(),
 
         //dates

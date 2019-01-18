@@ -19,5 +19,16 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
     @Query(nativeQuery = true)
     fun getMostRecentArticlesForLang(langId: String, offset: Int, limit: Int): List<ArticleInList>
 
+    @Query(
+            value = """
+            SELECT * FROM articles_langs a
+            WHERE a.lang_id = :langId AND a.created_on_site IS NOT NULL
+            ORDER BY a.created_on_site DESC
+            OFFSET :offset LIMIT :limit
+            """,
+            nativeQuery = true
+    )
+    fun getMostRecentArticlesForLangFull(langId: String, offset: Int, limit: Int): List<ArticleForLang>
+
     fun getOneByArticleIdAndLangId(articleId: Long, langId: String): ArticleForLang?
 }

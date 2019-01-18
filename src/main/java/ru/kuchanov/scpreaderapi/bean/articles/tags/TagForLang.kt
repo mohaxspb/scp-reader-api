@@ -10,7 +10,7 @@ import javax.persistence.*
 @Table(
         name = "tags_langs",
         uniqueConstraints = [
-            javax.persistence.UniqueConstraint(
+            UniqueConstraint(
                     columnNames = ["lang_id", "title"]
             )
         ]
