@@ -9,11 +9,7 @@ import javax.persistence.*
 @Entity
 @Table(
         name = "tags_langs",
-        uniqueConstraints = [
-            UniqueConstraint(
-                    columnNames = ["lang_id", "title"]
-            )
-        ]
+        uniqueConstraints = [UniqueConstraint(columnNames = ["lang_id", "title"])]
 )
 data class TagForLang(
         @Id
