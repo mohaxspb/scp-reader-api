@@ -16,13 +16,24 @@ interface TagForLangRepository : JpaRepository<TagForLang, Long> {
     fun getAllByLangId(langId: String): List<TagForLang>
 
     @Query(
-            name = TagForLang.NATIVE_QUERY_ALL_FOR_LANG_ID_AND_ARTICLE_FOR_LANG_ID,
-            nativeQuery = true
+            """
+                SELECT tl
+                FROM TagForLang tl
+                JOIN TagForArticleForLang tal
+                ON tal.tagForLangId = tl.id AND tal.articleForLangId = :articleForLangId
+                WHERE tl.langId = :langId
+            """
     )
     fun getAllForLangIdAndArticleForLangId(langId: String, articleForLangId: Long): List<TagForLang>
 
     @Query(
-            name = TagForLang.NATIVE_QUERY_ALL_FOR_LANG_ID_AND_ARTICLE_FOR_LANG_ID,
+            value =
+            """
+                SELECT tl.id, tl.title FROM tags_langs tl
+                JOIN tags_articles_langs tal
+                ON tal.tag_for_lang_id = tl.id AND tal.article_for_lang_id = :articleForLangId
+                WHERE tl.lang_id = :langId
+            """,
             nativeQuery = true
     )
     fun getAllForLangIdAndArticleForLangIdAsDto(langId: String, articleForLangId: Long): List<TagForLangDto>

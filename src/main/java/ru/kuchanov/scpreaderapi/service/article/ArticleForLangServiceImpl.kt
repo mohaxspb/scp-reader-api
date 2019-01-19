@@ -56,10 +56,10 @@ class ArticleForLangServiceImpl : ArticleForLangService {
     override fun getMostRecentArticlesForLangFull(langId: String, offset: Int, limit: Int) =
             articlesForLangRepository.getMostRecentArticlesForLangFull(langId, offset, limit).map {
                 it.apply {
-                    images = imagesRepository.findAllByArticleForLangIdFull(articleForLangId = it.id!!).toMutableSet()
+                    images = imagesRepository.findAllByArticleForLangIdFull(articleForLangId = id!!).toMutableSet()
                     tags = tagsForLangRepository.getAllForLangIdAndArticleForLangId(
                             langId = langId,
-                            articleForLangId = it.id
+                            articleForLangId = id
                     ).toMutableSet()
                 }
             }

@@ -42,19 +42,20 @@ import javax.persistence.*
             NamedNativeQuery(
                     name = "ArticleForLang.getMostRecentArticlesForLang",
                     resultSetMapping = "ArticleInListDtoResult",
-                    query = """
-            SELECT
-            id,
-            article_id as articleId,
-            lang_id as langId,
-            url_relative as urlRelative,
-            title,
-            rating
-            FROM articles_langs a
-            WHERE a.lang_id = :langId AND a.created_on_site IS NOT NULL
-            ORDER BY a.created_on_site DESC
-            OFFSET :offset LIMIT :limit
-             """
+                    query =
+                        """
+                        SELECT
+                        id,
+                        article_id as articleId,
+                        lang_id as langId,
+                        url_relative as urlRelative,
+                        title,
+                        rating
+                        FROM articles_langs a
+                        WHERE a.lang_id = :langId AND a.created_on_site IS NOT NULL
+                        ORDER BY a.created_on_site DESC
+                        OFFSET :offset LIMIT :limit
+                        """
             )
         ]
 )
@@ -82,6 +83,8 @@ data class ArticleForLang(
         @Column(name = "updated_on_site")
         var updatedOnSite: Timestamp? = null,
 
+        //todo add fields
+
         @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
         @JoinColumns(
                 value = [
@@ -89,8 +92,6 @@ data class ArticleForLang(
                 ]
         )
         var images: MutableSet<ArticlesImages> = mutableSetOf(),
-
-        //todo add fields
 
         //seems to be we do not need this field at all...
         //as we cant insert automatically...
@@ -124,6 +125,18 @@ data class ArticleForLang(
         //to not write on insert
         @Transient
         var tags: MutableSet<TagForLang> = mutableSetOf(),
+
+        //inner articles
+        //todo check it and create migration
+        @ManyToOne
+        @JoinColumn(name = "parent_article_for_lang_id")
+        val parentArticleForLang: ArticleForLang? = null,
+
+        @OneToMany(
+                cascade = [CascadeType.ALL],
+                mappedBy = "parentArticleForLang"
+        )
+        val innerArticlesForLang: Set<ArticleForLang> = mutableSetOf(),
 
         //dates
         @field:CreationTimestamp
