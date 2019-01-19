@@ -87,7 +87,18 @@ data class ArticleForLang(
 
         //todo add fields
 
-        @ManyToMany(fetch = FetchType.EAGER)
+        //seems to be we do not need this field at all...
+        //as we cant insert automatically...
+        //but we can just hold info in this field to handle it during parsing
+        //so we do need anything except of @Transient...
+        @ManyToMany(
+                //doesnt work as it's crashing on unique constraints
+                //cascade = [CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH],
+                //this also doest work, for the same reason
+                //cascade = [CascadeType.ALL],
+                //and without it we'll get another error - try to write not managed object...
+                fetch = FetchType.EAGER
+        )
         @JoinTable(
                 name = "tags_articles_langs",
                 joinColumns = [
@@ -95,6 +106,14 @@ data class ArticleForLang(
                 ],
                 inverseJoinColumns = [
                     JoinColumn(name = "tag_for_lang_id", referencedColumnName = "id")
+                ],
+                uniqueConstraints = [
+                    UniqueConstraint(
+                            columnNames = [
+                                "tag_for_lang_id",
+                                "article_for_lang_id"
+                            ]
+                    )
                 ]
         )
         //to not write on insert
