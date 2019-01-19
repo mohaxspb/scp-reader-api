@@ -3,6 +3,7 @@ package ru.kuchanov.scpreaderapi.repository.article.tags
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import ru.kuchanov.scpreaderapi.bean.articles.tags.TagForLang
+import ru.kuchanov.scpreaderapi.model.dto.article.TagForLangDto
 
 interface TagForLangRepository : JpaRepository<TagForLang, Long> {
 
@@ -15,13 +16,14 @@ interface TagForLangRepository : JpaRepository<TagForLang, Long> {
     fun getAllByLangId(langId: String): List<TagForLang>
 
     @Query(
-            value = """
-                SELECT * FROM tags_langs tl
-                JOIN tags_articles_langs tal
-                ON tal.tag_for_lang_id = tl.id AND tal.article_for_lang_id = :articleForLangId
-                WHERE tl.lang_id = :langId
-            """,
+            name = TagForLang.NATIVE_QUERY_ALL_FOR_LANG_ID_AND_ARTICLE_FOR_LANG_ID,
             nativeQuery = true
     )
     fun getAllForLangIdAndArticleForLangId(langId: String, articleForLangId: Long): List<TagForLang>
+
+    @Query(
+            name = TagForLang.NATIVE_QUERY_ALL_FOR_LANG_ID_AND_ARTICLE_FOR_LANG_ID,
+            nativeQuery = true
+    )
+    fun getAllForLangIdAndArticleForLangIdAsDto(langId: String, articleForLangId: Long): List<TagForLangDto>
 }

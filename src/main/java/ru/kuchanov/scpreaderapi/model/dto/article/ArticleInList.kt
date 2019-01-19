@@ -20,4 +20,5 @@ data class ArticleInList(
         val rating: Int?
 ){
     var imageUrls: List<ArticlesImagesDto>? = null
+    var tagsForLang: List<TagForLangDto>? = null
 }

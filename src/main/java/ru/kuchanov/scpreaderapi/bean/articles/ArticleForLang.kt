@@ -36,10 +36,13 @@ import javax.persistence.*
                     ])
         ]
 )
-@NamedNativeQuery(
-        name = "ArticleForLang.getMostRecentArticlesForLang",
-        resultSetMapping = "ArticleInListDtoResult",
-        query = """
+
+@NamedNativeQueries(
+        value = [
+            NamedNativeQuery(
+                    name = "ArticleForLang.getMostRecentArticlesForLang",
+                    resultSetMapping = "ArticleInListDtoResult",
+                    query = """
             SELECT
             id,
             article_id as articleId,
@@ -52,6 +55,8 @@ import javax.persistence.*
             ORDER BY a.created_on_site DESC
             OFFSET :offset LIMIT :limit
              """
+            )
+        ]
 )
 
 data class ArticleForLang(

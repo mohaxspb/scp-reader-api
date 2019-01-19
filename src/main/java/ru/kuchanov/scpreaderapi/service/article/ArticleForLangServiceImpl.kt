@@ -46,6 +46,10 @@ class ArticleForLangServiceImpl : ArticleForLangService {
                 //shit is here, blyat
                 it.apply {
                     imageUrls = imagesRepository.findAllByArticleForLangId(articleForLangId = it.id)
+                    tagsForLang = tagsForLangRepository.getAllForLangIdAndArticleForLangIdAsDto(
+                            langId = langId,
+                            articleForLangId = it.id
+                    )
                 }
             }
 
