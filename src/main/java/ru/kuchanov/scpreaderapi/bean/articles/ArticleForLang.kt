@@ -43,7 +43,7 @@ import javax.persistence.*
                     name = "ArticleForLang.getMostRecentArticlesForLang",
                     resultSetMapping = "ArticleInListDtoResult",
                     query =
-                        """
+                    """
                         SELECT
                         id,
                         article_id as articleId,
@@ -128,15 +128,52 @@ data class ArticleForLang(
 
         //inner articles
         //todo check it and create migration
-        @ManyToOne
-        @JoinColumn(name = "parent_article_for_lang_id")
-        val parentArticleForLang: ArticleForLang? = null,
 
-        @OneToMany(
-                cascade = [CascadeType.ALL],
-                mappedBy = "parentArticleForLang"
+        /**
+         * see https://stackoverflow.com/a/13708470/3212712
+         */
+        @ManyToMany(mappedBy = "parentArticlesForLang")
+        @JoinTable(
+                name = "articles_langs_to_articles_langs",
+                joinColumns = [
+                    JoinColumn(name = "parent_article_for_lang_id", referencedColumnName = "id")
+                ],
+                inverseJoinColumns = [
+                    JoinColumn(name = "article_for_lang_id", referencedColumnName = "id")
+                ]
         )
+        //to not write on insert
+        @Transient
         val innerArticlesForLang: Set<ArticleForLang> = mutableSetOf(),
+
+        /**
+         * see https://stackoverflow.com/a/13708470/3212712
+         */
+        @ManyToMany()
+        @JoinTable(
+                name = "articles_langs_to_articles_langs",
+                joinColumns = [
+                    JoinColumn(name = "article_for_lang_id", referencedColumnName = "id")
+                ],
+                inverseJoinColumns = [
+                    JoinColumn(name = "parent_article_for_lang_id", referencedColumnName = "id")
+                ]
+        )
+        //to not write on insert
+        @Transient
+        val parentArticlesForLang: Set<ArticleForLang> = mutableSetOf(),
+
+//@ManyToMany(mappedBy = "following", cascade = CascadeType.ALL)
+//@JoinTable(name="UserRel",
+//                joinColumns={@JoinColumn(name="ParentId")},
+//                inverseJoinColumns={@JoinColumn(name="UserId")})
+//private Set<User> followers = new HashSet<User>();
+//
+//@ManyToMany(cascade = CascadeType.ALL)
+//@JoinTable(name="UserRel",
+//                joinColumns={@JoinColumn(name="UserId")},
+//                inverseJoinColumns={@JoinColumn(name="ParentId")})
+//private Set<User> following = new HashSet<User>();
 
         //dates
         @field:CreationTimestamp

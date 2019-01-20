@@ -292,12 +292,13 @@ class ParseHtmlService {
 //            article.imagesUrls = imgsUrls
 //            //tags
 //            article.tags = articleTags
+
+//            //inner articles
+//            article.innerArticlesUrls = innerArticlesUrls
         //todo
 //            //textParts
 //            article.textParts = textParts
 //            article.textPartsTypes = textPartsTypes
-//            //inner articles
-//            article.innerArticlesUrls = innerArticlesUrls
 
         //finally fill article info
         return ArticleForLang(
@@ -308,7 +309,14 @@ class ParseHtmlService {
                 rating = rating,
                 commentsUrl = commentsUrl,
                 images = imgsUrls.map { ArticlesImages(url = it) }.toMutableSet(),
-                tags = articleTags.map { TagForLang(langId = lang.id, title = it) }.toMutableSet()
+                tags = articleTags.map { TagForLang(langId = lang.id, title = it) }.toMutableSet(),
+                innerArticlesForLang = innerArticlesUrls.map {
+                    ArticleForLang(
+                            langId = lang.id,
+                            urlRelative = it,
+                            title = ""
+                    )
+                }.toSet()
         )
     }
 

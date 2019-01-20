@@ -145,12 +145,17 @@ class ArticleParsingServiceImpl : ArticleParsingService {
         }
     }
 
-    private fun downloadAndSaveArticles(articlesToDownload: List<ArticleForLang>, lang: Lang): Single<List<ArticleForLang>> {
+    private fun downloadAndSaveArticles(
+            articlesToDownload: List<ArticleForLang>,
+            lang: Lang,
+            innerArticlesDepth: Int = 0
+    ): Single<List<ArticleForLang>> {
         return Single.just(articlesToDownload)
                 .flatMap { articles ->
                     for (articleToDownload in articles) {
                         try {
                             val articleDownloaded = getArticleFromApi(articleToDownload.urlRelative, lang)
+                            //todo create method for it.
                             if (articleDownloaded != null) {
                                 var articleInDb = articleService.getArticleByUrlRelative(articleDownloaded.urlRelative)
                                 if (articleInDb == null) {
@@ -193,22 +198,55 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                                         articleForLangInDb
                                 )
 
-                                //todo parse inner
-//                                if (mMyPreferenceManager.isHasSubscription() && mInnerArticlesDepth !== 0) {
-//                                    getAndSaveInnerArticles(dbProvider, getApiClient(), articleDownloaded, 0, mInnerArticlesDepth)
-//                                }
+                                //parse inner
+                                if (innerArticlesDepth != 0) {
+                                    getAndSaveInnerArticles(lang, articleDownloaded, innerArticlesDepth)
+                                }
                             } else {
                                 println("error in articles parsing: ${articleToDownload.urlRelative}")
                                 logger.warn("error in articles parsing: ${articleToDownload.urlRelative}")
                             }
                         } catch (e: Exception) {
-                            e.printStackTrace()
+                            println("error in articles parsing: ${articleToDownload.urlRelative} $e")
+                            logger.error("error in articles parsing: ${articleToDownload.urlRelative}", e)
                         }
                     }
                     Single.just(articles)
                 }
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
+    }
+
+    //todo
+    fun getAndSaveInnerArticles(
+            lang: Lang,
+            articleDownloaded: ArticleForLang,
+            maxDepth: Int,
+            currentDepthLevel: Int = 0
+    ) {
+        if (currentDepthLevel >= maxDepth) {
+            return
+        }
+        println("getAndSaveInnerArticles: ${articleDownloaded.title}, $currentDepthLevel")
+
+        val innerArticlesUrls = articleDownloaded.innerArticlesForLang.map { it.urlRelative }
+        for (innerUrl in innerArticlesUrls) {
+            println("save inner article: $innerUrl")
+            try {
+                val innerArticleDownloaded = getArticleFromApi(innerUrl, lang) ?: continue
+                //todo
+                saveArticle(innerArticleDownloaded)
+
+                getAndSaveInnerArticles(lang, innerArticleDownloaded, maxDepth, currentDepthLevel + 1)
+            } catch (e: Exception) {
+                println("error while save inner article: $e")
+                logger.error("error while save inner article", e)
+            } catch (e: ScpParseException) {
+                println("error while save inner article: $e")
+                logger.error("error while save inner article", e)
+            }
+
+        }
     }
 
     protected fun parseForRecentArticles(lang: Lang, doc: Document): List<ArticleForLang> {
