@@ -31,10 +31,11 @@ class ArticleController {
     fun updateRecentArticles(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
             @RequestParam(value = "maxPageCount") maxPageCount: Int?,
+            @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
             @AuthenticationPrincipal user: User?
     ): ResponseEntity<*> {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
-        articleParsingService.parseMostRecentArticlesForLang(lang, maxPageCount)
+        articleParsingService.parseMostRecentArticlesForLang(lang, maxPageCount, processOnlyCount)
 
         return ResponseEntity(object {
             @Suppress("unused")

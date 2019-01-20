@@ -20,7 +20,7 @@ import java.util.*
 class ParseHtmlService {
 
     fun parseArticle(
-            url: String,
+            urlRelative: String,
             doc: Document,
             pageContent: Element,
             lang: Lang
@@ -172,9 +172,9 @@ class ParseHtmlService {
         var title = ""
         if (titleEl != null) {
             title = titleEl.text()
-        } else if (url.contains(SITE_TAGS_PATH)) {
-            val decodedUrl = java.net.URLDecoder.decode(url, "UTF-8")
-            val tagName = decodedUrl.substring(url.lastIndexOf(SITE_TAGS_PATH) + SITE_TAGS_PATH.length)
+        } else if (urlRelative.contains(SITE_TAGS_PATH)) {
+            val decodedUrl = java.net.URLDecoder.decode(urlRelative, "UTF-8")
+            val tagName = decodedUrl.substring(urlRelative.lastIndexOf(SITE_TAGS_PATH) + SITE_TAGS_PATH.length)
             title = "TAG: $tagName"
         }
         val upperDivWithLink = doc.getElementById("breadcrumbs")
@@ -303,7 +303,7 @@ class ParseHtmlService {
         //finally fill article info
         return ArticleForLang(
                 langId = lang.id,
-                urlRelative = url,
+                urlRelative = urlRelative,
                 title = title,
                 text = rawText,
                 rating = rating,
@@ -313,7 +313,7 @@ class ParseHtmlService {
                 innerArticlesForLang = innerArticlesUrls.map {
                     ArticleForLang(
                             langId = lang.id,
-                            urlRelative = it,
+                            urlRelative = it.replace(lang.siteBaseUrl, "").trim(),
                             title = ""
                     )
                 }.toSet()

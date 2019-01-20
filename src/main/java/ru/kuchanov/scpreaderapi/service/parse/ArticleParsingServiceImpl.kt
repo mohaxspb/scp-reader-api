@@ -19,10 +19,7 @@ import ru.kuchanov.scpreaderapi.bean.articles.Article
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 import ru.kuchanov.scpreaderapi.configuration.NetworkConfiguration
-import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
-import ru.kuchanov.scpreaderapi.service.article.ArticleService
-import ru.kuchanov.scpreaderapi.service.article.ArticlesImagesService
-import ru.kuchanov.scpreaderapi.service.article.ParseHtmlService
+import ru.kuchanov.scpreaderapi.service.article.*
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForLangService
 import java.io.IOException
@@ -51,6 +48,9 @@ class ArticleParsingServiceImpl : ArticleParsingService {
     private lateinit var articleForLangService: ArticleForLangService
 
     @Autowired
+    private lateinit var articleForLangToArticleForLangService: ArticleForLangToArticleForLangService
+
+    @Autowired
     private lateinit var articlesImagesService: ArticlesImagesService
 
     @Autowired
@@ -60,7 +60,11 @@ class ArticleParsingServiceImpl : ArticleParsingService {
     private lateinit var tagForLangService: TagForLangService
 
     @Async
-    override fun parseMostRecentArticlesForLang(lang: Lang, maxPageCount: Int?) {
+    override fun parseMostRecentArticlesForLang(
+            lang: Lang,
+            maxPageCount: Int?,
+            processOnlyCount: Int?
+    ) {
         when (lang.id) {
             ScpReaderConstants.Firebase.FirebaseInstance.RU.lang -> {
                 getRecentArticlesPageCountObservable()
@@ -72,13 +76,23 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                                     .flatMapObservable { Observable.fromIterable(it) }
                         }
                         .toList()
-                        .flatMap { downloadAndSaveArticles(it, lang) }
+                        //test loading and save with less count of articles
+                        .map { articlesToDownload ->
+                            processOnlyCount?.let {
+                                articlesToDownload.take(processOnlyCount)
+                            } ?: articlesToDownload
+                        }
+                        .flatMap { downloadAndSaveArticles(it, lang, DEFAULT_INNER_ARTICLES_DEPTH) }
                         .subscribeOn(Schedulers.io())
                         .observeOn(Schedulers.io())
                         .subscribeBy(
-                                onSuccess = {
+                                onSuccess = { articlesDownloadedAndSavedSucessfully ->
                                     println("download complete")
-                                    println(it.joinToString(separator = "\n\n"))
+                                    println(
+                                            articlesDownloadedAndSavedSucessfully
+                                                    .map { it?.urlRelative }
+                                                    .joinToString(separator = "\n========###========\n")
+                                    )
                                     println("download complete")
                                 },
                                 onError = {
@@ -149,104 +163,21 @@ class ArticleParsingServiceImpl : ArticleParsingService {
             articlesToDownload: List<ArticleForLang>,
             lang: Lang,
             innerArticlesDepth: Int = 0
-    ): Single<List<ArticleForLang>> {
+    ): Single<List<ArticleForLang?>> {
         return Single.just(articlesToDownload)
-                .flatMap { articles ->
-                    for (articleToDownload in articles) {
-                        try {
-                            val articleDownloaded = getArticleFromApi(articleToDownload.urlRelative, lang)
-                            //todo create method for it.
-                            if (articleDownloaded != null) {
-                                var articleInDb = articleService.getArticleByUrlRelative(articleDownloaded.urlRelative)
-                                if (articleInDb == null) {
-                                    articleInDb = articleService.insert(Article())
-                                }
-                                var articleForLangInDb = articleForLangService
-                                        .getArticleForLangByUrlRelativeAndLang(
-                                                articleDownloaded.urlRelative,
-                                                lang.id
-                                        )
-
-                                //set keys for article images.
-                                articleDownloaded.images.forEach {
-                                    it.articleForLangId = articleDownloaded.id
-                                }
-
-                                if (articleForLangInDb == null) {
-                                    articleForLangInDb = articleForLangService.insert(articleDownloaded.apply {
-                                        articleId = articleInDb.id
-                                        createdOnSite = articleToDownload.createdOnSite
-                                        updatedOnSite = articleToDownload.updatedOnSite
-                                    })
-                                } else {
-                                    articleForLangInDb = articleForLangService.insert(
-                                            articleForLangInDb.apply {
-                                                commentsUrl = articleDownloaded.commentsUrl
-                                                rating = articleDownloaded.rating
-                                                title = articleDownloaded.title
-                                                text = articleDownloaded.text
-                                                createdOnSite = articleToDownload.createdOnSite
-                                                updatedOnSite = articleToDownload.updatedOnSite
-                                                //todo add fields
-                                            }
-                                    )
-                                }
-
-                                manageTagsForArticle(
-                                        lang.id,
-                                        articleDownloaded,
-                                        articleForLangInDb
-                                )
-
-                                //parse inner
-                                if (innerArticlesDepth != 0) {
-                                    getAndSaveInnerArticles(lang, articleDownloaded, innerArticlesDepth)
-                                }
-                            } else {
-                                println("error in articles parsing: ${articleToDownload.urlRelative}")
-                                logger.warn("error in articles parsing: ${articleToDownload.urlRelative}")
-                            }
-                        } catch (e: Exception) {
-                            println("error in articles parsing: ${articleToDownload.urlRelative} $e")
-                            logger.error("error in articles parsing: ${articleToDownload.urlRelative}", e)
-                        }
+                .map { articles ->
+                    articles.map { articleToDownload ->
+                        saveArticle(
+                                lang,
+                                articleToDownload.urlRelative,
+                                innerArticlesDepth,
+                                articleToDownload.createdOnSite,
+                                articleToDownload.updatedOnSite
+                        )
                     }
-                    Single.just(articles)
                 }
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
-    }
-
-    //todo
-    fun getAndSaveInnerArticles(
-            lang: Lang,
-            articleDownloaded: ArticleForLang,
-            maxDepth: Int,
-            currentDepthLevel: Int = 0
-    ) {
-        if (currentDepthLevel >= maxDepth) {
-            return
-        }
-        println("getAndSaveInnerArticles: ${articleDownloaded.title}, $currentDepthLevel")
-
-        val innerArticlesUrls = articleDownloaded.innerArticlesForLang.map { it.urlRelative }
-        for (innerUrl in innerArticlesUrls) {
-            println("save inner article: $innerUrl")
-            try {
-                val innerArticleDownloaded = getArticleFromApi(innerUrl, lang) ?: continue
-                //todo
-                saveArticle(innerArticleDownloaded)
-
-                getAndSaveInnerArticles(lang, innerArticleDownloaded, maxDepth, currentDepthLevel + 1)
-            } catch (e: Exception) {
-                println("error while save inner article: $e")
-                logger.error("error while save inner article", e)
-            } catch (e: ScpParseException) {
-                println("error while save inner article: $e")
-                logger.error("error while save inner article", e)
-            }
-
-        }
     }
 
     protected fun parseForRecentArticles(lang: Lang, doc: Document): List<ArticleForLang> {
@@ -329,6 +260,80 @@ class ArticleParsingServiceImpl : ArticleParsingService {
         return doc.getElementById(HTML_ID_PAGE_CONTENT)
     }
 
+    private fun saveArticle(
+            lang: Lang,
+            urlRelative: String,
+            innerArticlesDepth: Int = 0,
+            createdOnSite: Timestamp? = null,
+            updatedOnSite: Timestamp? = null
+    ): ArticleForLang? {
+        try {
+            val articleDownloaded = getArticleFromApi(urlRelative, lang)
+
+            if (articleDownloaded != null) {
+                var articleInDb = articleService.getArticleByUrlRelative(articleDownloaded.urlRelative)
+                if (articleInDb == null) {
+                    articleInDb = articleService.insert(Article())
+                }
+                var articleForLangInDb = articleForLangService
+                        .getArticleForLangByUrlRelativeAndLang(
+                                articleDownloaded.urlRelative,
+                                lang.id
+                        )
+
+                //set keys for article images.
+                articleDownloaded.images.forEach {
+                    it.articleForLangId = articleDownloaded.id
+                }
+
+                if (articleForLangInDb == null) {
+                    articleForLangInDb = articleForLangService.insert(articleDownloaded.apply {
+                        articleId = articleInDb.id
+                        this.createdOnSite = createdOnSite
+                        this.updatedOnSite = updatedOnSite
+                    })
+                } else {
+                    articleForLangInDb = articleForLangService.insert(
+                            articleForLangInDb.apply {
+                                commentsUrl = articleDownloaded.commentsUrl
+                                rating = articleDownloaded.rating
+                                title = articleDownloaded.title
+                                text = articleDownloaded.text
+                                this.createdOnSite = createdOnSite
+                                this.updatedOnSite = updatedOnSite
+                                //todo add fields
+                            }
+                    )
+                }
+
+                manageTagsForArticle(
+                        lang.id,
+                        articleDownloaded,
+                        articleForLangInDb
+                )
+
+                //parse inner
+                getAndSaveInnerArticles(lang, articleDownloaded, innerArticlesDepth)
+
+                //todo create links for relation ArticleForLang -> ArticleForLang
+                val parentArticleForLangId = articleForLangInDb.id!!
+                //todo getIds from DB
+                val innerArticlesInDbIds = articleDownloaded.innerArticlesForLang
+
+
+                return articleForLangInDb
+            } else {
+                println("error in articles parsing: $urlRelative")
+                logger.warn("error in articles parsing: $urlRelative")
+                return null
+            }
+        } catch (e: Exception) {
+            println("error in articles parsing: $urlRelative $e")
+            logger.error("error in articles parsing: $urlRelative", e)
+            return null
+        }
+    }
+
     private fun manageTagsForArticle(
             langId: String,
             articleDownloaded: ArticleForLang,
@@ -350,6 +355,35 @@ class ArticleParsingServiceImpl : ArticleParsingService {
         //do not insert in Tag, as we'll do it manually later. Maybe...
     }
 
+    fun getAndSaveInnerArticles(
+            lang: Lang,
+            articleDownloaded: ArticleForLang,
+            maxDepth: Int = 0,
+            currentDepthLevel: Int = 0
+    ) {
+        if (currentDepthLevel >= maxDepth) {
+            return
+        }
+        println("getAndSaveInnerArticles: ${articleDownloaded.title}, $currentDepthLevel")
+
+        val innerArticlesUrls = articleDownloaded.innerArticlesForLang.map { it.urlRelative }
+        for (innerUrl in innerArticlesUrls) {
+            println("save inner article: $innerUrl")
+            try {
+                val innerArticleDownloaded = saveArticle(lang, innerUrl) ?: continue
+
+                getAndSaveInnerArticles(lang, innerArticleDownloaded, maxDepth, currentDepthLevel + 1)
+            } catch (e: Exception) {
+                println("error while save inner article: $e")
+                logger.error("error while save inner article", e)
+            } catch (e: ScpParseException) {
+                println("error while save inner article: $e")
+                logger.error("error while save inner article", e)
+            }
+
+        }
+    }
+
     companion object {
         const val HTML_ID_PAGE_CONTENT = "page-content"
         /**
@@ -357,6 +391,8 @@ class ArticleParsingServiceImpl : ArticleParsingService {
          */
 //        private val DATE_FORMAT = SimpleDateFormat("HH:mm dd.MM.yyyy")
         private val DATE_FORMAT = SimpleDateFormat("dd MMM yyyy HH:mm")
+
+        private const val DEFAULT_INNER_ARTICLES_DEPTH = 1
     }
 }
 
