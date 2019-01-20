@@ -349,7 +349,7 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                 }
                 .filter {
                     articleForLangToArticleForLangService
-                            .findByArticleForLangIdAndParentArticleForLangId(
+                            .findByParentArticleForLangIdAndArticleForLangId(
                                     it.parentArticleForLangId, it.articleForLangId
                             ) == null
                 }

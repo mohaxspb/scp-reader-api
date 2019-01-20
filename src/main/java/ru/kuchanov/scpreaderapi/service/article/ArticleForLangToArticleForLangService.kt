@@ -14,7 +14,7 @@ interface ArticleForLangToArticleForLangService {
 
     fun getOneById(id: Long): ArticleForLangToArticleForLang?
 
-    fun findByArticleForLangIdAndParentArticleForLangId(
+    fun findByParentArticleForLangIdAndArticleForLangId(
             parentArticleForLangId: Long,
             articleForLangId: Long
     ): ArticleForLangToArticleForLang?

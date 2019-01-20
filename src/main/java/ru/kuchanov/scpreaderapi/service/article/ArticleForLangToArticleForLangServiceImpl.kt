@@ -23,11 +23,11 @@ class ArticleForLangToArticleForLangServiceImpl : ArticleForLangToArticleForLang
     override fun getOneById(id: Long): ArticleForLangToArticleForLang? =
             repository.getOneById(id)
 
-    override fun findByArticleForLangIdAndParentArticleForLangId(
+    override fun findByParentArticleForLangIdAndArticleForLangId(
             parentArticleForLangId: Long,
             articleForLangId: Long
     ): ArticleForLangToArticleForLang? =
-            repository.findByArticleForLangIdAndParentArticleForLangId(parentArticleForLangId, articleForLangId)
+            repository.findByParentArticleForLangIdAndArticleForLangId(parentArticleForLangId, articleForLangId)
 
     override fun getAllByArticleForLangId(articleForLangId: Long): List<ArticleForLangToArticleForLang> =
             getAllByArticleForLangId(articleForLangId)
