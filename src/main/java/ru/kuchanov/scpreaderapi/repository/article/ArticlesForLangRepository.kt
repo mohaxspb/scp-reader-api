@@ -7,14 +7,18 @@ import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInList
 
 interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
 
+    //todo we do not need query here
     @Query("SELECT al FROM ArticleForLang al " +
             "WHERE al.urlRelative = :urlRelative AND al.langId = :langId")
-    fun getArticleForLangByUrlRelativeAndLang(urlRelative: String, langId: String): ArticleForLang?
+    fun getArticleForLangByUrlRelativeAndLangId(urlRelative: String, langId: String): ArticleForLang?
 
     @Query(
-            "SELECT al FROM ArticleForLang al " +
-                    "WHERE al.articleId = :articleId AND al.langId = :langId")
-    fun getArticleForLang(articleId: Long, langId: String): ArticleForLang?
+            """
+                SELECT al.id FROM ArticleForLang al
+                WHERE al.urlRelative = :urlRelative AND al.langId = :langId
+                """
+    )
+    fun getIdByUrlRelativeAndLangId(urlRelative: String, langId: String): Long?
 
     @Query(nativeQuery = true)
     fun getMostRecentArticlesForLang(langId: String, offset: Int, limit: Int): List<ArticleInList>

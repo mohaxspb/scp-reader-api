@@ -6,22 +6,20 @@ import javax.transaction.Transactional
 
 interface ArticleForLangService {
 
-    fun findAll(): List<ArticleForLang>
+    fun getOneByLangAndArticleId(articleId: Long, langId: String): ArticleForLang?
 
-    fun update(articleForLang: ArticleForLang): ArticleForLang
+    fun getArticleForLangByUrlRelativeAndLang(urlRelative: String, langId: String): ArticleForLang?
+
+    fun getIdByUrlRelativeAndLangId(urlRelative: String, langId: String): Long?
+
+    fun findAll(): List<ArticleForLang>
 
     @Transactional
     fun insert(articleForLang: ArticleForLang): ArticleForLang
 
     fun insert(articleForLang: List<ArticleForLang>): List<ArticleForLang>
 
-    fun getArticleForLangByUrlRelativeAndLang(urlRelative: String, langId: String): ArticleForLang?
-
-    fun getArticleForLang(articleId: Long, langId: String): ArticleForLang?
-
     fun getMostRecentArticlesForLang(langId: String, offset: Int, limit: Int): List<ArticleInList>
 
     fun getMostRecentArticlesForLangFull(langId: String, offset: Int, limit: Int): List<ArticleForLang>
-
-    fun getOneByLangAndArticleId(articleId: Long, langId: String): ArticleForLang?
 }

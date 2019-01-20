@@ -24,9 +24,6 @@ class ArticleForLangServiceImpl : ArticleForLangService {
     override fun findAll() =
             articlesForLangRepository.findAll().toList()
 
-    override fun update(articleForLang: ArticleForLang): ArticleForLang =
-            articlesForLangRepository.save(articleForLang)
-
     override fun insert(articleForLang: ArticleForLang): ArticleForLang =
             articlesForLangRepository.save(articleForLang)
 
@@ -34,10 +31,10 @@ class ArticleForLangServiceImpl : ArticleForLangService {
             articlesForLangRepository.saveAll(articleForLang)
 
     override fun getArticleForLangByUrlRelativeAndLang(urlRelative: String, langId: String) =
-            articlesForLangRepository.getArticleForLangByUrlRelativeAndLang(urlRelative, langId)
+            articlesForLangRepository.getArticleForLangByUrlRelativeAndLangId(urlRelative, langId)
 
-    override fun getArticleForLang(articleId: Long, langId: String) =
-            articlesForLangRepository.getArticleForLang(articleId, langId)
+    override fun getIdByUrlRelativeAndLangId(urlRelative: String, langId: String) =
+            articlesForLangRepository.getIdByUrlRelativeAndLangId(urlRelative, langId)
 
     //FUCKING SHIT!!!!!!!!!!!!!!!!!!!!
     //todo try overrided pageable with offset/limit support

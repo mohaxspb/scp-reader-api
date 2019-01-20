@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.articles.Article
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
+import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLangToArticleForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 import ru.kuchanov.scpreaderapi.configuration.NetworkConfiguration
 import ru.kuchanov.scpreaderapi.service.article.*
@@ -86,10 +87,10 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                         .subscribeOn(Schedulers.io())
                         .observeOn(Schedulers.io())
                         .subscribeBy(
-                                onSuccess = { articlesDownloadedAndSavedSucessfully ->
+                                onSuccess = { articlesDownloadedAndSavedSuccessfully ->
                                     println("download complete")
                                     println(
-                                            articlesDownloadedAndSavedSucessfully
+                                            articlesDownloadedAndSavedSuccessfully
                                                     .map { it?.urlRelative }
                                                     .joinToString(separator = "\n========###========\n")
                                     )
@@ -315,11 +316,7 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                 //parse inner
                 getAndSaveInnerArticles(lang, articleDownloaded, innerArticlesDepth)
 
-                //todo create links for relation ArticleForLang -> ArticleForLang
-                val parentArticleForLangId = articleForLangInDb.id!!
-                //todo getIds from DB
-                val innerArticlesInDbIds = articleDownloaded.innerArticlesForLang
-
+                createArticleToArticleRelation(articleDownloaded, articleForLangInDb.id!!, lang)
 
                 return articleForLangInDb
             } else {
@@ -331,6 +328,34 @@ class ArticleParsingServiceImpl : ArticleParsingService {
             println("error in articles parsing: $urlRelative $e")
             logger.error("error in articles parsing: $urlRelative", e)
             return null
+        }
+    }
+
+    private fun createArticleToArticleRelation(
+            articleDownloaded: ArticleForLang,
+            articleDownloadedId: Long,
+            lang: Lang
+    ) {
+        //create links for relation ArticleForLang -> ArticleForLang
+        val articlesToArticle = articleDownloaded
+                .innerArticlesForLang
+                //remove nulls and map to articleForLang to get it's id
+                .mapNotNull { articleForLangService.getIdByUrlRelativeAndLangId(it.urlRelative, lang.id) }
+                .map {
+                    ArticleForLangToArticleForLang(
+                            parentArticleForLangId = articleDownloadedId,
+                            articleForLangId = it
+                    )
+                }
+                .filter {
+                    articleForLangToArticleForLangService
+                            .findByArticleForLangIdAndParentArticleForLangId(
+                                    it.parentArticleForLangId, it.articleForLangId
+                            ) == null
+                }
+
+        if (articlesToArticle.isNotEmpty()) {
+            articleForLangToArticleForLangService.insert(articlesToArticle)
         }
     }
 
