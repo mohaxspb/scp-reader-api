@@ -30,7 +30,7 @@ data class FavoriteArticlesByLang(
 
 @NoArgConstructor
 data class KeyFavoriteArticleByLang(
-        val userId: Long,
-        val articleId: Long,
-        val langId: String
+        val userId: Long? = null,
+        val articleId: Long? = null,
+        val langId: String? = null
 ) : Serializable

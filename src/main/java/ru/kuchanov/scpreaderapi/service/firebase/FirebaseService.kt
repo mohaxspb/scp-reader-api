@@ -14,16 +14,19 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
-import ru.kuchanov.scpreaderapi.bean.articles.*
+import ru.kuchanov.scpreaderapi.bean.articles.Article
+import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
+import ru.kuchanov.scpreaderapi.bean.articles.FavoriteArticlesByLang
+import ru.kuchanov.scpreaderapi.bean.articles.FirebaseDataUpdateDate
 import ru.kuchanov.scpreaderapi.bean.auth.Authority
 import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.UsersLangs
 import ru.kuchanov.scpreaderapi.model.dto.firebase.FirebaseUserData
+import ru.kuchanov.scpreaderapi.model.dto.firebase.UserUidArticles
 import ru.kuchanov.scpreaderapi.model.firebase.FirebaseArticle
 import ru.kuchanov.scpreaderapi.model.firebase.FirebaseUser
-import ru.kuchanov.scpreaderapi.model.dto.firebase.UserUidArticles
 import ru.kuchanov.scpreaderapi.model.user.LevelsJson
 import ru.kuchanov.scpreaderapi.repository.firebase.FirebaseDataUpdateDateRepository
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
@@ -84,7 +87,7 @@ class FirebaseService {
 
         ScpReaderConstants.Firebase.FirebaseInstance.values()
                 .forEach { lang ->
-//                    println("query for lang: $lang")
+                    //                    println("query for lang: $lang")
                     val firebaseApp = FirebaseApp.getInstance(lang.lang)
                     val firebaseAuth = FirebaseAuth.getInstance(firebaseApp)
                     val firebaseAuthUser = try {
@@ -149,7 +152,7 @@ class FirebaseService {
         ScpReaderConstants.Firebase.FirebaseInstance.values()
                 .filter { if (langToParse == null) true else it == langToParse }
                 .forEach { lang ->
-//                    println("query for lang: $lang")
+                    //                    println("query for lang: $lang")
 
                     val langInDb = lang.let { langService.getById(it.lang) }
                             ?: throw IllegalArgumentException("Unknown lang: $lang")
@@ -203,7 +206,7 @@ class FirebaseService {
     fun getAllFirebaseUpdatedDataDates(): MutableList<FirebaseDataUpdateDate> = firebaseDataUpdateDateRepository.findAll()
 
     @Transactional
-    private fun insertUsers(firebaseUsers: List<FirebaseUser>, lang: Lang) {
+    fun insertUsers(firebaseUsers: List<FirebaseUser>, lang: Lang) {
         println("insertUsers: ${lang.id}/${firebaseUsers.size}")
 
         var newUsersInserted = 0
@@ -258,7 +261,9 @@ class FirebaseService {
                     }
 
                     //add user-lang connection if need
+//                    println("userInDb.id: ${userInDb.id}/${userInDb}")
                     if (usersLangsService.getByUserIdAndLangId(userInDb.id!!, lang.id) == null) {
+//                        println("add user-lang connection if need: ${userInDb.id}/${lang.id}, ${userUidArticles.uid}")
                         usersLangsService.insert(UsersLangs(userInDb.id!!, lang.id, userUidArticles.uid))
                         newLangForExistedUsers++
                     }
@@ -370,7 +375,7 @@ class FirebaseService {
         )
 
         if (readArticleForLang == null) {
-            readArticleForLang = readArticleForLangService.insert(ReadArticlesByLang(
+            readArticleForLang = readArticleForLangService.insert(ru.kuchanov.scpreaderapi.bean.articles.ReadArticlesByLang(
                     userId = user.id,
                     articleId = articleInDb.id,
                     langId = lang.id,

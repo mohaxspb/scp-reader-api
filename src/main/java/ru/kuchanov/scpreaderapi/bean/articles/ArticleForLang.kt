@@ -33,9 +33,9 @@ data class ArticleForLang(
 
 @NoArgConstructor
 data class KeyArticleLangs(
-        val articleId: Long,
-        val langId: String,
-        val urlRelative: String
+        val articleId: Long? = null,
+        val langId: String? = null,
+        val urlRelative: String? = null
 ) : Serializable
 
 
