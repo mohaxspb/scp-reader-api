@@ -5,6 +5,6 @@ import java.io.Serializable
 
 @NoArgConstructor
 data class KeyUserLang(
-        val userId: Long,
-        val langId: String
+        val userId: Long? = null,
+        val langId: String? = null
 ) : Serializable

@@ -33,6 +33,6 @@ data class ArticlesAndArticleTypes(
 
 @NoArgConstructor
 data class KeyArticleAndArticleType(
-        val articleId: Long,
-        val articleTypeId: Long
+        val articleId: Long? = null,
+        val articleTypeId: Long? = null
 ) : Serializable
