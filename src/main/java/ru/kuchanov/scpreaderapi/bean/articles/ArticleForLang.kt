@@ -180,6 +180,13 @@ data class ArticleForLang(
         val created: Timestamp? = null,
         @field:UpdateTimestamp
         val updated: Timestamp? = null
+)
+
+@NoArgConstructor
+data class KeyArticleLangs(
+        val articleId: Long? = null,
+        val langId: String? = null,
+        val urlRelative: String? = null
 ) : Serializable
 
 

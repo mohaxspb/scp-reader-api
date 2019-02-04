@@ -262,7 +262,9 @@ class FirebaseService {
                     }
 
                     //add user-lang connection if need
+//                    println("userInDb.id: ${userInDb.id}/${userInDb}")
                     if (usersLangsService.getByUserIdAndLangId(userInDb.id!!, lang.id) == null) {
+//                        println("add user-lang connection if need: ${userInDb.id}/${lang.id}, ${userUidArticles.uid}")
                         usersLangsService.insert(UsersLangs(userInDb.id!!, lang.id, userUidArticles.uid))
                         newLangForExistedUsers++
                     }

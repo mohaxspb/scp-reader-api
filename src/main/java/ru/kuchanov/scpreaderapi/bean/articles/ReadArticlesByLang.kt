@@ -30,7 +30,7 @@ data class ReadArticlesByLang(
 
 @NoArgConstructor
 data class KeyReadArticleByLang(
-        val userId: Long,
-        val articleId: Long,
-        val langId: String
+        val userId: Long? = null,
+        val articleId: Long? = null,
+        val langId: String? = null
 ) : Serializable
