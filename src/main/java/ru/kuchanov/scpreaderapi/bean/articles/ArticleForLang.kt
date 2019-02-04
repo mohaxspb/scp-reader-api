@@ -6,7 +6,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.ResponseStatus
 import ru.kuchanov.scpreaderapi.bean.articles.tags.TagForLang
 import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInList
-import java.io.Serializable
 import java.sql.Timestamp
 import javax.persistence.*
 
@@ -181,14 +180,6 @@ data class ArticleForLang(
         @field:UpdateTimestamp
         val updated: Timestamp? = null
 )
-
-@NoArgConstructor
-data class KeyArticleLangs(
-        val articleId: Long? = null,
-        val langId: String? = null,
-        val urlRelative: String? = null
-) : Serializable
-
 
 @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "No such articleForLang")
 class ArticleForLangNotFoundException : RuntimeException()
