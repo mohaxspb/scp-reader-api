@@ -198,8 +198,10 @@ class ParseHtmlService {
                     && element.children().size == 2
                     && element.child(0).tagName() == TAG_IMG
                     && element.child(1).className() == "collapsible-block") {
-                element.before(element.childNode(0))
-                element.after(element.childNode(1))
+                val imgTag = element.childNode(0)
+                val spoiler = element.childNode(1)
+                element.before(imgTag);
+                element.after(spoiler);
                 element.remove()
             }
         }
