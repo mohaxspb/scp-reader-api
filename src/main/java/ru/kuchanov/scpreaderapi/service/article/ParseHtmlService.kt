@@ -59,7 +59,7 @@ class ParseHtmlService {
                     digits.append(c.toString())
                 }
             }
-            aTag.attr(ATTR_HREF, "scp://" + digits.toString())
+            aTag.attr(ATTR_HREF, "scp://$digits")
         }
         val footnoterefsFooter = pageContent.getElementsByClass("footnote-footer")
         for (snoska in footnoterefsFooter) {
@@ -110,35 +110,23 @@ class ParseHtmlService {
         }
         //remove something more
         val svernut = pageContent.getElementById("toc-action-bar")
-        if (svernut != null) {
-            svernut.remove()
-        }
+        svernut?.remove()
         val script = pageContent.getElementsByTag("script")
         for (element in script) {
             element.remove()
         }
         //remove audio link from DE version
         val audio = pageContent.getElementsByClass("audio-img-block")
-        if (audio != null) {
-            audio.remove()
-        }
+        audio?.remove()
         val audioContent = pageContent.getElementsByClass("audio-block")
-        if (audioContent != null) {
-            audioContent.remove()
-        }
+        audioContent?.remove()
         val creditRate = pageContent.getElementsByClass("creditRate")
-        if (creditRate != null) {
-            creditRate.remove()
-        }
+        creditRate?.remove()
 
         val uCreditView = pageContent.getElementById("u-credit-view")
-        if (uCreditView != null) {
-            uCreditView.remove()
-        }
+        uCreditView?.remove()
         val uCreditOtherwise = pageContent.getElementById("u-credit-otherwise")
-        if (uCreditOtherwise != null) {
-            uCreditOtherwise.remove()
-        }
+        uCreditOtherwise?.remove()
         //remove audio link from DE version END
 
         //replace all spans with strike-through with <s>
@@ -200,8 +188,8 @@ class ParseHtmlService {
                     && element.child(1).className() == "collapsible-block") {
                 val imgTag = element.childNode(0)
                 val spoiler = element.childNode(1)
-                element.before(imgTag);
-                element.after(spoiler);
+                element.before(imgTag)
+                element.after(spoiler)
                 element.remove()
             }
         }
@@ -517,7 +505,7 @@ class ParseHtmlService {
 
         private const val TAG_TABLE = "table"
 
-        private const val TAG_LI = "li"
+//        private const val TAG_LI = "li"
 
         private const val ATTR_SRC = "src"
 
