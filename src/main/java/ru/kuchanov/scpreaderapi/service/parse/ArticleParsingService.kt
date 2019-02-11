@@ -9,4 +9,6 @@ interface ArticleParsingService {
             maxPageCount: Int? = null,
             processOnlyCount: Int? = null
     )
+
+    fun parseArticleForLang(urlRelative: String, lang: Lang)
 }

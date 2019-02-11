@@ -37,10 +37,13 @@ class ArticleController {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
         articleParsingService.parseMostRecentArticlesForLang(lang, maxPageCount, processOnlyCount)
 
-        return ResponseEntity(object {
-            @Suppress("unused")
-            val state = "parsing started"
-        }, HttpStatus.ACCEPTED)
+        return ResponseEntity(
+                object {
+                    @Suppress("unused")
+                    val state = "parsing started"
+                },
+                HttpStatus.ACCEPTED
+        )
     }
 
     @GetMapping("/{langEnum}/recent")
@@ -68,4 +71,24 @@ class ArticleController {
     ) =
             articleForLangService.getOneByLangAndArticleId(articleId, langEnum.lang)
                     ?: throw ArticleForLangNotFoundException()
+
+    @GetMapping("{langEnum}/parseArticleByUrlRelative")
+    fun parseArticleByUrlRelativeAndLang(
+            @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
+            @RequestParam(value = "urlRelative") urlRelative: String
+    ): ResponseEntity<*> {
+        val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
+        val articleForLang = articleForLangService.getArticleForLangByUrlRelativeAndLang(urlRelative, lang.id)
+                ?: throw ArticleForLangNotFoundException()
+
+        articleParsingService.parseArticleForLang(urlRelative, lang)
+
+        return ResponseEntity(
+                object {
+                    @Suppress("unused")
+                    val state = "Parsing started for ArticleForLang id/title ${articleForLang.id}/${articleForLang.title}"
+                },
+                HttpStatus.ACCEPTED
+        )
+    }
 }

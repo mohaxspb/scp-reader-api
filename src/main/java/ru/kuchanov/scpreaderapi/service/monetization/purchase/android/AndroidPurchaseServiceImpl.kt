@@ -31,6 +31,7 @@ class AndroidPurchaseServiceImpl : AndroidPurchaseService {
             val productPurchase = productRequest.execute()
             AndroidProductResponse(ValidationStatus.VALID, productPurchase)
         } catch (e: GoogleJsonResponseException) {
+            println("Error while validate product: $e")
             AndroidProductResponse(
                     if (e.details.code == HttpServletResponse.SC_BAD_REQUEST) {
                         ValidationStatus.INVALID
@@ -56,6 +57,7 @@ class AndroidPurchaseServiceImpl : AndroidPurchaseService {
             val subscription: SubscriptionPurchase = subscriptionRequest.execute()
             AndroidSubscriptionResponse(ValidationStatus.VALID, subscription)
         } catch (e: GoogleJsonResponseException) {
+            println("Error while validate subscription: $e")
             AndroidSubscriptionResponse(
                     if (e.details.code == HttpServletResponse.SC_BAD_REQUEST) {
                         ValidationStatus.INVALID

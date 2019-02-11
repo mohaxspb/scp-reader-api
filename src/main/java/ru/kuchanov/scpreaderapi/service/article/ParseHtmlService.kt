@@ -389,34 +389,18 @@ class ParseHtmlService {
         for (textPart in articlesTextParts) {
             val element = Jsoup.parse(textPart)
             val ourElement = element.getElementsByTag(TAG_BODY).first().children().first()
-            if (ourElement == null) {
-                listOfTextTypes.add(TextType.TEXT)
-                continue
+            when {
+                ourElement == null -> listOfTextTypes.add(TextType.TEXT)
+                ourElement.tagName() == TAG_P -> listOfTextTypes.add(TextType.TEXT)
+                ourElement.className() == CLASS_SPOILER -> listOfTextTypes.add(TextType.SPOILER)
+                ourElement.classNames().contains(CLASS_TABS) -> listOfTextTypes.add(TextType.TABS)
+                ourElement.tagName() == TAG_TABLE -> listOfTextTypes.add(TextType.TABLE)
+                ourElement.className() == "rimg"
+                        || ourElement.className() == "limg"
+                        || ourElement.className() == "cimg"
+                        || ourElement.classNames().contains("scp-image-block") -> listOfTextTypes.add(TextType.IMAGE)
+                else -> listOfTextTypes.add(TextType.TEXT)
             }
-            if (ourElement.tagName() == TAG_P) {
-                listOfTextTypes.add(TextType.TEXT)
-                continue
-            }
-            if (ourElement.className() == CLASS_SPOILER) {
-                listOfTextTypes.add(TextType.SPOILER)
-                continue
-            }
-            if (ourElement.classNames().contains(CLASS_TABS)) {
-                listOfTextTypes.add(TextType.TABS)
-                continue
-            }
-            if (ourElement.tagName() == TAG_TABLE) {
-                listOfTextTypes.add(TextType.TABLE)
-                continue
-            }
-            if (ourElement.className() == "rimg"
-                    || ourElement.className() == "limg"
-                    || ourElement.className() == "cimg"
-                    || ourElement.classNames().contains("scp-image-block")) {
-                listOfTextTypes.add(TextType.IMAGE)
-                continue
-            }
-            listOfTextTypes.add(TextType.TEXT)
         }
 
         return listOfTextTypes

@@ -60,6 +60,10 @@ class ArticleParsingServiceImpl : ArticleParsingService {
     @Autowired
     private lateinit var tagForLangService: TagForLangService
 
+    override fun parseArticleForLang(urlRelative: String, lang: Lang) {
+        saveArticle(lang, urlRelative)
+    }
+
     @Async
     override fun parseMostRecentArticlesForLang(
             lang: Lang,
@@ -302,7 +306,6 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                                 text = articleDownloaded.text
                                 this.createdOnSite = createdOnSite
                                 this.updatedOnSite = updatedOnSite
-                                //todo add fields
                             }
                     )
                 }
