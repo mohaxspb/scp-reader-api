@@ -28,7 +28,6 @@ public class SpringBootTomcatConnectionPoolIntegrationTest {
     public void javaVersion_givenMoreOrEqualsThan11_thenCorrect() {
         System.out.println("JAVA VERSION OUTPUT: "+System.getProperty("java.version"));
         assertThat(System.getProperty("java.version"))
-//                .isEqualTo("org.apache.tomcat.jdbc.pool.DataSource");
                 .isEqualTo("11");
     }
 }
