@@ -21,8 +21,9 @@ class FirebaseController {
     private lateinit var usersService: UserService
 
     @Scheduled(
-            fixedDelay = ScpReaderConstants.FIREBASE_USERS_DATA_UPDATE_RATE_MILLIS,
-            initialDelay = ScpReaderConstants.FIREBASE_USERS_DATA_UPDATE_RATE_MILLIS
+//            fixedDelay = ScpReaderConstants.FIREBASE_USERS_DATA_UPDATE_RATE_MILLIS,
+//            initialDelay = ScpReaderConstants.FIREBASE_USERS_DATA_UPDATE_RATE_MILLIS
+            cron = "0 0 6 * * *"
     )
     @GetMapping("/users/updateFromFirebase")
     fun updateDataFromFirebase() = firebaseService.updateDataFromFirebase()

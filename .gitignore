@@ -9,3 +9,4 @@
 /src/main/resources/googlePlay/googlePlayAndroidDeveloperServiceKey.json
 /banners/*
 !/.idea/dictionaries/mohax.xml
+!/.idea/dictionaries/

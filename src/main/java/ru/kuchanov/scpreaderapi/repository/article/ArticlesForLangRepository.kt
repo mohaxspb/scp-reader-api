@@ -6,6 +6,7 @@ import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.KeyArticleLangs
 
 interface ArticlesForLangRepository : JpaRepository<ArticleForLang, KeyArticleLangs> {
+
     @Query("SELECT al FROM ArticleForLang al " +
             "WHERE al.urlRelative = :urlRelative AND al.langId = :langId")
     fun getArticleForLangByUrlRelativeAndLang(urlRelative: String, langId: String): ArticleForLang?
@@ -13,5 +14,5 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, KeyArticleLa
     @Query(
             "SELECT al FROM ArticleForLang al " +
                     "WHERE al.articleId = :articleId AND al.langId = :langId")
-    fun getArticleForLang(articleId: Long, langId: String): ArticleForLang?
+    fun getArticleForLang(articleId: Long, langId: String): List<ArticleForLang>
 }
