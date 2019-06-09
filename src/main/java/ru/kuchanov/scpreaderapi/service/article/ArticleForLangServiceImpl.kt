@@ -12,16 +12,21 @@ class ArticleForLangServiceImpl : ArticleForLangService {
     @Autowired
     private lateinit var repository: ArticlesForLangRepository
 
-    override fun findAll() = repository.findAll().toList()
+    override fun findAll() =
+            repository.findAll().toList()
 
-    override fun update(articleForLang: ArticleForLang): ArticleForLang = repository.save(articleForLang)
+    override fun update(articleForLang: ArticleForLang): ArticleForLang =
+            repository.save(articleForLang)
 
-    override fun insert(articleForLang: ArticleForLang): ArticleForLang = repository.save(articleForLang)
+    override fun insert(articleForLang: ArticleForLang): ArticleForLang =
+            repository.save(articleForLang)
 
-    override fun insert(articleForLang: List<ArticleForLang>): List<ArticleForLang> = repository.saveAll(articleForLang)
+    override fun insert(articleForLang: List<ArticleForLang>): List<ArticleForLang> =
+            repository.saveAll(articleForLang)
 
     override fun getArticleForLangByUrlRelativeAndLang(urlRelative: String, langId: String) =
             repository.getArticleForLangByUrlRelativeAndLang(urlRelative, langId)
 
-    override fun getArticleForLang(articleId: Long, langId: String) = repository.getArticleForLang(articleId, langId)
+    override fun getArticleForLang(articleId: Long, langId: String) =
+            repository.getArticleForLang(articleId, langId)
 }

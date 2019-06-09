@@ -11,6 +11,7 @@ import io.reactivex.processors.BehaviorProcessor
 import io.reactivex.rxkotlin.subscribeBy
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.dao.IncorrectResultSizeDataAccessException
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
@@ -45,7 +46,8 @@ import javax.transaction.Transactional
 class FirebaseService {
 
     companion object {
-        const val QUERY_LIMIT = 100
+        //        const val QUERY_LIMIT = 100
+        const val QUERY_LIMIT = 1000
     }
 
     @Autowired
@@ -145,8 +147,12 @@ class FirebaseService {
     }
 
     @Async
-    fun updateDataFromFirebase(startKey: String = "", langToParse: ScpReaderConstants.Firebase.FirebaseInstance? = null) {
+    fun updateDataFromFirebase(
+            startKey: String = "",
+            langToParse: ScpReaderConstants.Firebase.FirebaseInstance? = null
+    ) {
         println("updateDataFromFirebase")
+        log.error("updateDataFromFirebase start")
 
         //todo use rx for whole method
         ScpReaderConstants.Firebase.FirebaseInstance.values()
@@ -181,6 +187,7 @@ class FirebaseService {
                                     onSuccess = {
                                         updateFirebaseUpdateDate(lang.lang)
 
+                                        log.error("done updating users for lang: ${lang.lang}, totalCount: ${it.size}")
                                         println("done updating users for lang: ${lang.lang}, totalCount: ${it.size}")
                                     },
                                     onError = {
@@ -312,14 +319,28 @@ class FirebaseService {
                 articleInDb = articleService.insert(Article())
             }
             //check if we do not have article-lang connection for given article
-            if (articleForLangService.getArticleForLang(articleInDb.id!!, lang.id) == null) {
-                articleForLangService.insert(ArticleForLang(
-                        articleId = articleInDb.id!!,
-                        langId = lang.id,
-                        urlRelative = urlRelative,
-                        title = articleInFirebase.title
-                ))
+            try {
+                //todo check what the hell is going on here. We get 2 results here...
+                if (articleForLangService.getArticleForLang(articleInDb.id!!, lang.id).isEmpty()) {
+                    articleForLangService.insert(
+                            ArticleForLang(
+                                    articleId = articleInDb.id!!,
+                                    langId = lang.id,
+                                    urlRelative = urlRelative,
+                                    title = articleInFirebase.title
+                            )
+                    )
+                }
+            } catch (e: Exception) {
+                if (e is IncorrectResultSizeDataAccessException) {
+                    println("IncorrectResultSizeDataAccessException while insert new ArticleForLang: ${articleInDb.id}/$urlRelative")
+                    log.error("IncorrectResultSizeDataAccessException while insert new ArticleForLangL ${articleInDb.id}/$urlRelative")
+                } else {
+                    println("error while insert new ArticleForLang, ${e.message}")
+                    log.error("error while insert new ArticleForLang", e)
+                }
             }
+
             //update favorite if need
             manageFavoriteArticlesForUserForLang(user, articleInFirebase, articleInDb, lang)
 
