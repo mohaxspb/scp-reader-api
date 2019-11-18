@@ -8,6 +8,6 @@ data class ArticleType(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long? = null,
-        @Column(name = "image_url")
+        @Column(name = "image_url", columnDefinition = "TEXT")
         val imageUrl:String
 )

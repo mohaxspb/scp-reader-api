@@ -68,14 +68,15 @@ data class ArticleForLang(
         var articleId: Long? = null,
         @Column(name = "lang_id")
         var langId: String,
-        @Column(name = "url_relative")
+        @Column(name = "url_relative", columnDefinition = "TEXT")
         var urlRelative: String,
         @Column(columnDefinition = "TEXT")
         var title: String?,
         //new ones
+        @Column(columnDefinition = "TEXT")
         var text: String? = null,
         var rating: Int? = null,
-        @Column(name = "comments_url")
+        @Column(name = "comments_url", columnDefinition = "TEXT")
         var commentsUrl: String? = null,
         @Column(name = "created_on_site")
         var createdOnSite: Timestamp? = null,

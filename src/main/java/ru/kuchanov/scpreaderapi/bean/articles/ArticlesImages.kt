@@ -18,6 +18,7 @@ data class ArticlesImages(
         var articleForLangId: Long? = null,
 
         //content
+        @Column(columnDefinition = "TEXT")
         var url: String,
 
         //dates
