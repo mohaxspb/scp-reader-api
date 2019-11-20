@@ -10,7 +10,7 @@ import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.LangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
-import ru.kuchanov.scpreaderapi.service.parse.ArticleParsingService
+import ru.kuchanov.scpreaderapi.service.parse.ArticleParsingServiceBase
 import ru.kuchanov.scpreaderapi.service.users.LangService
 
 
@@ -19,7 +19,7 @@ import ru.kuchanov.scpreaderapi.service.users.LangService
 class ArticleController {
 
     @Autowired
-    private lateinit var articleParsingService: ArticleParsingService
+    private lateinit var articleParsingService: ArticleParsingServiceBase
 
     @Autowired
     private lateinit var articleForLangService: ArticleForLangService
@@ -35,7 +35,7 @@ class ArticleController {
             @AuthenticationPrincipal user: User?
     ): ResponseEntity<*> {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
-        articleParsingService.parseMostRecentArticlesForLang(lang, maxPageCount, processOnlyCount)
+        articleParsingService.getParsingRealizationForLang(lang).parseMostRecentArticlesForLang(lang, maxPageCount, processOnlyCount)
 
         return ResponseEntity(
                 object {

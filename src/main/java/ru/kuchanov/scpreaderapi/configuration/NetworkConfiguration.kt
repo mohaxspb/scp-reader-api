@@ -12,6 +12,7 @@ import retrofit2.Converter
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.jackson.JacksonConverterFactory
 import ru.kuchanov.scpreaderapi.network.ApiClient
+import ru.kuchanov.scpreaderapi.service.parse.ArticleParsingServiceImplRU
 import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
 

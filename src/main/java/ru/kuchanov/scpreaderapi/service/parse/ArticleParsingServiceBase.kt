@@ -12,6 +12,8 @@ import org.jsoup.nodes.Element
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory
+import org.springframework.context.annotation.Primary
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
@@ -28,16 +30,19 @@ import java.sql.Timestamp
 import java.text.SimpleDateFormat
 
 
-@Suppress("unused")
+@Primary
 @Service
-class ArticleParsingServiceImpl : ArticleParsingService {
+class ArticleParsingServiceBase {
 
     @Autowired
     private lateinit var logger: Logger
 
     @Autowired
+    private lateinit var autowireCapableBeanFactory: AutowireCapableBeanFactory
+
+    @Autowired
     @Qualifier(NetworkConfiguration.QUALIFIER_OK_HTTP_CLIENT_NOT_LOGGING)
-    private lateinit var okHttpClient: OkHttpClient
+    protected lateinit var okHttpClient: OkHttpClient
 
     @Autowired
     private lateinit var parseHtmlService: ParseHtmlService
@@ -60,82 +65,61 @@ class ArticleParsingServiceImpl : ArticleParsingService {
     @Autowired
     private lateinit var tagForLangService: TagForLangService
 
-    override fun parseArticleForLang(urlRelative: String, lang: Lang) {
-        saveArticle(lang, urlRelative)
+    fun getParsingRealizationForLang(lang: Lang): ArticleParsingServiceBase {
+
+        return when(lang.langCode){
+            ScpReaderConstants.Firebase.FirebaseInstance.RU.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplRU::class.java)
+            ScpReaderConstants.Firebase.FirebaseInstance.EN.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplEN::class.java)
+            // todo add another languages
+
+            else -> throw NotImplementedError("No parsing realization, need lang(current lang: $lang)")
+        }
     }
 
     @Async
-    override fun parseMostRecentArticlesForLang(
+    fun parseMostRecentArticlesForLang(
             lang: Lang,
-            maxPageCount: Int?,
-            processOnlyCount: Int?
+            maxPageCount: Int? = null,
+            processOnlyCount: Int? = null
     ) {
-        when (lang.id) {
-            ScpReaderConstants.Firebase.FirebaseInstance.RU.lang -> {
-                getRecentArticlesPageCountObservable()
-                        .flatMapObservable { recentArticlesPagesCount ->
-                            Observable.range(1, maxPageCount ?: recentArticlesPagesCount)
-                        }
-                        .flatMap { page ->
-                            getRecentArticlesForPage(lang, page)
-                                    .flatMapObservable { Observable.fromIterable(it) }
-                        }
-                        .toList()
-                        //test loading and save with less count of articles
-                        .map { articlesToDownload ->
-                            processOnlyCount?.let {
-                                articlesToDownload.take(processOnlyCount)
-                            } ?: articlesToDownload
-                        }
+        getMostRecentArticlesPageCountForLang(lang)
+                .flatMapObservable { recentArticlesPagesCount ->
+                    Observable.range(1, maxPageCount ?: recentArticlesPagesCount)
+                }
+                .flatMap { page ->
+                    getRecentArticlesForPage(lang, page)
+                            .flatMapObservable { Observable.fromIterable(it) }
+                }
+                .toList()
+                //test loading and save with less count of articles
+                .map { articlesToDownload ->
+                    processOnlyCount?.let {
+                        articlesToDownload.take(processOnlyCount)
+                    } ?: articlesToDownload
+                }
                         .flatMap { downloadAndSaveArticles(it, lang, DEFAULT_INNER_ARTICLES_DEPTH) }
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(Schedulers.io())
-                        .subscribeBy(
-                                onSuccess = { articlesDownloadedAndSavedSuccessfully ->
-                                    println("download complete")
-                                    println(
-                                            articlesDownloadedAndSavedSuccessfully
-                                                    .map { it?.urlRelative }
-                                                    .joinToString(separator = "\n========###========\n")
-                                    )
-                                    println("download complete")
-                                },
-                                onError = {
-                                    it.printStackTrace()
-                                }
-                        )
-            }
-            //todo
-            else -> throw NotImplementedError()
-        }
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .subscribeBy(
+                        onSuccess = { articlesDownloadedAndSavedSuccessfully ->
+                            println("download complete")
+                            println(
+                                    articlesDownloadedAndSavedSuccessfully
+                                            .map { it?.urlRelative }
+                                            .joinToString(separator = "\n========###========\n")
+                            )
+                            println("download complete")
+                        },
+                        onError = {
+                            it.printStackTrace()
+                        }
+                )
     }
 
-    private fun getRecentArticlesForPage(lang: Lang, page: Int): Single<List<ArticleForLang>> {
-        return Single.create<List<ArticleForLang>> {
-            val request = Request.Builder()
-                    //todo pass somehow
-                    .url("http://scpfoundation.ru/most-recently-created/p/$page")
-                    .build()
-
-            val responseBody = okHttpClient
-                    .newCall(request)
-                    .execute()
-                    .body()
-                    ?.string()
-                    ?: throw IOException("error while getRecentArticlesForPage: $page")
-            val doc: Document = Jsoup.parse(responseBody)
-
-            val articles = parseForRecentArticles(lang, doc)
-
-            it.onSuccess(articles)
-        }
-    }
-
-    private fun getRecentArticlesPageCountObservable(): Single<Int> {
+    fun getMostRecentArticlesPageCountForLang(lang: Lang) : Single<Int> {
         return Single.create<Int> { subscriber ->
             val request = Request.Builder()
-                    //todo pass somehow
-                    .url("http://scpfoundation.ru/most-recently-created/p/1")
+                    .url(lang.siteBaseUrl + ScpReaderConstants.RecentArticlesUrl.RU)
                     .build()
 
             val responseBody: String
@@ -164,6 +148,27 @@ class ArticleParsingServiceImpl : ArticleParsingService {
         }
     }
 
+    fun getRecentArticlesForPage(lang: Lang, page: Int): Single<List<ArticleForLang>> {
+        return Single.create<List<ArticleForLang>> {
+
+            val request = Request.Builder()
+                    .url(lang.siteBaseUrl + ScpReaderConstants.RecentArticlesUrl.RU + page)
+                    .build()
+
+            val responseBody = okHttpClient
+                    .newCall(request)
+                    .execute()
+                    .body()
+                    ?.string()
+                    ?: throw IOException("error while getRecentArticlesForPage: $page")
+            val doc: Document = Jsoup.parse(responseBody)
+
+            val articles = parseForRecentArticles(lang, doc)
+
+            it.onSuccess(articles)
+        }
+    }
+
     private fun downloadAndSaveArticles(
             articlesToDownload: List<ArticleForLang>,
             lang: Lang,
@@ -183,86 +188,6 @@ class ArticleParsingServiceImpl : ArticleParsingService {
                 }
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
-    }
-
-    protected fun parseForRecentArticles(lang: Lang, doc: Document): List<ArticleForLang> {
-        val pageContent = doc.getElementsByClass("wiki-content-table").first()
-                ?: throw NullPointerException("Can't find element for class \"wiki-content-table\"")
-
-        val articles = mutableListOf<ArticleForLang>()
-        val listOfElements = pageContent.getElementsByTag("tr")
-        for (i in 1/*start from 1 as first row is tables header*/ until listOfElements.size) {
-            val tableRow = listOfElements[i]
-            val listOfTd = tableRow.getElementsByTag("td")
-            //title and url
-            val firstTd = listOfTd.first()
-            val tagA = firstTd.getElementsByTag("a").first()
-            val title = tagA.text()
-            val url = lang.siteBaseUrl + tagA.attr("href")
-            //todo rating
-            val rating = Integer.parseInt(listOfTd[1].text())
-            //author
-            val spanWithAuthor = listOfTd[2]
-                    .getElementsByAttributeValueContaining("class", "printuser").first()
-            //todo
-            val authorName = spanWithAuthor.text()
-            //todo
-            val authorUrl = spanWithAuthor.getElementsByTag("a").first()?.attr("href")
-
-            val createdDate = listOfTd[3].text().trim()
-            val updatedDate = listOfTd[4].text().trim()
-
-            val article = ArticleForLang(
-                    langId = lang.id,
-                    urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
-                    title = title,
-                    createdOnSite = Timestamp(DATE_FORMAT.parse(createdDate).time),
-                    updatedOnSite = Timestamp(DATE_FORMAT.parse(updatedDate).time)
-            )
-            //todo
-//            article.rating = rating
-//            article.authorName = authorName
-//            article.authorUrl = authorUrl
-            articles.add(article)
-        }
-
-        return articles
-    }
-
-    fun getArticleFromApi(url: String, lang: Lang): ArticleForLang? {
-        val request = Request.Builder()
-                .url(lang.siteBaseUrl + url)
-                .build()
-
-        var responseBody = okHttpClient.newCall(request).execute().body()?.string()
-                ?: throw ScpParseException("error while getArticleFromApi")
-
-        //remove all fucking RTL(&lrm) used for text-alignment. What a fucking idiots!..
-        responseBody = responseBody.replace("[\\p{Cc}\\p{Cf}]".toRegex(), "")
-
-        val doc = Jsoup.parse(responseBody)
-        val pageContent = getArticlePageContentTag(doc)
-                ?: throw ScpParseException("pageContent is NULL for: $url")
-        val p404 = pageContent.getElementById("404-message")
-        if (p404 != null) {
-            return ArticleForLang(
-                    langId = lang.id,
-                    urlRelative = url,
-                    title = "404",
-                    text = p404.outerHtml()
-            )
-        }
-
-        return parseHtmlService.parseArticle(url, doc, pageContent, lang)
-    }
-
-    /**
-     * We need this as in FR site all article content wrapped in another div... ***!!!11
-     *
-     * @return Element with article content
-     */
-    protected fun getArticlePageContentTag(doc: Document): Element? {
-        return doc.getElementById(HTML_ID_PAGE_CONTENT)
     }
 
     private fun saveArticle(
@@ -332,6 +257,90 @@ class ArticleParsingServiceImpl : ArticleParsingService {
             logger.error("error in articles parsing: $urlRelative", e)
             return null
         }
+    }
+
+    protected fun parseForRecentArticles(lang: Lang, doc: Document): List<ArticleForLang> {
+        val pageContent = doc.getElementsByClass("wiki-content-table").first()
+                ?: throw NullPointerException("Can't find element for class \"wiki-content-table\"")
+
+        val articles = mutableListOf<ArticleForLang>()
+        val listOfElements = pageContent.getElementsByTag("tr")
+        for (i in 1/*start from 1 as first row is tables header*/ until listOfElements.size) {
+            val tableRow = listOfElements[i]
+            val listOfTd = tableRow.getElementsByTag("td")
+            //title and url
+            val firstTd = listOfTd.first()
+            val tagA = firstTd.getElementsByTag("a").first()
+            val title = tagA.text()
+            val url = lang.siteBaseUrl + tagA.attr("href")
+            //todo rating
+            val rating = Integer.parseInt(listOfTd[1].text())
+            //author
+            val spanWithAuthor = listOfTd[2]
+                    .getElementsByAttributeValueContaining("class", "printuser").first()
+            //todo
+            val authorName = spanWithAuthor.text()
+            //todo
+            val authorUrl = spanWithAuthor.getElementsByTag("a").first()?.attr("href")
+
+            val createdDate = listOfTd[3].text().trim()
+            val updatedDate = listOfTd[4].text().trim()
+
+            val article = ArticleForLang(
+                    langId = lang.id,
+                    urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
+                    title = title,
+                    createdOnSite = Timestamp(DATE_FORMAT.parse(createdDate).time),
+                    updatedOnSite = Timestamp(DATE_FORMAT.parse(updatedDate).time)
+            )
+            //todo
+//            article.rating = rating
+//            article.authorName = authorName
+//            article.authorUrl = authorUrl
+            articles.add(article)
+        }
+
+        return articles
+    }
+
+    fun parseArticleForLang(urlRelative: String, lang: Lang) {
+        saveArticle(lang, urlRelative)
+    }
+
+    fun getArticleFromApi(url: String, lang: Lang): ArticleForLang? {
+        val request = Request.Builder()
+                .url(lang.siteBaseUrl + url)
+                .build()
+
+        var responseBody = okHttpClient.newCall(request).execute().body()?.string()
+                ?: throw ScpParseException("error while getArticleFromApi")
+
+        //remove all fucking RTL(&lrm) used for text-alignment. What a fucking idiots!..
+        responseBody = responseBody.replace("[\\p{Cc}\\p{Cf}]".toRegex(), "")
+
+        val doc = Jsoup.parse(responseBody)
+        val pageContent = getArticlePageContentTag(doc)
+                ?: throw ScpParseException("pageContent is NULL for: $url")
+        val p404 = pageContent.getElementById("404-message")
+        if (p404 != null) {
+            return ArticleForLang(
+                    langId = lang.id,
+                    urlRelative = url,
+                    title = "404",
+                    text = p404.outerHtml()
+            )
+        }
+
+        return parseHtmlService.parseArticle(url, doc, pageContent, lang)
+    }
+
+    /**
+     * We need this as in FR site all article content wrapped in another div... ***!!!11
+     *
+     * @return Element with article content
+     */
+    protected fun getArticlePageContentTag(doc: Document): Element? {
+        return doc.getElementById(HTML_ID_PAGE_CONTENT)
     }
 
     private fun createArticleToArticleRelation(
@@ -418,9 +427,9 @@ class ArticleParsingServiceImpl : ArticleParsingService {
          * i.e. 05:33 02.12.2018`
          */
 //        private val DATE_FORMAT = SimpleDateFormat("HH:mm dd.MM.yyyy")
-        private val DATE_FORMAT = SimpleDateFormat("dd MMM yyyy HH:mm")
+        val DATE_FORMAT = SimpleDateFormat("dd MMM yyyy HH:mm")
 
-        private const val DEFAULT_INNER_ARTICLES_DEPTH = 1
+        const val DEFAULT_INNER_ARTICLES_DEPTH = 1
     }
 }
 

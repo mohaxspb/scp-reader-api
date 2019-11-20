@@ -52,4 +52,9 @@ object ScpReaderConstants {
             CH("ch")
         }
     }
+
+    object RecentArticlesUrl {
+        const val RU = "/most-recently-created/p/"
+        const val EN = "/most-recently-created/p/"
+    }
 }
