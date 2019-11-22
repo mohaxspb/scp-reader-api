@@ -10,6 +10,7 @@ import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
+import ru.kuchanov.scpreaderapi.bean.articles.Article
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 import java.io.IOException
@@ -17,15 +18,17 @@ import java.sql.Timestamp
 import java.util.*
 
 
-@Suppress("unused")
 @Service
-class ArticleParsingServiceImplEN : ArticleParsingServiceBase() {
+class ArticleParsingServiceImplPL : ArticleParsingServiceBase() {
+
+    override fun parseMostRecentArticlesForLang(lang: Lang, maxPageCount: Int?, processOnlyCount: Int?) {
+        super.parseMostRecentArticlesForLang(lang, maxPageCount, processOnlyCount)
+    }
 
     override fun getMostRecentArticlesPageCountForLang(lang: Lang): Single<Int> {
-
         return Single.create<Int> { subscriber: SingleEmitter<Int> ->
             val request: Request = Request.Builder()
-                    .url(lang.siteBaseUrl + ScpReaderConstants.RecentArticlesUrl.EN)
+                    .url(lang.siteBaseUrl + ScpReaderConstants.RecentArticlesUrl.PL)
                     .build()
             val responseBody: String
             responseBody = try {
@@ -59,7 +62,7 @@ class ArticleParsingServiceImplEN : ArticleParsingServiceBase() {
         return Single.create<List<ArticleForLang>> {
 
             val request = Request.Builder()
-                    .url(lang.siteBaseUrl + ScpReaderConstants.RecentArticlesUrl.EN + page)
+                    .url(lang.siteBaseUrl + ScpReaderConstants.RecentArticlesUrl.PL + page)
                     .build()
 
             val responseBody = okHttpClient
@@ -79,19 +82,19 @@ class ArticleParsingServiceImplEN : ArticleParsingServiceBase() {
     override fun parseForRecentArticles(lang: Lang, doc: Document): List<ArticleForLang> {
         val contentTypeDescription = doc.getElementsByClass("content-type-description").first()
         val pageContent = contentTypeDescription.getElementsByTag("table").first()
-                ?: throw ScpParseException("parse error EN!!!")
+                ?: throw ScpParseException("parse error!")
 
         val articles: MutableList<ArticleForLang> = ArrayList()
         val listOfElements: Elements = pageContent.getElementsByTag("tr")
         for (i in 1 /*start from 1 as first row is tables header*/ until listOfElements.size) {
-            val listOfTd: Elements = listOfElements[i].getElementsByTag("td")
+            val listOfTd: Elements = listOfElements.get(i).getElementsByTag("td")
             val firstTd: Element = listOfTd.first()
             val tagA = firstTd.getElementsByTag("a").first()
             val title = tagA.text()
             val url: String = lang.siteBaseUrl + tagA.attr("href")
             //4 Jun 2017, 22:25
-            //createdDate
-            val createdDateNode: Element = listOfTd[1]
+//createdDate
+            val createdDateNode: Element = listOfTd.get(1)
             val createdDate = createdDateNode.text().trim()
             val article = ArticleForLang(
                     langId = lang.id,
@@ -105,27 +108,19 @@ class ArticleParsingServiceImplEN : ArticleParsingServiceBase() {
         return articles
     }
 
-    override fun parseMostRecentArticlesForLang(lang: Lang, maxPageCount: Int?, processOnlyCount: Int?) {
-        super.parseMostRecentArticlesForLang(lang, maxPageCount, processOnlyCount)
-    }
-
-    override fun getParsingRealizationForLang(lang: Lang): ArticleParsingServiceBase {
-        return super.getParsingRealizationForLang(lang)
-    }
-
     override fun parseArticleForLang(urlRelative: String, lang: Lang) {
-        throw IllegalStateException("NOT IMPLEMENTED parseArticleForLang")
+        super.parseArticleForLang(urlRelative, lang)
     }
 
     override fun getArticleFromApi(url: String, lang: Lang): ArticleForLang? {
-        throw IllegalStateException("NOT IMPLEMENTED getArticleFromApi")
+        return super.getArticleFromApi(url, lang)
     }
 
     override fun getArticlePageContentTag(doc: Document): Element? {
-        throw IllegalStateException("NOT IMPLEMENTED getArticlePageContentTag")
+        return super.getArticlePageContentTag(doc)
     }
 
     override fun getAndSaveInnerArticles(lang: Lang, articleDownloaded: ArticleForLang, maxDepth: Int, currentDepthLevel: Int) {
-        throw IllegalStateException("NOT IMPLEMENTED getAndSaveInnerArticles")
+        super.getAndSaveInnerArticles(lang, articleDownloaded, maxDepth, currentDepthLevel)
     }
 }

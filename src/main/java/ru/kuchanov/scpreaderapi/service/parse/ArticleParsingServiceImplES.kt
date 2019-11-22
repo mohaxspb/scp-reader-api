@@ -17,15 +17,21 @@ import java.sql.Timestamp
 import java.util.*
 
 
-@Suppress("unused")
 @Service
-class ArticleParsingServiceImplEN : ArticleParsingServiceBase() {
+class ArticleParsingServiceImplES : ArticleParsingServiceBase() {
+
+    override fun getParsingRealizationForLang(lang: Lang): ArticleParsingServiceBase {
+        return super.getParsingRealizationForLang(lang)
+    }
+
+    override fun parseMostRecentArticlesForLang(lang: Lang, maxPageCount: Int?, processOnlyCount: Int?) {
+        super.parseMostRecentArticlesForLang(lang, maxPageCount, processOnlyCount)
+    }
 
     override fun getMostRecentArticlesPageCountForLang(lang: Lang): Single<Int> {
-
         return Single.create<Int> { subscriber: SingleEmitter<Int> ->
             val request: Request = Request.Builder()
-                    .url(lang.siteBaseUrl + ScpReaderConstants.RecentArticlesUrl.EN)
+                    .url(lang.siteBaseUrl + ScpReaderConstants.RecentArticlesUrl.ES)
                     .build()
             val responseBody: String
             responseBody = try {
@@ -34,7 +40,7 @@ class ArticleParsingServiceImplEN : ArticleParsingServiceBase() {
                 if (body != null) {
                     body.string()
                 } else {
-                    subscriber.onError(ScpParseException("parse error!"))
+                    subscriber.onError(ScpParseException("parse error!!!"))
                     return@create
                 }
             } catch (e: IOException) {
@@ -59,7 +65,7 @@ class ArticleParsingServiceImplEN : ArticleParsingServiceBase() {
         return Single.create<List<ArticleForLang>> {
 
             val request = Request.Builder()
-                    .url(lang.siteBaseUrl + ScpReaderConstants.RecentArticlesUrl.EN + page)
+                    .url(lang.siteBaseUrl + ScpReaderConstants.RecentArticlesUrl.ES + page)
                     .build()
 
             val responseBody = okHttpClient
@@ -79,19 +85,19 @@ class ArticleParsingServiceImplEN : ArticleParsingServiceBase() {
     override fun parseForRecentArticles(lang: Lang, doc: Document): List<ArticleForLang> {
         val contentTypeDescription = doc.getElementsByClass("content-type-description").first()
         val pageContent = contentTypeDescription.getElementsByTag("table").first()
-                ?: throw ScpParseException("parse error EN!!!")
+                ?: throw ScpParseException("parse error!!")
 
         val articles: MutableList<ArticleForLang> = ArrayList()
         val listOfElements: Elements = pageContent.getElementsByTag("tr")
         for (i in 1 /*start from 1 as first row is tables header*/ until listOfElements.size) {
-            val listOfTd: Elements = listOfElements[i].getElementsByTag("td")
+            val listOfTd: Elements = listOfElements.get(i).getElementsByTag("td")
             val firstTd: Element = listOfTd.first()
             val tagA = firstTd.getElementsByTag("a").first()
             val title = tagA.text()
             val url: String = lang.siteBaseUrl + tagA.attr("href")
             //4 Jun 2017, 22:25
-            //createdDate
-            val createdDateNode: Element = listOfTd[1]
+//createdDate
+            val createdDateNode: Element = listOfTd.get(1)
             val createdDate = createdDateNode.text().trim()
             val article = ArticleForLang(
                     langId = lang.id,
@@ -105,27 +111,51 @@ class ArticleParsingServiceImplEN : ArticleParsingServiceBase() {
         return articles
     }
 
-    override fun parseMostRecentArticlesForLang(lang: Lang, maxPageCount: Int?, processOnlyCount: Int?) {
-        super.parseMostRecentArticlesForLang(lang, maxPageCount, processOnlyCount)
-    }
-
-    override fun getParsingRealizationForLang(lang: Lang): ArticleParsingServiceBase {
-        return super.getParsingRealizationForLang(lang)
-    }
-
     override fun parseArticleForLang(urlRelative: String, lang: Lang) {
-        throw IllegalStateException("NOT IMPLEMENTED parseArticleForLang")
+        super.parseArticleForLang(urlRelative, lang)
     }
 
     override fun getArticleFromApi(url: String, lang: Lang): ArticleForLang? {
-        throw IllegalStateException("NOT IMPLEMENTED getArticleFromApi")
+
+        //TODO
+        /*
+        18:31:24.054 error in articles parsing: /hub-del-sarkicismo
+java.lang.NullPointerException: null
+	at ru.kuchanov.scpreaderapi.service.article.ParseHtmlService.parseArticle(ParseHtmlService.kt:269)
+	at ru.kuchanov.scpreaderapi.service.parse.ArticleParsingServiceBase.getArticleFromApi(ArticleParsingServiceBase.kt:340)
+	at ru.kuchanov.scpreaderapi.service.parse.ArticleParsingServiceImplES.getArticleFromApi(ArticleParsingServiceImplES.kt:119)
+	at ru.kuchanov.scpreaderapi.service.parse.ArticleParsingServiceBase.saveArticle(ArticleParsingServiceBase.kt:207)
+	at ru.kuchanov.scpreaderapi.service.parse.ArticleParsingServiceBase.saveArticle$default(ArticleParsingServiceBase.kt:204)
+	at ru.kuchanov.scpreaderapi.service.parse.ArticleParsingServiceBase.getAndSaveInnerArticles(ArticleParsingServiceBase.kt:416)
+	at ru.kuchanov.scpreaderapi.service.parse.ArticleParsingServiceImplES.getAndSaveInnerArticles(ArticleParsingServiceImplES.kt:127)
+	at ru.kuchanov.scpreaderapi.service.parse.ArticleParsingServiceBase.getAndSaveInnerArticles$default(ArticleParsingServiceBase.kt:405)
+	at ru.kuchanov.scpreaderapi.service.parse.ArticleParsingServiceBase.saveArticle(ArticleParsingServiceBase.kt:251)
+	at ru.kuchanov.scpreaderapi.service.parse.ArticleParsingServiceBase$downloadAndSaveArticles$1.apply(ArticleParsingServiceBase.kt:186)
+	at ru.kuchanov.scpreaderapi.service.parse.ArticleParsingServiceBase$downloadAndSaveArticles$1.apply(ArticleParsingServiceBase.kt:35)
+	at io.reactivex.internal.operators.single.SingleMap$MapSingleObserver.onSuccess(SingleMap.java:57)
+	at io.reactivex.internal.operators.single.SingleJust.subscribeActual(SingleJust.java:30)
+	at io.reactivex.Single.subscribe(Single.java:3433)
+	at io.reactivex.internal.operators.single.SingleMap.subscribeActual(SingleMap.java:34)
+	at io.reactivex.Single.subscribe(Single.java:3433)
+	at io.reactivex.internal.operators.single.SingleSubscribeOn$SubscribeOnObserver.run(SingleSubscribeOn.java:89)
+	at io.reactivex.Scheduler$DisposeTask.run(Scheduler.java:579)
+	at io.reactivex.internal.schedulers.ScheduledRunnable.run(ScheduledRunnable.java:66)
+	at io.reactivex.internal.schedulers.ScheduledRunnable.call(ScheduledRunnable.java:57)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.access$201(ScheduledThreadPoolExecutor.java:180)
+	at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:293)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+         */
+        return super.getArticleFromApi(url, lang)
     }
 
     override fun getArticlePageContentTag(doc: Document): Element? {
-        throw IllegalStateException("NOT IMPLEMENTED getArticlePageContentTag")
+        return super.getArticlePageContentTag(doc)
     }
 
     override fun getAndSaveInnerArticles(lang: Lang, articleDownloaded: ArticleForLang, maxDepth: Int, currentDepthLevel: Int) {
-        throw IllegalStateException("NOT IMPLEMENTED getAndSaveInnerArticles")
+        super.getAndSaveInnerArticles(lang, articleDownloaded, maxDepth, currentDepthLevel)
     }
 }

@@ -56,5 +56,13 @@ object ScpReaderConstants {
     object RecentArticlesUrl {
         const val RU = "/most-recently-created/p/"
         const val EN = "/most-recently-created/p/"
+        const val DE = "/most-recently-created/p/"
+        const val FR = "/most-recently-created/p/"
+        const val ES = "/recientemente-creados/p/"
+        const val IT = "/system:recent-changes/p/"
+        const val PL = "/ostatnio-stworzone/p/"
+        const val PT = "/most-recently-created/p/"
+        const val CH = "/most-recently-created/p/"
+
     }
 }

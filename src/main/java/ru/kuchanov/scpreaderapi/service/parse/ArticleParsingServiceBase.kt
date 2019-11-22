@@ -70,7 +70,13 @@ class ArticleParsingServiceBase {
         return when(lang.langCode){
             ScpReaderConstants.Firebase.FirebaseInstance.RU.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplRU::class.java)
             ScpReaderConstants.Firebase.FirebaseInstance.EN.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplEN::class.java)
-            // todo add another languages
+            ScpReaderConstants.Firebase.FirebaseInstance.DE.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplDE::class.java)
+            ScpReaderConstants.Firebase.FirebaseInstance.FR.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplFR::class.java)
+            ScpReaderConstants.Firebase.FirebaseInstance.CH.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplCH::class.java)
+            ScpReaderConstants.Firebase.FirebaseInstance.ES.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplES::class.java)
+            ScpReaderConstants.Firebase.FirebaseInstance.IT.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplIT::class.java)
+            ScpReaderConstants.Firebase.FirebaseInstance.PL.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplPL::class.java)
+            ScpReaderConstants.Firebase.FirebaseInstance.PT.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplPT::class.java)
 
             else -> throw NotImplementedError("No parsing realization, need lang(current lang: $lang)")
         }
@@ -97,7 +103,7 @@ class ArticleParsingServiceBase {
                         articlesToDownload.take(processOnlyCount)
                     } ?: articlesToDownload
                 }
-                        .flatMap { downloadAndSaveArticles(it, lang, DEFAULT_INNER_ARTICLES_DEPTH) }
+                .flatMap { downloadAndSaveArticles(it, lang, DEFAULT_INNER_ARTICLES_DEPTH) }
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
                 .subscribeBy(
@@ -169,7 +175,7 @@ class ArticleParsingServiceBase {
         }
     }
 
-    private fun downloadAndSaveArticles(
+    protected fun downloadAndSaveArticles(
             articlesToDownload: List<ArticleForLang>,
             lang: Lang,
             innerArticlesDepth: Int = 0
@@ -190,7 +196,7 @@ class ArticleParsingServiceBase {
                 .observeOn(Schedulers.io())
     }
 
-    private fun saveArticle(
+    protected fun saveArticle(
             lang: Lang,
             urlRelative: String,
             innerArticlesDepth: Int = 0,

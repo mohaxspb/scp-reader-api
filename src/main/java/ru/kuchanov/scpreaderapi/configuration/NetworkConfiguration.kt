@@ -49,7 +49,7 @@ class NetworkConfiguration {
     fun objectMapper(): ObjectMapper = ObjectMapper()
             .registerKotlinModule()
             .enable(SerializationFeature.INDENT_OUTPUT)
-            .setDateFormat(SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"));
+            .setDateFormat(SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"))
 
     @Bean
     fun converterFactory(): Converter.Factory = JacksonConverterFactory.create(objectMapper())

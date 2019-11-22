@@ -16,16 +16,13 @@ import java.io.IOException
 import java.sql.Timestamp
 import java.util.*
 
-
-@Suppress("unused")
 @Service
-class ArticleParsingServiceImplEN : ArticleParsingServiceBase() {
+class ArticleParsingServiceImplCH : ArticleParsingServiceBase() {
 
     override fun getMostRecentArticlesPageCountForLang(lang: Lang): Single<Int> {
-
         return Single.create<Int> { subscriber: SingleEmitter<Int> ->
             val request: Request = Request.Builder()
-                    .url(lang.siteBaseUrl + ScpReaderConstants.RecentArticlesUrl.EN)
+                    .url(lang.siteBaseUrl + ScpReaderConstants.RecentArticlesUrl.CH)
                     .build()
             val responseBody: String
             responseBody = try {
@@ -38,7 +35,7 @@ class ArticleParsingServiceImplEN : ArticleParsingServiceBase() {
                     return@create
                 }
             } catch (e: IOException) {
-                subscriber.onError(IOException("connection error!"))
+                subscriber.onError(IOException("connection error!!!"))
                 return@create
             }
             try {
@@ -59,7 +56,7 @@ class ArticleParsingServiceImplEN : ArticleParsingServiceBase() {
         return Single.create<List<ArticleForLang>> {
 
             val request = Request.Builder()
-                    .url(lang.siteBaseUrl + ScpReaderConstants.RecentArticlesUrl.EN + page)
+                    .url(lang.siteBaseUrl + ScpReaderConstants.RecentArticlesUrl.CH + page)
                     .build()
 
             val responseBody = okHttpClient
@@ -79,7 +76,7 @@ class ArticleParsingServiceImplEN : ArticleParsingServiceBase() {
     override fun parseForRecentArticles(lang: Lang, doc: Document): List<ArticleForLang> {
         val contentTypeDescription = doc.getElementsByClass("content-type-description").first()
         val pageContent = contentTypeDescription.getElementsByTag("table").first()
-                ?: throw ScpParseException("parse error EN!!!")
+                ?: throw ScpParseException("parse error!")
 
         val articles: MutableList<ArticleForLang> = ArrayList()
         val listOfElements: Elements = pageContent.getElementsByTag("tr")
@@ -105,27 +102,19 @@ class ArticleParsingServiceImplEN : ArticleParsingServiceBase() {
         return articles
     }
 
-    override fun parseMostRecentArticlesForLang(lang: Lang, maxPageCount: Int?, processOnlyCount: Int?) {
-        super.parseMostRecentArticlesForLang(lang, maxPageCount, processOnlyCount)
-    }
-
-    override fun getParsingRealizationForLang(lang: Lang): ArticleParsingServiceBase {
-        return super.getParsingRealizationForLang(lang)
-    }
-
     override fun parseArticleForLang(urlRelative: String, lang: Lang) {
-        throw IllegalStateException("NOT IMPLEMENTED parseArticleForLang")
+        super.parseArticleForLang(urlRelative, lang)
     }
 
     override fun getArticleFromApi(url: String, lang: Lang): ArticleForLang? {
-        throw IllegalStateException("NOT IMPLEMENTED getArticleFromApi")
+        return super.getArticleFromApi(url, lang)
     }
 
     override fun getArticlePageContentTag(doc: Document): Element? {
-        throw IllegalStateException("NOT IMPLEMENTED getArticlePageContentTag")
+        return super.getArticlePageContentTag(doc)
     }
 
     override fun getAndSaveInnerArticles(lang: Lang, articleDownloaded: ArticleForLang, maxDepth: Int, currentDepthLevel: Int) {
-        throw IllegalStateException("NOT IMPLEMENTED getAndSaveInnerArticles")
+        super.getAndSaveInnerArticles(lang, articleDownloaded, maxDepth, currentDepthLevel)
     }
 }
