@@ -117,36 +117,10 @@ class ArticleParsingServiceImplES : ArticleParsingServiceBase() {
 
     override fun getArticleFromApi(url: String, lang: Lang): ArticleForLang? {
 
-        //TODO
+        //TODO check commentsUrl for ES site
         /*
         18:31:24.054 error in articles parsing: /hub-del-sarkicismo
 java.lang.NullPointerException: null
-	at ru.kuchanov.scpreaderapi.service.article.ParseHtmlService.parseArticle(ParseHtmlService.kt:269)
-	at ru.kuchanov.scpreaderapi.service.parse.ArticleParsingServiceBase.getArticleFromApi(ArticleParsingServiceBase.kt:340)
-	at ru.kuchanov.scpreaderapi.service.parse.ArticleParsingServiceImplES.getArticleFromApi(ArticleParsingServiceImplES.kt:119)
-	at ru.kuchanov.scpreaderapi.service.parse.ArticleParsingServiceBase.saveArticle(ArticleParsingServiceBase.kt:207)
-	at ru.kuchanov.scpreaderapi.service.parse.ArticleParsingServiceBase.saveArticle$default(ArticleParsingServiceBase.kt:204)
-	at ru.kuchanov.scpreaderapi.service.parse.ArticleParsingServiceBase.getAndSaveInnerArticles(ArticleParsingServiceBase.kt:416)
-	at ru.kuchanov.scpreaderapi.service.parse.ArticleParsingServiceImplES.getAndSaveInnerArticles(ArticleParsingServiceImplES.kt:127)
-	at ru.kuchanov.scpreaderapi.service.parse.ArticleParsingServiceBase.getAndSaveInnerArticles$default(ArticleParsingServiceBase.kt:405)
-	at ru.kuchanov.scpreaderapi.service.parse.ArticleParsingServiceBase.saveArticle(ArticleParsingServiceBase.kt:251)
-	at ru.kuchanov.scpreaderapi.service.parse.ArticleParsingServiceBase$downloadAndSaveArticles$1.apply(ArticleParsingServiceBase.kt:186)
-	at ru.kuchanov.scpreaderapi.service.parse.ArticleParsingServiceBase$downloadAndSaveArticles$1.apply(ArticleParsingServiceBase.kt:35)
-	at io.reactivex.internal.operators.single.SingleMap$MapSingleObserver.onSuccess(SingleMap.java:57)
-	at io.reactivex.internal.operators.single.SingleJust.subscribeActual(SingleJust.java:30)
-	at io.reactivex.Single.subscribe(Single.java:3433)
-	at io.reactivex.internal.operators.single.SingleMap.subscribeActual(SingleMap.java:34)
-	at io.reactivex.Single.subscribe(Single.java:3433)
-	at io.reactivex.internal.operators.single.SingleSubscribeOn$SubscribeOnObserver.run(SingleSubscribeOn.java:89)
-	at io.reactivex.Scheduler$DisposeTask.run(Scheduler.java:579)
-	at io.reactivex.internal.schedulers.ScheduledRunnable.run(ScheduledRunnable.java:66)
-	at io.reactivex.internal.schedulers.ScheduledRunnable.call(ScheduledRunnable.java:57)
-	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
-	at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.access$201(ScheduledThreadPoolExecutor.java:180)
-	at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:293)
-	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
-	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
-	at java.lang.Thread.run(Thread.java:748)
          */
         return super.getArticleFromApi(url, lang)
     }

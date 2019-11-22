@@ -266,7 +266,7 @@ class ParseHtmlService {
             textPartsTypes.add(value)
         }
 
-        val commentsUrl = doc.getElementById("discuss-button").attr("href")?.let {
+        val commentsUrl = doc.getElementById("discuss-button")?.attr("href")?.let {
             "${lang.siteBaseUrl}$it"
         }
 

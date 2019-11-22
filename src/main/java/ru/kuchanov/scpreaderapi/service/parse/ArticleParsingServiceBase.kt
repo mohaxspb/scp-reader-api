@@ -72,11 +72,11 @@ class ArticleParsingServiceBase {
             ScpReaderConstants.Firebase.FirebaseInstance.EN.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplEN::class.java)
             ScpReaderConstants.Firebase.FirebaseInstance.DE.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplDE::class.java)
             ScpReaderConstants.Firebase.FirebaseInstance.FR.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplFR::class.java)
-            ScpReaderConstants.Firebase.FirebaseInstance.CH.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplCH::class.java)
             ScpReaderConstants.Firebase.FirebaseInstance.ES.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplES::class.java)
             ScpReaderConstants.Firebase.FirebaseInstance.IT.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplIT::class.java)
             ScpReaderConstants.Firebase.FirebaseInstance.PL.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplPL::class.java)
             ScpReaderConstants.Firebase.FirebaseInstance.PT.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplPT::class.java)
+            "cn" -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplCH::class.java)
 
             else -> throw NotImplementedError("No parsing realization, need lang(current lang: $lang)")
         }
