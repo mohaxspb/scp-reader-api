@@ -2,13 +2,19 @@ package ru.kuchanov.scpreaderapi.service.parse
 
 import io.reactivex.Observable
 import io.reactivex.Single
+import io.reactivex.SingleEmitter
+import io.reactivex.processors.BehaviorProcessor
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.Response
+import org.apache.http.util.TextUtils
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
+import org.jsoup.parser.Tag
+import org.jsoup.select.Elements
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
@@ -25,9 +31,11 @@ import ru.kuchanov.scpreaderapi.configuration.NetworkConfiguration
 import ru.kuchanov.scpreaderapi.service.article.*
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForLangService
+import ru.kuchanov.scpreaderapi.service.firebase.FirebaseService
 import java.io.IOException
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
+import java.util.*
 
 
 @Primary
@@ -122,6 +130,57 @@ class ArticleParsingServiceBase {
                 )
     }
 
+    @Async
+    fun parseMostRatedArticlesForLang(
+            lang: Lang,
+            totalPageCount: Int? = null,
+            processOnlyCount: Int? = null
+    ) {
+        val subject = BehaviorProcessor.createDefault(1)
+
+        subject
+                .concatMap { page -> getRatedArticlesForLang(lang, page).toFlowable() }
+                .doOnNext { articles ->
+                    if (articles.size != ScpReaderConstants.NUM_OF_ARTICLES_RATED_PAGE) {
+                        subject.onComplete()
+                    } else {
+                        if (totalPageCount == null || subject.value!! < totalPageCount){
+                            subject.onNext(subject.value!! + 1)
+                        } else {
+                            subject.onComplete()
+                        }
+
+                    }
+                }
+                .doOnNext { println("articles size: ${it.size}") }
+                .toList()
+                .map { it.flatten() }
+
+                //test loading and save with less count of articles
+                .map { articlesToDownload ->
+                    processOnlyCount?.let {
+                        articlesToDownload.take(processOnlyCount)
+                    } ?: articlesToDownload
+                }
+                .flatMap { downloadAndSaveArticles(it, lang, DEFAULT_INNER_ARTICLES_DEPTH) }
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .subscribeBy(
+                        onSuccess = { articlesDownloadedAndSavedSuccessfully ->
+                            println("download complete")
+                            println(
+                                    articlesDownloadedAndSavedSuccessfully
+                                            .map { it?.urlRelative }
+                                            .joinToString(separator = "\n========###========\n")
+                            )
+                            println("download complete")
+                        },
+                        onError = {
+                            it.printStackTrace()
+                        }
+                )
+    }
+
     fun getMostRecentArticlesPageCountForLang(lang: Lang) : Single<Int> {
         return Single.create<Int> { subscriber ->
             val request = Request.Builder()
@@ -173,6 +232,163 @@ class ArticleParsingServiceBase {
 
             it.onSuccess(articles)
         }
+    }
+
+    fun getRatedArticlesForLang(lang: Lang, page: Int): Single<List<ArticleForLang>> {
+        return Single.create { subscriber: SingleEmitter<List<ArticleForLang>> ->
+
+            val request: Request = Request.Builder()
+                    .url(lang.siteBaseUrl + ScpReaderConstants.RatedArticlesUrl.RU + page)
+                    .build()
+            val responseBody: String
+            responseBody = try {
+                val response: Response = okHttpClient.newCall(request).execute()
+                val body = response.body()
+                if (body != null) {
+                    body.string()
+                } else {
+                    subscriber.onError(ScpParseException("parse error!"))
+                    return@create
+                }
+            } catch (e: IOException) {
+                subscriber.onError(IOException("connection error!"))
+                return@create
+            }
+            try {
+                val doc = Jsoup.parse(responseBody)
+                val articles: List<ArticleForLang> = parseForRatedArticles(lang, doc)
+                subscriber.onSuccess(articles)
+            } catch (e: Exception) {
+                println("error while get arts list")
+                subscriber.onError(e)
+            } catch (e: ScpParseException) {
+                println("error while get arts list")
+                subscriber.onError(e)
+            }
+        }
+    }
+
+    protected fun parseForRatedArticles(lang: Lang, doc: Document): List<ArticleForLang> {
+        val pageContent = doc.getElementById("page-content")
+                ?: throw ScpParseException("parse error!")
+        val listPagesBox = pageContent.getElementsByClass("list-pages-box").first()
+                ?: throw ScpParseException("parse error!")
+        val articles: MutableList<ArticleForLang> = ArrayList()
+        val listOfElements: List<Element> = listPagesBox.getElementsByClass("list-pages-item")
+        for (element in listOfElements) { //                    Timber.d("element: %s", element);
+            val tagP = element.getElementsByTag("p").first()
+            val tagA = tagP.getElementsByTag("a").first()
+            val title = tagP.text().substring(0, tagP.text().indexOf(", рейтинг"))
+            val url: String = lang.siteBaseUrl + tagA.attr("href")
+            //remove a tag to leave only text with rating
+            tagA.remove()
+            tagP.text(tagP.text().replace(", рейтинг ", ""))
+            tagP.text(tagP.text().substring(0, tagP.text().length - 1))
+            val rating = tagP.text().toInt()
+            val article = ArticleForLang(
+                    langId = lang.id,
+                    urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
+                    title = title,
+                    rating = rating
+//                    createdOnSite = Timestamp(DATE_FORMAT.parse(createdDate).time),
+//                    updatedOnSite = Timestamp(DATE_FORMAT.parse(updatedDate).time)
+
+            )
+            articles.add(article)
+        }
+        return articles
+    }
+
+    fun getObjectsArticlesForLang(lang: Lang, sObjectsLink: String): Single<List<ArticleForLang>> {
+        return Single.create { subscriber: SingleEmitter<List<ArticleForLang>> ->
+            val request = Request.Builder()
+                    .url(sObjectsLink)
+                    .build()
+            val responseBody: String
+            responseBody = try {
+                val response: Response = okHttpClient.newCall(request).execute()
+                val body = response.body()
+                if (body != null) {
+                    body.string()
+                } else {
+                    subscriber.onError(ScpParseException("parse error!"))
+                    return@create
+                }
+            } catch (e: IOException) {
+                subscriber.onError(IOException("connection error!"))
+                return@create
+            }
+            try {
+                val doc = Jsoup.parse(responseBody)
+                val articles: List<ArticleForLang> = parseForObjectArticles(lang, doc)
+                subscriber.onSuccess(articles)
+            } catch (e: Exception) {
+                println("error while get arts list")
+                subscriber.onError(e)
+            } catch (e: ScpParseException) {
+                println("error while get arts list")
+                subscriber.onError(e)
+            }
+        }
+    }
+
+    protected fun parseForObjectArticles(lang: Lang, doc: Document): List<ArticleForLang> {
+        var doc = doc
+        val pageContent = doc.getElementById("page-content")
+                ?: throw ScpParseException("parse error!")
+        //parse
+        val listPagesBox = pageContent.getElementsByClass("list-pages-box").first()
+        listPagesBox?.remove()
+        val collapsibleBlock = pageContent.getElementsByClass("collapsible-block").first()
+        collapsibleBlock?.remove()
+        val table = pageContent.getElementsByTag("table").first()
+        table?.remove()
+        val h2 = doc.getElementById("toc0")
+        h2?.remove()
+        //now we will remove all html code before tag h2,with id toc1
+        var allHtml = pageContent.html()
+        val indexOfh2WithIdToc1 = allHtml.indexOf("<h2 id=\"toc1\">")
+        var indexOfhr = allHtml.indexOf("<hr>")
+        //for other objects filials there is no HR tag at the end...
+        if (indexOfhr < indexOfh2WithIdToc1) {
+            indexOfhr = allHtml.indexOf("<p style=\"text-align: center;\">= = = =</p>")
+        }
+        if (indexOfhr < indexOfh2WithIdToc1) {
+            indexOfhr = allHtml.length
+        }
+        allHtml = allHtml.substring(indexOfh2WithIdToc1, indexOfhr)
+        doc = Jsoup.parse(allHtml)
+        val h2withIdToc1 = doc.getElementById("toc1")
+        h2withIdToc1.remove()
+        val allh2Tags: Elements = doc.getElementsByTag("h2")
+        for (h2Tag in allh2Tags) {
+            val brTag = Element(Tag.valueOf("br"), "")
+            h2Tag.replaceWith(brTag)
+        }
+        val allArticles = doc.getElementsByTag("body").first().html()
+        val arrayOfArticles = allArticles.split("<br>").toTypedArray()
+        val articles: MutableList<ArticleForLang> = ArrayList()
+        for (arrayItem in arrayOfArticles) {
+            if (TextUtils.isEmpty(arrayItem.trim())) {
+                continue
+            }
+            println("arrayItem: $arrayItem")
+            val arrayItemParsed = Jsoup.parse(arrayItem)
+            println("arrayItemParsed: $arrayItemParsed")
+//type of object
+            val imageURL = arrayItemParsed.getElementsByTag("img").first().attr("src")
+            val type = getObjectTypeByImageUrl(imageURL)
+            val url: String = lang.siteBaseUrl + arrayItemParsed.getElementsByTag("a").first().attr("href")
+            val title = arrayItemParsed.text()
+            val article = ArticleForLang(
+                    langId = lang.id,
+                    urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
+                    title = title
+
+            )
+            articles.add(article)
+        }
+        return articles
     }
 
     protected fun downloadAndSaveArticles(
@@ -425,6 +641,90 @@ class ArticleParsingServiceBase {
             }
 
         }
+    }
+
+    fun getObjectTypeByImageUrl(imageURL : String) : ScpReaderConstants.ObjectType {
+        val type : ScpReaderConstants.ObjectType
+
+        when (imageURL) {
+            "http://scp-ru.wdfiles.com/local--files/scp-list-4/na.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-3/na.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-2/na.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-ru/na(1).png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list/na.png",
+            "http://scp-ru.wdfiles.com/local--files/archive/na.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-j/na(1).png",
+                //other filials
+            "http://scp-ru.wdfiles.com/local--files/scp-list-fr/safe.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-jp/safe1.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-es/safe.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-pl/safe.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-de/safe1.png" ->
+                type = ScpReaderConstants.ObjectType.NEUTRAL_OR_NOT_ADDED
+
+            "http://scp-ru.wdfiles.com/local--files/scp-list-4/safe.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-3/safe.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-2/safe.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-ru/safe(1).png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list/safe.png" ,
+            "http://scp-ru.wdfiles.com/local--files/archive/safe.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-j/safe(1).png" ,
+                //other filials
+            "http://scp-ru.wdfiles.com/local--files/scp-list-fr/na.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-jp/na1.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-es/na.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-pl/na.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-de/na1.png" ->
+                type = ScpReaderConstants.ObjectType.SAFE
+
+            "http://scp-ru.wdfiles.com/local--files/scp-list-4/euclid.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-3/euclid.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-2/euclid.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-ru/euclid(1).png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list/euclid.png" ,
+            "http://scp-ru.wdfiles.com/local--files/archive/euclid.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-j/euclid(1).png" ,
+                //other filials
+            "http://scp-ru.wdfiles.com/local--files/scp-list-fr/euclid.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-jp/euclid1.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-es/euclid.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-pl/euclid.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-de/euclid1.png" ->
+                type = ScpReaderConstants.ObjectType.EUCLID
+
+            "http://scp-ru.wdfiles.com/local--files/scp-list-4/keter.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-3/keter.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-2/keter.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-ru/keter(1).png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list/keter.png" ,
+            "http://scp-ru.wdfiles.com/local--files/archive/keter.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-j/keter(1).png" ,
+                //other filials
+            "http://scp-ru.wdfiles.com/local--files/scp-list-fr/keter.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-jp/keter1.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-es/keter.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-pl/keter.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-de/keter1.png" ->
+                type = ScpReaderConstants.ObjectType.KETER
+
+            "http://scp-ru.wdfiles.com/local--files/scp-list-4/thaumiel.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-3/thaumiel.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-2/thaumiel.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-ru/thaumiel(1).png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list/thaumiel.png" ,
+            "http://scp-ru.wdfiles.com/local--files/archive/thaumiel.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-j/thaumiel(1).png" ,
+                //other filials
+            "http://scp-ru.wdfiles.com/local--files/scp-list-fr/thaumiel.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-jp/thaumiel1.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-es/thaumiel.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-pl/thaumiel.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-de/thaumiel1.png" ->
+                type = ScpReaderConstants.ObjectType.THAUMIEL
+
+            else -> type = ScpReaderConstants.ObjectType.NONE
+        }
+        return type
     }
 
     companion object {
