@@ -55,30 +55,6 @@ object ScpReaderConstants {
         }
     }
 
-    object RecentArticlesUrl {
-        const val RU = "/most-recently-created/p/"
-        const val EN = "/most-recently-created/p/"
-        const val DE = "/most-recently-created/p/"
-        const val FR = "/most-recently-created/p/"
-        const val ES = "/recientemente-creados/p/"
-        const val IT = "/system:recent-changes/p/"
-        const val PL = "/ostatnio-stworzone/p/"
-        const val PT = "/most-recently-created/p/"
-        const val CH = "/most-recently-created/p/"
-    }
-
-    object RatedArticlesUrl {
-        const val RU = "/top-rated-pages/p/"
-        const val EN = "/top-rated-pages/p/"
-        const val DE = "/top-rated-pages/p/"
-        const val FR = "/top-rated-pages/p/"
-        const val ES = "/paginas-mejor-puntuadas/p/"
-        const val IT = "/pagine-piu-votate/p/"
-        const val PL = "/najwyzej-ocenione/p/"
-        const val PT = "/top-rated-pages/p/"
-        const val CH = "/top-rated-pages/all_p/"
-    }
-
     enum class ObjectType {
         NEUTRAL_OR_NOT_ADDED,
         SAFE,
@@ -87,6 +63,4 @@ object ScpReaderConstants {
         THAUMIEL,
         NONE
     }
-
-
 }

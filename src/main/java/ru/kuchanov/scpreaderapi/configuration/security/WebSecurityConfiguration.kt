@@ -150,7 +150,8 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
                 "/${ScpReaderConstants.Path.ADS}/all",
                 "/${ScpReaderConstants.Path.ADS}/files/**",
                 "/${ScpReaderConstants.Path.ARTICLE}/**/recent/**",
-                "/${ScpReaderConstants.Path.ARTICLE}/**/rated/**"
+                "/${ScpReaderConstants.Path.ARTICLE}/**/rated/**",
+                "/${ScpReaderConstants.Path.ARTICLE}/**/object/**"
         )
     }
 }

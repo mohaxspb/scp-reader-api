@@ -1,5 +1,6 @@
 package ru.kuchanov.scpreaderapi.service.parse
 
+import io.reactivex.Flowable
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.SingleEmitter
@@ -31,7 +32,6 @@ import ru.kuchanov.scpreaderapi.configuration.NetworkConfiguration
 import ru.kuchanov.scpreaderapi.service.article.*
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForLangService
-import ru.kuchanov.scpreaderapi.service.firebase.FirebaseService
 import java.io.IOException
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
@@ -75,7 +75,7 @@ class ArticleParsingServiceBase {
 
     fun getParsingRealizationForLang(lang: Lang): ArticleParsingServiceBase {
 
-        return when(lang.langCode){
+        return when(lang.langCode) {
             ScpReaderConstants.Firebase.FirebaseInstance.RU.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplRU::class.java)
             ScpReaderConstants.Firebase.FirebaseInstance.EN.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplEN::class.java)
             ScpReaderConstants.Firebase.FirebaseInstance.DE.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplDE::class.java)
@@ -89,6 +89,18 @@ class ArticleParsingServiceBase {
             else -> throw NotImplementedError("No parsing realization, need lang(current lang: $lang)")
         }
     }
+
+    fun getRatedArticlesUrl() = "/top-rated-pages/p/"
+
+    fun getRecentArticlesUrl() = "/most-recently-created/p/"
+
+    fun getObjectArticlesUrls() = listOf(
+            "http://scpfoundation.ru/scp-list",
+            "http://scpfoundation.ru/scp-list-2",
+            "http://scpfoundation.ru/scp-list-3",
+            "http://scpfoundation.ru/scp-list-4",
+            "http://scpfoundation.ru/scp-list-5"
+    )
 
     @Async
     fun parseMostRecentArticlesForLang(
@@ -181,10 +193,47 @@ class ArticleParsingServiceBase {
                 )
     }
 
+    @Async
+    fun parseObjectsArticlesForLang(
+            lang: Lang,
+            totalPageCount: Int? = null,
+            processOnlyCount: Int? = null
+    ) {
+
+        Flowable.fromIterable(getObjectArticlesUrls())
+                .flatMapSingle { url -> getObjectsArticlesForLang(lang, url) }
+                .toList()
+                .map { it.flatten() }
+
+                //test loading and save with less count of articles
+                .map { articlesToDownload ->
+                    processOnlyCount?.let {
+                        articlesToDownload.take(processOnlyCount)
+                    } ?: articlesToDownload
+                }
+                .flatMap { downloadAndSaveArticles(it, lang, DEFAULT_INNER_ARTICLES_DEPTH) }
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .subscribeBy(
+                        onSuccess = { articlesDownloadedAndSavedSuccessfully ->
+                            println("download complete")
+                            println(
+                                    articlesDownloadedAndSavedSuccessfully
+                                            .map { it?.urlRelative }
+                                            .joinToString(separator = "\n========###========\n")
+                            )
+                            println("download complete")
+                        },
+                        onError = {
+                            it.printStackTrace()
+                        }
+                )
+    }
+
     fun getMostRecentArticlesPageCountForLang(lang: Lang) : Single<Int> {
         return Single.create<Int> { subscriber ->
             val request = Request.Builder()
-                    .url(lang.siteBaseUrl + ScpReaderConstants.RecentArticlesUrl.RU)
+                    .url(lang.siteBaseUrl + getRecentArticlesUrl())
                     .build()
 
             val responseBody: String
@@ -194,22 +243,27 @@ class ArticleParsingServiceBase {
                 if (body != null) {
                     responseBody = body.string()
                 } else {
-                    subscriber.onError(IOException("error while getRecentArticlesPageCount"))
+                    subscriber.onError(ScpParseException("error while getRecentArticlesPageCountForLang"))
                     return@create
                 }
             } catch (e: IOException) {
-                subscriber.onError(IOException("error while getRecentArticlesPageCount", e))
+                subscriber.onError(IOException("error while getRecentArticlesPageCountForLang", e))
                 return@create
             }
 
-            val doc = Jsoup.parse(responseBody)
+            try {
+                val doc = Jsoup.parse(responseBody)
 
-            //get num of pages
-            val spanWithNumber = doc.getElementsByClass("pager-no").first()
-            val text = spanWithNumber.text()
-            val numOfPages = Integer.valueOf(text.substring(text.lastIndexOf(" ") + 1))
+                //get num of pages
+                val spanWithNumber = doc.getElementsByClass("pager-no").first()
+                val text = spanWithNumber.text()
+                val numOfPages = Integer.valueOf(text.substring(text.lastIndexOf(" ") + 1))
 
-            subscriber.onSuccess(numOfPages)
+                subscriber.onSuccess(numOfPages)
+            } catch (e: Exception) {
+                println("error while get arts list")
+                subscriber.onError(e)
+            }
         }
     }
 
@@ -217,7 +271,7 @@ class ArticleParsingServiceBase {
         return Single.create<List<ArticleForLang>> {
 
             val request = Request.Builder()
-                    .url(lang.siteBaseUrl + ScpReaderConstants.RecentArticlesUrl.RU + page)
+                    .url(lang.siteBaseUrl + getRecentArticlesUrl() + page)
                     .build()
 
             val responseBody = okHttpClient
@@ -238,7 +292,7 @@ class ArticleParsingServiceBase {
         return Single.create { subscriber: SingleEmitter<List<ArticleForLang>> ->
 
             val request: Request = Request.Builder()
-                    .url(lang.siteBaseUrl + ScpReaderConstants.RatedArticlesUrl.RU + page)
+                    .url(lang.siteBaseUrl + getRatedArticlesUrl() + page)
                     .build()
             val responseBody: String
             responseBody = try {
@@ -247,7 +301,7 @@ class ArticleParsingServiceBase {
                 if (body != null) {
                     body.string()
                 } else {
-                    subscriber.onError(ScpParseException("parse error!"))
+                    subscriber.onError(ScpParseException("parse error getRatedArticlesForLang!"))
                     return@create
                 }
             } catch (e: IOException) {

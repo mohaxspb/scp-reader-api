@@ -1,77 +1,29 @@
 package ru.kuchanov.scpreaderapi.service.parse
 
-import io.reactivex.Single
-import io.reactivex.SingleEmitter
-import okhttp3.Request
-import okhttp3.Response
-import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import org.springframework.stereotype.Service
-import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
-import java.io.IOException
 import java.sql.Timestamp
 import java.util.*
-
 
 @Service
 class ArticleParsingServiceImplCH : ArticleParsingServiceBase() {
 
-    override fun getMostRecentArticlesPageCountForLang(lang: Lang): Single<Int> {
-        return Single.create<Int> { subscriber: SingleEmitter<Int> ->
-            val request: Request = Request.Builder()
-                    .url(lang.siteBaseUrl + ScpReaderConstants.RecentArticlesUrl.CH)
-                    .build()
-            val responseBody: String
-            responseBody = try {
-                val response: Response = okHttpClient.newCall(request).execute()
-                val body = response.body()
-                if (body != null) {
-                    body.string()
-                } else {
-                    subscriber.onError(ScpParseException("parse error!"))
-                    return@create
-                }
-            } catch (e: IOException) {
-                subscriber.onError(IOException("connection error!!!"))
-                return@create
-            }
-            try {
-                val doc = Jsoup.parse(responseBody)
-                //get num of pages
-                val spanWithNumber = doc.getElementsByClass("pager-no").first()
-                val text = spanWithNumber.text()
-                val numOfPages = Integer.valueOf(text.substring(text.lastIndexOf(" ") + 1))
-                subscriber.onSuccess(numOfPages)
-            } catch (e: Exception) {
-                println("error while get arts list")
-                subscriber.onError(e)
-            }
-        }
-    }
+    override fun getRatedArticlesUrl() = "/top-rated-pages/all_p/"
 
-    override fun getRecentArticlesForPage(lang: Lang, page: Int): Single<List<ArticleForLang>> {
-        return Single.create<List<ArticleForLang>> {
+    override fun getRecentArticlesUrl() = "/most-recently-created/p/"
 
-            val request = Request.Builder()
-                    .url(lang.siteBaseUrl + ScpReaderConstants.RecentArticlesUrl.CH + page)
-                    .build()
-
-            val responseBody = okHttpClient
-                    .newCall(request)
-                    .execute()
-                    .body()
-                    ?.string()
-                    ?: throw IOException("error while getRecentArticlesForPage: $page")
-            val doc: Document = Jsoup.parse(responseBody)
-
-            val articles = parseForRecentArticles(lang, doc)
-
-            it.onSuccess(articles)
-        }
+    override fun getObjectArticlesUrls(): List<String> {
+        return listOf(
+                "/scp-series",
+                "/scp-series-2",
+                "/scp-series-3",
+                "/scp-series-4",
+                "/scp-series-5"
+                )
     }
 
     override fun parseForRecentArticles(lang: Lang, doc: Document): List<ArticleForLang> {
@@ -103,40 +55,6 @@ class ArticleParsingServiceImplCH : ArticleParsingServiceBase() {
         return articles
     }
 
-    override fun getRatedArticlesForLang(lang: Lang, page: Int): Single<List<ArticleForLang>> {
-        return Single.create { subscriber: SingleEmitter<List<ArticleForLang>> ->
-
-            val request: Request = Request.Builder()
-                    .url(lang.siteBaseUrl + ScpReaderConstants.RatedArticlesUrl.CH + page)
-                    .build()
-            val responseBody: String
-            responseBody = try {
-                val response: Response = okHttpClient.newCall(request).execute()
-                val body = response.body()
-                if (body != null) {
-                    body.string()
-                } else {
-                    subscriber.onError(ScpParseException("parse error!"))
-                    return@create
-                }
-            } catch (e: IOException) {
-                subscriber.onError(IOException("connection error!"))
-                return@create
-            }
-            try {
-                val doc = Jsoup.parse(responseBody)
-                val articles: List<ArticleForLang> = parseForRatedArticles(lang, doc)
-                subscriber.onSuccess(articles)
-            } catch (e: Exception) {
-                println("error while get arts list")
-                subscriber.onError(e)
-            } catch (e: ScpParseException) {
-                println("error while get arts list")
-                subscriber.onError(e)
-            }
-        }
-    }
-
     override fun parseForRatedArticles(lang: Lang, doc: Document): List<ArticleForLang> {
         var doc = doc
         val pageContent = doc.getElementById("page-content")
@@ -165,6 +83,5 @@ class ArticleParsingServiceImplCH : ArticleParsingServiceBase() {
             articles.add(article)
         }
         return articles
-
     }
 }
