@@ -67,8 +67,12 @@ object ScpReaderConstants {
         const val CH = "/most-recently-created/p/"
     }
 
-    object RatedArticlesUrl{
+    object RatedArticlesUrl {
         const val RU = "/top-rated-pages/p/"
+        const val CH = "/top-rated-pages/all_p/"
+        const val DE = "/top-rated-pages/p/"
+        const val PL = "/najwyzej-ocenione/p/"
+
 
     }
 

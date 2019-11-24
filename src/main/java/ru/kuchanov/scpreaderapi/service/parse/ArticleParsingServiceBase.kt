@@ -290,9 +290,6 @@ class ArticleParsingServiceBase {
                     urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
                     title = title,
                     rating = rating
-//                    createdOnSite = Timestamp(DATE_FORMAT.parse(createdDate).time),
-//                    updatedOnSite = Timestamp(DATE_FORMAT.parse(updatedDate).time)
-
             )
             articles.add(article)
         }
@@ -377,6 +374,7 @@ class ArticleParsingServiceBase {
             println("arrayItemParsed: $arrayItemParsed")
 //type of object
             val imageURL = arrayItemParsed.getElementsByTag("img").first().attr("src")
+            //TODO do something with obj type like migrate new column do db
             val type = getObjectTypeByImageUrl(imageURL)
             val url: String = lang.siteBaseUrl + arrayItemParsed.getElementsByTag("a").first().attr("href")
             val title = arrayItemParsed.text()
