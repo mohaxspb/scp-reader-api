@@ -108,19 +108,66 @@ class ArticleParsingServiceImplPL : ArticleParsingServiceBase() {
         return articles
     }
 
-    override fun parseArticleForLang(urlRelative: String, lang: Lang) {
-        super.parseArticleForLang(urlRelative, lang)
+    override fun parseForRatedArticles(lang: Lang, doc: Document): List<ArticleForLang> {
+        val pageContent = doc.getElementById("page-content")
+                ?: throw ScpParseException("parse error!")
+        val listPagesBox = pageContent.getElementsByClass("list-pages-box").first()
+                ?: throw ScpParseException("parse error!")
+        val articlesDivs = listPagesBox.getElementsByClass("list-pages-item")
+        val articles: MutableList<ArticleForLang> = ArrayList()
+        for (element in articlesDivs) {
+            val aTag = element.getElementsByTag("a").first()
+            val url: String = lang.siteBaseUrl + aTag.attr("href")
+            val title = aTag.text()
+            val pTag = element.getElementsByTag("p").first()
+            var ratingString = pTag.text().substring(pTag.text().indexOf("Ocena: ") + "Ocena: ".length)
+            println("ratingString: $ratingString")
+            ratingString = ratingString.substring(0, ratingString.indexOf(", Komentarze"))
+            println("ratingString: $ratingString")
+            val rating = ratingString.toInt()
+            //TODO parse date
+            val article = ArticleForLang(
+                    langId = lang.id,
+                    urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
+                    title = title,
+                    rating = rating
+            )
+            articles.add(article)
+        }
+        return articles
     }
 
-    override fun getArticleFromApi(url: String, lang: Lang): ArticleForLang? {
-        return super.getArticleFromApi(url, lang)
-    }
+    override fun getRatedArticlesForLang(lang: Lang, page: Int): Single<List<ArticleForLang>> {
+        return Single.create { subscriber: SingleEmitter<List<ArticleForLang>> ->
 
-    override fun getArticlePageContentTag(doc: Document): Element? {
-        return super.getArticlePageContentTag(doc)
-    }
-
-    override fun getAndSaveInnerArticles(lang: Lang, articleDownloaded: ArticleForLang, maxDepth: Int, currentDepthLevel: Int) {
-        super.getAndSaveInnerArticles(lang, articleDownloaded, maxDepth, currentDepthLevel)
+            val request: Request = Request.Builder()
+                    .url(lang.siteBaseUrl + ScpReaderConstants.RatedArticlesUrl.PL + page)
+                    .build()
+            val responseBody: String
+            responseBody = try {
+                val response: Response = okHttpClient.newCall(request).execute()
+                val body = response.body()
+                if (body != null) {
+                    body.string()
+                } else {
+                    subscriber.onError(ScpParseException("parse error!"))
+                    return@create
+                }
+            } catch (e: IOException) {
+                subscriber.onError(IOException("connection error!"))
+                return@create
+            }
+            try {
+                val doc = Jsoup.parse(responseBody)
+                val articles: List<ArticleForLang> = parseForRatedArticles(lang, doc)
+                subscriber.onSuccess(articles)
+            } catch (e: Exception) {
+                println("error while get arts list")
+                subscriber.onError(e)
+            } catch (e: ScpParseException) {
+                println("error while get arts list")
+                subscriber.onError(e)
+            }
+        }
     }
 }

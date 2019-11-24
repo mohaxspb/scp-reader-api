@@ -69,11 +69,14 @@ object ScpReaderConstants {
 
     object RatedArticlesUrl {
         const val RU = "/top-rated-pages/p/"
-        const val CH = "/top-rated-pages/all_p/"
+        const val EN = "/top-rated-pages/p/"
         const val DE = "/top-rated-pages/p/"
+        const val FR = "/top-rated-pages/p/"
+        const val ES = "/paginas-mejor-puntuadas/p/"
+        const val IT = "/pagine-piu-votate/p/"
         const val PL = "/najwyzej-ocenione/p/"
-
-
+        const val PT = "/top-rated-pages/p/"
+        const val CH = "/top-rated-pages/all_p/"
     }
 
     enum class ObjectType {

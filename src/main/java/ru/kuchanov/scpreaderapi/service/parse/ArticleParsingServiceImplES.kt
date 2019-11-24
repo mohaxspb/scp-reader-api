@@ -10,6 +10,7 @@ import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
+import ru.kuchanov.scpreaderapi.bean.articles.Article
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 import java.io.IOException
@@ -111,8 +112,65 @@ class ArticleParsingServiceImplES : ArticleParsingServiceBase() {
         return articles
     }
 
-    override fun parseArticleForLang(urlRelative: String, lang: Lang) {
-        super.parseArticleForLang(urlRelative, lang)
+    override fun parseForRatedArticles(lang: Lang, doc: Document): List<ArticleForLang> {
+        var doc = doc
+        val pageContent = doc.getElementById("page-content")
+                ?: throw ScpParseException("parse error!")
+        val listPagesBox = pageContent.getElementsByClass("list-pages-box").first()
+                ?: throw ScpParseException("parse error!")
+        val allArticles = listPagesBox.getElementsByTag("p").first().html()
+        val arrayOfArticles = allArticles.split("<br>").toTypedArray()
+        val articles: MutableList<ArticleForLang> = ArrayList()
+        for (arrayItem in arrayOfArticles) {
+            doc = Jsoup.parse(arrayItem)
+            val aTag = doc.getElementsByTag("a").first()
+            val url: String = lang.siteBaseUrl + aTag.attr("href")
+            val title = aTag.text()
+            var rating = arrayItem.substring(arrayItem.indexOf(" (+") + " (+".length)
+            rating = rating.substring(0, rating.indexOf(")"))
+            val article = ArticleForLang(
+                    langId = lang.id,
+                    urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
+                    title = title,
+                    rating = rating.toInt()
+            )
+            articles.add(article)
+        }
+        return articles
+    }
+
+    override fun getRatedArticlesForLang(lang: Lang, page: Int): Single<List<ArticleForLang>> {
+        return Single.create { subscriber: SingleEmitter<List<ArticleForLang>> ->
+
+            val request: Request = Request.Builder()
+                    .url(lang.siteBaseUrl + ScpReaderConstants.RatedArticlesUrl.ES + page)
+                    .build()
+            val responseBody: String
+            responseBody = try {
+                val response: Response = okHttpClient.newCall(request).execute()
+                val body = response.body()
+                if (body != null) {
+                    body.string()
+                } else {
+                    subscriber.onError(ScpParseException("parse error!"))
+                    return@create
+                }
+            } catch (e: IOException) {
+                subscriber.onError(IOException("connection error!"))
+                return@create
+            }
+            try {
+                val doc = Jsoup.parse(responseBody)
+                val articles: List<ArticleForLang> = parseForRatedArticles(lang, doc)
+                subscriber.onSuccess(articles)
+            } catch (e: Exception) {
+                println("error while get arts list")
+                subscriber.onError(e)
+            } catch (e: ScpParseException) {
+                println("error while get arts list")
+                subscriber.onError(e)
+            }
+        }
     }
 
     override fun getArticleFromApi(url: String, lang: Lang): ArticleForLang? {
@@ -125,11 +183,4 @@ java.lang.NullPointerException: null
         return super.getArticleFromApi(url, lang)
     }
 
-    override fun getArticlePageContentTag(doc: Document): Element? {
-        return super.getArticlePageContentTag(doc)
-    }
-
-    override fun getAndSaveInnerArticles(lang: Lang, articleDownloaded: ArticleForLang, maxDepth: Int, currentDepthLevel: Int) {
-        super.getAndSaveInnerArticles(lang, articleDownloaded, maxDepth, currentDepthLevel)
-    }
 }
