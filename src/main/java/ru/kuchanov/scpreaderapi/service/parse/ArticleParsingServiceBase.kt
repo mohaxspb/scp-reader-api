@@ -539,9 +539,11 @@ class ArticleParsingServiceBase {
     protected fun parseForRecentArticles(lang: Lang, doc: Document): List<ArticleForLang> {
         val pageContent = doc.getElementsByClass("wiki-content-table").first()
                 ?: throw NullPointerException("Can't find element for class \"wiki-content-table\"")
+        val listPagesBox = pageContent.getElementsByClass("list-pages-box").first()
+                ?: throw ScpParseException("parse error!")
 
         val articles = mutableListOf<ArticleForLang>()
-        val listOfElements = pageContent.getElementsByTag("tr")
+        val listOfElements = listPagesBox.getElementsByTag("tr")
         for (i in 1/*start from 1 as first row is tables header*/ until listOfElements.size) {
             val tableRow = listOfElements[i]
             val listOfTd = tableRow.getElementsByTag("td")
