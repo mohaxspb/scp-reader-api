@@ -72,6 +72,7 @@ class UserServiceImpl : UserService {
 
         val result = query.resultList
 
+        @Suppress("UNCHECKED_CAST")
         return result as List<LeaderboardUser>
     }
 
