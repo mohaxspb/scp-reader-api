@@ -384,7 +384,6 @@ class ArticleParsingServiceBase {
     }
 
     protected fun parseForObjectArticles(lang: Lang, doc: Document): List<ArticleForLang> {
-        var doc = doc
         val pageContent = doc.getElementById("page-content")
                 ?: throw ScpParseException("parse error!")
         //parse
@@ -408,24 +407,24 @@ class ArticleParsingServiceBase {
             indexOfhr = allHtml.length
         }
         allHtml = allHtml.substring(indexOfh2WithIdToc1, indexOfhr)
-        doc = Jsoup.parse(allHtml)
-        val h2withIdToc1 = doc.getElementById("toc1")
+        val document = Jsoup.parse(allHtml)
+        val h2withIdToc1 = document.getElementById("toc1")
         h2withIdToc1.remove()
-        val allh2Tags: Elements = doc.getElementsByTag("h2")
+        val allh2Tags: Elements = document.getElementsByTag("h2")
         for (h2Tag in allh2Tags) {
             val brTag = Element(Tag.valueOf("br"), "")
             h2Tag.replaceWith(brTag)
         }
-        val allArticles = doc.getElementsByTag("body").first().html()
+        val allArticles = document.getElementsByTag("body").first().html()
         val arrayOfArticles = allArticles.split("<br>").toTypedArray()
         val articles: MutableList<ArticleForLang> = ArrayList()
         for (arrayItem in arrayOfArticles) {
             if (TextUtils.isEmpty(arrayItem.trim())) {
                 continue
             }
-            println("arrayItem: $arrayItem")
+//            println("arrayItem: $arrayItem")
             val arrayItemParsed = Jsoup.parse(arrayItem)
-            println("arrayItemParsed: $arrayItemParsed")
+//            println("arrayItemParsed: $arrayItemParsed")
 //type of object
             val imageURL = arrayItemParsed.getElementsByTag("img").first().attr("src")
             //TODO do something with obj type like migrate new column do db
@@ -547,7 +546,6 @@ class ArticleParsingServiceBase {
             val tagA = firstTd.getElementsByTag("a").first()
             val title = tagA.text()
             val url = lang.siteBaseUrl + tagA.attr("href")
-            //todo rating
             val rating = Integer.parseInt(listOfTd[1].text())
             //author
             val spanWithAuthor = listOfTd[2]
@@ -564,11 +562,11 @@ class ArticleParsingServiceBase {
                     langId = lang.id,
                     urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
                     title = title,
+                    rating = rating,
                     createdOnSite = Timestamp(DATE_FORMAT.parse(createdDate).time),
                     updatedOnSite = Timestamp(DATE_FORMAT.parse(updatedDate).time)
             )
             //todo
-//            article.rating = rating
 //            article.authorName = authorName
 //            article.authorUrl = authorUrl
             articles.add(article)

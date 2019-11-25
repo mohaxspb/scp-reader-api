@@ -56,7 +56,6 @@ class ArticleParsingServiceImplCH : ArticleParsingServiceBase() {
     }
 
     override fun parseForRatedArticles(lang: Lang, doc: Document): List<ArticleForLang> {
-        var doc = doc
         val pageContent = doc.getElementById("page-content")
                 ?: throw ScpParseException("parse error!")
         val listPagesBox = pageContent.getElementsByClass("list-pages-box").first()

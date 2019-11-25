@@ -58,7 +58,6 @@ class ArticleParsingServiceImplDE : ArticleParsingServiceBase() {
     }
 
     override fun parseForRatedArticles(lang: Lang, doc: Document): List<ArticleForLang> {
-        var doc = doc
         val pageContent = doc.getElementById("page-content")
                 ?: throw ScpParseException("parse error!")
         val listPagesBox = pageContent.getElementsByClass("list-pages-box").first()
@@ -67,8 +66,8 @@ class ArticleParsingServiceImplDE : ArticleParsingServiceBase() {
         val arrayOfArticles = allArticles.split("<br>").toTypedArray()
         val articles: MutableList<ArticleForLang> = ArrayList()
         for (arrayItem in arrayOfArticles) {
-            doc = Jsoup.parse(arrayItem)
-            val aTag = doc.getElementsByTag("a").first()
+            val currentDocument = Jsoup.parse(arrayItem)
+            val aTag = currentDocument.getElementsByTag("a").first()
             val url: String = lang.siteBaseUrl + aTag.attr("href")
             val title = aTag.text()
             var rating = arrayItem.substring(arrayItem.indexOf("Bewertung: ") + "Bewertung: ".length)
