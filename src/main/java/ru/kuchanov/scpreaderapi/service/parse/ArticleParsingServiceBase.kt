@@ -422,9 +422,9 @@ class ArticleParsingServiceBase {
             if (TextUtils.isEmpty(arrayItem.trim())) {
                 continue
             }
-            println("arrayItem: $arrayItem")
+//            println("arrayItem: $arrayItem")
             val arrayItemParsed = Jsoup.parse(arrayItem)
-            println("arrayItemParsed: $arrayItemParsed")
+//            println("arrayItemParsed: $arrayItemParsed")
 //type of object
             val imageURL = arrayItemParsed.getElementsByTag("img").first().attr("src")
             //TODO do something with obj type like migrate new column do db

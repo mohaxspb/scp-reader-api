@@ -27,9 +27,6 @@ buildscript {
 plugins {
     //db migrations
     id "org.flywaydb.flyway" version "5.1.4"
-
-    //to fix CreateProcess error=206, Имя файла или его расширение имеет слишком большую длину
-    id "com.github.ManifestClasspath" version "0.1.0-RELEASE"
 }
 
 group 'ru.kuchanov.scp'
