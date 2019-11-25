@@ -28,29 +28,8 @@ class ArticleParsingServiceImplIT : ArticleParsingServiceBase() {
         return listOf()
     }
 
-    override fun parseForRatedArticles(lang: Lang, doc: Document): List<ArticleForLang> {
-        val pageContent = doc.getElementById("page-content")
-                ?: throw ScpParseException("parse error!")
-        val listPagesBox = pageContent.getElementsByClass("list-pages-box").first()
-                ?: throw ScpParseException("parse error!")
-        val allArticles = listPagesBox.getElementsByTag("p").first().html()
-        val arrayOfArticles = allArticles.split("<br>").toTypedArray()
-        val articles: MutableList<ArticleForLang> = ArrayList()
-        for (arrayItem in arrayOfArticles) {
-            val currentDocument = Jsoup.parse(arrayItem)
-            val aTag = currentDocument.getElementsByTag("a").first()
-            val url: String = lang.siteBaseUrl + aTag.attr("href")
-            val title = aTag.text()
-            var rating = arrayItem.substring(arrayItem.indexOf("Voto: ") + "Voto: ".length)
-            rating = rating.substring(0, rating.indexOf(", "))
-            val article = ArticleForLang(
-                    langId = lang.id,
-                    urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
-                    title = title,
-                    rating = rating.toInt()
-            )
-            articles.add(article)
-        }
-        return articles
-    }
+    override fun parseForRatedArticles(lang: Lang, doc: Document) =
+            parseForRatedArticlesENStyle(lang, doc, getArticleRatingStringDelimiter(), getArticleRatingStringDelimiterEnd())
+
+    override fun getArticleRatingStringDelimiter() = "Voto: "
 }

@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 import java.sql.Timestamp
-import java.util.*
 
 @Service
 class ArticleParsingServiceImplCH : ArticleParsingServiceBase() {
@@ -26,34 +25,8 @@ class ArticleParsingServiceImplCH : ArticleParsingServiceBase() {
                 )
     }
 
-    override fun parseForRecentArticles(lang: Lang, doc: Document): List<ArticleForLang> {
-        val contentTypeDescription = doc.getElementsByClass("content-type-description").first()
-        val pageContent = contentTypeDescription.getElementsByTag("table").first()
-                ?: throw ScpParseException("parse error!")
-
-        val articles: MutableList<ArticleForLang> = ArrayList()
-        val listOfElements: Elements = pageContent.getElementsByTag("tr")
-        for (i in 1 /*start from 1 as first row is tables header*/ until listOfElements.size) {
-            val listOfTd: Elements = listOfElements[i].getElementsByTag("td")
-            val firstTd: Element = listOfTd.first()
-            val tagA = firstTd.getElementsByTag("a").first()
-            val title = tagA.text()
-            val url: String = lang.siteBaseUrl + tagA.attr("href")
-            //4 Jun 2017, 22:25
-            //createdDate
-            val createdDateNode: Element = listOfTd[1]
-            val createdDate = createdDateNode.text().trim()
-            val article = ArticleForLang(
-                    langId = lang.id,
-                    urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
-                    title = title,
-                    createdOnSite = Timestamp(DATE_FORMAT.parse(createdDate).time)
-            )
-            articles.add(article)
-        }
-
-        return articles
-    }
+    override fun parseForRecentArticles(lang: Lang, doc: Document) =
+            parseForRecentArticlesENStyle(lang, doc)
 
     override fun parseForRatedArticles(lang: Lang, doc: Document): List<ArticleForLang> {
         val pageContent = doc.getElementById("page-content")

@@ -102,6 +102,10 @@ class ArticleParsingServiceBase {
             "http://scpfoundation.ru/scp-list-5"
     )
 
+    fun getArticleRatingStringDelimiter() = ", рейтинг"
+
+    fun getArticleRatingStringDelimiterEnd() = ""
+
     @Async
     fun parseMostRecentArticlesForLang(
             lang: Lang,
@@ -327,12 +331,12 @@ class ArticleParsingServiceBase {
                 ?: throw ScpParseException("parse error!")
         val listPagesBox = pageContent.getElementsByClass("list-pages-box").first()
                 ?: throw ScpParseException("parse error!")
-        val articles: MutableList<ArticleForLang> = ArrayList()
-        val listOfElements: List<Element> = listPagesBox.getElementsByClass("list-pages-item")
-        for (element in listOfElements) { //                    Timber.d("element: %s", element);
+        val articles = mutableListOf<ArticleForLang>()
+        val listOfElements = listPagesBox.getElementsByClass("list-pages-item")
+        for (element in listOfElements) {
             val tagP = element.getElementsByTag("p").first()
             val tagA = tagP.getElementsByTag("a").first()
-            val title = tagP.text().substring(0, tagP.text().indexOf(", рейтинг"))
+            val title = tagP.text().substring(0, tagP.text().indexOf(getArticleRatingStringDelimiter()))
             val url: String = lang.siteBaseUrl + tagA.attr("href")
             //remove a tag to leave only text with rating
             tagA.remove()
