@@ -10,3 +10,4 @@
 /src/main/resources/googlePlay/googlePlayAndroidDeveloperServiceKey.json
 /banners/*
 /.gradle/
+/out/

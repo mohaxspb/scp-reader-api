@@ -27,6 +27,9 @@ buildscript {
 plugins {
     //db migrations
     id "org.flywaydb.flyway" version "5.1.4"
+
+    //to fix CreateProcess error=206, Имя файла или его расширение имеет слишком большую длину
+    id "ua.eshepelyuk.ManifestClasspath" version "1.0.0"
 }
 
 group 'ru.kuchanov.scp'
@@ -60,6 +63,8 @@ bootWar {
 //to be able to run with task args to define correct properties file
 //i.e. `bootRun -Dspring.profiles.active=dev`
 bootRun.systemProperties = System.properties as Map<String, ?>
+bootRun.main = 'ru.kuchanov.scpreaderapi.Application'
+
 
 repositories {
     mavenCentral()
@@ -86,6 +91,8 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-security"
     //oauth2
     implementation 'org.springframework.security.oauth:spring-security-oauth2:2.3.0.RELEASE'
+    //tests
+    implementation 'org.springframework.boot:spring-boot-starter-test'
     //spring END
 
     //postgresql
