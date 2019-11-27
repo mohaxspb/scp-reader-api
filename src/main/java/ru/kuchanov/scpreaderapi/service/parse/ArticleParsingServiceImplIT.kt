@@ -1,5 +1,6 @@
 package ru.kuchanov.scpreaderapi.service.parse
 
+import io.reactivex.Single
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.springframework.stereotype.Service
@@ -24,9 +25,11 @@ class ArticleParsingServiceImplIT : ArticleParsingServiceBase() {
         )
     }
 
-    override fun parseForRecentArticles(lang: Lang, doc: Document): List<ArticleForLang> {
-        return listOf()
-    }
+    override fun getMostRecentArticlesPageCountForLang(lang: Lang): Single<Int> =
+            Single.just(0)
+
+    override fun parseForRecentArticles(lang: Lang, doc: Document) =
+        listOf<ArticleForLang>()
 
     override fun parseForRatedArticles(lang: Lang, doc: Document) =
             parseForRatedArticlesENStyle(lang, doc, getArticleRatingStringDelimiter(), getArticleRatingStringDelimiterEnd())

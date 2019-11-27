@@ -74,6 +74,7 @@ fun parseForRecentArticlesENStyle(lang: Lang, doc: Document): List<ArticleForLan
     val pageContent = contentTypeDescription.getElementsByTag("table").first()
             ?: throw ScpParseException("parse error!")
 
+    val dateFormat = ArticleParsingServiceBase.getDateFormatForLang(lang)
     val articles = mutableListOf<ArticleForLang>()
     val listOfElements = pageContent.getElementsByTag("tr")
     for (i in 1 /*start from 1 as first row is tables header*/ until listOfElements.size) {
@@ -90,7 +91,7 @@ fun parseForRecentArticlesENStyle(lang: Lang, doc: Document): List<ArticleForLan
                 langId = lang.id,
                 urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
                 title = title,
-                createdOnSite = Timestamp(ArticleParsingServiceBase.DATE_FORMAT.parse(createdDate).time)
+                createdOnSite = Timestamp(dateFormat.parse(createdDate).time)
         )
         articles.add(article)
     }

@@ -278,6 +278,8 @@ class ArticleParsingServiceBase {
                     .url(lang.siteBaseUrl + getRecentArticlesUrl() + page)
                     .build()
 
+            println("start request to: ${lang.siteBaseUrl + getRecentArticlesUrl() + page}")
+
             val responseBody = okHttpClient
                     .newCall(request)
                     .execute()
@@ -537,13 +539,11 @@ class ArticleParsingServiceBase {
     }
 
     protected fun parseForRecentArticles(lang: Lang, doc: Document): List<ArticleForLang> {
-        val pageContent = doc.getElementsByClass("wiki-content-table").first()
+        val table = doc.getElementsByClass("wiki-content-table").first()
                 ?: throw NullPointerException("Can't find element for class \"wiki-content-table\"")
-        val listPagesBox = pageContent.getElementsByClass("list-pages-box").first()
-                ?: throw ScpParseException("parse error!")
 
         val articles = mutableListOf<ArticleForLang>()
-        val listOfElements = listPagesBox.getElementsByTag("tr")
+        val listOfElements = table.getElementsByTag("tr")
         for (i in 1/*start from 1 as first row is tables header*/ until listOfElements.size) {
             val tableRow = listOfElements[i]
             val listOfTd = tableRow.getElementsByTag("td")
@@ -569,8 +569,8 @@ class ArticleParsingServiceBase {
                     urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
                     title = title,
                     rating = rating,
-                    createdOnSite = Timestamp(DATE_FORMAT.parse(createdDate).time),
-                    updatedOnSite = Timestamp(DATE_FORMAT.parse(updatedDate).time)
+                    createdOnSite = Timestamp(getDateFormatForLang(lang).parse(createdDate).time),
+                    updatedOnSite = Timestamp(getDateFormatForLang(lang).parse(updatedDate).time)
             )
             //todo
 //            article.authorName = authorName
@@ -785,11 +785,10 @@ class ArticleParsingServiceBase {
 
     companion object {
         const val HTML_ID_PAGE_CONTENT = "page-content"
-        /**
-         * i.e. 05:33 02.12.2018`
-         */
-//        private val DATE_FORMAT = SimpleDateFormat("HH:mm dd.MM.yyyy")
-        val DATE_FORMAT = SimpleDateFormat("dd MMM yyyy HH:mm")
+
+        private const val DATE_FORMAT_PATTERN_EN = "dd MMM yyyy HH:mm"
+
+        fun getDateFormatForLang(lang: Lang) = SimpleDateFormat(DATE_FORMAT_PATTERN_EN, Locale.ENGLISH)
 
         const val DEFAULT_INNER_ARTICLES_DEPTH = 1
     }
