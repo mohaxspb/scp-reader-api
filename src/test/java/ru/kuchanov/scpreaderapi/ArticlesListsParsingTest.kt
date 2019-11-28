@@ -1,7 +1,6 @@
 package ru.kuchanov.scpreaderapi
 
 import io.reactivex.Flowable
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -9,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.junit4.SpringRunner
-import org.springframework.test.web.servlet.MockMvc
 import ru.kuchanov.scpreaderapi.service.parse.ArticleParsingServiceBase
 import ru.kuchanov.scpreaderapi.service.users.LangService
 
@@ -17,9 +15,6 @@ import ru.kuchanov.scpreaderapi.service.users.LangService
 @SpringBootTest
 @AutoConfigureMockMvc
 class ArticlesListsParsingTest {
-
-    @Autowired
-    lateinit var mvc: MockMvc
 
     @Autowired
     lateinit var articleParsingServiceBase: ArticleParsingServiceBase
@@ -33,9 +28,11 @@ class ArticlesListsParsingTest {
         println("prepare end")
     }
 
+    val italy = ScpReaderConstants.Firebase.FirebaseInstance.IT
+
     @Test
     fun getRecentArticlesCountReturnsSomething() {
-        val listOfPagesCount = Flowable
+        Flowable
                 .fromIterable(ScpReaderConstants.Firebase.FirebaseInstance.values().toList())
                 .map { langService.getById(it.lang)!! }
                 .flatMapSingle {
@@ -43,17 +40,27 @@ class ArticlesListsParsingTest {
                             .getParsingRealizationForLang(it)
                             .getMostRecentArticlesPageCountForLang(it)
                 }
-                //todo test as rx. Check italy
+                .doOnError { println(it) }
                 .toList()
-                .blockingGet()
+                .test()
+                .assertValue { it[italy.ordinal] == 0 }
+                .assertValue { pagesCount ->
+                    val pagesCountWithoutItaly = pagesCount
+                            .filterIndexed { index, _ -> index != italy.ordinal }
+                            .filter { it != 0 }
 
-        assertThat(listOfPagesCount).isNotEmpty
+                    val languagesWithoutItaly =
+                            ScpReaderConstants.Firebase.FirebaseInstance.values()
+                                    .filter { it.lang != italy.lang }
+
+                    pagesCountWithoutItaly.size == languagesWithoutItaly.size
+                }
+                .assertNoErrors()
+                .assertComplete()
     }
 
     @Test
     fun getRecentArticles_receivesNotEmptyListForNotItalyLang() {
-        val italy = ScpReaderConstants.Firebase.FirebaseInstance.IT
-
         Flowable
                 .fromIterable(ScpReaderConstants.Firebase.FirebaseInstance.values().toList())
                 .map { langService.getById(it.lang)!! }
