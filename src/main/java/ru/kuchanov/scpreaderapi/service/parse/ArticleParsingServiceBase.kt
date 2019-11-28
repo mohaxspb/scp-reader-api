@@ -73,9 +73,8 @@ class ArticleParsingServiceBase {
     @Autowired
     private lateinit var tagForLangService: TagForLangService
 
-    fun getParsingRealizationForLang(lang: Lang): ArticleParsingServiceBase {
-
-        return when(lang.langCode) {
+    fun getParsingRealizationForLang(lang: Lang): ArticleParsingServiceBase =
+      when(lang.langCode) {
             ScpReaderConstants.Firebase.FirebaseInstance.RU.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplRU::class.java)
             ScpReaderConstants.Firebase.FirebaseInstance.EN.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplEN::class.java)
             ScpReaderConstants.Firebase.FirebaseInstance.DE.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplDE::class.java)
@@ -85,10 +84,8 @@ class ArticleParsingServiceBase {
             ScpReaderConstants.Firebase.FirebaseInstance.PL.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplPL::class.java)
             ScpReaderConstants.Firebase.FirebaseInstance.PT.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplPT::class.java)
             "cn" -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplCH::class.java)
-
             else -> throw NotImplementedError("No parsing realization, need lang(current lang: $lang)")
         }
-    }
 
     fun getRatedArticlesUrl() = "/top-rated-pages/p/"
 
@@ -358,7 +355,7 @@ class ArticleParsingServiceBase {
     }
 
     fun getObjectsArticlesForLang(lang: Lang, sObjectsLink: String): Single<List<ArticleForLang>> {
-        return Single.create { subscriber: SingleEmitter<List<ArticleForLang>> ->
+        return Single.create { subscriber ->
             val request = Request.Builder()
                     .url(sObjectsLink)
                     .build()
@@ -378,7 +375,7 @@ class ArticleParsingServiceBase {
             }
             try {
                 val doc = Jsoup.parse(responseBody)
-                val articles: List<ArticleForLang> = parseForObjectArticles(lang, doc)
+                val articles = parseForObjectArticles(lang, doc)
                 subscriber.onSuccess(articles)
             } catch (e: Exception) {
                 println("error while get arts list")
@@ -432,7 +429,7 @@ class ArticleParsingServiceBase {
 //            println("arrayItem: $arrayItem")
             val arrayItemParsed = Jsoup.parse(arrayItem)
 //            println("arrayItemParsed: $arrayItemParsed")
-//type of object
+            //type of object
             val imageURL = arrayItemParsed.getElementsByTag("img").first().attr("src")
             //TODO do something with obj type like migrate new column do db
             val type = getObjectTypeByImageUrl(imageURL)
@@ -618,9 +615,8 @@ class ArticleParsingServiceBase {
      *
      * @return Element with article content
      */
-    protected fun getArticlePageContentTag(doc: Document): Element? {
-        return doc.getElementById(HTML_ID_PAGE_CONTENT)
-    }
+    protected fun getArticlePageContentTag(doc: Document): Element? =
+            doc.getElementById(HTML_ID_PAGE_CONTENT)
 
     private fun createArticleToArticleRelation(
             articleDownloaded: ArticleForLang,
