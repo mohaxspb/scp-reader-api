@@ -68,20 +68,16 @@ class ArticlesListsParsingTest {
                     articleParsingServiceBase
                             .getParsingRealizationForLang(lang)
                             .getRecentArticlesForPage(lang, 1)
-                            .map { Pair(it, lang) }
                 }
                 .doOnError { println(it) }
                 .toList()
                 .test()
-                .assertValue {
-                    it[italy.ordinal].second.langCode == italy.lang
-                            && it[italy.ordinal].first.isEmpty()
-                }
+                .assertValue { it[italy.ordinal].isEmpty() }
                 .assertValue { allArticlesForLangs ->
                     val notEmptyArticlesListsWithoutItaly =
                             allArticlesForLangs
-                                    .filter { it.second.langCode != italy.lang }
-                                    .filter { it.first.isNotEmpty() }
+                                    .filterIndexed { index, _ -> index != italy.ordinal }
+                                    .filter { it.isNotEmpty() }
                     val languagesWithoutItaly =
                             ScpReaderConstants.Firebase.FirebaseInstance.values()
                                     .filter { it.lang != italy.lang }
