@@ -74,29 +74,29 @@ class ArticleParsingServiceBase {
     private lateinit var tagForLangService: TagForLangService
 
     fun getParsingRealizationForLang(lang: Lang): ArticleParsingServiceBase =
-      when(lang.langCode) {
-            ScpReaderConstants.Firebase.FirebaseInstance.RU.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplRU::class.java)
-            ScpReaderConstants.Firebase.FirebaseInstance.EN.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplEN::class.java)
-            ScpReaderConstants.Firebase.FirebaseInstance.DE.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplDE::class.java)
-            ScpReaderConstants.Firebase.FirebaseInstance.FR.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplFR::class.java)
-            ScpReaderConstants.Firebase.FirebaseInstance.ES.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplES::class.java)
-            ScpReaderConstants.Firebase.FirebaseInstance.IT.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplIT::class.java)
-            ScpReaderConstants.Firebase.FirebaseInstance.PL.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplPL::class.java)
-            ScpReaderConstants.Firebase.FirebaseInstance.PT.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplPT::class.java)
-            "cn" -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplCH::class.java)
-            else -> throw NotImplementedError("No parsing realization, need lang(current lang: $lang)")
-        }
+            when (lang.langCode) {
+                ScpReaderConstants.Firebase.FirebaseInstance.RU.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplRU::class.java)
+                ScpReaderConstants.Firebase.FirebaseInstance.EN.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplEN::class.java)
+                ScpReaderConstants.Firebase.FirebaseInstance.DE.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplDE::class.java)
+                ScpReaderConstants.Firebase.FirebaseInstance.FR.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplFR::class.java)
+                ScpReaderConstants.Firebase.FirebaseInstance.ES.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplES::class.java)
+                ScpReaderConstants.Firebase.FirebaseInstance.IT.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplIT::class.java)
+                ScpReaderConstants.Firebase.FirebaseInstance.PL.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplPL::class.java)
+                ScpReaderConstants.Firebase.FirebaseInstance.PT.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplPT::class.java)
+                "cn" -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplCH::class.java)
+                else -> throw NotImplementedError("No parsing realization, need lang(current lang: $lang)")
+            }
 
     fun getRatedArticlesUrl() = "/top-rated-pages/p/"
 
     fun getRecentArticlesUrl() = "/most-recently-created/p/"
 
     fun getObjectArticlesUrls() = listOf(
-            "http://scpfoundation.ru/scp-list",
-            "http://scpfoundation.ru/scp-list-2",
-            "http://scpfoundation.ru/scp-list-3",
-            "http://scpfoundation.ru/scp-list-4",
-            "http://scpfoundation.ru/scp-list-5"
+            "/scp-list",
+            "/scp-list-2",
+            "/scp-list-3",
+            "/scp-list-4",
+            "/scp-list-5"
     )
 
     fun getArticleRatingStringDelimiter() = ", рейтинг"
@@ -157,7 +157,7 @@ class ArticleParsingServiceBase {
                     if (articles.size != ScpReaderConstants.NUM_OF_ARTICLES_RATED_PAGE) {
                         subject.onComplete()
                     } else {
-                        if (totalPageCount == null || subject.value!! < totalPageCount){
+                        if (totalPageCount == null || subject.value!! < totalPageCount) {
                             subject.onNext(subject.value!! + 1)
                         } else {
                             subject.onComplete()
@@ -200,7 +200,6 @@ class ArticleParsingServiceBase {
             totalPageCount: Int? = null,
             processOnlyCount: Int? = null
     ) {
-
         Flowable.fromIterable(getObjectArticlesUrls())
                 .flatMapSingle { url -> getObjectsArticlesForLang(lang, url) }
                 .toList()
@@ -231,7 +230,7 @@ class ArticleParsingServiceBase {
                 )
     }
 
-    fun getMostRecentArticlesPageCountForLang(lang: Lang) : Single<Int> {
+    fun getMostRecentArticlesPageCountForLang(lang: Lang): Single<Int> {
         return Single.create<Int> { subscriber ->
             val request = Request.Builder()
                     .url(lang.siteBaseUrl + getRecentArticlesUrl())
@@ -354,10 +353,11 @@ class ArticleParsingServiceBase {
         return articles
     }
 
-    fun getObjectsArticlesForLang(lang: Lang, sObjectsLink: String): Single<List<ArticleForLang>> {
+    fun getObjectsArticlesForLang(lang: Lang, objectsLink: String): Single<List<ArticleForLang>> {
+        println("getObjectsArticlesForLang: ${lang.langCode}, $objectsLink")
         return Single.create { subscriber ->
             val request = Request.Builder()
-                    .url(sObjectsLink)
+                    .url(lang.siteBaseUrl + objectsLink)
                     .build()
             val responseBody: String
             responseBody = try {
@@ -696,8 +696,8 @@ class ArticleParsingServiceBase {
         }
     }
 
-    fun getObjectTypeByImageUrl(imageURL : String) : ScpReaderConstants.ObjectType {
-        val type : ScpReaderConstants.ObjectType
+    fun getObjectTypeByImageUrl(imageURL: String): ScpReaderConstants.ObjectType {
+        val type: ScpReaderConstants.ObjectType
 
         when (imageURL) {
             "http://scp-ru.wdfiles.com/local--files/scp-list-4/na.png",
@@ -715,63 +715,63 @@ class ArticleParsingServiceBase {
             "http://scp-ru.wdfiles.com/local--files/scp-list-de/safe1.png" ->
                 type = ScpReaderConstants.ObjectType.NEUTRAL_OR_NOT_ADDED
 
-            "http://scp-ru.wdfiles.com/local--files/scp-list-4/safe.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-3/safe.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-2/safe.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-ru/safe(1).png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list/safe.png" ,
-            "http://scp-ru.wdfiles.com/local--files/archive/safe.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-j/safe(1).png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-4/safe.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-3/safe.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-2/safe.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-ru/safe(1).png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list/safe.png",
+            "http://scp-ru.wdfiles.com/local--files/archive/safe.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-j/safe(1).png",
                 //other filials
-            "http://scp-ru.wdfiles.com/local--files/scp-list-fr/na.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-jp/na1.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-es/na.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-pl/na.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-fr/na.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-jp/na1.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-es/na.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-pl/na.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-de/na1.png" ->
                 type = ScpReaderConstants.ObjectType.SAFE
 
-            "http://scp-ru.wdfiles.com/local--files/scp-list-4/euclid.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-3/euclid.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-2/euclid.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-ru/euclid(1).png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list/euclid.png" ,
-            "http://scp-ru.wdfiles.com/local--files/archive/euclid.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-j/euclid(1).png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-4/euclid.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-3/euclid.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-2/euclid.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-ru/euclid(1).png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list/euclid.png",
+            "http://scp-ru.wdfiles.com/local--files/archive/euclid.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-j/euclid(1).png",
                 //other filials
-            "http://scp-ru.wdfiles.com/local--files/scp-list-fr/euclid.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-jp/euclid1.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-es/euclid.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-pl/euclid.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-fr/euclid.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-jp/euclid1.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-es/euclid.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-pl/euclid.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-de/euclid1.png" ->
                 type = ScpReaderConstants.ObjectType.EUCLID
 
-            "http://scp-ru.wdfiles.com/local--files/scp-list-4/keter.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-3/keter.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-2/keter.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-ru/keter(1).png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list/keter.png" ,
-            "http://scp-ru.wdfiles.com/local--files/archive/keter.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-j/keter(1).png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-4/keter.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-3/keter.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-2/keter.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-ru/keter(1).png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list/keter.png",
+            "http://scp-ru.wdfiles.com/local--files/archive/keter.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-j/keter(1).png",
                 //other filials
-            "http://scp-ru.wdfiles.com/local--files/scp-list-fr/keter.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-jp/keter1.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-es/keter.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-pl/keter.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-fr/keter.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-jp/keter1.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-es/keter.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-pl/keter.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-de/keter1.png" ->
                 type = ScpReaderConstants.ObjectType.KETER
 
-            "http://scp-ru.wdfiles.com/local--files/scp-list-4/thaumiel.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-3/thaumiel.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-2/thaumiel.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-ru/thaumiel(1).png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list/thaumiel.png" ,
-            "http://scp-ru.wdfiles.com/local--files/archive/thaumiel.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-j/thaumiel(1).png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-4/thaumiel.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-3/thaumiel.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-2/thaumiel.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-ru/thaumiel(1).png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list/thaumiel.png",
+            "http://scp-ru.wdfiles.com/local--files/archive/thaumiel.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-j/thaumiel(1).png",
                 //other filials
-            "http://scp-ru.wdfiles.com/local--files/scp-list-fr/thaumiel.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-jp/thaumiel1.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-es/thaumiel.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-pl/thaumiel.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-fr/thaumiel.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-jp/thaumiel1.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-es/thaumiel.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-pl/thaumiel.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-de/thaumiel1.png" ->
                 type = ScpReaderConstants.ObjectType.THAUMIEL
 
