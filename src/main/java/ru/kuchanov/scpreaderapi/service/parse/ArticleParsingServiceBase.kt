@@ -73,33 +73,30 @@ class ArticleParsingServiceBase {
     @Autowired
     private lateinit var tagForLangService: TagForLangService
 
-    fun getParsingRealizationForLang(lang: Lang): ArticleParsingServiceBase {
-
-        return when(lang.langCode) {
-            ScpReaderConstants.Firebase.FirebaseInstance.RU.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplRU::class.java)
-            ScpReaderConstants.Firebase.FirebaseInstance.EN.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplEN::class.java)
-            ScpReaderConstants.Firebase.FirebaseInstance.DE.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplDE::class.java)
-            ScpReaderConstants.Firebase.FirebaseInstance.FR.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplFR::class.java)
-            ScpReaderConstants.Firebase.FirebaseInstance.ES.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplES::class.java)
-            ScpReaderConstants.Firebase.FirebaseInstance.IT.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplIT::class.java)
-            ScpReaderConstants.Firebase.FirebaseInstance.PL.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplPL::class.java)
-            ScpReaderConstants.Firebase.FirebaseInstance.PT.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplPT::class.java)
-            "cn" -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplCH::class.java)
-
-            else -> throw NotImplementedError("No parsing realization, need lang(current lang: $lang)")
-        }
-    }
+    fun getParsingRealizationForLang(lang: Lang): ArticleParsingServiceBase =
+            when (lang.langCode) {
+                ScpReaderConstants.Firebase.FirebaseInstance.RU.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplRU::class.java)
+                ScpReaderConstants.Firebase.FirebaseInstance.EN.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplEN::class.java)
+                ScpReaderConstants.Firebase.FirebaseInstance.DE.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplDE::class.java)
+                ScpReaderConstants.Firebase.FirebaseInstance.FR.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplFR::class.java)
+                ScpReaderConstants.Firebase.FirebaseInstance.ES.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplES::class.java)
+                ScpReaderConstants.Firebase.FirebaseInstance.IT.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplIT::class.java)
+                ScpReaderConstants.Firebase.FirebaseInstance.PL.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplPL::class.java)
+                ScpReaderConstants.Firebase.FirebaseInstance.PT.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplPT::class.java)
+                "cn" -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplCH::class.java)
+                else -> throw NotImplementedError("No parsing realization, need lang(current lang: $lang)")
+            }
 
     fun getRatedArticlesUrl() = "/top-rated-pages/p/"
 
     fun getRecentArticlesUrl() = "/most-recently-created/p/"
 
     fun getObjectArticlesUrls() = listOf(
-            "http://scpfoundation.ru/scp-list",
-            "http://scpfoundation.ru/scp-list-2",
-            "http://scpfoundation.ru/scp-list-3",
-            "http://scpfoundation.ru/scp-list-4",
-            "http://scpfoundation.ru/scp-list-5"
+            "/scp-list",
+            "/scp-list-2",
+            "/scp-list-3",
+            "/scp-list-4",
+            "/scp-list-5"
     )
 
     fun getArticleRatingStringDelimiter() = ", рейтинг"
@@ -160,7 +157,7 @@ class ArticleParsingServiceBase {
                     if (articles.size != ScpReaderConstants.NUM_OF_ARTICLES_RATED_PAGE) {
                         subject.onComplete()
                     } else {
-                        if (totalPageCount == null || subject.value!! < totalPageCount){
+                        if (totalPageCount == null || subject.value!! < totalPageCount) {
                             subject.onNext(subject.value!! + 1)
                         } else {
                             subject.onComplete()
@@ -203,7 +200,6 @@ class ArticleParsingServiceBase {
             totalPageCount: Int? = null,
             processOnlyCount: Int? = null
     ) {
-
         Flowable.fromIterable(getObjectArticlesUrls())
                 .flatMapSingle { url -> getObjectsArticlesForLang(lang, url) }
                 .toList()
@@ -234,7 +230,7 @@ class ArticleParsingServiceBase {
                 )
     }
 
-    fun getMostRecentArticlesPageCountForLang(lang: Lang) : Single<Int> {
+    fun getMostRecentArticlesPageCountForLang(lang: Lang): Single<Int> {
         return Single.create<Int> { subscriber ->
             val request = Request.Builder()
                     .url(lang.siteBaseUrl + getRecentArticlesUrl())
@@ -277,6 +273,8 @@ class ArticleParsingServiceBase {
             val request = Request.Builder()
                     .url(lang.siteBaseUrl + getRecentArticlesUrl() + page)
                     .build()
+
+            println("start request to: ${lang.siteBaseUrl + getRecentArticlesUrl() + page}")
 
             val responseBody = okHttpClient
                     .newCall(request)
@@ -327,6 +325,7 @@ class ArticleParsingServiceBase {
     }
 
     protected fun parseForRatedArticles(lang: Lang, doc: Document): List<ArticleForLang> {
+        println("start parsing rated articles for lang: $lang")
         val pageContent = doc.getElementById("page-content")
                 ?: throw ScpParseException("parse error!")
         val listPagesBox = pageContent.getElementsByClass("list-pages-box").first()
@@ -354,10 +353,11 @@ class ArticleParsingServiceBase {
         return articles
     }
 
-    fun getObjectsArticlesForLang(lang: Lang, sObjectsLink: String): Single<List<ArticleForLang>> {
-        return Single.create { subscriber: SingleEmitter<List<ArticleForLang>> ->
+    fun getObjectsArticlesForLang(lang: Lang, objectsLink: String): Single<List<ArticleForLang>> {
+        println("getObjectsArticlesForLang: ${lang.langCode}, $objectsLink")
+        return Single.create { subscriber ->
             val request = Request.Builder()
-                    .url(sObjectsLink)
+                    .url(lang.siteBaseUrl + objectsLink)
                     .build()
             val responseBody: String
             responseBody = try {
@@ -375,7 +375,7 @@ class ArticleParsingServiceBase {
             }
             try {
                 val doc = Jsoup.parse(responseBody)
-                val articles: List<ArticleForLang> = parseForObjectArticles(lang, doc)
+                val articles = parseForObjectArticles(lang, doc)
                 subscriber.onSuccess(articles)
             } catch (e: Exception) {
                 println("error while get arts list")
@@ -429,7 +429,7 @@ class ArticleParsingServiceBase {
 //            println("arrayItem: $arrayItem")
             val arrayItemParsed = Jsoup.parse(arrayItem)
 //            println("arrayItemParsed: $arrayItemParsed")
-//type of object
+            //type of object
             val imageURL = arrayItemParsed.getElementsByTag("img").first().attr("src")
             //TODO do something with obj type like migrate new column do db
             val type = getObjectTypeByImageUrl(imageURL)
@@ -537,13 +537,11 @@ class ArticleParsingServiceBase {
     }
 
     protected fun parseForRecentArticles(lang: Lang, doc: Document): List<ArticleForLang> {
-        val pageContent = doc.getElementsByClass("wiki-content-table").first()
+        val table = doc.getElementsByClass("wiki-content-table").first()
                 ?: throw NullPointerException("Can't find element for class \"wiki-content-table\"")
-        val listPagesBox = pageContent.getElementsByClass("list-pages-box").first()
-                ?: throw ScpParseException("parse error!")
 
         val articles = mutableListOf<ArticleForLang>()
-        val listOfElements = listPagesBox.getElementsByTag("tr")
+        val listOfElements = table.getElementsByTag("tr")
         for (i in 1/*start from 1 as first row is tables header*/ until listOfElements.size) {
             val tableRow = listOfElements[i]
             val listOfTd = tableRow.getElementsByTag("td")
@@ -569,8 +567,8 @@ class ArticleParsingServiceBase {
                     urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
                     title = title,
                     rating = rating,
-                    createdOnSite = Timestamp(DATE_FORMAT.parse(createdDate).time),
-                    updatedOnSite = Timestamp(DATE_FORMAT.parse(updatedDate).time)
+                    createdOnSite = Timestamp(getDateFormatForLang(lang).parse(createdDate).time),
+                    updatedOnSite = Timestamp(getDateFormatForLang(lang).parse(updatedDate).time)
             )
             //todo
 //            article.authorName = authorName
@@ -617,9 +615,8 @@ class ArticleParsingServiceBase {
      *
      * @return Element with article content
      */
-    protected fun getArticlePageContentTag(doc: Document): Element? {
-        return doc.getElementById(HTML_ID_PAGE_CONTENT)
-    }
+    protected fun getArticlePageContentTag(doc: Document): Element? =
+            doc.getElementById(HTML_ID_PAGE_CONTENT)
 
     private fun createArticleToArticleRelation(
             articleDownloaded: ArticleForLang,
@@ -699,8 +696,8 @@ class ArticleParsingServiceBase {
         }
     }
 
-    fun getObjectTypeByImageUrl(imageURL : String) : ScpReaderConstants.ObjectType {
-        val type : ScpReaderConstants.ObjectType
+    fun getObjectTypeByImageUrl(imageURL: String): ScpReaderConstants.ObjectType {
+        val type: ScpReaderConstants.ObjectType
 
         when (imageURL) {
             "http://scp-ru.wdfiles.com/local--files/scp-list-4/na.png",
@@ -718,63 +715,63 @@ class ArticleParsingServiceBase {
             "http://scp-ru.wdfiles.com/local--files/scp-list-de/safe1.png" ->
                 type = ScpReaderConstants.ObjectType.NEUTRAL_OR_NOT_ADDED
 
-            "http://scp-ru.wdfiles.com/local--files/scp-list-4/safe.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-3/safe.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-2/safe.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-ru/safe(1).png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list/safe.png" ,
-            "http://scp-ru.wdfiles.com/local--files/archive/safe.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-j/safe(1).png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-4/safe.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-3/safe.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-2/safe.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-ru/safe(1).png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list/safe.png",
+            "http://scp-ru.wdfiles.com/local--files/archive/safe.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-j/safe(1).png",
                 //other filials
-            "http://scp-ru.wdfiles.com/local--files/scp-list-fr/na.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-jp/na1.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-es/na.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-pl/na.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-fr/na.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-jp/na1.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-es/na.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-pl/na.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-de/na1.png" ->
                 type = ScpReaderConstants.ObjectType.SAFE
 
-            "http://scp-ru.wdfiles.com/local--files/scp-list-4/euclid.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-3/euclid.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-2/euclid.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-ru/euclid(1).png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list/euclid.png" ,
-            "http://scp-ru.wdfiles.com/local--files/archive/euclid.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-j/euclid(1).png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-4/euclid.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-3/euclid.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-2/euclid.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-ru/euclid(1).png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list/euclid.png",
+            "http://scp-ru.wdfiles.com/local--files/archive/euclid.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-j/euclid(1).png",
                 //other filials
-            "http://scp-ru.wdfiles.com/local--files/scp-list-fr/euclid.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-jp/euclid1.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-es/euclid.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-pl/euclid.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-fr/euclid.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-jp/euclid1.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-es/euclid.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-pl/euclid.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-de/euclid1.png" ->
                 type = ScpReaderConstants.ObjectType.EUCLID
 
-            "http://scp-ru.wdfiles.com/local--files/scp-list-4/keter.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-3/keter.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-2/keter.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-ru/keter(1).png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list/keter.png" ,
-            "http://scp-ru.wdfiles.com/local--files/archive/keter.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-j/keter(1).png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-4/keter.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-3/keter.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-2/keter.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-ru/keter(1).png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list/keter.png",
+            "http://scp-ru.wdfiles.com/local--files/archive/keter.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-j/keter(1).png",
                 //other filials
-            "http://scp-ru.wdfiles.com/local--files/scp-list-fr/keter.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-jp/keter1.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-es/keter.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-pl/keter.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-fr/keter.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-jp/keter1.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-es/keter.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-pl/keter.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-de/keter1.png" ->
                 type = ScpReaderConstants.ObjectType.KETER
 
-            "http://scp-ru.wdfiles.com/local--files/scp-list-4/thaumiel.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-3/thaumiel.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-2/thaumiel.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-ru/thaumiel(1).png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list/thaumiel.png" ,
-            "http://scp-ru.wdfiles.com/local--files/archive/thaumiel.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-j/thaumiel(1).png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-4/thaumiel.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-3/thaumiel.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-2/thaumiel.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-ru/thaumiel(1).png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list/thaumiel.png",
+            "http://scp-ru.wdfiles.com/local--files/archive/thaumiel.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-j/thaumiel(1).png",
                 //other filials
-            "http://scp-ru.wdfiles.com/local--files/scp-list-fr/thaumiel.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-jp/thaumiel1.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-es/thaumiel.png" ,
-            "http://scp-ru.wdfiles.com/local--files/scp-list-pl/thaumiel.png" ,
+            "http://scp-ru.wdfiles.com/local--files/scp-list-fr/thaumiel.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-jp/thaumiel1.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-es/thaumiel.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-list-pl/thaumiel.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-de/thaumiel1.png" ->
                 type = ScpReaderConstants.ObjectType.THAUMIEL
 
@@ -785,11 +782,10 @@ class ArticleParsingServiceBase {
 
     companion object {
         const val HTML_ID_PAGE_CONTENT = "page-content"
-        /**
-         * i.e. 05:33 02.12.2018`
-         */
-//        private val DATE_FORMAT = SimpleDateFormat("HH:mm dd.MM.yyyy")
-        val DATE_FORMAT = SimpleDateFormat("dd MMM yyyy HH:mm")
+
+        private const val DATE_FORMAT_PATTERN_EN = "dd MMM yyyy HH:mm"
+
+        fun getDateFormatForLang(lang: Lang) = SimpleDateFormat(DATE_FORMAT_PATTERN_EN, Locale.ENGLISH)
 
         const val DEFAULT_INNER_ARTICLES_DEPTH = 1
     }

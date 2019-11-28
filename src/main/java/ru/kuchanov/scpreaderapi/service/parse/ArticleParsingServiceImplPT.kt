@@ -31,6 +31,7 @@ class ArticleParsingServiceImplPT : ArticleParsingServiceBase() {
             parseForRecentArticlesENStyle(lang, doc)
 
     override fun parseForRatedArticles(lang: Lang, doc: Document): List<ArticleForLang> {
+        println("start parsing rated articles for lang: $lang")
         val pageContent = doc.getElementById("page-content")
                 ?: throw ScpParseException("parse error!")
         val listPagesBox = pageContent.getElementsByClass("panel-body").last()

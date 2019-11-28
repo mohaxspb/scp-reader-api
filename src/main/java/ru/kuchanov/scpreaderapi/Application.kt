@@ -27,8 +27,11 @@ class Application : SpringBootServletInitializer() {
     @Bean
     fun modelConverter() =
             ModelConverter()
-}
 
-fun main(args: Array<String>) {
-    SpringApplication.run(Application::class.java, *args)
+    companion object{
+        @JvmStatic
+        fun main(args: Array<String>) {
+            SpringApplication.run(Application::class.java, *args)
+        }
+    }
 }
