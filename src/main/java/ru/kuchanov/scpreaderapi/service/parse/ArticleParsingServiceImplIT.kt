@@ -35,4 +35,6 @@ class ArticleParsingServiceImplIT : ArticleParsingServiceBase() {
             parseForRatedArticlesENStyle(lang, doc, getArticleRatingStringDelimiter(), getArticleRatingStringDelimiterEnd())
 
     override fun getArticleRatingStringDelimiter() = "Voto: "
+
+    override fun getArticleRatingStringDelimiterEnd() = ","
 }

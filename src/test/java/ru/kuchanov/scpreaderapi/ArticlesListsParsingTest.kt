@@ -31,7 +31,7 @@ class ArticlesListsParsingTest {
     val italy = ScpReaderConstants.Firebase.FirebaseInstance.IT
 
     @Test
-    fun getRecentArticlesCountReturnsSomething() {
+    fun getRecentArticlesCount_returnsNotZeroForNotItalyLang() {
         Flowable
                 .fromIterable(ScpReaderConstants.Firebase.FirebaseInstance.values().toList())
                 .map { langService.getById(it.lang)!! }
@@ -82,6 +82,28 @@ class ArticlesListsParsingTest {
                             ScpReaderConstants.Firebase.FirebaseInstance.values()
                                     .filter { it.lang != italy.lang }
                     notEmptyArticlesListsWithoutItaly.size == languagesWithoutItaly.size
+                }
+                .assertNoErrors()
+                .assertComplete()
+    }
+
+    @Test
+    fun getRatedArticles_receivesNotEmptyList() {
+        Flowable
+                .fromIterable(ScpReaderConstants.Firebase.FirebaseInstance.values().toList())
+                .map { langService.getById(it.lang)!! }
+                .flatMapSingle { lang ->
+                    articleParsingServiceBase
+                            .getParsingRealizationForLang(lang)
+                            .getRatedArticlesForLang(lang, 1)
+                }
+                .doOnError { println(it) }
+                .toList()
+                .test()
+                .assertValue { allArticlesForLangs ->
+                    val notEmptyArticlesListsWithoutItaly = allArticlesForLangs.filter { it.isNotEmpty() }
+                    val allLangs = ScpReaderConstants.Firebase.FirebaseInstance.values()
+                    notEmptyArticlesListsWithoutItaly.size == allLangs.size
                 }
                 .assertNoErrors()
                 .assertComplete()

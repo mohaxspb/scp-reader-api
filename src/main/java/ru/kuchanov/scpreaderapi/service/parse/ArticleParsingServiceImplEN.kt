@@ -44,25 +44,38 @@ fun parseForRatedArticlesENStyle(
         articleRatingStringDelimiter: String,
         articleRatingStringDelimiterEnd: String
 ): List<ArticleForLang> {
+    println("start parsing rated articles for lang: $lang")
     val pageContent = doc.getElementById("page-content")
             ?: throw ScpParseException("parse error!")
     val listPagesBox = pageContent.getElementsByClass("list-pages-box").first()
             ?: throw ScpParseException("parse error!")
     val allArticles = listPagesBox.getElementsByTag("p").first().html()
     val arrayOfArticles = allArticles.split("<br>").toTypedArray()
+    println("arrayOfArticles: ${arrayOfArticles.size}")
     val articles = mutableListOf<ArticleForLang>()
     for (arrayItem in arrayOfArticles) {
         val currentDocument = Jsoup.parse(arrayItem)
         val aTag = currentDocument.getElementsByTag("a").first()
         val url: String = lang.siteBaseUrl + aTag.attr("href")
         val title = aTag.text()
-        var rating = arrayItem.substring(arrayItem.indexOf(articleRatingStringDelimiter) + articleRatingStringDelimiter.length)
-        rating = rating.substring(0, rating.indexOf(articleRatingStringDelimiterEnd))
+        val rating = arrayItem.substring(arrayItem.indexOf(articleRatingStringDelimiter) + articleRatingStringDelimiter.length)
+        val ratingCuted = rating.substring(0, rating.indexOf(articleRatingStringDelimiterEnd))
         val article = ArticleForLang(
                 langId = lang.id,
                 urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
                 title = title,
-                rating = rating.toInt()
+                rating = try {
+                    ratingCuted.toInt()
+                } catch (e: Exception){
+                    println("=========================================")
+                    println("arrayItem: $arrayItem")
+                    println("rating: $rating")
+                    println("articleRatingStringDelimiter: $articleRatingStringDelimiter")
+                    println("articleRatingStringDelimiterEnd: $articleRatingStringDelimiterEnd")
+                    println("ratingCuted: $ratingCuted")
+                    println("=========================================")
+                    0
+                }
         )
         articles.add(article)
     }
