@@ -116,7 +116,10 @@ class ArticlesListsParsingTest {
         Flowable
                 .fromIterable(ScpReaderConstants.Firebase.FirebaseInstance.values().toList())
                 //todo remove filter after all lang realization
-                .filter { it == ScpReaderConstants.Firebase.FirebaseInstance.RU }
+                .filter {
+                    it == ScpReaderConstants.Firebase.FirebaseInstance.RU
+                            || it == ScpReaderConstants.Firebase.FirebaseInstance.EN
+                }
                 .map { langService.getById(it.lang)!! }
                 .flatMapSingle { lang ->
                     val objectUrls = articleParsingServiceBase
@@ -163,7 +166,10 @@ class ArticlesListsParsingTest {
                                     }
                     val allLangs = ScpReaderConstants.Firebase.FirebaseInstance.values()
                             //fixme add other langs
-                            .filter { it == ScpReaderConstants.Firebase.FirebaseInstance.RU }
+                            .filter {
+                                it == ScpReaderConstants.Firebase.FirebaseInstance.RU
+                                        || it == ScpReaderConstants.Firebase.FirebaseInstance.EN
+                            }
                     notEmptyArticlesLists.size == allLangs.size
                 }
                 .assertNoErrors()

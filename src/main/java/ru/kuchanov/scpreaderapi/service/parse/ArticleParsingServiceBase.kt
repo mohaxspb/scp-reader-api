@@ -200,7 +200,6 @@ class ArticleParsingServiceBase {
                 .flatMapSingle { url -> getObjectsArticlesForLang(lang, url) }
                 .toList()
                 .map { it.flatten() }
-
                 //test loading and save with less count of articles
                 .map { articlesToDownload ->
                     processOnlyCount?.let {
@@ -411,8 +410,8 @@ class ArticleParsingServiceBase {
         val document = Jsoup.parse(allHtml)
         val h2withIdToc1 = document.getElementById("toc1")
         h2withIdToc1.remove()
-        val allh2Tags: Elements = document.getElementsByTag("h2")
-        for (h2Tag in allh2Tags) {
+        val allH2Tags: Elements = document.getElementsByTag("h2")
+        for (h2Tag in allH2Tags) {
             val brTag = Element(Tag.valueOf("br"), "")
             h2Tag.replaceWith(brTag)
         }
