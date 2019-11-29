@@ -58,6 +58,9 @@ class ArticleParsingServiceImplPL : ArticleParsingServiceBase() {
         return articles
     }
 
+    override fun parseForObjectArticles(lang: Lang, doc: Document) =
+            parseForObjectArticlesENStyle(lang, doc)
+
     override fun getArticleRatingStringDelimiter() = "Ocena: "
 
     override fun getArticleRatingStringDelimiterEnd() = ", Komentarze"
