@@ -8,7 +8,8 @@ import java.sql.Timestamp
 import javax.persistence.*
 
 @Entity
-@Table(name = "articles_article_types",
+@Table(
+        name = "articles_article_types",
         indexes = [
             Index(
                     name = "index_articles_article_types_ids",
