@@ -1,13 +1,8 @@
 package ru.kuchanov.scpreaderapi.service.parse
 
 import org.jsoup.nodes.Document
-import org.jsoup.nodes.Element
-import org.jsoup.select.Elements
 import org.springframework.stereotype.Service
-import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
-import java.sql.Timestamp
-import java.util.*
 
 
 @Service
@@ -32,6 +27,9 @@ class ArticleParsingServiceImplDE : ArticleParsingServiceBase() {
 
     override fun parseForRatedArticles(lang: Lang, doc: Document) =
             parseForRatedArticlesENStyle(lang, doc, getArticleRatingStringDelimiter(), getArticleRatingStringDelimiterEnd())
+
+    override fun parseForObjectArticles(lang: Lang, doc: Document) =
+            parseForObjectArticlesENStyle(lang, doc)
 
     override fun getArticleRatingStringDelimiter() = "Bewertung: "
 

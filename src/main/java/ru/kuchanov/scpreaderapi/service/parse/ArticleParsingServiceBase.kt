@@ -350,7 +350,7 @@ class ArticleParsingServiceBase {
     }
 
     fun getObjectsArticlesForLang(lang: Lang, objectsLink: String): Single<List<ArticleForLang>> {
-        println("getObjectsArticlesForLang: ${lang.langCode}/${lang.siteBaseUrl}, $objectsLink")
+        println("getObjectsArticlesForLang: ${lang.langCode}, url: ${lang.siteBaseUrl}$objectsLink")
         return Single.create { subscriber ->
             val request = Request.Builder()
                     .url(lang.siteBaseUrl + objectsLink)
