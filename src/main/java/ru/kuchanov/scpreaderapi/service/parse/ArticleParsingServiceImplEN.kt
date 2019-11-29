@@ -33,37 +33,8 @@ class ArticleParsingServiceImplEN : ArticleParsingServiceBase() {
     override fun parseForRatedArticles(lang: Lang, doc: Document) =
             parseForRatedArticlesENStyle(lang, doc, getArticleRatingStringDelimiter(), getArticleRatingStringDelimiterEnd())
 
-    override fun parseForObjectArticles(lang: Lang, doc: Document): List<ArticleForLang> {
-        val pageContent = doc.getElementById("page-content")
-                ?: throw ScpParseException("Parse error! \"page-content\" tag is null!")
-        val listPagesBox = pageContent.getElementsByTag("h1")
-        listPagesBox.remove()
-        val collapsibleBlock = pageContent.getElementsByTag("ul").first()
-        collapsibleBlock.remove()
-        val table = pageContent.getElementsByClass("content-toc").first()
-        table.remove()
-        val allUls = pageContent.getElementsByClass("content-panel").first().getElementsByTag("ul")
-
-        val articles = mutableListOf<ArticleForLang>()
-
-        for (ul in allUls) {
-            for (li in ul.children()) { //do not add empty articles
-                if (li.getElementsByTag("a").first().hasClass("newpage")) {
-                    continue
-                }
-                val title = li.text()
-                val url = li.getElementsByTag("a").first().attr("href")
-                val article = ArticleForLang(
-                        langId = lang.id,
-                        urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
-                        title = title
-                )
-                articles.add(article)
-            }
-        }
-
-        return articles
-    }
+    override fun parseForObjectArticles(lang: Lang, doc: Document) =
+            parseForObjectArticlesENStyle(lang, doc)
 
     override fun getArticleRatingStringDelimiter() = "rating: "
 
@@ -98,7 +69,7 @@ fun parseForRatedArticlesENStyle(
                 title = title,
                 rating = try {
                     ratingCuted.toInt()
-                } catch (e: Exception){
+                } catch (e: Exception) {
                     println("=========================================")
                     println("arrayItem: $arrayItem")
                     println("rating: $rating")
@@ -139,6 +110,38 @@ fun parseForRecentArticlesENStyle(lang: Lang, doc: Document): List<ArticleForLan
                 createdOnSite = Timestamp(dateFormat.parse(createdDate).time)
         )
         articles.add(article)
+    }
+
+    return articles
+}
+
+fun parseForObjectArticlesENStyle(lang: Lang, doc: Document): List<ArticleForLang> {
+    val pageContent = doc.getElementById("page-content")
+            ?: throw ScpParseException("Parse error! \"page-content\" tag is null!")
+    val listPagesBox = pageContent.getElementsByTag("h1")
+    listPagesBox.remove()
+    val collapsibleBlock = pageContent.getElementsByTag("ul").first()
+    collapsibleBlock.remove()
+    val table = pageContent.getElementsByClass("content-toc").first()
+    table.remove()
+    val allUls = pageContent.getElementsByClass("content-panel").first().getElementsByTag("ul")
+
+    val articles = mutableListOf<ArticleForLang>()
+
+    for (ul in allUls) {
+        for (li in ul.children()) { //do not add empty articles
+            if (li.getElementsByTag("a").first().hasClass("newpage")) {
+                continue
+            }
+            val title = li.text()
+            val url = li.getElementsByTag("a").first().attr("href")
+            val article = ArticleForLang(
+                    langId = lang.id,
+                    urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
+                    title = title
+            )
+            articles.add(article)
+        }
     }
 
     return articles

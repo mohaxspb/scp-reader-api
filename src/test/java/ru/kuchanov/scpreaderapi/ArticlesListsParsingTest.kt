@@ -119,6 +119,7 @@ class ArticlesListsParsingTest {
                 .filter {
                     it == ScpReaderConstants.Firebase.FirebaseInstance.RU
                             || it == ScpReaderConstants.Firebase.FirebaseInstance.EN
+                            || it == ScpReaderConstants.Firebase.FirebaseInstance.FR
                 }
                 .map { langService.getById(it.lang)!! }
                 .flatMapSingle { lang ->
@@ -169,6 +170,7 @@ class ArticlesListsParsingTest {
                             .filter {
                                 it == ScpReaderConstants.Firebase.FirebaseInstance.RU
                                         || it == ScpReaderConstants.Firebase.FirebaseInstance.EN
+                                        || it == ScpReaderConstants.Firebase.FirebaseInstance.FR
                             }
                     notEmptyArticlesLists.size == allLangs.size
                 }
