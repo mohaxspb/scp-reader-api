@@ -121,7 +121,7 @@ fun parseForObjectArticlesENStyle(lang: Lang, doc: Document): List<ArticleForLan
     val listPagesBox = pageContent.getElementsByTag("h1")
     listPagesBox.remove()
     val collapsibleBlock = pageContent.getElementsByTag("ul").first()
-    collapsibleBlock.remove()
+    collapsibleBlock?.remove()
     val table = pageContent.getElementsByClass("content-toc").first()
     table.remove()
     val allUls = pageContent.getElementsByClass("content-panel").first().getElementsByTag("ul")
