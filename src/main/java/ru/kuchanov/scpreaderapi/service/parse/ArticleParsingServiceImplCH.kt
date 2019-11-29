@@ -19,7 +19,7 @@ class ArticleParsingServiceImplCH : ArticleParsingServiceBase() {
                 "/scp-series-3",
                 "/scp-series-4",
                 "/scp-series-5"
-                )
+        )
     }
 
     override fun parseForRecentArticles(lang: Lang, doc: Document) =
@@ -55,4 +55,7 @@ class ArticleParsingServiceImplCH : ArticleParsingServiceBase() {
         }
         return articles
     }
+
+    override fun parseForObjectArticles(lang: Lang, doc: Document) =
+            parseForObjectArticlesENStyle(lang, doc)
 }
