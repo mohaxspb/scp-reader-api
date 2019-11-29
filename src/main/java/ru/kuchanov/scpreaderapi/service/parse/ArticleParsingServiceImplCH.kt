@@ -1,12 +1,9 @@
 package ru.kuchanov.scpreaderapi.service.parse
 
 import org.jsoup.nodes.Document
-import org.jsoup.nodes.Element
-import org.jsoup.select.Elements
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
-import java.sql.Timestamp
 
 @Service
 class ArticleParsingServiceImplCH : ArticleParsingServiceBase() {
@@ -28,6 +25,7 @@ class ArticleParsingServiceImplCH : ArticleParsingServiceBase() {
     override fun parseForRecentArticles(lang: Lang, doc: Document) =
             parseForRecentArticlesENStyle(lang, doc)
 
+    @Suppress("DuplicatedCode")
     override fun parseForRatedArticles(lang: Lang, doc: Document): List<ArticleForLang> {
         println("start parsing rated articles for lang: $lang")
         val pageContent = doc.getElementById("page-content")

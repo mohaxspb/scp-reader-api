@@ -320,6 +320,7 @@ class ArticleParsingServiceBase {
         }
     }
 
+    @Suppress("DuplicatedCode")
     protected fun parseForRatedArticles(lang: Lang, doc: Document): List<ArticleForLang> {
         println("start parsing rated articles for lang: $lang")
         val pageContent = doc.getElementById("page-content")
