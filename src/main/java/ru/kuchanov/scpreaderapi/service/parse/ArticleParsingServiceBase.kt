@@ -16,7 +16,6 @@ import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.parser.Tag
 import org.jsoup.select.Elements
-import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory
@@ -43,9 +42,6 @@ import java.util.*
 class ArticleParsingServiceBase {
 
     @Autowired
-    private lateinit var logger: Logger
-
-    @Autowired
     private lateinit var autowireCapableBeanFactory: AutowireCapableBeanFactory
 
     @Autowired
@@ -64,8 +60,8 @@ class ArticleParsingServiceBase {
     @Autowired
     private lateinit var articleForLangToArticleForLangService: ArticleForLangToArticleForLangService
 
-    @Autowired
-    private lateinit var articlesImagesService: ArticlesImagesService
+//    @Autowired
+//    private lateinit var articlesImagesService: ArticlesImagesService
 
     @Autowired
     private lateinit var tagForArticleForLangService: TagForArticleForLangService
@@ -526,12 +522,10 @@ class ArticleParsingServiceBase {
                 return articleForLangInDb
             } else {
                 println("error in articles parsing: $urlRelative")
-                logger.warn("error in articles parsing: $urlRelative")
                 return null
             }
         } catch (e: Exception) {
             println("error in articles parsing: $urlRelative $e")
-            logger.error("error in articles parsing: $urlRelative", e)
             return null
         }
     }
@@ -567,8 +561,8 @@ class ArticleParsingServiceBase {
                     urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
                     title = title,
                     rating = rating,
-                    createdOnSite = Timestamp(getDateFormatForLang(lang).parse(createdDate).time),
-                    updatedOnSite = Timestamp(getDateFormatForLang(lang).parse(updatedDate).time)
+                    createdOnSite = Timestamp(getDateFormatForLang().parse(createdDate).time),
+                    updatedOnSite = Timestamp(getDateFormatForLang().parse(updatedDate).time)
             )
             //todo
 //            article.authorName = authorName
@@ -687,10 +681,8 @@ class ArticleParsingServiceBase {
                 getAndSaveInnerArticles(lang, innerArticleDownloaded, maxDepth, currentDepthLevel + 1)
             } catch (e: Exception) {
                 println("error while save inner article: $e")
-                logger.error("error while save inner article", e)
             } catch (e: ScpParseException) {
                 println("error while save inner article: $e")
-                logger.error("error while save inner article", e)
             }
 
         }
@@ -785,7 +777,7 @@ class ArticleParsingServiceBase {
 
         private const val DATE_FORMAT_PATTERN_EN = "dd MMM yyyy HH:mm"
 
-        fun getDateFormatForLang(lang: Lang) = SimpleDateFormat(DATE_FORMAT_PATTERN_EN, Locale.ENGLISH)
+        fun getDateFormatForLang() = SimpleDateFormat(DATE_FORMAT_PATTERN_EN, Locale.ENGLISH)
 
         const val DEFAULT_INNER_ARTICLES_DEPTH = 1
     }
