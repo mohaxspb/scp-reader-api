@@ -49,9 +49,6 @@ create table if not exists articles
     article_type_id bigint
 );
 
-create index if not exists index_articles_articletypeid
-    on articles (article_type_id);
-
 create table if not exists articles_article_types
 (
     article_id bigint not null,
