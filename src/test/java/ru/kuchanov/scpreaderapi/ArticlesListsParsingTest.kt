@@ -115,17 +115,6 @@ class ArticlesListsParsingTest {
     fun getObjectArticles_receivesNotEmptyList() {
         Flowable
                 .fromIterable(ScpReaderConstants.Firebase.FirebaseInstance.values().toList())
-                //todo remove filter after all lang realization
-                .filter {
-                    it == ScpReaderConstants.Firebase.FirebaseInstance.RU
-                            || it == ScpReaderConstants.Firebase.FirebaseInstance.EN
-                            || it == ScpReaderConstants.Firebase.FirebaseInstance.FR
-                            || it == ScpReaderConstants.Firebase.FirebaseInstance.PL
-                            || it == ScpReaderConstants.Firebase.FirebaseInstance.DE
-                            || it == ScpReaderConstants.Firebase.FirebaseInstance.ES
-                            || it == ScpReaderConstants.Firebase.FirebaseInstance.IT
-                            || it == ScpReaderConstants.Firebase.FirebaseInstance.CH
-                }
                 .map { langService.getById(it.lang)!! }
                 .flatMapSingle { lang ->
                     val objectUrls = articleParsingServiceBase
@@ -171,17 +160,6 @@ class ArticlesListsParsingTest {
                                         notEmptyObjectsListsForLang.size == numOfObjectLinks
                                     }
                     val allLangs = ScpReaderConstants.Firebase.FirebaseInstance.values()
-                            //fixme add other langs
-                            .filter {
-                                it == ScpReaderConstants.Firebase.FirebaseInstance.RU
-                                        || it == ScpReaderConstants.Firebase.FirebaseInstance.EN
-                                        || it == ScpReaderConstants.Firebase.FirebaseInstance.FR
-                                        || it == ScpReaderConstants.Firebase.FirebaseInstance.PL
-                                        || it == ScpReaderConstants.Firebase.FirebaseInstance.DE
-                                        || it == ScpReaderConstants.Firebase.FirebaseInstance.ES
-                                        || it == ScpReaderConstants.Firebase.FirebaseInstance.IT
-                                        || it == ScpReaderConstants.Firebase.FirebaseInstance.CH
-                            }
                     notEmptyArticlesLists.size == allLangs.size
                 }
                 .assertNoErrors()
