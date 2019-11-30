@@ -14,10 +14,10 @@ data class Lang(
         var id: String,
         @Column(name = "lang_code")
         var langCode: String,
+        // todo change es site from http://lafundacionscp.wikidot.com to http://scp-es.com/
         @Column(name = "site_base_url", columnDefinition = "TEXT")
         var siteBaseUrl: String
 )
-
 
 
 @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "No such lang")
