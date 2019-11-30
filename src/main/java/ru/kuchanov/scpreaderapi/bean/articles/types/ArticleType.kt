@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.bean.articles
+package ru.kuchanov.scpreaderapi.bean.articles.types
 
 import javax.persistence.*
 
