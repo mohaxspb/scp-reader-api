@@ -383,6 +383,7 @@ class ArticleParsingServiceBase {
         }
     }
 
+    @Suppress("DuplicatedCode")
     protected fun parseForObjectArticles(lang: Lang, doc: Document): List<ArticleForLang> {
         val pageContent = doc.getElementById("page-content")
                 ?: throw ScpParseException("parse error!")
@@ -429,7 +430,7 @@ class ArticleParsingServiceBase {
             val imageURL = arrayItemParsed.getElementsByTag("img").first().attr("src")
             //TODO do something with obj type like migrate new column do db
             val type = getObjectTypeByImageUrl(imageURL)
-            val url: String = lang.siteBaseUrl + arrayItemParsed.getElementsByTag("a").first().attr("href")
+            val url = lang.siteBaseUrl + arrayItemParsed.getElementsByTag("a").first().attr("href")
             val title = arrayItemParsed.text()
             val article = ArticleForLang(
                     langId = lang.id,
