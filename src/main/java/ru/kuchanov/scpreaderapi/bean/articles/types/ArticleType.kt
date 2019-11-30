@@ -9,5 +9,5 @@ data class ArticleType(
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long? = null,
         @Column(name = "image_url", columnDefinition = "TEXT")
-        val imageUrl:String
+        val imageUrl: String
 )

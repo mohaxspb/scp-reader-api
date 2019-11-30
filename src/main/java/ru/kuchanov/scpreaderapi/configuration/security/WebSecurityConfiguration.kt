@@ -142,6 +142,7 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
 
     override fun configure(web: WebSecurity) {
         web.ignoring().antMatchers(
+                "/image/**",
                 "/${ScpReaderConstants.Path.GALLERY}/files/**",
                 "/${ScpReaderConstants.Path.GALLERY}/all",
                 "/${ScpReaderConstants.Path.FIREBASE}/**/**/**",
