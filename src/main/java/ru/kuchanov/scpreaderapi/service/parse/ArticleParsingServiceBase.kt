@@ -28,7 +28,10 @@ import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLangToArticleForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 import ru.kuchanov.scpreaderapi.configuration.NetworkConfiguration
-import ru.kuchanov.scpreaderapi.service.article.*
+import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
+import ru.kuchanov.scpreaderapi.service.article.ArticleForLangToArticleForLangService
+import ru.kuchanov.scpreaderapi.service.article.ArticleService
+import ru.kuchanov.scpreaderapi.service.article.ParseHtmlService
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForLangService
 import java.io.IOException
@@ -59,9 +62,6 @@ class ArticleParsingServiceBase {
 
     @Autowired
     private lateinit var articleForLangToArticleForLangService: ArticleForLangToArticleForLangService
-
-//    @Autowired
-//    private lateinit var articlesImagesService: ArticlesImagesService
 
     @Autowired
     private lateinit var tagForArticleForLangService: TagForArticleForLangService
@@ -426,15 +426,14 @@ class ArticleParsingServiceBase {
             val arrayItemParsed = Jsoup.parse(arrayItem)
             //type of object
             val imageURL = arrayItemParsed.getElementsByTag("img").first().attr("src")
-            //TODO do something with obj type like migrate new column do db
             val type = getObjectTypeByImageUrl(imageURL)
             val url = lang.siteBaseUrl + arrayItemParsed.getElementsByTag("a").first().attr("href")
             val title = arrayItemParsed.text()
             val article = ArticleForLang(
                     langId = lang.id,
                     urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
-                    title = title
-
+                    title = title,
+                    articleTypeEnumValue = type
             )
             articles.add(article)
         }
@@ -450,11 +449,9 @@ class ArticleParsingServiceBase {
                 .map { articles ->
                     articles.map { articleToDownload ->
                         saveArticle(
+                                articleToDownload,
                                 lang,
-                                articleToDownload.urlRelative,
-                                innerArticlesDepth,
-                                articleToDownload.createdOnSite,
-                                articleToDownload.updatedOnSite
+                                innerArticlesDepth
                         )
                     }
                 }
@@ -463,14 +460,12 @@ class ArticleParsingServiceBase {
     }
 
     protected fun saveArticle(
+            articleToSave: ArticleForLang,
             lang: Lang,
-            urlRelative: String,
-            innerArticlesDepth: Int = 0,
-            createdOnSite: Timestamp? = null,
-            updatedOnSite: Timestamp? = null
+            innerArticlesDepth: Int = 0
     ): ArticleForLang? {
         try {
-            val articleDownloaded = getArticleFromApi(urlRelative, lang)
+            val articleDownloaded = getArticleFromApi(articleToSave.urlRelative, lang)
 
             if (articleDownloaded != null) {
                 var articleInDb = articleService.getArticleByUrlRelative(articleDownloaded.urlRelative)
@@ -491,8 +486,8 @@ class ArticleParsingServiceBase {
                 if (articleForLangInDb == null) {
                     articleForLangInDb = articleForLangService.insert(articleDownloaded.apply {
                         articleId = articleInDb.id
-                        this.createdOnSite = createdOnSite
-                        this.updatedOnSite = updatedOnSite
+                        this.createdOnSite = articleToSave.createdOnSite
+                        this.updatedOnSite = articleToSave.updatedOnSite
                     })
                 } else {
                     articleForLangInDb = articleForLangService.insert(
@@ -501,17 +496,15 @@ class ArticleParsingServiceBase {
                                 rating = articleDownloaded.rating
                                 title = articleDownloaded.title
                                 text = articleDownloaded.text
-                                this.createdOnSite = createdOnSite
-                                this.updatedOnSite = updatedOnSite
+                                this.createdOnSite = articleToSave.createdOnSite
+                                this.updatedOnSite = articleToSave.updatedOnSite
                             }
                     )
                 }
 
-                manageTagsForArticle(
-                        lang.id,
-                        articleDownloaded,
-                        articleForLangInDb
-                )
+                manageArticleType(articleToSave, articleForLangInDb, lang.id)
+
+                manageTagsForArticle(lang.id, articleDownloaded, articleForLangInDb)
 
                 //parse inner
                 getAndSaveInnerArticles(lang, articleDownloaded, innerArticlesDepth)
@@ -520,15 +513,16 @@ class ArticleParsingServiceBase {
 
                 return articleForLangInDb
             } else {
-                println("error in articles parsing: $urlRelative")
+                println("error in articles parsing: $articleToSave.urlRelative")
                 return null
             }
         } catch (e: Exception) {
-            println("error in articles parsing: $urlRelative $e")
+            println("error in articles parsing: $articleToSave.urlRelative $e")
             return null
         }
     }
 
+    @Suppress("DuplicatedCode")
     protected fun parseForRecentArticles(lang: Lang, doc: Document): List<ArticleForLang> {
         val table = doc.getElementsByClass("wiki-content-table").first()
                 ?: throw NullPointerException("Can't find element for class \"wiki-content-table\"")
@@ -573,7 +567,7 @@ class ArticleParsingServiceBase {
     }
 
     fun parseArticleForLang(urlRelative: String, lang: Lang) {
-        saveArticle(lang, urlRelative)
+        saveArticle(ArticleForLang(urlRelative = urlRelative, langId = lang.id), lang)
     }
 
     fun getArticleFromApi(url: String, lang: Lang): ArticleForLang? {
@@ -660,6 +654,14 @@ class ArticleParsingServiceBase {
         //do not insert in Tag, as we'll do it manually later. Maybe...
     }
 
+    private fun manageArticleType(
+            articleToSave: ArticleForLang,
+            articleForLangInDb: ArticleForLang,
+            langId: String
+    ) {
+        TODO()
+    }
+
     fun getAndSaveInnerArticles(
             lang: Lang,
             articleDownloaded: ArticleForLang,
@@ -675,7 +677,8 @@ class ArticleParsingServiceBase {
         for (innerUrl in innerArticlesUrls) {
             println("save inner article: $innerUrl")
             try {
-                val innerArticleDownloaded = saveArticle(lang, innerUrl) ?: continue
+                val articleForLang = ArticleForLang(urlRelative = innerUrl, langId = lang.id)
+                val innerArticleDownloaded = saveArticle(articleForLang, lang) ?: continue
 
                 getAndSaveInnerArticles(lang, innerArticleDownloaded, maxDepth, currentDepthLevel + 1)
             } catch (e: Exception) {
@@ -683,7 +686,6 @@ class ArticleParsingServiceBase {
             } catch (e: ScpParseException) {
                 println("error while save inner article: $e")
             }
-
         }
     }
 
