@@ -26,6 +26,7 @@ import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.articles.Article
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLangToArticleForLang
+import ru.kuchanov.scpreaderapi.bean.articles.types.ArticlesAndArticleTypes
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 import ru.kuchanov.scpreaderapi.configuration.NetworkConfiguration
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
@@ -34,6 +35,7 @@ import ru.kuchanov.scpreaderapi.service.article.ArticleService
 import ru.kuchanov.scpreaderapi.service.article.ParseHtmlService
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForLangService
+import ru.kuchanov.scpreaderapi.service.article.type.ArticleAndArticleTypeService
 import ru.kuchanov.scpreaderapi.service.article.type.ArticleTypeService
 import java.io.IOException
 import java.sql.Timestamp
@@ -72,6 +74,9 @@ class ArticleParsingServiceBase {
 
     @Autowired
     private lateinit var articleTypeService: ArticleTypeService
+
+    @Autowired
+    private lateinit var articleAndArticleTypeService: ArticleAndArticleTypeService
 
     fun getParsingRealizationForLang(lang: Lang): ArticleParsingServiceBase =
             when (lang.langCode) {
@@ -667,8 +672,35 @@ class ArticleParsingServiceBase {
     ) {
         val articleType = articleTypeService.getByEnumValue(articleTypeEnum)
         //create article_for_lang connection to article_type
-
-        TODO()
+        var articleToArticleTypeInDb = articleAndArticleTypeService.getByArticleId(articleForLangInDb.articleId!!)
+        if (articleToArticleTypeInDb == null) {
+            articleToArticleTypeInDb = articleAndArticleTypeService.save(
+                    ArticlesAndArticleTypes(
+                            articleId = articleForLangInDb.articleId!!,
+                            articleTypeId = articleType.id!!
+                    )
+            )
+        } else {
+            //check if types not equal and update
+            if (articleToArticleTypeInDb.articleTypeId != articleType.id) {
+                println("""
+                    |Article types not equal!
+                    | Article id: ${articleForLangInDb.articleId}, 
+                    | ArticleForLangId: ${articleForLangInDb.id},
+                    | Saved typeId: ${articleToArticleTypeInDb.articleTypeId},
+                    | New typeId: ${articleType.id}
+                    """.trimMargin()
+                )
+                articleToArticleTypeInDb = articleAndArticleTypeService.save(
+                        ArticlesAndArticleTypes(
+                                articleId = articleForLangInDb.articleId!!,
+                                articleTypeId = articleType.id!!
+                        )
+                )
+            } else {
+                //do nothing
+            }
+        }
     }
 
     fun getAndSaveInnerArticles(
