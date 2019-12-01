@@ -666,6 +666,7 @@ class ArticleParsingServiceBase {
             langId: String
     ) {
         val articleType = articleTypeService.getByEnumValue(articleTypeEnum)
+        //create article_for_lang connection to article_type
 
         TODO()
     }
