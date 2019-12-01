@@ -180,7 +180,7 @@ data class ArticleForLang(
          * we have it here to be able to write it to DB while parse Objects for RU and PT.
          */
         @Transient
-        var articleTypeEnumValue:ScpReaderConstants.ObjectType? = null,
+        var articleTypeEnumEnumValue:ScpReaderConstants.ArticleTypeEnum? = null,
 
         //dates
         @field:CreationTimestamp

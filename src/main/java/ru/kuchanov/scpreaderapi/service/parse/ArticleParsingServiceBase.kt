@@ -34,6 +34,7 @@ import ru.kuchanov.scpreaderapi.service.article.ArticleService
 import ru.kuchanov.scpreaderapi.service.article.ParseHtmlService
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForLangService
+import ru.kuchanov.scpreaderapi.service.article.type.ArticleTypeService
 import java.io.IOException
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
@@ -68,6 +69,9 @@ class ArticleParsingServiceBase {
 
     @Autowired
     private lateinit var tagForLangService: TagForLangService
+
+    @Autowired
+    private lateinit var articleTypeService: ArticleTypeService
 
     fun getParsingRealizationForLang(lang: Lang): ArticleParsingServiceBase =
             when (lang.langCode) {
@@ -433,7 +437,7 @@ class ArticleParsingServiceBase {
                     langId = lang.id,
                     urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
                     title = title,
-                    articleTypeEnumValue = type
+                    articleTypeEnumEnumValue = type
             )
             articles.add(article)
         }
@@ -502,7 +506,9 @@ class ArticleParsingServiceBase {
                     )
                 }
 
-                manageArticleType(articleToSave, articleForLangInDb, lang.id)
+                articleToSave.articleTypeEnumEnumValue?.let {
+                    manageArticleType(it, articleForLangInDb, lang.id)
+                }
 
                 manageTagsForArticle(lang.id, articleDownloaded, articleForLangInDb)
 
@@ -655,10 +661,12 @@ class ArticleParsingServiceBase {
     }
 
     private fun manageArticleType(
-            articleToSave: ArticleForLang,
+            articleTypeEnum: ScpReaderConstants.ArticleTypeEnum,
             articleForLangInDb: ArticleForLang,
             langId: String
     ) {
+        val articleType = articleTypeService.getByEnumValue(articleTypeEnum)
+
         TODO()
     }
 
@@ -689,8 +697,8 @@ class ArticleParsingServiceBase {
         }
     }
 
-    fun getObjectTypeByImageUrl(imageURL: String): ScpReaderConstants.ObjectType {
-        val type: ScpReaderConstants.ObjectType
+    fun getObjectTypeByImageUrl(imageURL: String): ScpReaderConstants.ArticleTypeEnum {
+        val typeEnum: ScpReaderConstants.ArticleTypeEnum
 
         when (imageURL) {
             "http://scp-ru.wdfiles.com/local--files/scp-list-4/na.png",
@@ -706,7 +714,7 @@ class ArticleParsingServiceBase {
             "http://scp-ru.wdfiles.com/local--files/scp-list-es/safe.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-pl/safe.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-de/safe1.png" ->
-                type = ScpReaderConstants.ObjectType.NEUTRAL_OR_NOT_ADDED
+                typeEnum = ScpReaderConstants.ArticleTypeEnum.NEUTRAL_OR_NOT_ADDED
 
             "http://scp-ru.wdfiles.com/local--files/scp-list-4/safe.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-3/safe.png",
@@ -721,7 +729,7 @@ class ArticleParsingServiceBase {
             "http://scp-ru.wdfiles.com/local--files/scp-list-es/na.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-pl/na.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-de/na1.png" ->
-                type = ScpReaderConstants.ObjectType.SAFE
+                typeEnum = ScpReaderConstants.ArticleTypeEnum.SAFE
 
             "http://scp-ru.wdfiles.com/local--files/scp-list-4/euclid.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-3/euclid.png",
@@ -736,7 +744,7 @@ class ArticleParsingServiceBase {
             "http://scp-ru.wdfiles.com/local--files/scp-list-es/euclid.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-pl/euclid.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-de/euclid1.png" ->
-                type = ScpReaderConstants.ObjectType.EUCLID
+                typeEnum = ScpReaderConstants.ArticleTypeEnum.EUCLID
 
             "http://scp-ru.wdfiles.com/local--files/scp-list-4/keter.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-3/keter.png",
@@ -751,7 +759,7 @@ class ArticleParsingServiceBase {
             "http://scp-ru.wdfiles.com/local--files/scp-list-es/keter.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-pl/keter.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-de/keter1.png" ->
-                type = ScpReaderConstants.ObjectType.KETER
+                typeEnum = ScpReaderConstants.ArticleTypeEnum.KETER
 
             "http://scp-ru.wdfiles.com/local--files/scp-list-4/thaumiel.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-3/thaumiel.png",
@@ -766,11 +774,11 @@ class ArticleParsingServiceBase {
             "http://scp-ru.wdfiles.com/local--files/scp-list-es/thaumiel.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-pl/thaumiel.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-de/thaumiel1.png" ->
-                type = ScpReaderConstants.ObjectType.THAUMIEL
+                typeEnum = ScpReaderConstants.ArticleTypeEnum.THAUMIEL
 
-            else -> type = ScpReaderConstants.ObjectType.NONE
+            else -> typeEnum = ScpReaderConstants.ArticleTypeEnum.NONE
         }
-        return type
+        return typeEnum
     }
 
     companion object {

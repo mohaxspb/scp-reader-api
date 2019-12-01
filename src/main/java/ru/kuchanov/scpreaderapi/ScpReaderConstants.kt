@@ -51,7 +51,7 @@ object ScpReaderConstants {
         }
     }
 
-    enum class ObjectType {
+    enum class ArticleTypeEnum {
         NEUTRAL_OR_NOT_ADDED,
         SAFE,
         EUCLID,
