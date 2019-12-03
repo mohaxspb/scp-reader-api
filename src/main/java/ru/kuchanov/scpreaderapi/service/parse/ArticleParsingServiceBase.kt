@@ -524,11 +524,11 @@ class ArticleParsingServiceBase {
 
                 return articleForLangInDb
             } else {
-                println("error in articles parsing: $articleToSave.urlRelative")
+                println("error in articles parsing: ${articleToSave.urlRelative}")
                 return null
             }
         } catch (e: Exception) {
-            println("error in articles parsing: $articleToSave.urlRelative $e")
+            println("error in articles parsing: ${articleToSave.urlRelative} $e")
             return null
         }
     }
