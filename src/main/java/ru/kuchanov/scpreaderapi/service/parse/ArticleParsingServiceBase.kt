@@ -529,6 +529,7 @@ class ArticleParsingServiceBase {
             }
         } catch (e: Exception) {
             println("error in articles parsing: ${articleToSave.urlRelative} $e")
+            e.printStackTrace()
             return null
         }
     }
@@ -688,12 +689,7 @@ class ArticleParsingServiceBase {
                     | New typeId: ${articleType.id}
                     """.trimMargin()
             )
-            articleAndArticleTypeService.save(
-                    ArticlesAndArticleTypes(
-                            articleId = articleForLangInDb.articleId!!,
-                            articleTypeId = articleType.id!!
-                    )
-            )
+            articleAndArticleTypeService.save(articleToArticleTypeInDb.apply { articleTypeId = articleType.id!! })
         }
     }
 
@@ -728,6 +724,7 @@ class ArticleParsingServiceBase {
         val typeEnum: ScpReaderConstants.ArticleTypeEnum
 
         when (imageURL) {
+            "http://scp-ru.wdfiles.com/local--files/scp-list-5/na.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-4/na.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-3/na.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-2/na.png",
@@ -743,6 +740,7 @@ class ArticleParsingServiceBase {
             "http://scp-ru.wdfiles.com/local--files/scp-list-de/safe1.png" ->
                 typeEnum = ScpReaderConstants.ArticleTypeEnum.NEUTRAL_OR_NOT_ADDED
 
+            "http://scp-ru.wdfiles.com/local--files/scp-list-5/safe.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-4/safe.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-3/safe.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-2/safe.png",
@@ -758,6 +756,7 @@ class ArticleParsingServiceBase {
             "http://scp-ru.wdfiles.com/local--files/scp-list-de/na1.png" ->
                 typeEnum = ScpReaderConstants.ArticleTypeEnum.SAFE
 
+            "http://scp-ru.wdfiles.com/local--files/scp-list-5/euclid.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-4/euclid.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-3/euclid.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-2/euclid.png",
@@ -773,6 +772,7 @@ class ArticleParsingServiceBase {
             "http://scp-ru.wdfiles.com/local--files/scp-list-de/euclid1.png" ->
                 typeEnum = ScpReaderConstants.ArticleTypeEnum.EUCLID
 
+            "http://scp-ru.wdfiles.com/local--files/scp-list-5/keter.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-4/keter.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-3/keter.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-2/keter.png",
@@ -788,6 +788,7 @@ class ArticleParsingServiceBase {
             "http://scp-ru.wdfiles.com/local--files/scp-list-de/keter1.png" ->
                 typeEnum = ScpReaderConstants.ArticleTypeEnum.KETER
 
+            "http://scp-ru.wdfiles.com/local--files/scp-list-5/thaumiel.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-4/thaumiel.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-3/thaumiel.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-2/thaumiel.png",
