@@ -512,7 +512,7 @@ class ArticleParsingServiceBase {
                 }
 
                 articleToSave.articleTypeEnumEnumValue?.let {
-                    manageArticleType(it, articleForLangInDb, lang.id)
+                    manageArticleType(it, articleForLangInDb)
                 }
 
                 manageTagsForArticle(lang.id, articleDownloaded, articleForLangInDb)
@@ -548,14 +548,16 @@ class ArticleParsingServiceBase {
             val tagA = firstTd.getElementsByTag("a").first()
             val title = tagA.text()
             val url = lang.siteBaseUrl + tagA.attr("href")
+            //rating
             val rating = Integer.parseInt(listOfTd[1].text())
+
+            //todo authorName and authorUrl
             //author
-            val spanWithAuthor = listOfTd[2]
-                    .getElementsByAttributeValueContaining("class", "printuser").first()
-            //todo
-            val authorName = spanWithAuthor.text()
-            //todo
-            val authorUrl = spanWithAuthor.getElementsByTag("a").first()?.attr("href")
+//            val spanWithAuthor = listOfTd[2]
+//                    .getElementsByAttributeValueContaining("class", "printuser")
+//                    .first()
+//            val authorName = spanWithAuthor.text()
+//            val authorUrl = spanWithAuthor.getElementsByTag("a").first()?.attr("href")
 
             val createdDate = listOfTd[3].text().trim()
             val updatedDate = listOfTd[4].text().trim()
@@ -568,9 +570,6 @@ class ArticleParsingServiceBase {
                     createdOnSite = Timestamp(getDateFormatForLang().parse(createdDate).time),
                     updatedOnSite = Timestamp(getDateFormatForLang().parse(updatedDate).time)
             )
-            //todo
-//            article.authorName = authorName
-//            article.authorUrl = authorUrl
             articles.add(article)
         }
 
@@ -667,39 +666,34 @@ class ArticleParsingServiceBase {
 
     private fun manageArticleType(
             articleTypeEnum: ScpReaderConstants.ArticleTypeEnum,
-            articleForLangInDb: ArticleForLang,
-            langId: String
+            articleForLangInDb: ArticleForLang
     ) {
         val articleType = articleTypeService.getByEnumValue(articleTypeEnum)
-        //create article_for_lang connection to article_type
-        var articleToArticleTypeInDb = articleAndArticleTypeService.getByArticleId(articleForLangInDb.articleId!!)
+        //create article connection to article_type
+        //or check if types not equal and update
+        val articleToArticleTypeInDb = articleAndArticleTypeService.getByArticleId(articleForLangInDb.articleId!!)
         if (articleToArticleTypeInDb == null) {
-            articleToArticleTypeInDb = articleAndArticleTypeService.save(
+            articleAndArticleTypeService.save(
                     ArticlesAndArticleTypes(
                             articleId = articleForLangInDb.articleId!!,
                             articleTypeId = articleType.id!!
                     )
             )
-        } else {
-            //check if types not equal and update
-            if (articleToArticleTypeInDb.articleTypeId != articleType.id) {
-                println("""
+        } else if (articleToArticleTypeInDb.articleTypeId != articleType.id) {
+            println("""
                     |Article types not equal!
                     | Article id: ${articleForLangInDb.articleId}, 
                     | ArticleForLangId: ${articleForLangInDb.id},
                     | Saved typeId: ${articleToArticleTypeInDb.articleTypeId},
                     | New typeId: ${articleType.id}
                     """.trimMargin()
-                )
-                articleToArticleTypeInDb = articleAndArticleTypeService.save(
-                        ArticlesAndArticleTypes(
-                                articleId = articleForLangInDb.articleId!!,
-                                articleTypeId = articleType.id!!
-                        )
-                )
-            } else {
-                //do nothing
-            }
+            )
+            articleAndArticleTypeService.save(
+                    ArticlesAndArticleTypes(
+                            articleId = articleForLangInDb.articleId!!,
+                            articleTypeId = articleType.id!!
+                    )
+            )
         }
     }
 
