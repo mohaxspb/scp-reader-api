@@ -26,11 +26,17 @@ import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.articles.Article
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLangToArticleForLang
+import ru.kuchanov.scpreaderapi.bean.articles.types.ArticlesAndArticleTypes
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 import ru.kuchanov.scpreaderapi.configuration.NetworkConfiguration
-import ru.kuchanov.scpreaderapi.service.article.*
+import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
+import ru.kuchanov.scpreaderapi.service.article.ArticleForLangToArticleForLangService
+import ru.kuchanov.scpreaderapi.service.article.ArticleService
+import ru.kuchanov.scpreaderapi.service.article.ParseHtmlService
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForLangService
+import ru.kuchanov.scpreaderapi.service.article.type.ArticleAndArticleTypeService
+import ru.kuchanov.scpreaderapi.service.article.type.ArticleTypeService
 import java.io.IOException
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
@@ -60,14 +66,17 @@ class ArticleParsingServiceBase {
     @Autowired
     private lateinit var articleForLangToArticleForLangService: ArticleForLangToArticleForLangService
 
-//    @Autowired
-//    private lateinit var articlesImagesService: ArticlesImagesService
-
     @Autowired
     private lateinit var tagForArticleForLangService: TagForArticleForLangService
 
     @Autowired
     private lateinit var tagForLangService: TagForLangService
+
+    @Autowired
+    private lateinit var articleTypeService: ArticleTypeService
+
+    @Autowired
+    private lateinit var articleAndArticleTypeService: ArticleAndArticleTypeService
 
     fun getParsingRealizationForLang(lang: Lang): ArticleParsingServiceBase =
             when (lang.langCode) {
@@ -383,6 +392,7 @@ class ArticleParsingServiceBase {
         }
     }
 
+    @Suppress("DuplicatedCode")
     protected fun parseForObjectArticles(lang: Lang, doc: Document): List<ArticleForLang> {
         val pageContent = doc.getElementById("page-content")
                 ?: throw ScpParseException("parse error!")
@@ -422,20 +432,17 @@ class ArticleParsingServiceBase {
             if (TextUtils.isEmpty(arrayItem.trim())) {
                 continue
             }
-//            println("arrayItem: $arrayItem")
             val arrayItemParsed = Jsoup.parse(arrayItem)
-//            println("arrayItemParsed: $arrayItemParsed")
             //type of object
             val imageURL = arrayItemParsed.getElementsByTag("img").first().attr("src")
-            //TODO do something with obj type like migrate new column do db
             val type = getObjectTypeByImageUrl(imageURL)
-            val url: String = lang.siteBaseUrl + arrayItemParsed.getElementsByTag("a").first().attr("href")
+            val url = lang.siteBaseUrl + arrayItemParsed.getElementsByTag("a").first().attr("href")
             val title = arrayItemParsed.text()
             val article = ArticleForLang(
                     langId = lang.id,
                     urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
-                    title = title
-
+                    title = title,
+                    articleTypeEnumEnumValue = type
             )
             articles.add(article)
         }
@@ -451,11 +458,9 @@ class ArticleParsingServiceBase {
                 .map { articles ->
                     articles.map { articleToDownload ->
                         saveArticle(
+                                articleToDownload,
                                 lang,
-                                articleToDownload.urlRelative,
-                                innerArticlesDepth,
-                                articleToDownload.createdOnSite,
-                                articleToDownload.updatedOnSite
+                                innerArticlesDepth
                         )
                     }
                 }
@@ -464,14 +469,12 @@ class ArticleParsingServiceBase {
     }
 
     protected fun saveArticle(
+            articleToSave: ArticleForLang,
             lang: Lang,
-            urlRelative: String,
-            innerArticlesDepth: Int = 0,
-            createdOnSite: Timestamp? = null,
-            updatedOnSite: Timestamp? = null
+            innerArticlesDepth: Int = 0
     ): ArticleForLang? {
         try {
-            val articleDownloaded = getArticleFromApi(urlRelative, lang)
+            val articleDownloaded = getArticleFromApi(articleToSave.urlRelative, lang)
 
             if (articleDownloaded != null) {
                 var articleInDb = articleService.getArticleByUrlRelative(articleDownloaded.urlRelative)
@@ -492,8 +495,8 @@ class ArticleParsingServiceBase {
                 if (articleForLangInDb == null) {
                     articleForLangInDb = articleForLangService.insert(articleDownloaded.apply {
                         articleId = articleInDb.id
-                        this.createdOnSite = createdOnSite
-                        this.updatedOnSite = updatedOnSite
+                        this.createdOnSite = articleToSave.createdOnSite
+                        this.updatedOnSite = articleToSave.updatedOnSite
                     })
                 } else {
                     articleForLangInDb = articleForLangService.insert(
@@ -502,17 +505,17 @@ class ArticleParsingServiceBase {
                                 rating = articleDownloaded.rating
                                 title = articleDownloaded.title
                                 text = articleDownloaded.text
-                                this.createdOnSite = createdOnSite
-                                this.updatedOnSite = updatedOnSite
+                                this.createdOnSite = articleToSave.createdOnSite
+                                this.updatedOnSite = articleToSave.updatedOnSite
                             }
                     )
                 }
 
-                manageTagsForArticle(
-                        lang.id,
-                        articleDownloaded,
-                        articleForLangInDb
-                )
+                articleToSave.articleTypeEnumEnumValue?.let {
+                    manageArticleType(it, articleForLangInDb)
+                }
+
+                manageTagsForArticle(lang.id, articleDownloaded, articleForLangInDb)
 
                 //parse inner
                 getAndSaveInnerArticles(lang, articleDownloaded, innerArticlesDepth)
@@ -521,15 +524,17 @@ class ArticleParsingServiceBase {
 
                 return articleForLangInDb
             } else {
-                println("error in articles parsing: $urlRelative")
+                println("error in articles parsing: ${articleToSave.urlRelative}")
                 return null
             }
         } catch (e: Exception) {
-            println("error in articles parsing: $urlRelative $e")
+            println("error in articles parsing: ${articleToSave.urlRelative} $e")
+            e.printStackTrace()
             return null
         }
     }
 
+    @Suppress("DuplicatedCode")
     protected fun parseForRecentArticles(lang: Lang, doc: Document): List<ArticleForLang> {
         val table = doc.getElementsByClass("wiki-content-table").first()
                 ?: throw NullPointerException("Can't find element for class \"wiki-content-table\"")
@@ -544,14 +549,16 @@ class ArticleParsingServiceBase {
             val tagA = firstTd.getElementsByTag("a").first()
             val title = tagA.text()
             val url = lang.siteBaseUrl + tagA.attr("href")
+            //rating
             val rating = Integer.parseInt(listOfTd[1].text())
+
+            //todo authorName and authorUrl
             //author
-            val spanWithAuthor = listOfTd[2]
-                    .getElementsByAttributeValueContaining("class", "printuser").first()
-            //todo
-            val authorName = spanWithAuthor.text()
-            //todo
-            val authorUrl = spanWithAuthor.getElementsByTag("a").first()?.attr("href")
+//            val spanWithAuthor = listOfTd[2]
+//                    .getElementsByAttributeValueContaining("class", "printuser")
+//                    .first()
+//            val authorName = spanWithAuthor.text()
+//            val authorUrl = spanWithAuthor.getElementsByTag("a").first()?.attr("href")
 
             val createdDate = listOfTd[3].text().trim()
             val updatedDate = listOfTd[4].text().trim()
@@ -564,9 +571,6 @@ class ArticleParsingServiceBase {
                     createdOnSite = Timestamp(getDateFormatForLang().parse(createdDate).time),
                     updatedOnSite = Timestamp(getDateFormatForLang().parse(updatedDate).time)
             )
-            //todo
-//            article.authorName = authorName
-//            article.authorUrl = authorUrl
             articles.add(article)
         }
 
@@ -574,7 +578,7 @@ class ArticleParsingServiceBase {
     }
 
     fun parseArticleForLang(urlRelative: String, lang: Lang) {
-        saveArticle(lang, urlRelative)
+        saveArticle(ArticleForLang(urlRelative = urlRelative, langId = lang.id), lang)
     }
 
     fun getArticleFromApi(url: String, lang: Lang): ArticleForLang? {
@@ -661,6 +665,34 @@ class ArticleParsingServiceBase {
         //do not insert in Tag, as we'll do it manually later. Maybe...
     }
 
+    private fun manageArticleType(
+            articleTypeEnum: ScpReaderConstants.ArticleTypeEnum,
+            articleForLangInDb: ArticleForLang
+    ) {
+        val articleType = articleTypeService.getByEnumValue(articleTypeEnum)
+        //create article connection to article_type
+        //or check if types not equal and update
+        val articleToArticleTypeInDb = articleAndArticleTypeService.getByArticleId(articleForLangInDb.articleId!!)
+        if (articleToArticleTypeInDb == null) {
+            articleAndArticleTypeService.save(
+                    ArticlesAndArticleTypes(
+                            articleId = articleForLangInDb.articleId!!,
+                            articleTypeId = articleType.id!!
+                    )
+            )
+        } else if (articleToArticleTypeInDb.articleTypeId != articleType.id) {
+            println("""
+                    |Article types not equal!
+                    | Article id: ${articleForLangInDb.articleId}, 
+                    | ArticleForLangId: ${articleForLangInDb.id},
+                    | Saved typeId: ${articleToArticleTypeInDb.articleTypeId},
+                    | New typeId: ${articleType.id}
+                    """.trimMargin()
+            )
+            articleAndArticleTypeService.save(articleToArticleTypeInDb.apply { articleTypeId = articleType.id!! })
+        }
+    }
+
     fun getAndSaveInnerArticles(
             lang: Lang,
             articleDownloaded: ArticleForLang,
@@ -676,7 +708,8 @@ class ArticleParsingServiceBase {
         for (innerUrl in innerArticlesUrls) {
             println("save inner article: $innerUrl")
             try {
-                val innerArticleDownloaded = saveArticle(lang, innerUrl) ?: continue
+                val articleForLang = ArticleForLang(urlRelative = innerUrl, langId = lang.id)
+                val innerArticleDownloaded = saveArticle(articleForLang, lang) ?: continue
 
                 getAndSaveInnerArticles(lang, innerArticleDownloaded, maxDepth, currentDepthLevel + 1)
             } catch (e: Exception) {
@@ -684,14 +717,14 @@ class ArticleParsingServiceBase {
             } catch (e: ScpParseException) {
                 println("error while save inner article: $e")
             }
-
         }
     }
 
-    fun getObjectTypeByImageUrl(imageURL: String): ScpReaderConstants.ObjectType {
-        val type: ScpReaderConstants.ObjectType
+    fun getObjectTypeByImageUrl(imageURL: String): ScpReaderConstants.ArticleTypeEnum {
+        val typeEnum: ScpReaderConstants.ArticleTypeEnum
 
         when (imageURL) {
+            "http://scp-ru.wdfiles.com/local--files/scp-list-5/na.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-4/na.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-3/na.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-2/na.png",
@@ -705,8 +738,9 @@ class ArticleParsingServiceBase {
             "http://scp-ru.wdfiles.com/local--files/scp-list-es/safe.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-pl/safe.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-de/safe1.png" ->
-                type = ScpReaderConstants.ObjectType.NEUTRAL_OR_NOT_ADDED
+                typeEnum = ScpReaderConstants.ArticleTypeEnum.NEUTRAL_OR_NOT_ADDED
 
+            "http://scp-ru.wdfiles.com/local--files/scp-list-5/safe.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-4/safe.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-3/safe.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-2/safe.png",
@@ -720,8 +754,9 @@ class ArticleParsingServiceBase {
             "http://scp-ru.wdfiles.com/local--files/scp-list-es/na.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-pl/na.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-de/na1.png" ->
-                type = ScpReaderConstants.ObjectType.SAFE
+                typeEnum = ScpReaderConstants.ArticleTypeEnum.SAFE
 
+            "http://scp-ru.wdfiles.com/local--files/scp-list-5/euclid.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-4/euclid.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-3/euclid.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-2/euclid.png",
@@ -735,8 +770,9 @@ class ArticleParsingServiceBase {
             "http://scp-ru.wdfiles.com/local--files/scp-list-es/euclid.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-pl/euclid.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-de/euclid1.png" ->
-                type = ScpReaderConstants.ObjectType.EUCLID
+                typeEnum = ScpReaderConstants.ArticleTypeEnum.EUCLID
 
+            "http://scp-ru.wdfiles.com/local--files/scp-list-5/keter.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-4/keter.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-3/keter.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-2/keter.png",
@@ -750,8 +786,9 @@ class ArticleParsingServiceBase {
             "http://scp-ru.wdfiles.com/local--files/scp-list-es/keter.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-pl/keter.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-de/keter1.png" ->
-                type = ScpReaderConstants.ObjectType.KETER
+                typeEnum = ScpReaderConstants.ArticleTypeEnum.KETER
 
+            "http://scp-ru.wdfiles.com/local--files/scp-list-5/thaumiel.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-4/thaumiel.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-3/thaumiel.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-2/thaumiel.png",
@@ -765,11 +802,11 @@ class ArticleParsingServiceBase {
             "http://scp-ru.wdfiles.com/local--files/scp-list-es/thaumiel.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-pl/thaumiel.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-de/thaumiel1.png" ->
-                type = ScpReaderConstants.ObjectType.THAUMIEL
+                typeEnum = ScpReaderConstants.ArticleTypeEnum.THAUMIEL
 
-            else -> type = ScpReaderConstants.ObjectType.NONE
+            else -> typeEnum = ScpReaderConstants.ArticleTypeEnum.NONE
         }
-        return type
+        return typeEnum
     }
 
     companion object {

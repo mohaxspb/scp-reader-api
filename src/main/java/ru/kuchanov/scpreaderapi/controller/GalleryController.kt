@@ -21,6 +21,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 
+@Deprecated("Remove it")
 @RestController
 @RequestMapping("/${ScpReaderConstants.Path.GALLERY}")
 class GalleryController {
@@ -37,6 +38,7 @@ class GalleryController {
     @Autowired
     lateinit var galleryTranslationService: GalleryTranslationService
 
+    @Deprecated("Remove it")
     @Scheduled(
             fixedDelay = ScpReaderConstants.GALLERY_UPDATE_FROM_VK_RATE_MILLIS,
             initialDelay = ScpReaderConstants.GALLERY_UPDATE_FROM_VK_RATE_MILLIS

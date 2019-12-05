@@ -4,6 +4,7 @@ import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.ResponseStatus
+import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.articles.tags.TagForLang
 import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInList
 import java.sql.Timestamp
@@ -71,7 +72,7 @@ data class ArticleForLang(
         @Column(name = "url_relative", columnDefinition = "TEXT")
         var urlRelative: String,
         @Column(columnDefinition = "TEXT")
-        var title: String?,
+        var title: String? = null,
         //new ones
         @Column(columnDefinition = "TEXT")
         var text: String? = null,
@@ -149,7 +150,7 @@ data class ArticleForLang(
         /**
          * see https://stackoverflow.com/a/13708470/3212712
          */
-        @ManyToMany()
+        @ManyToMany
         @JoinTable(
                 name = "articles_langs_to_articles_langs",
                 joinColumns = [
@@ -174,6 +175,12 @@ data class ArticleForLang(
 //                joinColumns={@JoinColumn(name="UserId")},
 //                inverseJoinColumns={@JoinColumn(name="ParentId")})
 //private Set<User> following = new HashSet<User>();
+
+        /**
+         * we have it here to be able to write it to DB while parse Objects for RU and PT.
+         */
+        @Transient
+        var articleTypeEnumEnumValue:ScpReaderConstants.ArticleTypeEnum? = null,
 
         //dates
         @field:CreationTimestamp

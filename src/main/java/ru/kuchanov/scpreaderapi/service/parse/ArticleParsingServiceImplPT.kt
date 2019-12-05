@@ -5,8 +5,11 @@ import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.parser.Tag
 import org.springframework.stereotype.Service
+import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
 
 @Service
@@ -114,15 +117,29 @@ class ArticleParsingServiceImplPT : ArticleParsingServiceBase() {
         val articles = mutableListOf<ArticleForLang>()
         for (arrayItem in arrayOfArticles) {
             val arrayItemAsDocument = Jsoup.parse(arrayItem)
-            //TODO type of object
-//            final String imageURL = doc.getElementsByTag("img").first().attr("src");
-            val url = arrayItemAsDocument.getElementsByTag("a").first().attr("href")
+
+            val url = arrayItemAsDocument
+                    .getElementsByTag("a")
+                    .first()
+                    .attr("href")
                     .replace(lang.siteBaseUrl, "")
             val title = arrayItemAsDocument.text()
+
+            //type of object
+            val imageURL = arrayItemAsDocument
+                    .getElementsByTag("img")
+                    .ifEmpty { null }
+                    ?.first()
+                    ?.attr("src")
+//            println("title: $title, imageURL: $imageURL, ${imageURL?.let{URLDecoder.decode(it, StandardCharsets.UTF_8)}}")
+
+            val type = imageURL?.let { getObjectTypeByImageUrl(URLDecoder.decode(it, StandardCharsets.UTF_8)) }
+
             val article = ArticleForLang(
                     langId = lang.id,
                     urlRelative = url,
-                    title = title
+                    title = title,
+                    articleTypeEnumEnumValue = type
             )
             articles.add(article)
         }
@@ -139,4 +156,44 @@ class ArticleParsingServiceImplPT : ArticleParsingServiceBase() {
 
         return super.getArticleFromApi(url, lang)
     }
+
+    override fun getObjectTypeByImageUrl(imageURL: String): ScpReaderConstants.ArticleTypeEnum =
+            when (imageURL) {
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-5/na.png",
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-4/na.png",
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-3/na.png",
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-2/na.png",
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series/na.png" ->
+                    ScpReaderConstants.ArticleTypeEnum.NEUTRAL_OR_NOT_ADDED
+
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-5/seguro.png",
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-4/seguro.png",
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-3/seguro.png",
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-2/seguro.png",
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series/seguro.png" ->
+                    ScpReaderConstants.ArticleTypeEnum.SAFE
+
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-5/euclídeo.png",
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-4/euclídeo.png",
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-3/euclídeo.png",
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-2/euclídeo.png",
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series/euclídeo.png" ->
+                    ScpReaderConstants.ArticleTypeEnum.EUCLID
+
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-5/keter.png",
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-4/keter.png",
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-3/keter.png",
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-2/keter.png",
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series/keter.png" ->
+                    ScpReaderConstants.ArticleTypeEnum.KETER
+
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-5/thaumiel.png",
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-4/thaumiel.png",
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-3/thaumiel.png",
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-2/thaumiel.png",
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series/thaumiel.png" ->
+                    ScpReaderConstants.ArticleTypeEnum.THAUMIEL
+
+                else -> ScpReaderConstants.ArticleTypeEnum.NONE
+            }
 }

@@ -15,17 +15,12 @@ import ru.kuchanov.scpreaderapi.service.users.LangService
 
 
 @RestController
-@RequestMapping("/${ScpReaderConstants.Path.ARTICLE}")
-class ArticleController {
-
-    @Autowired
-    private lateinit var articleParsingService: ArticleParsingServiceBase
-
-    @Autowired
-    private lateinit var articleForLangService: ArticleForLangService
-
-    @Autowired
-    private lateinit var langService: LangService
+@RequestMapping("/" + ScpReaderConstants.Path.ARTICLE)
+class ArticleController @Autowired constructor(
+        val articleParsingService: ArticleParsingServiceBase,
+        val articleForLangService: ArticleForLangService,
+        val langService: LangService
+) {
 
     @GetMapping("/{langEnum}/recent/all")
     fun updateRecentArticles(

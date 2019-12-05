@@ -2,10 +2,6 @@ package ru.kuchanov.scpreaderapi
 
 object ScpReaderConstants {
     /**
-     * 12 hours
-     */
-    const val BACK_UP_RATE_MILLIS = 1000L * 60 * 60 * 12
-    /**
      * 24 hours
      */
     const val GALLERY_UPDATE_FROM_VK_RATE_MILLIS = 1000L * 60 * 60 * 24
@@ -55,7 +51,7 @@ object ScpReaderConstants {
         }
     }
 
-    enum class ObjectType {
+    enum class ArticleTypeEnum {
         NEUTRAL_OR_NOT_ADDED,
         SAFE,
         EUCLID,
