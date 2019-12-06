@@ -12,7 +12,8 @@ values ('SCP Series I'),
        ('SCP Series II'),
        ('SCP Series III'),
        ('SCP Series IV'),
-       ('SCP Series V');
+       ('SCP Series V')
+ON CONFLICT DO NOTHING;
 
 create table if not exists article_category_titles_for_langs
 (
@@ -61,59 +62,60 @@ insert
 into article_category_titles_for_langs(article_category_id, lang_id, title, site_url)
 VALUES
 -- ru
-(SERIES_1.id, ruLang.id, 'Объекты I', '/scp-list'),
-(SERIES_2.id, ruLang.id, 'Объекты II', '/scp-list-2'),
-(SERIES_3.id, ruLang.id, 'Объекты III', '/scp-list-3'),
-(SERIES_4.id, ruLang.id, 'Объекты IV', '/scp-list-4'),
-(SERIES_5.id, ruLang.id, 'Объекты V', '/scp-list-5'),
+((select id from SERIES_1), (select id from ruLang), 'Объекты I', '/scp-list'),
+((select id from SERIES_2), (select id from ruLang), 'Объекты II', '/scp-list-2'),
+((select id from SERIES_3), (select id from ruLang), 'Объекты III', '/scp-list-3'),
+((select id from SERIES_4), (select id from ruLang), 'Объекты IV', '/scp-list-4'),
+((select id from SERIES_5), (select id from ruLang), 'Объекты V', '/scp-list-5'),
 -- en
-(SERIES_1.id, enLang.id, SERIES_1.default_title, '/scp-series'),
-(SERIES_2.id, enLang.id, SERIES_2.default_title, '/scp-series-2'),
-(SERIES_3.id, enLang.id, SERIES_3.default_title, '/scp-series-3'),
-(SERIES_4.id, enLang.id, SERIES_4.default_title, '/scp-series-4'),
-(SERIES_5.id, enLang.id, SERIES_5.default_title, '/scp-series-5'),
+((select id from SERIES_1), (select id from enLang), (select default_title from SERIES_1), '/scp-series'),
+((select id from SERIES_2), (select id from enLang), (select default_title from SERIES_2), '/scp-series-2'),
+((select id from SERIES_3), (select id from enLang), (select default_title from SERIES_3), '/scp-series-3'),
+((select id from SERIES_4), (select id from enLang), (select default_title from SERIES_4), '/scp-series-4'),
+((select id from SERIES_5), (select id from enLang), (select default_title from SERIES_5), '/scp-series-5'),
 -- pl
-(SERIES_1.id, plLang.id, 'Lista angielska 1', '/lista-eng'),
-(SERIES_2.id, plLang.id, 'Lista angielska 2', '/lista-eng-2'),
-(SERIES_3.id, plLang.id, 'Lista angielska 3', '/lista-eng-3'),
-(SERIES_4.id, plLang.id, 'Lista angielska 4', '/lista-eng-4'),
-(SERIES_5.id, plLang.id, 'Lista angielska 5', '/lista-eng-5'),
+((select id from SERIES_1), (select id from plLang), 'Lista angielska 1', '/lista-eng'),
+((select id from SERIES_2), (select id from plLang), 'Lista angielska 2', '/lista-eng-2'),
+((select id from SERIES_3), (select id from plLang), 'Lista angielska 3', '/lista-eng-3'),
+((select id from SERIES_4), (select id from plLang), 'Lista angielska 4', '/lista-eng-4'),
+((select id from SERIES_5), (select id from plLang), 'Lista angielska 5', '/lista-eng-5'),
 -- de
-(SERIES_1.id, deLang.id, 'SCP Serie 1', '/scp-series'),
-(SERIES_2.id, deLang.id, 'SCP Serie 2', '/scp-series-2'),
-(SERIES_3.id, deLang.id, 'SCP Serie 3', '/scp-series-3'),
-(SERIES_4.id, deLang.id, 'SCP Serie 4', '/scp-series-4'),
-(SERIES_5.id, deLang.id, 'SCP Serie 5', '/scp-series-5'),
+((select id from SERIES_1), (select id from deLang), 'SCP Serie 1', '/scp-series'),
+((select id from SERIES_2), (select id from deLang), 'SCP Serie 2', '/scp-series-2'),
+((select id from SERIES_3), (select id from deLang), 'SCP Serie 3', '/scp-series-3'),
+((select id from SERIES_4), (select id from deLang), 'SCP Serie 4', '/scp-series-4'),
+((select id from SERIES_5), (select id from deLang), 'SCP Serie 5', '/scp-series-5'),
 -- fr
-(SERIES_1.id, frLang.id, 'Liste de 001 à 999', '/scp-series'),
-(SERIES_2.id, frLang.id, 'Liste de 1000 à 1999', '/scp-series-2'),
-(SERIES_3.id, frLang.id, 'Liste de 2000 à 2999', '/scp-series-3'),
-(SERIES_4.id, frLang.id, 'Liste de 3000 à 3999', '/scp-series-4'),
-(SERIES_5.id, frLang.id, 'Liste de 4000 à 4999', '/scp-series-5'),
+((select id from SERIES_1), (select id from frLang), 'Liste de 001 à 999', '/scp-series'),
+((select id from SERIES_2), (select id from frLang), 'Liste de 1000 à 1999', '/scp-series-2'),
+((select id from SERIES_3), (select id from frLang), 'Liste de 2000 à 2999', '/scp-series-3'),
+((select id from SERIES_4), (select id from frLang), 'Liste de 3000 à 3999', '/scp-series-4'),
+((select id from SERIES_5), (select id from frLang), 'Liste de 4000 à 4999', '/scp-series-5'),
 -- it
-(SERIES_1.id, itLang.id, 'Serie SCP I', '/scp-series'),
-(SERIES_2.id, itLang.id, 'Serie SCP II', '/scp-series-2'),
-(SERIES_3.id, itLang.id, 'Serie SCP III', '/scp-series-3'),
-(SERIES_4.id, itLang.id, 'Serie SCP IV', '/scp-series-4'),
-(SERIES_5.id, itLang.id, 'Serie SCP V', '/scp-series-5'),
+((select id from SERIES_1), (select id from itLang), 'Serie SCP I', '/scp-series'),
+((select id from SERIES_2), (select id from itLang), 'Serie SCP II', '/scp-series-2'),
+((select id from SERIES_3), (select id from itLang), 'Serie SCP III', '/scp-series-3'),
+((select id from SERIES_4), (select id from itLang), 'Serie SCP IV', '/scp-series-4'),
+((select id from SERIES_5), (select id from itLang), 'Serie SCP V', '/scp-series-5'),
 -- es
-(SERIES_1.id, esLang.id, 'Serie SCP I', '/scp-series'),
-(SERIES_2.id, esLang.id, 'Serie SCP II', '/scp-series-2'),
-(SERIES_3.id, esLang.id, 'Serie SCP III', '/scp-series-3'),
-(SERIES_4.id, esLang.id, 'Serie SCP IV', '/scp-series-4'),
-(SERIES_5.id, esLang.id, 'Serie SCP V', '/scp-series-5'),
+((select id from SERIES_1), (select id from esLang), 'Serie SCP I', '/scp-series'),
+((select id from SERIES_2), (select id from esLang), 'Serie SCP II', '/scp-series-2'),
+((select id from SERIES_3), (select id from esLang), 'Serie SCP III', '/scp-series-3'),
+((select id from SERIES_4), (select id from esLang), 'Serie SCP IV', '/scp-series-4'),
+((select id from SERIES_5), (select id from esLang), 'Serie SCP V', '/scp-series-5'),
 -- pt
-(SERIES_1.id, ptLang.id, 'SCP Série 1', '/scp-series'),
-(SERIES_2.id, ptLang.id, 'SCP Série 2', '/scp-series-2'),
-(SERIES_3.id, ptLang.id, 'SCP Série 3', '/scp-series-3'),
-(SERIES_4.id, ptLang.id, 'SCP Série 4', '/scp-series-4'),
-(SERIES_5.id, ptLang.id, 'SCP Série 5', '/scp-series-5'),
+((select id from SERIES_1), (select id from ptLang), 'SCP Série 1', '/scp-series'),
+((select id from SERIES_2), (select id from ptLang), 'SCP Série 2', '/scp-series-2'),
+((select id from SERIES_3), (select id from ptLang), 'SCP Série 3', '/scp-series-3'),
+((select id from SERIES_4), (select id from ptLang), 'SCP Série 4', '/scp-series-4'),
+((select id from SERIES_5), (select id from ptLang), 'SCP Série 5', '/scp-series-5'),
 -- cn
-(SERIES_1.id, cnLang.id, 'SCP系列 1', '/scp-series'),
-(SERIES_2.id, cnLang.id, 'SCP系列 2', '/scp-series-2'),
-(SERIES_3.id, cnLang.id, 'SCP系列 3', '/scp-series-3'),
-(SERIES_4.id, cnLang.id, 'SCP系列 4', '/scp-series-4'),
-(SERIES_5.id, cnLang.id, 'SCP系列 5', '/scp-series-5');
+((select id from SERIES_1), (select id from cnLang), 'SCP系列 1', '/scp-series'),
+((select id from SERIES_2), (select id from cnLang), 'SCP系列 2', '/scp-series-2'),
+((select id from SERIES_3), (select id from cnLang), 'SCP系列 3', '/scp-series-3'),
+((select id from SERIES_4), (select id from cnLang), 'SCP系列 4', '/scp-series-4'),
+((select id from SERIES_5), (select id from cnLang), 'SCP系列 5', '/scp-series-5')
+ON CONFLICT DO NOTHING;
 
 create table if not exists article_categories__to__articles
 (
