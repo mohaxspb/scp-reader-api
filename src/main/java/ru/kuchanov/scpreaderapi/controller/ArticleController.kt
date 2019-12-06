@@ -27,10 +27,13 @@ class ArticleController @Autowired constructor(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
             @RequestParam(value = "maxPageCount") maxPageCount: Int?,
             @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
+            @RequestParam(value = "innerArticlesDepth") innerArticlesDepth: Int?,
             @AuthenticationPrincipal user: User?
     ): ResponseEntity<*> {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
-        articleParsingService.getParsingRealizationForLang(lang).parseMostRecentArticlesForLang(lang, maxPageCount, processOnlyCount)
+        articleParsingService
+                .getParsingRealizationForLang(lang)
+                .parseMostRecentArticlesForLang(lang, maxPageCount, processOnlyCount, innerArticlesDepth)
 
         return ResponseEntity(
                 object {
@@ -46,10 +49,13 @@ class ArticleController @Autowired constructor(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
             @RequestParam(value = "maxPageCount") maxPageCount: Int?,
             @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
+            @RequestParam(value = "innerArticlesDepth") innerArticlesDepth: Int?,
             @AuthenticationPrincipal user: User?
     ): ResponseEntity<*> {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
-        articleParsingService.getParsingRealizationForLang(lang).parseObjectsArticlesForLang(lang, maxPageCount, processOnlyCount)
+        articleParsingService
+                .getParsingRealizationForLang(lang)
+                .parseObjectsArticlesForLang(lang, maxPageCount, processOnlyCount, innerArticlesDepth)
 
         return ResponseEntity(
                 object {

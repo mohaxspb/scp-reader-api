@@ -112,7 +112,8 @@ class ArticleParsingServiceBase {
     fun parseMostRecentArticlesForLang(
             lang: Lang,
             maxPageCount: Int? = null,
-            processOnlyCount: Int? = null
+            processOnlyCount: Int? = null,
+            innerArticlesDepth: Int? = null
     ) {
         getMostRecentArticlesPageCountForLang(lang)
                 .flatMapObservable { recentArticlesPagesCount ->
@@ -129,7 +130,7 @@ class ArticleParsingServiceBase {
                         articlesToDownload.take(processOnlyCount)
                     } ?: articlesToDownload
                 }
-                .flatMap { downloadAndSaveArticles(it, lang, DEFAULT_INNER_ARTICLES_DEPTH) }
+                .flatMap { downloadAndSaveArticles(it, lang, innerArticlesDepth ?: DEFAULT_INNER_ARTICLES_DEPTH) }
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
                 .subscribeBy(
@@ -210,10 +211,14 @@ class ArticleParsingServiceBase {
     fun parseObjectsArticlesForLang(
             lang: Lang,
             totalPageCount: Int? = null,
-            processOnlyCount: Int? = null
+            processOnlyCount: Int? = null,
+            innerArticlesDepth: Int? = null
     ) {
         Flowable.fromIterable(getObjectArticlesUrls())
-                .flatMapSingle { url -> getObjectsArticlesForLang(lang, url) }
+                .flatMapSingle { objectsUrl ->
+                    getObjectsArticlesForLang(lang, objectsUrl)
+                            .doOnSuccess {}
+                }
                 // todo save to categories
                 .toList()
                 .map { it.flatten() }
@@ -223,7 +228,7 @@ class ArticleParsingServiceBase {
                         articlesToDownload.take(processOnlyCount)
                     } ?: articlesToDownload
                 }
-                .flatMap { downloadAndSaveArticles(it, lang, DEFAULT_INNER_ARTICLES_DEPTH) }
+                .flatMap { downloadAndSaveArticles(it, lang, innerArticlesDepth ?: DEFAULT_INNER_ARTICLES_DEPTH) }
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
                 .subscribeBy(
