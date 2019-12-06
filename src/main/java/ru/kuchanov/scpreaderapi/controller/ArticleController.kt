@@ -112,10 +112,13 @@ class ArticleController @Autowired constructor(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
             @RequestParam(value = "totalPageCount") totalPageCount: Int?,
             @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
+            @RequestParam(value = "innerArticlesDepth") innerArticlesDepth: Int?,
             @AuthenticationPrincipal user: User?
     ): ResponseEntity<*> {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
-        articleParsingService.getParsingRealizationForLang(lang).parseMostRatedArticlesForLang(lang, totalPageCount, processOnlyCount)
+        articleParsingService
+                .getParsingRealizationForLang(lang)
+                .parseMostRatedArticlesForLang(lang, totalPageCount, processOnlyCount, innerArticlesDepth)
 
         return ResponseEntity(
                 object {

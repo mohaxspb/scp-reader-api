@@ -152,7 +152,8 @@ class ArticleParsingServiceBase {
     fun parseMostRatedArticlesForLang(
             lang: Lang,
             totalPageCount: Int? = null,
-            processOnlyCount: Int? = null
+            processOnlyCount: Int? = null,
+            innerArticlesDepth: Int? = null
     ) {
         val subject = BehaviorProcessor.createDefault(1)
 
@@ -180,7 +181,13 @@ class ArticleParsingServiceBase {
                         articlesToDownload.take(processOnlyCount)
                     } ?: articlesToDownload
                 }
-                .flatMap { downloadAndSaveArticles(it, lang, DEFAULT_INNER_ARTICLES_DEPTH) }
+                .flatMap {
+                    downloadAndSaveArticles(
+                            it,
+                            lang,
+                            innerArticlesDepth ?: DEFAULT_INNER_ARTICLES_DEPTH
+                    )
+                }
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
                 .subscribeBy(
@@ -207,6 +214,7 @@ class ArticleParsingServiceBase {
     ) {
         Flowable.fromIterable(getObjectArticlesUrls())
                 .flatMapSingle { url -> getObjectsArticlesForLang(lang, url) }
+                // todo save to categories
                 .toList()
                 .map { it.flatten() }
                 //test loading and save with less count of articles
@@ -297,11 +305,10 @@ class ArticleParsingServiceBase {
     fun getRatedArticlesForLang(lang: Lang, page: Int): Single<List<ArticleForLang>> {
         return Single.create { subscriber: SingleEmitter<List<ArticleForLang>> ->
 
-            val request: Request = Request.Builder()
+            val request = Request.Builder()
                     .url(lang.siteBaseUrl + getRatedArticlesUrl() + page)
                     .build()
-            val responseBody: String
-            responseBody = try {
+            val responseBody = try {
                 val response: Response = okHttpClient.newCall(request).execute()
                 val body = response.body()
                 if (body != null) {
@@ -316,7 +323,7 @@ class ArticleParsingServiceBase {
             }
             try {
                 val doc = Jsoup.parse(responseBody)
-                val articles: List<ArticleForLang> = parseForRatedArticles(lang, doc)
+                val articles = parseForRatedArticles(lang, doc)
                 subscriber.onSuccess(articles)
             } catch (e: Exception) {
                 println("error while get arts list")
