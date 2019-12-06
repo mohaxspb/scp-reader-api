@@ -113,8 +113,7 @@ VALUES
 (SERIES_2.id, cnLang.id, 'SCP系列 2', '/scp-series-2'),
 (SERIES_3.id, cnLang.id, 'SCP系列 3', '/scp-series-3'),
 (SERIES_4.id, cnLang.id, 'SCP系列 4', '/scp-series-4'),
-(SERIES_5.id, cnLang.id, 'SCP系列 5', '/scp-series-5')
-;
+(SERIES_5.id, cnLang.id, 'SCP系列 5', '/scp-series-5');
 
 create table if not exists article_categories__to__articles
 (
