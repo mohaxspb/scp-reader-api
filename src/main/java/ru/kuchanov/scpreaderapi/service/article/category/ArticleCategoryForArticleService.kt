@@ -1,11 +1,11 @@
 package ru.kuchanov.scpreaderapi.service.article.category
 
-import ru.kuchanov.scpreaderapi.bean.articles.category.ArticleCategoryForArticle
+import ru.kuchanov.scpreaderapi.bean.articles.category.ArticleCategoryForLangToArticleForLang
 
 
 interface ArticleCategoryForArticleService {
-    fun findAllByArticleCategoryId(articleCategoryId: Long): List<ArticleCategoryForArticle>
+    fun findAllByArticleCategoryToLangId(articleCategoryToLangId: Long): List<ArticleCategoryForLangToArticleForLang>
 
-    fun save(entity: ArticleCategoryForArticle): ArticleCategoryForArticle
-    fun save(entities: List<ArticleCategoryForArticle>): List<ArticleCategoryForArticle>
+    fun save(entity: ArticleCategoryForLangToArticleForLang): ArticleCategoryForLangToArticleForLang
+    fun save(entities: List<ArticleCategoryForLangToArticleForLang>): List<ArticleCategoryForLangToArticleForLang>
 }

@@ -61,6 +61,9 @@ class ArticleForLangServiceImpl : ArticleForLangService {
                 }
             }
 
+    override fun findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId: Long): List<ArticleForLang> =
+            articlesForLangRepository.findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId)
+
     override fun getOneByLangAndArticleId(articleId: Long, langId: String) =
             articlesForLangRepository.getOneByArticleIdAndLangId(articleId, langId)
 }

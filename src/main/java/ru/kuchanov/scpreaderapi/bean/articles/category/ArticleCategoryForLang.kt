@@ -6,7 +6,7 @@ import java.sql.Timestamp
 import javax.persistence.*
 
 @Entity
-@Table(name = "article_category_titles_for_langs")
+@Table(name = "article_categories__to__langs")
 data class ArticleCategoryForLang(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)

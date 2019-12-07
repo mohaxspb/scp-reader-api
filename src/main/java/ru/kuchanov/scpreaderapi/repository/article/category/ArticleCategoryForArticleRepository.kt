@@ -1,9 +1,9 @@
 package ru.kuchanov.scpreaderapi.repository.article.category
 
 import org.springframework.data.jpa.repository.JpaRepository
-import ru.kuchanov.scpreaderapi.bean.articles.category.ArticleCategoryForArticle
+import ru.kuchanov.scpreaderapi.bean.articles.category.ArticleCategoryForLangToArticleForLang
 
-interface ArticleCategoryForArticleRepository : JpaRepository<ArticleCategoryForArticle, Long> {
+interface ArticleCategoryForArticleRepository : JpaRepository<ArticleCategoryForLangToArticleForLang, Long> {
 
-    fun findAllByArticleCategoryId(articleCategoryId: Long): List<ArticleCategoryForArticle>
+    fun findAllByArticleCategoryToLangId(articleCategoryId: Long): List<ArticleCategoryForLangToArticleForLang>
 }
