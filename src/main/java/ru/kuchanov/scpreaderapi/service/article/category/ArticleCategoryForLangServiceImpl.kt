@@ -12,4 +12,7 @@ class ArticleCategoryForLangServiceImpl @Autowired constructor(
 
     override fun findByLangIdAndArticleCategoryId(langId: String, articleCategoryId: Long): ArticleCategoryForLang? =
             repository.findByLangIdAndArticleCategoryId(langId, articleCategoryId)
+
+    override fun findByLangIdAndSiteUrl(langId: String, siteUrl: String): ArticleCategoryForLang? =
+            repository.findByLangIdAndSiteUrl(langId, siteUrl)
 }

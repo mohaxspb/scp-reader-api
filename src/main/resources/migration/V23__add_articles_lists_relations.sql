@@ -7,6 +7,12 @@ create table if not exists article_categories
     PRIMARY KEY (id)
 );
 
+alter table article_categories
+    drop constraint if exists default_title_unique;
+
+alter table article_categories
+    add constraint default_title_unique unique (default_title);
+
 insert into article_categories(default_title)
 values ('SCP Series I'),
        ('SCP Series II'),
@@ -40,6 +46,11 @@ alter table article_category_titles_for_langs
     add constraint fk_lang_id__to__langs
         foreign key (lang_id)
             REFERENCES langs (id);
+
+alter table article_category_titles_for_langs
+    drop constraint if exists category_to_lang_unique;
+alter table article_category_titles_for_langs
+    add constraint category_to_lang_unique unique (article_category_id, lang_id);
 
 with
     -- categories

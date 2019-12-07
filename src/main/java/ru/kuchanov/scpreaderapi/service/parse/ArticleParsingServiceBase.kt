@@ -26,6 +26,7 @@ import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.articles.Article
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLangToArticleForLang
+import ru.kuchanov.scpreaderapi.bean.articles.category.ArticleCategoryForLangToArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.types.ArticlesAndArticleTypes
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 import ru.kuchanov.scpreaderapi.configuration.NetworkConfiguration
@@ -33,6 +34,8 @@ import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangToArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.ArticleService
 import ru.kuchanov.scpreaderapi.service.article.ParseHtmlService
+import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryForArticleService
+import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryForLangService
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForLangService
 import ru.kuchanov.scpreaderapi.service.article.type.ArticleAndArticleTypeService
@@ -77,6 +80,12 @@ class ArticleParsingServiceBase {
 
     @Autowired
     private lateinit var articleAndArticleTypeService: ArticleAndArticleTypeService
+
+    @Autowired
+    private lateinit var categoryToArticleService: ArticleCategoryForArticleService
+
+    @Autowired
+    private lateinit var categoryToLangService: ArticleCategoryForLangService
 
     fun getParsingRealizationForLang(lang: Lang): ArticleParsingServiceBase =
             when (lang.langCode) {
@@ -217,18 +226,49 @@ class ArticleParsingServiceBase {
         Flowable.fromIterable(getObjectArticlesUrls())
                 .flatMapSingle { objectsUrl ->
                     getObjectsArticlesForLang(lang, objectsUrl)
-                            .doOnSuccess {}
+                            //test loading and save with less count of articles
+                            .map { articlesToDownload ->
+                                processOnlyCount?.let {
+                                    articlesToDownload.take(processOnlyCount)
+                                } ?: articlesToDownload
+                            }
+                            .flatMap { articlesToSave ->
+                                downloadAndSaveArticles(
+                                        articlesToSave,
+                                        lang,
+                                        innerArticlesDepth ?: DEFAULT_INNER_ARTICLES_DEPTH
+                                )
+                            }
+                            .doOnSuccess { articlesForLangInDb ->
+                                // 1. get articleCategory by lang and objectUrl
+                                // 2. delete articleToCategory relation for lang
+                                // 3. save articleToCategory relation with order
+
+                                val categoryToLang =
+                                        categoryToLangService.findByLangIdAndSiteUrl(lang.id, objectsUrl)
+                                println("categoryToLang: $categoryToLang")
+                                if (categoryToLang == null) {
+                                    return@doOnSuccess
+                                }
+                                var order = 0
+                                val articlesForCategory = articlesForLangInDb
+                                        .filterNotNull()
+                                        .map {
+                                            ArticleCategoryForLangToArticleForLang(
+                                                    articleCategoryToLangId = categoryToLang.id!!,
+                                                    articleForLangId = it.id!!,
+                                                    orderInCategory = order++
+                                            )
+                                        }
+
+                                categoryToArticleService.updateCategoryForLangToArticleForLang(
+                                        categoryToLang.id!!,
+                                        articlesForCategory
+                                )
+                            }
                 }
-                // todo save to categories
                 .toList()
                 .map { it.flatten() }
-                //test loading and save with less count of articles
-                .map { articlesToDownload ->
-                    processOnlyCount?.let {
-                        articlesToDownload.take(processOnlyCount)
-                    } ?: articlesToDownload
-                }
-                .flatMap { downloadAndSaveArticles(it, lang, innerArticlesDepth ?: DEFAULT_INNER_ARTICLES_DEPTH) }
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
                 .subscribeBy(

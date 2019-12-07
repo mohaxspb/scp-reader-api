@@ -2,8 +2,14 @@
 ALTER TABLE IF EXISTS article_categories__to__articles
     RENAME TO article_categories_to_lang__to__articles_to_lang;
 
+ALTER SEQUENCE if exists article_categories__to__articles_id_seq RENAME TO
+    article_categories_to_lang__to__articles_to_lang_id_seq;
+
 ALTER TABLE IF EXISTS article_category_titles_for_langs
     RENAME TO article_categories__to__langs;
+
+ALTER SEQUENCE if exists article_category_titles_for_langs_id_seq RENAME TO
+    article_categories__to__langs_id_seq;
 
 -- change article_id to article_to_lang_id
 ALTER TABLE if exists article_categories_to_lang__to__articles_to_lang
