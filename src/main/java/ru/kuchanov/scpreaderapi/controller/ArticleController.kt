@@ -6,10 +6,13 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
+import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.LangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
+import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryForLangService
+import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryService
 import ru.kuchanov.scpreaderapi.service.parse.ArticleParsingServiceBase
 import ru.kuchanov.scpreaderapi.service.users.LangService
 
@@ -19,7 +22,9 @@ import ru.kuchanov.scpreaderapi.service.users.LangService
 class ArticleController @Autowired constructor(
         val articleParsingService: ArticleParsingServiceBase,
         val articleForLangService: ArticleForLangService,
-        val langService: LangService
+        val langService: LangService,
+        val categoryForLangService: ArticleCategoryForLangService,
+        val categoryService: ArticleCategoryService
 ) {
 
     @GetMapping("/{langEnum}/recent/all")
@@ -133,5 +138,24 @@ class ArticleController @Autowired constructor(
                 },
                 HttpStatus.ACCEPTED
         )
+    }
+
+    //fixme test
+    @GetMapping("/{langEnum}/category/{categoryId}/")
+    fun getArticlesByCategoryForLang(
+            @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
+            @PathVariable(value = "categoryId") categoryId: Long
+    ): List<ArticleForLang> {
+        val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
+        val category = categoryService.getById(categoryId)
+                ?: throw NullPointerException("Category is null for id: $categoryId") //fixme create error
+        println("category: $category")
+        val articleCategoryToLang = categoryForLangService.findByLangIdAndArticleCategoryId(
+                langId = lang.id,
+                articleCategoryId = category.id!!
+        )
+                ?: throw NullPointerException("Category for lang not found for id: ${category.id} and lang: ${lang.id}") //fixme create error
+        println("articleCategoryToLang: $articleCategoryToLang")
+        return articleForLangService.findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLang.id!!)
     }
 }

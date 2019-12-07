@@ -36,7 +36,9 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
 
     @Query(
             value = """
-                select * from articles_langs where id in 
+                select * from articles_langs art
+                join article_categories_to_lang__to__articles_to_lang art_cat on art.id = art_cat.article_to_lang_id
+                where art.id in 
                     (select article_to_lang_id from article_categories_to_lang__to__articles_to_lang 
                         where article_category_to_lang_id = :articleCategoryToLangId order by order_in_category)
             """,
