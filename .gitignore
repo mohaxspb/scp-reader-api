@@ -13,3 +13,4 @@
 /banners/*
 /.gradle/
 /out/
+!/.idea/dictionaries/*
