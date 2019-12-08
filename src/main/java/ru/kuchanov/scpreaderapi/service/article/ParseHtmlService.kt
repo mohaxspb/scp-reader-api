@@ -32,10 +32,11 @@ class ParseHtmlService {
 
             var child = theOnlyChildDiv.children().first()
 
-            val children = ArrayList<Node>()
+            val children = mutableListOf<Node>()
             while (child != null) {
                 children.add(child)
                 //todo check casting
+                // fixme error in case for /scp-4000 on http://www.scp-wiki.net/scp-series-5
                 child = child.nextSibling() as Element?
             }
 

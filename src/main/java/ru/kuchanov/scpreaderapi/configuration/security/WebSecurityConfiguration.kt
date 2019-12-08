@@ -152,7 +152,10 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
                 "/${ScpReaderConstants.Path.ADS}/files/**",
                 "/${ScpReaderConstants.Path.ARTICLE}/**/recent/**",
                 "/${ScpReaderConstants.Path.ARTICLE}/**/rated/**",
-                "/${ScpReaderConstants.Path.ARTICLE}/**/object/**"
+                "/${ScpReaderConstants.Path.ARTICLE}/**/object/**",
+                "/${ScpReaderConstants.Path.ARTICLE}/**/category/**",
+                //todo remove. Allow only admin access on PROD
+                "/${ScpReaderConstants.Path.ARTICLE}/${ScpReaderConstants.Path.PARSE}/**"
         )
     }
 }

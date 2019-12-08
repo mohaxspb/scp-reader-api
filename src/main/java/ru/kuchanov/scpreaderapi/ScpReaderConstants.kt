@@ -26,6 +26,7 @@ object ScpReaderConstants {
         const val ADS_FILES = "files"
         const val USER = "user"
         const val ARTICLE = "article"
+        const val PARSE = "parse"
     }
 
     object FilesPaths {
