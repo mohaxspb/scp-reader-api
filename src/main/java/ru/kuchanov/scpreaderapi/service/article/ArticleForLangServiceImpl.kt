@@ -30,7 +30,7 @@ class ArticleForLangServiceImpl : ArticleForLangService {
             articlesForLangRepository.saveAll(articleForLang)
 
     override fun getArticleForLangByUrlRelativeAndLang(urlRelative: String, langId: String) =
-            articlesForLangRepository.getArticleForLangByUrlRelativeAndLangId(urlRelative, langId)
+            articlesForLangRepository.findByUrlRelativeAndLangId(urlRelative, langId)
 
     override fun getIdByUrlRelativeAndLangId(urlRelative: String, langId: String) =
             articlesForLangRepository.getIdByUrlRelativeAndLangId(urlRelative, langId)

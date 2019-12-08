@@ -7,10 +7,7 @@ import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInList
 
 interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
 
-    //todo we do not need query here
-    @Query("SELECT al FROM ArticleForLang al " +
-            "WHERE al.urlRelative = :urlRelative AND al.langId = :langId")
-    fun getArticleForLangByUrlRelativeAndLangId(urlRelative: String, langId: String): ArticleForLang?
+    fun findByUrlRelativeAndLangId(urlRelative: String, langId: String): ArticleForLang?
 
     @Query(
             """
