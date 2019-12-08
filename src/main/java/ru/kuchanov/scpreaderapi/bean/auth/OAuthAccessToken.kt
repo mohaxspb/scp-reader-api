@@ -10,31 +10,31 @@ import javax.persistence.*
 data class OAuthAccessToken(
         @Id
         val token_id: String,
-        val token:ByteArray,
-        val authentication_id:String,
-        val user_name:String,
-        val client_id:String,
-        val authentication:ByteArray,
-        val refresh_token:String,
+        val token: ByteArray,
+        val authentication_id: String,
+        val user_name: String,
+        val client_id: String,
+        val authentication: ByteArray,
+        val refresh_token: String,
         @field:CreationTimestamp
         val created: Timestamp,
         @field:UpdateTimestamp
         val updated: Timestamp
 ) {
-        override fun equals(other: Any?): Boolean {
-                if (this === other) return true
-                if (javaClass != other?.javaClass) return false
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
 
-                other as OAuthAccessToken
+        other as OAuthAccessToken
 
-                if (token_id != other.token_id) return false
+        if (token_id != other.token_id) return false
 
-                return true
-        }
+        return true
+    }
 
-        override fun hashCode(): Int {
-                return token_id.hashCode()
-        }
+    override fun hashCode(): Int {
+        return token_id.hashCode()
+    }
 }
 //create table oauth_access_token (
 //token_id VARCHAR(256),

@@ -9,9 +9,7 @@ import javax.persistence.*
 data class Article(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
-        val id: Long? = null,
-        @Column(name = "article_type_id")
-        val articleTypeId: Long? = null
+        val id: Long? = null
 )
 
 @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "No such article")

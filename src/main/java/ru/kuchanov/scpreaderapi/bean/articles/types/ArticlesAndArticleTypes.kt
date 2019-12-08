@@ -1,15 +1,13 @@
-package ru.kuchanov.scpreaderapi.bean.articles
+package ru.kuchanov.scpreaderapi.bean.articles.types
 
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
-import ru.kuchanov.scpreaderapi.utils.NoArgConstructor
-import java.io.Serializable
 import java.sql.Timestamp
 import javax.persistence.*
 
 @Entity
-@IdClass(KeyArticleAndArticleType::class)
-@Table(name = "articles_article_types",
+@Table(
+        name = "articles_article_types",
         indexes = [
             Index(
                     name = "index_articles_article_types_ids",
@@ -20,9 +18,10 @@ import javax.persistence.*
 )
 data class ArticlesAndArticleTypes(
         @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        val id: Long? = null,
         @Column(name = "article_id")
         var articleId: Long,
-        @Id
         @Column(name = "article_type_id")
         var articleTypeId: Long,
         @field:CreationTimestamp
@@ -30,9 +29,3 @@ data class ArticlesAndArticleTypes(
         @field:UpdateTimestamp
         val updated: Timestamp? = null
 )
-
-@NoArgConstructor
-data class KeyArticleAndArticleType(
-        val articleId: Long? = null,
-        val articleTypeId: Long? = null
-) : Serializable

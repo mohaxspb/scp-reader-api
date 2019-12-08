@@ -35,48 +35,67 @@ data class User(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long? = null,
+
         //spring security user details
-        @Column(name = "username", unique = true)
+        @Column(name = "username", columnDefinition = "TEXT", unique = true)
         var myUsername: String,
+
         @Convert(converter = EncryptionConverter::class)
-        @Column(name = "password")
+        @Column(name = "password", columnDefinition = "TEXT")
         var myPassword: String,
+
         val enabled: Boolean = true,
+
         @OneToMany(cascade = [CascadeType.ALL], mappedBy = "userId", fetch = FetchType.EAGER)
         var userAuthorities: Set<Authority>,
         //dates
         @field:CreationTimestamp
         val created: Timestamp? = null,
+
         @field:UpdateTimestamp
         val updated: Timestamp? = null,
         //firebase
-        @Column(name = "full_name")
+        @Column(name = "full_name", columnDefinition = "TEXT")
         var fullName: String? = null,
+
         @Column(name = "sign_in_reward_gained")
         var signInRewardGained: Boolean? = null,
+
         var score: Int? = null,
+
         //level
         @Column(name = "level_num")
         var levelNum: Int? = null,
+
         @Column(name = "score_to_next_level")
         var scoreToNextLevel: Int? = null,
+
         @Column(name = "cur_level_score")
         var curLevelScore: Int? = null,
+
         //social login fields
-        @Column(name = "facebook_id")
+        @Column(name = "facebook_id", columnDefinition = "TEXT")
         var facebookId: String? = null,
-        @Column(name = "google_id")
+
+        @Column(name = "google_id", columnDefinition = "TEXT")
         var googleId: String? = null,
-        @Column(name = "vk_id")
+
+        @Column(name = "vk_id", columnDefinition = "TEXT")
         var vkId: String? = null,
+
         //misc
-        @Column(name = "name_first")
+        @Column(name = "name_first", columnDefinition = "TEXT")
         var nameFirst: String? = null,
-        @Column(name = "name_second")
+
+        @Column(name = "name_second", columnDefinition = "TEXT")
         var nameSecond: String? = null,
-        @Column(name = "name_third")
+
+        @Column(name = "name_third", columnDefinition = "TEXT")
         var nameThird: String? = null,
+
+        @Column(columnDefinition = "TEXT")
         var avatar: String? = null,
+
         @Column(name = "main_lang_id")
         var mainLangId: String = ScpReaderConstants.Firebase.FirebaseInstance.EN.lang,
         @OneToMany(cascade = [CascadeType.ALL], mappedBy = "userId", fetch = FetchType.EAGER)

@@ -19,6 +19,7 @@ import ru.kuchanov.scpreaderapi.bean.articles.Article
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.FavoriteArticlesByLang
 import ru.kuchanov.scpreaderapi.bean.articles.FirebaseDataUpdateDate
+import ru.kuchanov.scpreaderapi.bean.articles.ReadArticlesByLang
 import ru.kuchanov.scpreaderapi.bean.auth.Authority
 import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
 import ru.kuchanov.scpreaderapi.bean.users.Lang
@@ -46,8 +47,7 @@ import javax.transaction.Transactional
 class FirebaseService {
 
     companion object {
-        //        const val QUERY_LIMIT = 100
-        const val QUERY_LIMIT = 1000
+        const val QUERY_LIMIT = 100
     }
 
     @Autowired
@@ -304,7 +304,7 @@ class FirebaseService {
             lang: Lang
     ) {
 //        println("manageFirebaseArticlesForUser: ${lang.id}/${user.username}")
-        articlesInFirebase.forEachIndexed { index, articleInFirebase ->
+        articlesInFirebase.forEachIndexed { _, articleInFirebase ->
             if (articleInFirebase.url == null) {
 //                println("manageFirebaseArticlesForUser: ${lang.id}/${user.username}")
 //                println("articleInFirebase: $index/$articleInFirebase")
@@ -321,7 +321,7 @@ class FirebaseService {
             //check if we do not have article-lang connection for given article
             try {
                 //todo check what the hell is going on here. We get 2 results here...
-                if (articleForLangService.getArticleForLang(articleInDb.id!!, lang.id).isEmpty()) {
+                if (articleForLangService.getOneByLangAndArticleId(articleInDb.id!!, lang.id) == null) {
                     articleForLangService.insert(
                             ArticleForLang(
                                     articleId = articleInDb.id!!,
@@ -396,7 +396,7 @@ class FirebaseService {
         )
 
         if (readArticleForLang == null) {
-            readArticleForLang = readArticleForLangService.insert(ru.kuchanov.scpreaderapi.bean.articles.ReadArticlesByLang(
+            readArticleForLang = readArticleForLangService.insert(ReadArticlesByLang(
                     userId = user.id,
                     articleId = articleInDb.id,
                     langId = lang.id,

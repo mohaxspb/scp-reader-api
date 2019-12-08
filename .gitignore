@@ -1,6 +1,9 @@
 /.idea/
 /build
 /src/main/resources/*.properties
+/src/main/resources/*.yml
+/src/main/resources/*.properties-backup
+/src/test/resources/*.yml
 /src/main/resources/migration/V3__import_initial_data.sql
 /logs
 !src/main/resources/firebase/keys/.gitkeep
@@ -8,5 +11,6 @@
 /*.sql
 /src/main/resources/googlePlay/googlePlayAndroidDeveloperServiceKey.json
 /banners/*
-!/.idea/dictionaries/mohax.xml
-!/.idea/dictionaries/
+/.gradle/
+/out/
+!/.idea/dictionaries/*

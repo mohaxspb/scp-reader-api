@@ -5,6 +5,7 @@ import com.google.api.services.androidpublisher.model.ProductPurchase
 import com.google.api.services.androidpublisher.model.SubscriptionPurchase
 
 enum class ValidationStatus {
+
     VALID, INVALID, GOOGLE_SERVER_ERROR;
 
     @JsonValue

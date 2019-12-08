@@ -1,10 +1,13 @@
 buildscript {
     ext.app_version = "1.1.3"
 
-    ext.kotlin_version = '1.3.31'
+    ext.kotlin_version = '1.3.61'
     ext.spring_boot_version = '2.1.5.RELEASE'
 
     ext['netty.version'] = '4.1.36.Final'
+
+    //fix tomcat deploy error
+    ext.jaxb_api_version = '2.3.0'
 
     repositories {
         mavenCentral()
@@ -22,8 +25,11 @@ buildscript {
 }
 
 plugins {
-//db migrations
+    //db migrations
     id "org.flywaydb.flyway" version "5.2.4"
+
+    //to fix CreateProcess error=206, Имя файла или его расширение имеет слишком большую длину
+    id "ua.eshepelyuk.ManifestClasspath" version "1.0.0"
 }
 
 group 'ru.kuchanov.scp'
@@ -35,6 +41,8 @@ apply plugin: 'kotlin'
 apply plugin: "kotlin-spring"
 //use entities with data classes
 apply plugin: "kotlin-jpa"
+//no arg
+apply plugin: "kotlin-noarg"
 
 //spring boot
 apply plugin: 'eclipse'
@@ -55,6 +63,8 @@ bootWar {
 //to be able to run with task args to define correct properties file
 //i.e. `bootRun -Dspring.profiles.active=dev`
 bootRun.systemProperties = System.properties as Map<String, ?>
+bootRun.main = 'ru.kuchanov.scpreaderapi.Application'
+
 
 repositories {
     mavenCentral()
@@ -81,6 +91,8 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-security"
     //oauth2
     implementation 'org.springframework.security.oauth:spring-security-oauth2:2.3.0.RELEASE'
+    //tests
+    implementation 'org.springframework.boot:spring-boot-starter-test'
     //spring END
 
     //postgresql
@@ -116,24 +128,27 @@ dependencies {
     implementation 'com.squareup.retrofit2:adapter-rxjava2:2.4.0'
 
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.6'
-    
-    //connection poll
-    compile 'com.zaxxer:HikariCP:3.3.1'
 
-    //tests
-    testCompile 'junit:junit:4.12'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-//    testCompile 'org.springframework:spring-test:4.3.2.RELEASE'
-    testCompile 'org.hamcrest:hamcrest-library:1.3'
-    testCompile 'com.jayway.jsonpath:json-path:2.2.0'
-    testCompile 'org.mockito:mockito-core:2.23.0'
-    //tests END
+    //connection poll
+    implementation 'com.zaxxer:HikariCP:3.3.1'
+
+    //jsoup
+    api 'org.jsoup:jsoup:1.11.3'
+
+    //testing
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.hamcrest:hamcrest-library:1.3'
+    testImplementation 'com.jayway.jsonpath:json-path:2.2.0'
+    testImplementation 'org.mockito:mockito-core:2.23.0'
+    //testing END
 
     //fix running on java9+
     //see https://stackoverflow.com/questions/43574426/how-to-resolve-java-lang-noclassdeffounderror-javax-xml-bind-jaxbexception-in-j
-    implementation 'javax.xml.bind:jaxb-api:2.2.11'
-    implementation 'com.sun.xml.bind:jaxb-core:2.2.11'
-    implementation 'com.sun.xml.bind:jaxb-impl:2.2.11'
+    implementation "com.sun.xml.bind:jaxb-core:$jaxb_api_version"
+    implementation "com.sun.xml.bind:jaxb-impl:$jaxb_api_version"
+    implementation 'javax.transaction:javax.transaction-api:1.2'
+    implementation "javax.xml.bind:jaxb-api:$jaxb_api_version"
+    implementation "org.glassfish.jaxb:jaxb-runtime:$jaxb_api_version"
     implementation 'javax.activation:activation:1.1.1'
 }
 

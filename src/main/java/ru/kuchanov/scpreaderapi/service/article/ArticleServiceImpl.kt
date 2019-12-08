@@ -8,22 +8,19 @@ import ru.kuchanov.scpreaderapi.repository.article.ArticlesRepository
 
 
 @Service
-class ArticleServiceImpl : ArticleService {
+class ArticleServiceImpl @Autowired constructor(var repository: ArticlesRepository) : ArticleService {
 
-    @Autowired
-    private lateinit var repository: ArticlesRepository
+    override fun getById(id: Long) =
+            repository.getOne(id) ?: throw ArticleNotFoundException()
 
-    override fun findAll() = repository.findAll().toList()
+    override fun insert(article: Article): Article =
+            repository.save(article)
 
-    override fun getById(id: Long) = repository.getOne(id) ?: throw ArticleNotFoundException()
+    override fun insert(articles: List<Article>): List<Article> =
+            repository.saveAll(articles)
 
-    override fun update(article: Article): Article = repository.save(article)
-
-    override fun insert(article: Article): Article = repository.save(article)
-
-    override fun insert(articles: List<Article>): List<Article> = repository.saveAll(articles)
-
-    override fun getArticleByUrlRelative(urlRelative: String) = repository.getArticleByUrlRelative(urlRelative)
+    override fun getArticleByUrlRelative(urlRelative: String) =
+            repository.getArticleByUrlRelative(urlRelative)
 
     override fun getArticleByUrlRelativeAndLang(urlRelative: String, langId: String) =
             repository.getOneByUrlRelativeUrlAndLang(urlRelative, langId)

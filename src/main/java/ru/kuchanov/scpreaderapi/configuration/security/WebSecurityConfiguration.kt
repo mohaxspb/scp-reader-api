@@ -142,13 +142,20 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
 
     override fun configure(web: WebSecurity) {
         web.ignoring().antMatchers(
+                "/image/**",
                 "/${ScpReaderConstants.Path.GALLERY}/files/**",
                 "/${ScpReaderConstants.Path.GALLERY}/all",
                 "/${ScpReaderConstants.Path.FIREBASE}/**/**/**",
                 "/${ScpReaderConstants.Path.AUTH}/**",
                 "/${ScpReaderConstants.Path.PURCHASE}/**",
                 "/${ScpReaderConstants.Path.ADS}/all",
-                "/${ScpReaderConstants.Path.ADS}/files/**"
+                "/${ScpReaderConstants.Path.ADS}/files/**",
+                "/${ScpReaderConstants.Path.ARTICLE}/**/recent/**",
+                "/${ScpReaderConstants.Path.ARTICLE}/**/rated/**",
+                "/${ScpReaderConstants.Path.ARTICLE}/**/object/**",
+                "/${ScpReaderConstants.Path.ARTICLE}/**/category/**",
+                //todo remove. Allow only admin access on PROD
+                "/${ScpReaderConstants.Path.ARTICLE}/${ScpReaderConstants.Path.PARSE}/**"
         )
     }
 }

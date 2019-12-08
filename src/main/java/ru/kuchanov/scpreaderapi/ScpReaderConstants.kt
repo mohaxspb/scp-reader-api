@@ -15,6 +15,8 @@ object ScpReaderConstants {
     const val DEFAULT_FULL_NAME = "N/A"
     const val DEFAULT_NEW_USER_SCORE = 50
 
+    const val NUM_OF_ARTICLES_RATED_PAGE = 20
+
     object Path {
         const val GALLERY = "gallery"
         const val FIREBASE = "firebase"
@@ -23,6 +25,8 @@ object ScpReaderConstants {
         const val ADS = "ads"
         const val ADS_FILES = "files"
         const val USER = "user"
+        const val ARTICLE = "article"
+        const val PARSE = "parse"
     }
 
     object FilesPaths {
@@ -46,5 +50,14 @@ object ScpReaderConstants {
             PT("pt"),
             CH("ch")
         }
+    }
+
+    enum class ArticleTypeEnum {
+        NEUTRAL_OR_NOT_ADDED,
+        SAFE,
+        EUCLID,
+        KETER,
+        THAUMIEL,
+        NONE
     }
 }
