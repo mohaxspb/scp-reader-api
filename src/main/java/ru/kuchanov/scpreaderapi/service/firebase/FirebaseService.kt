@@ -321,7 +321,7 @@ class FirebaseService {
             //check if we do not have article-lang connection for given article
             try {
                 //todo check what the hell is going on here. We get 2 results here...
-                if (articleForLangService.getOneByLangAndArticleId(articleInDb.id!!, lang.id).isEmpty()) {
+                if (articleForLangService.getOneByLangAndArticleId(articleInDb.id!!, lang.id) == null) {
                     articleForLangService.insert(
                             ArticleForLang(
                                     articleId = articleInDb.id!!,

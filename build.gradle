@@ -146,13 +146,10 @@ dependencies {
     //see https://stackoverflow.com/questions/43574426/how-to-resolve-java-lang-noclassdeffounderror-javax-xml-bind-jaxbexception-in-j
     implementation "com.sun.xml.bind:jaxb-core:$jaxb_api_version"
     implementation "com.sun.xml.bind:jaxb-impl:$jaxb_api_version"
-
-
     implementation 'javax.transaction:javax.transaction-api:1.2'
     implementation "javax.xml.bind:jaxb-api:$jaxb_api_version"
     implementation "org.glassfish.jaxb:jaxb-runtime:$jaxb_api_version"
-
-    implementation 'javax.activation:activation:1.2.0'
+    implementation 'javax.activation:activation:1.1.1'
 }
 
 compileKotlin {
