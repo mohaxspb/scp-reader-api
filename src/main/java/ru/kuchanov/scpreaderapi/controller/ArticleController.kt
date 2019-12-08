@@ -43,14 +43,6 @@ class ArticleController @Autowired constructor(
     ) =
             articleForLangService.getMostRecentArticlesForLangFull(langEnum.lang, offset, limit)
 
-    @GetMapping("{langEnum}/{id}")
-    fun showArticleForLangAndId(
-            @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
-            @PathVariable(value = "id") articleId: Long
-    ) =
-            articleForLangService.getOneByLangAndArticleId(articleId, langEnum.lang)
-                    ?: throw ArticleForLangNotFoundException()
-
     @GetMapping("/{langEnum}/category/{categoryId}/")
     fun getArticlesByCategoryForLang(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
@@ -66,4 +58,12 @@ class ArticleController @Autowired constructor(
                 ?: throw ArticleCategoryForLangNotFoundException()
         return articleForLangService.findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLang.id!!)
     }
+
+    @GetMapping("{langEnum}/{id}")
+    fun showArticleForLangAndId(
+            @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
+            @PathVariable(value = "id") articleId: Long
+    ) =
+            articleForLangService.getOneByLangAndArticleId(articleId, langEnum.lang)
+                    ?: throw ArticleForLangNotFoundException()
 }
