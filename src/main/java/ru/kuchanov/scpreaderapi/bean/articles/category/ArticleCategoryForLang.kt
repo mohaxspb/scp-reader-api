@@ -2,6 +2,8 @@ package ru.kuchanov.scpreaderapi.bean.articles.category
 
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
+import org.springframework.http.HttpStatus
+import org.springframework.web.bind.annotation.ResponseStatus
 import java.sql.Timestamp
 import javax.persistence.*
 
@@ -24,3 +26,9 @@ data class ArticleCategoryForLang(
         @field:UpdateTimestamp
         val updated: Timestamp? = null
 )
+
+
+@ResponseStatus(value = HttpStatus.NOT_FOUND)
+class ArticleCategoryForLangNotFoundException(
+        override val message: String? = "ArticleCategoryForLang not found in db!"
+) : RuntimeException(message)

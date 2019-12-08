@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLangNotFoundException
+import ru.kuchanov.scpreaderapi.bean.articles.category.ArticleCategoryForLangNotFoundException
+import ru.kuchanov.scpreaderapi.bean.articles.category.ArticleCategoryNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.LangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
@@ -140,7 +142,6 @@ class ArticleController @Autowired constructor(
         )
     }
 
-    //fixme test
     @GetMapping("/{langEnum}/category/{categoryId}/")
     fun getArticlesByCategoryForLang(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
@@ -148,14 +149,14 @@ class ArticleController @Autowired constructor(
     ): List<ArticleForLang> {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
         val category = categoryService.getById(categoryId)
-                ?: throw NullPointerException("Category is null for id: $categoryId") //fixme create error
-        println("category: $category")
+                ?: throw ArticleCategoryNotFoundException()
+//        println("category: $category")
         val articleCategoryToLang = categoryForLangService.findByLangIdAndArticleCategoryId(
                 langId = lang.id,
                 articleCategoryId = category.id!!
         )
-                ?: throw NullPointerException("Category for lang not found for id: ${category.id} and lang: ${lang.id}") //fixme create error
-        println("articleCategoryToLang: $articleCategoryToLang")
+                ?: throw ArticleCategoryForLangNotFoundException()
+//        println("articleCategoryToLang: $articleCategoryToLang")
         return articleForLangService.findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLang.id!!)
     }
 }
