@@ -1,4 +1,8 @@
-###Connection pool issue
+### Properties and securing data
+
+To ignore changes in file execute: `git update-index --assume-unchanged src/test/resources/application.yml`
+
+### Connection pool issue
 
 try to add this to application.properties
 
