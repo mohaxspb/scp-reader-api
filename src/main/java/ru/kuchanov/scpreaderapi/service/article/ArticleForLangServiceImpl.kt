@@ -9,19 +9,11 @@ import ru.kuchanov.scpreaderapi.repository.article.tags.TagForLangRepository
 
 
 @Service
-class ArticleForLangServiceImpl : ArticleForLangService {
-
-    @Autowired
-    private lateinit var articlesForLangRepository: ArticlesForLangRepository
-
-    @Autowired
-    private lateinit var imagesRepository: ArticlesImagesRepository
-
-    @Autowired
-    private lateinit var tagsForLangRepository: TagForLangRepository
-
-    override fun findAll() =
-            articlesForLangRepository.findAll().toList()
+class ArticleForLangServiceImpl @Autowired constructor(
+        val articlesForLangRepository: ArticlesForLangRepository,
+        val imagesRepository: ArticlesImagesRepository,
+        val tagsForLangRepository: TagForLangRepository
+) : ArticleForLangService {
 
     override fun insert(articleForLang: ArticleForLang): ArticleForLang =
             articlesForLangRepository.save(articleForLang)

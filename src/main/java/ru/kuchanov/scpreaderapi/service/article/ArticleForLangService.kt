@@ -12,8 +12,6 @@ interface ArticleForLangService {
 
     fun getIdByUrlRelativeAndLangId(urlRelative: String, langId: String): Long?
 
-    fun findAll(): List<ArticleForLang>
-
     @Transactional
     fun insert(articleForLang: ArticleForLang): ArticleForLang
 
