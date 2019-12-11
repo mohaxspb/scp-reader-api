@@ -37,6 +37,8 @@ import javax.persistence.*
         ]
 )
 
+//fixme move to repository
+//todo use projection interface as for category articles
 @NamedNativeQueries(
         value = [
             NamedNativeQuery(
@@ -180,7 +182,7 @@ data class ArticleForLang(
          * we have it here to be able to write it to DB while parse Objects for RU and PT.
          */
         @Transient
-        var articleTypeEnumEnumValue:ScpReaderConstants.ArticleTypeEnum? = null,
+        var articleTypeEnumEnumValue: ScpReaderConstants.ArticleTypeEnum? = null,
 
         //dates
         @field:CreationTimestamp

@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInList
+import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInListProjection
 
 interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
 
@@ -33,7 +34,14 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
 
     @Query(
             value = """
-                select * from articles_langs art
+                select 
+                art.id, 
+                art.lang_id as langId,
+                art.article_id as articleId,
+                art.url_relative as urlRelative,
+                art.title,
+                art.rating 
+                from articles_langs art
                 join article_categories_to_lang__to__articles_to_lang art_cat on art.id = art_cat.article_to_lang_id
                 where art.id in 
                     (select article_to_lang_id from article_categories_to_lang__to__articles_to_lang 
@@ -41,7 +49,7 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
             """,
             nativeQuery = true
     )
-    fun findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId: Long): List<ArticleForLang>
+    fun findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId: Long): List<ArticleInListProjection>
 
     fun getOneByArticleIdAndLangId(articleId: Long, langId: String): ArticleForLang?
 }

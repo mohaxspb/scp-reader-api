@@ -10,6 +10,8 @@ import ru.kuchanov.scpreaderapi.bean.articles.category.ArticleCategoryForLangNot
 import ru.kuchanov.scpreaderapi.bean.articles.category.ArticleCategoryNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.LangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.User
+import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInList
+import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInListProjection
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryForLangService
 import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryService
@@ -47,7 +49,7 @@ class ArticleController @Autowired constructor(
     fun getArticlesByCategoryForLang(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
             @PathVariable(value = "categoryId") categoryId: Long
-    ): List<ArticleForLang> {
+    ): List<ArticleInListProjection> {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
         val category = categoryService.getById(categoryId)
                 ?: throw ArticleCategoryNotFoundException()
