@@ -2,7 +2,6 @@ package ru.kuchanov.scpreaderapi.model.dto.article
 
 
 interface ArticleInListProjection {
-
     val id: Long
     val articleId: Long
     val langId: String

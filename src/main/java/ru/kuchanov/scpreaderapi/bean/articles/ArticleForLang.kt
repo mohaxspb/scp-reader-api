@@ -6,7 +6,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.ResponseStatus
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.articles.tags.TagForLang
-import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInList
 import java.sql.Timestamp
 import javax.persistence.*
 
@@ -17,47 +16,6 @@ import javax.persistence.*
         uniqueConstraints = [
             UniqueConstraint(
                     columnNames = ["article_id", "lang_id", "url_relative"]
-            )
-        ]
-)
-
-@SqlResultSetMapping(
-        name = "ArticleInListDtoResult",
-        classes = [
-            ConstructorResult(
-                    targetClass = ArticleInList::class,
-                    columns = [
-                        ColumnResult(name = "id", type = Long::class),
-                        ColumnResult(name = "articleId", type = Long::class),
-                        ColumnResult(name = "langId"),
-                        ColumnResult(name = "urlRelative"),
-                        ColumnResult(name = "title"),
-                        ColumnResult(name = "rating", type = Int::class)
-                    ])
-        ]
-)
-
-//fixme move to repository
-//todo use projection interface as for category articles
-@NamedNativeQueries(
-        value = [
-            NamedNativeQuery(
-                    name = "ArticleForLang.getMostRecentArticlesForLang",
-                    resultSetMapping = "ArticleInListDtoResult",
-                    query =
-                    """
-                        SELECT
-                        id,
-                        article_id as articleId,
-                        lang_id as langId,
-                        url_relative as urlRelative,
-                        title,
-                        rating
-                        FROM articles_langs a
-                        WHERE a.lang_id = :langId AND a.created_on_site IS NOT NULL
-                        ORDER BY a.created_on_site DESC
-                        OFFSET :offset LIMIT :limit
-                        """
             )
         ]
 )

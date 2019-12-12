@@ -3,7 +3,6 @@ package ru.kuchanov.scpreaderapi.repository.article
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
-import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInList
 import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInListProjection
 
 interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
@@ -18,19 +17,42 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
     )
     fun getIdByUrlRelativeAndLangId(urlRelative: String, langId: String): Long?
 
-    @Query(nativeQuery = true)
-    fun getMostRecentArticlesForLang(langId: String, offset: Int, limit: Int): List<ArticleInList>
-
     @Query(
-            value = """
-            SELECT * FROM articles_langs a
-            WHERE a.lang_id = :langId AND a.created_on_site IS NOT NULL
-            ORDER BY a.created_on_site DESC
-            OFFSET :offset LIMIT :limit
+            value =
+            """
+                SELECT
+                id,
+                article_id as articleId,
+                lang_id as langId,
+                url_relative as urlRelative,
+                title,
+                rating
+                FROM articles_langs a
+                WHERE a.lang_id = :langId AND a.created_on_site IS NOT NULL
+                ORDER BY a.created_on_site DESC
+                OFFSET :offset LIMIT :limit
             """,
             nativeQuery = true
     )
-    fun getMostRecentArticlesForLangFull(langId: String, offset: Int, limit: Int): List<ArticleForLang>
+    fun getMostRecentArticlesForLang(langId: String, offset: Int, limit: Int): List<ArticleInListProjection>
+
+    @Query(
+            value = """
+                select 
+                art.id, 
+                art.article_id as articleId,
+                art.lang_id as langId,
+                art.url_relative as urlRelative,
+                art.title,
+                art.rating 
+                from articles_langs art
+                where lang_id = :langId AND art.rating is not null
+                order by rating desc 
+                OFFSET :offset LIMIT :limit
+            """,
+            nativeQuery = true
+    )
+    fun getMostRatedArticlesForLang(langId: String, offset: Int, limit: Int): List<ArticleInListProjection>
 
     @Query(
             value = """

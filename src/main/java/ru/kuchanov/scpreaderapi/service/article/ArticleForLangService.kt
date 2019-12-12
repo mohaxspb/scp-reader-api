@@ -1,7 +1,7 @@
 package ru.kuchanov.scpreaderapi.service.article
 
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
-import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInList
+import ru.kuchanov.scpreaderapi.model.dto.article.ArticleForLangDto
 import javax.transaction.Transactional
 
 interface ArticleForLangService {
@@ -17,7 +17,9 @@ interface ArticleForLangService {
 
     fun insert(articleForLang: List<ArticleForLang>): List<ArticleForLang>
 
-    fun getMostRecentArticlesForLang(langId: String, offset: Int, limit: Int): List<ArticleInList>
+    fun getMostRecentArticlesForLang(langId: String, offset: Int, limit: Int): List<ArticleForLangDto>
 
-    fun findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId: Long): List<ArticleInList>
+    fun getMostRatedArticlesForLang(langId: String, offset: Int, limit: Int): List<ArticleForLangDto>
+
+    fun findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId: Long): List<ArticleForLangDto>
 }

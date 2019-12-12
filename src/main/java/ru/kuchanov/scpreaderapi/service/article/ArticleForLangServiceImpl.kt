@@ -3,7 +3,7 @@ package ru.kuchanov.scpreaderapi.service.article
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
-import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInList
+import ru.kuchanov.scpreaderapi.model.dto.article.ArticleForLangDto
 import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInListProjection
 import ru.kuchanov.scpreaderapi.repository.article.ArticlesForLangRepository
 import ru.kuchanov.scpreaderapi.repository.article.ArticlesImagesRepository
@@ -32,7 +32,12 @@ class ArticleForLangServiceImpl @Autowired constructor(
     override fun getMostRecentArticlesForLang(langId: String, offset: Int, limit: Int) =
             articlesForLangRepository
                     .getMostRecentArticlesForLang(langId, offset, limit)
-                    .map { it.withImages().withTags() }
+                    .map { it.toArticleInList().withImages().withTags() }
+
+    override fun getMostRatedArticlesForLang(langId: String, offset: Int, limit: Int): List<ArticleForLangDto> =
+            articlesForLangRepository
+                    .getMostRatedArticlesForLang(langId, offset, limit)
+                    .map { it.toArticleInList().withImages().withTags() }
 
     override fun findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId: Long) =
             articlesForLangRepository
@@ -43,7 +48,7 @@ class ArticleForLangServiceImpl @Autowired constructor(
             articlesForLangRepository.getOneByArticleIdAndLangId(articleId, langId)
 
     fun ArticleInListProjection.toArticleInList() =
-            ArticleInList(
+            ArticleForLangDto(
                     id = this.id,
                     articleId = this.articleId,
                     langId = this.langId,
@@ -52,10 +57,10 @@ class ArticleForLangServiceImpl @Autowired constructor(
                     title = this.title
             )
 
-    fun ArticleInList.withImages(): ArticleInList =
+    fun ArticleForLangDto.withImages(): ArticleForLangDto =
             this.apply { imageUrls = imagesRepository.findAllByArticleForLangId(articleForLangId = id) }
 
-    fun ArticleInList.withTags(): ArticleInList =
+    fun ArticleForLangDto.withTags(): ArticleForLangDto =
             this.apply {
                 tagsForLang = tagsForLangRepository.getAllForLangIdAndArticleForLangIdAsDto(
                         langId = langId,
