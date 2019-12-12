@@ -6,15 +6,16 @@ import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.model.dto.article.ArticleForLangDto
 import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInListProjection
 import ru.kuchanov.scpreaderapi.repository.article.ArticlesForLangRepository
-import ru.kuchanov.scpreaderapi.repository.article.ArticlesImagesRepository
 import ru.kuchanov.scpreaderapi.repository.article.tags.TagForLangRepository
+import ru.kuchanov.scpreaderapi.service.article.type.ArticleAndArticleTypeService
 
 
 @Service
 class ArticleForLangServiceImpl @Autowired constructor(
         val articlesForLangRepository: ArticlesForLangRepository,
-        val imagesRepository: ArticlesImagesRepository,
-        val tagsForLangRepository: TagForLangRepository
+        val imagesService: ArticlesImagesService,
+        val tagsForLangRepository: TagForLangRepository,
+        val articleAndArticleTypeService: ArticleAndArticleTypeService
 ) : ArticleForLangService {
 
     override fun insert(articleForLang: ArticleForLang): ArticleForLang =
@@ -32,17 +33,17 @@ class ArticleForLangServiceImpl @Autowired constructor(
     override fun getMostRecentArticlesForLang(langId: String, offset: Int, limit: Int) =
             articlesForLangRepository
                     .getMostRecentArticlesForLang(langId, offset, limit)
-                    .map { it.toArticleInList().withImages().withTags() }
+                    .map { it.toArticleInList().withImages().withTags().withType() }
 
     override fun getMostRatedArticlesForLang(langId: String, offset: Int, limit: Int): List<ArticleForLangDto> =
             articlesForLangRepository
                     .getMostRatedArticlesForLang(langId, offset, limit)
-                    .map { it.toArticleInList().withImages().withTags() }
+                    .map { it.toArticleInList().withImages().withTags().withType() }
 
     override fun findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId: Long) =
             articlesForLangRepository
                     .findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId)
-                    .map { it.toArticleInList().withImages().withTags() }
+                    .map { it.toArticleInList().withImages().withTags().withType() }
 
     override fun getOneByLangAndArticleId(articleId: Long, langId: String) =
             articlesForLangRepository.getOneByArticleIdAndLangId(articleId, langId)
@@ -58,7 +59,7 @@ class ArticleForLangServiceImpl @Autowired constructor(
             )
 
     fun ArticleForLangDto.withImages(): ArticleForLangDto =
-            this.apply { imageUrls = imagesRepository.findAllByArticleForLangId(articleForLangId = id) }
+            this.apply { imageUrls = imagesService.findAllByArticleForLangId(articleForLangId = id) }
 
     fun ArticleForLangDto.withTags(): ArticleForLangDto =
             this.apply {
@@ -67,4 +68,7 @@ class ArticleForLangServiceImpl @Autowired constructor(
                         articleForLangId = id
                 )
             }
+
+    fun ArticleForLangDto.withType(): ArticleForLangDto =
+            this.apply { articleTypeDto = articleAndArticleTypeService.getByArticleIdAndLangIdAsDto(articleId, langId) }
 }
