@@ -1,12 +1,10 @@
 package ru.kuchanov.scpreaderapi.service.parse
 
 import io.reactivex.Single
-import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
-import java.util.*
 
 
 @Service

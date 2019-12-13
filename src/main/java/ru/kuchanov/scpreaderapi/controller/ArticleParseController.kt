@@ -92,13 +92,16 @@ class ArticleParseController @Autowired constructor(
     fun parseArticleByUrlRelativeAndLang(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
             @RequestParam(value = "urlRelative") urlRelative: String,
+            @RequestParam(value = "printTextParts", defaultValue = "false") printTextParts: Boolean = false,
             @AuthenticationPrincipal user: User?
     ): ResponseEntity<*> {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
         val articleForLang = articleForLangService.getArticleForLangByUrlRelativeAndLang(urlRelative, lang.id)
                 ?: throw ArticleForLangNotFoundException()
 
-        articleParsingService.parseArticleForLang(urlRelative, lang)
+        println("parseArticleByUrlRelativeAndLang. lang: ${lang.id}, articleForLang.id: ${articleForLang.id}, article.id: ${articleForLang.articleId}, printTextParts: $printTextParts")
+
+        articleParsingService.parseArticleForLang(urlRelative, lang, printTextParts)
 
         return ResponseEntity(
                 object {

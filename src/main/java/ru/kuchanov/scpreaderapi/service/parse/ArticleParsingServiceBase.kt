@@ -523,10 +523,11 @@ class ArticleParsingServiceBase {
     protected fun saveArticle(
             articleToSave: ArticleForLang,
             lang: Lang,
-            innerArticlesDepth: Int = 0
+            innerArticlesDepth: Int = 0,
+            printTextParts: Boolean = false
     ): ArticleForLang? {
         try {
-            val articleDownloaded = getArticleFromApi(articleToSave.urlRelative, lang)
+            val articleDownloaded = getArticleFromApi(articleToSave.urlRelative, lang, printTextParts)
 
             if (articleDownloaded != null) {
                 var articleInDb = articleService.getArticleByUrlRelative(articleDownloaded.urlRelative)
@@ -629,11 +630,12 @@ class ArticleParsingServiceBase {
         return articles
     }
 
-    fun parseArticleForLang(urlRelative: String, lang: Lang) {
-        saveArticle(ArticleForLang(urlRelative = urlRelative, langId = lang.id), lang)
+    @Async
+    fun parseArticleForLang(urlRelative: String, lang: Lang, printTextParts: Boolean = false) {
+        saveArticle(ArticleForLang(urlRelative = urlRelative, langId = lang.id), lang, printTextParts = printTextParts)
     }
 
-    fun getArticleFromApi(url: String, lang: Lang): ArticleForLang? {
+    fun getArticleFromApi(url: String, lang: Lang, printTextParts: Boolean = false): ArticleForLang? {
         val request = Request.Builder()
                 .url(lang.siteBaseUrl + url)
                 .build()
@@ -657,7 +659,7 @@ class ArticleParsingServiceBase {
             )
         }
 
-        return parseHtmlService.parseArticle(url, doc, pageContent, lang)
+        return parseHtmlService.parseArticle(url, doc, pageContent, lang, printTextParts)
     }
 
     /**

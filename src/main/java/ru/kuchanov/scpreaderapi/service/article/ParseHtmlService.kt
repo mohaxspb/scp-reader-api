@@ -23,8 +23,10 @@ class ParseHtmlService {
             urlRelative: String,
             doc: Document,
             pageContent: Element,
-            lang: Lang
+            lang: Lang,
+            printTextParts: Boolean = false
     ): ArticleForLang {
+        println("parseArticle: $urlRelative, ${lang.id}, $printTextParts")
         //some article are in div... I.e. http://scp-wiki-cn.wikidot.com/taboo
         //so check it and extract text
         if (pageContent.children().size == 1 && pageContent.children().first().tagName() == TAG_DIV) {
@@ -107,6 +109,13 @@ class ParseHtmlService {
             val heritageDiv = rateDiv.parent().getElementsByClass("heritage-emblem")
             if (heritageDiv != null && !heritageDiv.isEmpty()) {
                 heritageDiv.first().remove()
+            }
+
+            //attempt to remove parent div, if it has only this child
+            if (rateDiv.parent().childNodeSize() == 1) {
+                rateDiv.parent().remove()
+            } else {
+                rateDiv.remove()
             }
         }
         //remove something more
@@ -267,6 +276,16 @@ class ParseHtmlService {
             textPartsTypes.add(value)
         }
 
+        if (printTextParts) {
+            println("textParts: ${textParts.size}")
+            println("textPartsTypes: ${textPartsTypes.size}\n")
+            textParts.forEachIndexed { index, value ->
+                println("$index: ${textPartsTypes[index]}\n")
+                println("$index: $value\n\n")
+            }
+        }
+
+        //comments url
         val commentsUrl = doc.getElementById("discuss-button")?.attr("href")?.let {
             "${lang.siteBaseUrl}$it"
         }
@@ -275,6 +294,8 @@ class ParseHtmlService {
 //            //textParts
 //            article.textParts = textParts
 //            article.textPartsTypes = textPartsTypes
+
+        println("parseArticle: $urlRelative, ${lang.id}, $printTextParts END")
 
         //finally fill article info
         return ArticleForLang(

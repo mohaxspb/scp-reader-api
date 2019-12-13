@@ -151,10 +151,10 @@ class ArticleParsingServiceImplPT : ArticleParsingServiceBase() {
 
     override fun getArticleRatingStringDelimiterEnd() = "."
 
-    override fun getArticleFromApi(url: String, lang: Lang): ArticleForLang? {
+    override fun getArticleFromApi(url: String, lang: Lang, printTextParts: Boolean): ArticleForLang? {
         //TODO check commentsUrl parsing (http://scp-pt-br.wikidot.comjavascript:;)
 
-        return super.getArticleFromApi(url, lang)
+        return super.getArticleFromApi(url, lang, printTextParts)
     }
 
     override fun getObjectTypeByImageUrl(imageURL: String): ScpReaderConstants.ArticleTypeEnum =
