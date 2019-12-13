@@ -3,25 +3,20 @@ package ru.kuchanov.scpreaderapi.service.article
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
+import ru.kuchanov.scpreaderapi.model.dto.article.ArticleForLangDto
+import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInListProjection
 import ru.kuchanov.scpreaderapi.repository.article.ArticlesForLangRepository
-import ru.kuchanov.scpreaderapi.repository.article.ArticlesImagesRepository
 import ru.kuchanov.scpreaderapi.repository.article.tags.TagForLangRepository
+import ru.kuchanov.scpreaderapi.service.article.type.ArticleAndArticleTypeService
 
 
 @Service
-class ArticleForLangServiceImpl : ArticleForLangService {
-
-    @Autowired
-    private lateinit var articlesForLangRepository: ArticlesForLangRepository
-
-    @Autowired
-    private lateinit var imagesRepository: ArticlesImagesRepository
-
-    @Autowired
-    private lateinit var tagsForLangRepository: TagForLangRepository
-
-    override fun findAll() =
-            articlesForLangRepository.findAll().toList()
+class ArticleForLangServiceImpl @Autowired constructor(
+        val articlesForLangRepository: ArticlesForLangRepository,
+        val imagesService: ArticlesImagesService,
+        val tagsForLangRepository: TagForLangRepository,
+        val articleAndArticleTypeService: ArticleAndArticleTypeService
+) : ArticleForLangService {
 
     override fun insert(articleForLang: ArticleForLang): ArticleForLang =
             articlesForLangRepository.save(articleForLang)
@@ -35,38 +30,47 @@ class ArticleForLangServiceImpl : ArticleForLangService {
     override fun getIdByUrlRelativeAndLangId(urlRelative: String, langId: String) =
             articlesForLangRepository.getIdByUrlRelativeAndLangId(urlRelative, langId)
 
-    //FUCKING SHIT!!!!!!!!!!!!!!!!!!!!
-    //todo try overrided pageable with offset/limit support
     override fun getMostRecentArticlesForLang(langId: String, offset: Int, limit: Int) =
             articlesForLangRepository
                     .getMostRecentArticlesForLang(langId, offset, limit)
-                    .map {
-                        //shit is here, blyat
-                        it.apply {
-                            imageUrls = imagesRepository.findAllByArticleForLangId(articleForLangId = it.id)
-                            tagsForLang = tagsForLangRepository.getAllForLangIdAndArticleForLangIdAsDto(
-                                    langId = langId,
-                                    articleForLangId = it.id
-                            )
-                        }
-                    }
+                    .map { it.toDto().withImages().withTags().withType() }
 
-    override fun getMostRecentArticlesForLangFull(langId: String, offset: Int, limit: Int) =
+    override fun getMostRatedArticlesForLang(langId: String, offset: Int, limit: Int): List<ArticleForLangDto> =
             articlesForLangRepository
-                    .getMostRecentArticlesForLangFull(langId, offset, limit)
-                    .map {
-                        it.apply {
-                            images = imagesRepository.findAllByArticleForLangIdFull(articleForLangId = id!!).toMutableSet()
-                            tags = tagsForLangRepository.getAllForLangIdAndArticleForLangId(
-                                    langId = langId,
-                                    articleForLangId = id
-                            ).toMutableSet()
-                        }
-                    }
+                    .getMostRatedArticlesForLang(langId, offset, limit)
+                    .map { it.toDto().withImages().withTags().withType() }
 
     override fun findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId: Long) =
-            articlesForLangRepository.findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId)
+            articlesForLangRepository
+                    .findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId)
+                    .map { it.toDto().withImages().withTags().withType() }
 
     override fun getOneByLangAndArticleId(articleId: Long, langId: String) =
             articlesForLangRepository.getOneByArticleIdAndLangId(articleId, langId)
+
+    fun ArticleInListProjection.toDto() =
+            ArticleForLangDto(
+                    //todo add createdOnSite
+                    id = this.id,
+                    articleId = this.articleId,
+                    langId = this.langId,
+                    urlRelative = this.urlRelative,
+                    rating = this.rating,
+                    title = this.title,
+                    createdOnSite = this.createdOnSite
+            )
+
+    fun ArticleForLangDto.withImages(): ArticleForLangDto =
+            this.apply { imageUrls = imagesService.findAllByArticleForLangId(articleForLangId = id) }
+
+    fun ArticleForLangDto.withTags(): ArticleForLangDto =
+            this.apply {
+                tagsForLang = tagsForLangRepository.getAllForLangIdAndArticleForLangIdAsDto(
+                        langId = langId,
+                        articleForLangId = id
+                )
+            }
+
+    fun ArticleForLangDto.withType(): ArticleForLangDto =
+            this.apply { articleTypeDto = articleAndArticleTypeService.getByArticleIdAndLangIdAsDto(articleId, langId) }
 }

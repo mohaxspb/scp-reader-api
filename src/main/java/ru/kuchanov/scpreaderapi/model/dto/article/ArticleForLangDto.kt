@@ -1,24 +1,18 @@
 package ru.kuchanov.scpreaderapi.model.dto.article
 
-import ru.kuchanov.scpreaderapi.utils.NoArgConstructor
+import java.sql.Timestamp
 
 
-/**
- * @param articleId
- * @param langId
- * @param urlRelative
- * @param title
- * @param rating
- */
-@NoArgConstructor
-data class ArticleInList(
+data class ArticleForLangDto(
         val id: Long,
         val articleId: Long,
         val langId: String,
         val urlRelative: String,
         val title: String,
-        val rating: Int?
-){
+        val rating: Int?,
+        val createdOnSite: Timestamp?
+) {
     var imageUrls: List<ArticlesImagesDto>? = null
     var tagsForLang: List<TagForLangDto>? = null
+    var articleTypeDto: ArticleTypeDto? = null
 }

@@ -7,7 +7,7 @@ import javax.persistence.*
 
 @Entity
 @Table(name = "article_types_to_titles_for_lang")
-data class ArticleTypeTitleForLang(
+data class ArticleTypeForLang(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long? = null,
