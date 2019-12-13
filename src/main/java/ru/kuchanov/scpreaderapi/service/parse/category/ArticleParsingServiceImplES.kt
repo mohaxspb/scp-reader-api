@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.service.parse
+package ru.kuchanov.scpreaderapi.service.parse.category
 
 import org.jsoup.nodes.Document
 import org.springframework.stereotype.Service
@@ -44,5 +44,4 @@ java.lang.NullPointerException: null
          */
         return super.getArticleFromApi(url, lang, printTextParts)
     }
-
 }

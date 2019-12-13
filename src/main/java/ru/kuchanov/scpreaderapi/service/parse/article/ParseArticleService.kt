@@ -1,23 +1,34 @@
-package ru.kuchanov.scpreaderapi.service.article
+package ru.kuchanov.scpreaderapi.service.parse.article
 
 import org.apache.http.util.TextUtils
-import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.parser.Tag
 import org.jsoup.select.Elements
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.ArticlesImages
 import ru.kuchanov.scpreaderapi.bean.articles.tags.TagForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
-import ru.kuchanov.scpreaderapi.utils.isDigistOnly
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ATTR_HREF
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ATTR_SRC
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.NOT_TRANSLATED_ARTICLE_URL_DELIMITER
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.NOT_TRANSLATED_ARTICLE_UTIL_URL
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.SITE_TAGS_PATH
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_A
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_DIV
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_IMG
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_SPAN
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_TABLE
 import java.util.*
 
 
 @Service
-class ParseHtmlService {
+class ParseArticleService @Autowired constructor(
+        val parseArticleTextService: ParseArticleTextService
+) {
 
     fun parseArticle(
             urlRelative: String,
@@ -265,14 +276,18 @@ class ParseHtmlService {
         //this we store as article text
         val rawText = pageContent.toString()
 
+        //todo move to parseArticleTextService
+        //textParts
+//            article.textParts = textParts
+//            article.textPartsTypes = textPartsTypes
         //articles textParts
         val textParts = mutableListOf<String>()
-        val rawTextParts = getArticlesTextParts(rawText)
+        val rawTextParts = parseArticleTextService.getArticlesTextParts(rawText)
         for (value in rawTextParts) {
             textParts.add(value)
         }
         val textPartsTypes = mutableListOf<TextType>()
-        for (value in getListOfTextTypes(rawTextParts)) {
+        for (value in parseArticleTextService.getListOfTextTypes(rawTextParts)) {
             textPartsTypes.add(value)
         }
 
@@ -284,16 +299,12 @@ class ParseHtmlService {
                 println("$index: $value\n\n")
             }
         }
+        //move  to parseArticleTextService END
 
         //comments url
         val commentsUrl = doc.getElementById("discuss-button")?.attr("href")?.let {
             "${lang.siteBaseUrl}$it"
         }
-
-        //todo
-//            //textParts
-//            article.textParts = textParts
-//            article.textPartsTypes = textPartsTypes
 
         println("parseArticle: $urlRelative, ${lang.id}, $printTextParts END")
 
@@ -376,143 +387,5 @@ class ParseHtmlService {
                 ourElement.remove()
             }
         }
-    }
-
-    fun getArticlesTextParts(html: String): List<String> {
-        val document = Jsoup.parse(html)
-        var contentPage: Element? = document.getElementById(ID_PAGE_CONTENT)
-        if (contentPage == null) {
-            contentPage = document.body()
-        }
-        val articlesTextParts = ArrayList<String>()
-        for (element in contentPage!!.children()) {
-            articlesTextParts.add(element.outerHtml())
-        }
-        return articlesTextParts
-    }
-
-    fun getListOfTextTypes(articlesTextParts: Iterable<String>): List<TextType> {
-        val listOfTextTypes = mutableListOf<TextType>()
-        for (textPart in articlesTextParts) {
-            val element = Jsoup.parse(textPart)
-            val ourElement = element.getElementsByTag(TAG_BODY).first().children().first()
-            when {
-                ourElement == null -> listOfTextTypes.add(TextType.TEXT)
-                ourElement.tagName() == TAG_P -> listOfTextTypes.add(TextType.TEXT)
-                ourElement.className() == CLASS_SPOILER -> listOfTextTypes.add(TextType.SPOILER)
-                ourElement.classNames().contains(CLASS_TABS) -> listOfTextTypes.add(TextType.TABS)
-                ourElement.tagName() == TAG_TABLE -> listOfTextTypes.add(TextType.TABLE)
-                ourElement.className() == "rimg"
-                        || ourElement.className() == "limg"
-                        || ourElement.className() == "cimg"
-                        || ourElement.classNames().contains("scp-image-block") -> listOfTextTypes.add(TextType.IMAGE)
-                else -> listOfTextTypes.add(TextType.TEXT)
-            }
-        }
-
-        return listOfTextTypes
-    }
-
-    enum class TextType {
-        TEXT,
-        SPOILER,
-        IMAGE,
-        TABLE,
-        TITLE,
-        TAGS,
-        TABS
-    }
-
-    enum class LinkType {
-
-        JAVASCRIPT, SNOSKA, BIBLIOGRAPHY, TOC, MUSIC, NOT_TRANSLATED, EXTERNAL, INNER;
-
-        companion object {
-
-            fun getLinkType(link: String, lang: Lang): LinkType {
-                if (link.contains("javascript")) {
-                    return JAVASCRIPT
-                }
-                if (link.isDigistOnly() || link.startsWith("scp://")) {
-                    return SNOSKA
-                }
-                if (link.startsWith("bibitem-")) {
-                    return BIBLIOGRAPHY
-                }
-                if (link.startsWith("#")) {
-                    return TOC
-                }
-                if (link.endsWith(".mp3")) {
-                    return MUSIC
-                }
-                if (link.startsWith(NOT_TRANSLATED_ARTICLE_UTIL_URL)) {
-                    return NOT_TRANSLATED
-                }
-                return if (!link.startsWith(lang.siteBaseUrl) || link.startsWith(lang.siteBaseUrl + "/forum")) {
-                    EXTERNAL
-                } else INNER
-            }
-
-            fun getFormattedUrl(url: String, lang: Lang) =
-                    when (getLinkType(url, lang)) {
-                        JAVASCRIPT, INNER, TOC, MUSIC, EXTERNAL, BIBLIOGRAPHY -> {
-                            if (!url.startsWith("http") && !url.startsWith(NOT_TRANSLATED_ARTICLE_UTIL_URL)) {
-                                lang.siteBaseUrl + url
-                            } else {
-                                url
-                            }
-                        }
-                        SNOSKA -> {
-                            if (url.startsWith("scp://")) {
-                                url.replace("scp://", "")
-                            } else {
-                                url
-                            }
-                        }
-                        NOT_TRANSLATED -> {
-                            if (url.startsWith(NOT_TRANSLATED_ARTICLE_UTIL_URL)) {
-                                url.split(NOT_TRANSLATED_ARTICLE_URL_DELIMITER)[1]
-                            } else {
-                                url
-                            }
-                        }
-                    }
-        }
-    }
-
-    companion object {
-
-        private const val TAG_IMG = "img"
-
-        private const val TAG_SPAN = "span"
-
-        private const val TAG_DIV = "div"
-
-        private const val TAG_A = "a"
-
-        private const val TAG_P = "p"
-
-        private const val TAG_BODY = "body"
-
-        private const val TAG_TABLE = "table"
-
-//        private const val TAG_LI = "li"
-
-        private const val ATTR_SRC = "src"
-
-        private const val ATTR_HREF = "href"
-
-        private const val ID_PAGE_CONTENT = "page-content"
-
-        private const val CLASS_TABS = "yui-navset"
-
-        private const val CLASS_SPOILER = "collapsible-block"
-
-        //misc
-        private const val SITE_TAGS_PATH = "system:page-tags/tag/"
-
-        private const val NOT_TRANSLATED_ARTICLE_UTIL_URL = "not_translated_yet_article_which_we_cant_show"
-
-        private const val NOT_TRANSLATED_ARTICLE_URL_DELIMITER = "___"
     }
 }

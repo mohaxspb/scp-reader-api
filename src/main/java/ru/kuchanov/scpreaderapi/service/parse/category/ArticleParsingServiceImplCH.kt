@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.service.parse
+package ru.kuchanov.scpreaderapi.service.parse.category
 
 import org.jsoup.nodes.Document
 import org.springframework.stereotype.Service

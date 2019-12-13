@@ -10,7 +10,7 @@ import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.LangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
-import ru.kuchanov.scpreaderapi.service.parse.ArticleParsingServiceBase
+import ru.kuchanov.scpreaderapi.service.parse.category.ArticleParsingServiceBase
 import ru.kuchanov.scpreaderapi.service.users.LangService
 
 

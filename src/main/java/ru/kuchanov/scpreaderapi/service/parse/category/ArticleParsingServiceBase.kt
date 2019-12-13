@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.service.parse
+package ru.kuchanov.scpreaderapi.service.parse.category
 
 import io.reactivex.Flowable
 import io.reactivex.Observable
@@ -33,13 +33,13 @@ import ru.kuchanov.scpreaderapi.configuration.NetworkConfiguration
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangToArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.ArticleService
-import ru.kuchanov.scpreaderapi.service.article.ParseHtmlService
 import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryForArticleService
 import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryForLangService
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForLangService
 import ru.kuchanov.scpreaderapi.service.article.type.ArticleAndArticleTypeService
 import ru.kuchanov.scpreaderapi.service.article.type.ArticleTypeService
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseArticleService
 import java.io.IOException
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
@@ -58,7 +58,7 @@ class ArticleParsingServiceBase {
     protected lateinit var okHttpClient: OkHttpClient
 
     @Autowired
-    private lateinit var parseHtmlService: ParseHtmlService
+    private lateinit var parseArticleService: ParseArticleService
 
     @Autowired
     private lateinit var articleService: ArticleService
@@ -659,7 +659,7 @@ class ArticleParsingServiceBase {
             )
         }
 
-        return parseHtmlService.parseArticle(url, doc, pageContent, lang, printTextParts)
+        return parseArticleService.parseArticle(url, doc, pageContent, lang, printTextParts)
     }
 
     /**

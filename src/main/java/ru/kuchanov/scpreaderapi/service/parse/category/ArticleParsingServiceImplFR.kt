@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.service.parse
+package ru.kuchanov.scpreaderapi.service.parse.category
 
 import org.jsoup.nodes.Document
 import org.springframework.stereotype.Service
@@ -6,7 +6,7 @@ import ru.kuchanov.scpreaderapi.bean.users.Lang
 
 
 @Service
-class ArticleParsingServiceImplDE : ArticleParsingServiceBase() {
+class ArticleParsingServiceImplFR : ArticleParsingServiceBase() {
 
     override fun getRatedArticlesUrl() = "/top-rated-pages/p/"
 
@@ -31,7 +31,7 @@ class ArticleParsingServiceImplDE : ArticleParsingServiceBase() {
     override fun parseForObjectArticles(lang: Lang, doc: Document) =
             parseForObjectArticlesENStyle(lang, doc)
 
-    override fun getArticleRatingStringDelimiter() = "Bewertung: "
+    override fun getArticleRatingStringDelimiter() = "note : "
 
     override fun getArticleRatingStringDelimiterEnd() = ","
 }
