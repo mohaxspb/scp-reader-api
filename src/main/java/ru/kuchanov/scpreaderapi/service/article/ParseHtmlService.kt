@@ -271,21 +271,6 @@ class ParseHtmlService {
             "${lang.siteBaseUrl}$it"
         }
 
-//            article.url = url
-//            article.text = rawText
-//            article.title = title
-//            //rating
-//            if (rating != 0) {
-//                article.rating = rating
-//            }
-//            article.commentsUrl = commentsUrl
-//            //images
-//            article.imagesUrls = imgsUrls
-//            //tags
-//            article.tags = articleTags
-
-//            //inner articles
-//            article.innerArticlesUrls = innerArticlesUrls
         //todo
 //            //textParts
 //            article.textParts = textParts
