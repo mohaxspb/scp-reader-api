@@ -1,5 +1,7 @@
 package ru.kuchanov.scpreaderapi.model.dto.article
 
+import java.sql.Timestamp
+
 
 data class ArticleForLangDto(
         val id: Long,
@@ -7,7 +9,8 @@ data class ArticleForLangDto(
         val langId: String,
         val urlRelative: String,
         val title: String,
-        val rating: Int?
+        val rating: Int?,
+        val createdOnSite: Timestamp?
 ) {
     var imageUrls: List<ArticlesImagesDto>? = null
     var tagsForLang: List<TagForLangDto>? = null

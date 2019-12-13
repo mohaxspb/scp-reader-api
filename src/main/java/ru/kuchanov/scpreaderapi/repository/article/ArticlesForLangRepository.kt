@@ -26,7 +26,8 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
                 lang_id as langId,
                 url_relative as urlRelative,
                 title,
-                rating
+                rating,
+                created_on_site as createdOnSite
                 FROM articles_langs a
                 WHERE a.lang_id = :langId AND a.created_on_site IS NOT NULL
                 ORDER BY a.created_on_site DESC
@@ -44,7 +45,8 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
                 art.lang_id as langId,
                 art.url_relative as urlRelative,
                 art.title,
-                art.rating 
+                art.rating,
+                art.created_on_site as createdOnSite
                 from articles_langs art
                 where lang_id = :langId AND art.rating is not null
                 order by rating desc 
@@ -62,7 +64,8 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
                 art.article_id as articleId,
                 art.url_relative as urlRelative,
                 art.title,
-                art.rating 
+                art.rating ,
+                art.created_on_site as createdOnSite
                 from articles_langs art
                 join article_categories_to_lang__to__articles_to_lang art_cat on art.id = art_cat.article_to_lang_id
                 where art.id in 

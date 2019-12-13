@@ -33,29 +33,31 @@ class ArticleForLangServiceImpl @Autowired constructor(
     override fun getMostRecentArticlesForLang(langId: String, offset: Int, limit: Int) =
             articlesForLangRepository
                     .getMostRecentArticlesForLang(langId, offset, limit)
-                    .map { it.toArticleInList().withImages().withTags().withType() }
+                    .map { it.toDto().withImages().withTags().withType() }
 
     override fun getMostRatedArticlesForLang(langId: String, offset: Int, limit: Int): List<ArticleForLangDto> =
             articlesForLangRepository
                     .getMostRatedArticlesForLang(langId, offset, limit)
-                    .map { it.toArticleInList().withImages().withTags().withType() }
+                    .map { it.toDto().withImages().withTags().withType() }
 
     override fun findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId: Long) =
             articlesForLangRepository
                     .findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId)
-                    .map { it.toArticleInList().withImages().withTags().withType() }
+                    .map { it.toDto().withImages().withTags().withType() }
 
     override fun getOneByLangAndArticleId(articleId: Long, langId: String) =
             articlesForLangRepository.getOneByArticleIdAndLangId(articleId, langId)
 
-    fun ArticleInListProjection.toArticleInList() =
+    fun ArticleInListProjection.toDto() =
             ArticleForLangDto(
+                    //todo add createdOnSite
                     id = this.id,
                     articleId = this.articleId,
                     langId = this.langId,
                     urlRelative = this.urlRelative,
                     rating = this.rating,
-                    title = this.title
+                    title = this.title,
+                    createdOnSite = this.createdOnSite
             )
 
     fun ArticleForLangDto.withImages(): ArticleForLangDto =
