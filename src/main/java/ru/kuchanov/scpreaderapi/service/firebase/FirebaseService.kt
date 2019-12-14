@@ -33,8 +33,8 @@ import ru.kuchanov.scpreaderapi.model.user.LevelsJson
 import ru.kuchanov.scpreaderapi.repository.firebase.FirebaseDataUpdateDateRepository
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.ArticleService
-import ru.kuchanov.scpreaderapi.service.article.FavoriteArticleForLangService
-import ru.kuchanov.scpreaderapi.service.article.ReadArticleForLangService
+import ru.kuchanov.scpreaderapi.service.article.favorite.FavoriteArticleForLangService
+import ru.kuchanov.scpreaderapi.service.article.read.ReadArticleForLangService
 import ru.kuchanov.scpreaderapi.service.auth.AuthorityService
 import ru.kuchanov.scpreaderapi.service.users.LangService
 import ru.kuchanov.scpreaderapi.service.users.UserService

@@ -7,6 +7,7 @@ import ru.kuchanov.scpreaderapi.model.dto.article.ArticleForLangDto
 import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInListProjection
 import ru.kuchanov.scpreaderapi.repository.article.ArticlesForLangRepository
 import ru.kuchanov.scpreaderapi.repository.article.tags.TagForLangRepository
+import ru.kuchanov.scpreaderapi.service.article.image.ArticlesImagesService
 import ru.kuchanov.scpreaderapi.service.article.type.ArticleAndArticleTypeService
 
 

@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.service.article
+package ru.kuchanov.scpreaderapi.service.article.favorite
 
 import ru.kuchanov.scpreaderapi.bean.articles.favorite.FavoriteArticlesByLang
 import javax.transaction.Transactional

@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.repository.article
+package ru.kuchanov.scpreaderapi.repository.article.favorite
 
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query

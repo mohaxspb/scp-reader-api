@@ -1,9 +1,9 @@
-package ru.kuchanov.scpreaderapi.service.article
+package ru.kuchanov.scpreaderapi.service.article.favorite
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.articles.favorite.FavoriteArticlesByLang
-import ru.kuchanov.scpreaderapi.repository.article.FavoriteArticlesForLangRepository
+import ru.kuchanov.scpreaderapi.repository.article.favorite.FavoriteArticlesForLangRepository
 
 
 @Service

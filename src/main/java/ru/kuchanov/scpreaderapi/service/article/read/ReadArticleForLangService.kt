@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.service.article
+package ru.kuchanov.scpreaderapi.service.article.read
 
 import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticlesByLang
 import javax.transaction.Transactional
