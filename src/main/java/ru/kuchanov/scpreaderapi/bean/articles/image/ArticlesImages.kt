@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.bean.articles
+package ru.kuchanov.scpreaderapi.bean.articles.image
 
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp

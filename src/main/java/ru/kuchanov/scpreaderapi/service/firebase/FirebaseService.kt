@@ -17,9 +17,9 @@ import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.articles.Article
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
-import ru.kuchanov.scpreaderapi.bean.articles.FavoriteArticlesByLang
-import ru.kuchanov.scpreaderapi.bean.articles.FirebaseDataUpdateDate
-import ru.kuchanov.scpreaderapi.bean.articles.ReadArticlesByLang
+import ru.kuchanov.scpreaderapi.bean.articles.favorite.FavoriteArticlesByLang
+import ru.kuchanov.scpreaderapi.bean.FirebaseDataUpdateDate
+import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticlesByLang
 import ru.kuchanov.scpreaderapi.bean.auth.Authority
 import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
 import ru.kuchanov.scpreaderapi.bean.users.Lang

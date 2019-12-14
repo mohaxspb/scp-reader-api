@@ -1,6 +1,6 @@
 package ru.kuchanov.scpreaderapi.service.article
 
-import ru.kuchanov.scpreaderapi.bean.articles.FavoriteArticlesByLang
+import ru.kuchanov.scpreaderapi.bean.articles.favorite.FavoriteArticlesByLang
 import javax.transaction.Transactional
 
 interface FavoriteArticleForLangService {

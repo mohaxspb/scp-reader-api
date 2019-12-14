@@ -2,7 +2,7 @@ package ru.kuchanov.scpreaderapi.service.article
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import ru.kuchanov.scpreaderapi.bean.articles.ReadArticlesByLang
+import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticlesByLang
 import ru.kuchanov.scpreaderapi.repository.article.ReadArticlesForLangRepository
 
 

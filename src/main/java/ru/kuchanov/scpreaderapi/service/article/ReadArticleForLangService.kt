@@ -1,6 +1,6 @@
 package ru.kuchanov.scpreaderapi.service.article
 
-import ru.kuchanov.scpreaderapi.bean.articles.ReadArticlesByLang
+import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticlesByLang
 import javax.transaction.Transactional
 
 interface ReadArticleForLangService {

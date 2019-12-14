@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.bean.articles
+package ru.kuchanov.scpreaderapi.bean
 
 import java.sql.Timestamp
 import javax.persistence.*

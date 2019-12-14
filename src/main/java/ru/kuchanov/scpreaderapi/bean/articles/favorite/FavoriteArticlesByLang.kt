@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.bean.articles
+package ru.kuchanov.scpreaderapi.bean.articles.favorite
 
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
@@ -8,9 +8,9 @@ import java.sql.Timestamp
 import javax.persistence.*
 
 @Entity
-@IdClass(KeyReadArticleByLang::class)
-@Table(name = "read_articles_by_lang")
-data class ReadArticlesByLang(
+@IdClass(KeyFavoriteArticleByLang::class)
+@Table(name = "favorite_articles_by_lang")
+data class FavoriteArticlesByLang(
         @Id
         @Column(name = "user_id")
         var userId: Long,
@@ -20,8 +20,8 @@ data class ReadArticlesByLang(
         @Id
         @Column(name = "lang_id")
         var langId: String,
-        @Column(name = "is_read")
-        var isRead: Boolean = false,
+        @Column(name = "is_favorite")
+        var isFavorite: Boolean = false,
         @field:CreationTimestamp
         val created: Timestamp? = null,
         @field:UpdateTimestamp
@@ -29,7 +29,7 @@ data class ReadArticlesByLang(
 )
 
 @NoArgConstructor
-data class KeyReadArticleByLang(
+data class KeyFavoriteArticleByLang(
         val userId: Long? = null,
         val articleId: Long? = null,
         val langId: String? = null

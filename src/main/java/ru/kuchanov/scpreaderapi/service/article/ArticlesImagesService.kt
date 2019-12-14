@@ -1,6 +1,6 @@
 package ru.kuchanov.scpreaderapi.service.article
 
-import ru.kuchanov.scpreaderapi.bean.articles.ArticlesImages
+import ru.kuchanov.scpreaderapi.bean.articles.image.ArticlesImages
 import ru.kuchanov.scpreaderapi.model.dto.article.ArticlesImagesDto
 import javax.transaction.Transactional
 

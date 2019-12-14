@@ -5,6 +5,7 @@ import org.hibernate.annotations.UpdateTimestamp
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.ResponseStatus
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
+import ru.kuchanov.scpreaderapi.bean.articles.image.ArticlesImages
 import ru.kuchanov.scpreaderapi.bean.articles.tags.TagForLang
 import java.sql.Timestamp
 import javax.persistence.*
