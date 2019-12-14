@@ -275,31 +275,7 @@ class ParseArticleService @Autowired constructor(
 
         //this we store as article text
         val rawText = pageContent.toString()
-
-        //todo move to parseArticleTextService
-        //textParts
-//            article.textParts = textParts
-//            article.textPartsTypes = textPartsTypes
-        //articles textParts
-        val textParts = mutableListOf<String>()
-        val rawTextParts = parseArticleTextService.getArticlesTextParts(rawText)
-        for (value in rawTextParts) {
-            textParts.add(value)
-        }
-        val textPartsTypes = mutableListOf<TextType>()
-        for (value in parseArticleTextService.getListOfTextTypes(rawTextParts)) {
-            textPartsTypes.add(value)
-        }
-
-        if (printTextParts) {
-            println("textParts: ${textParts.size}")
-            println("textPartsTypes: ${textPartsTypes.size}\n")
-            textParts.forEachIndexed { index, value ->
-                println("$index: ${textPartsTypes[index]}\n")
-                println("$index: $value\n\n")
-            }
-        }
-        //move  to parseArticleTextService END
+        parseArticleTextService.parseArticleText(rawText, printTextParts)
 
         //comments url
         val commentsUrl = doc.getElementById("discuss-button")?.attr("href")?.let {

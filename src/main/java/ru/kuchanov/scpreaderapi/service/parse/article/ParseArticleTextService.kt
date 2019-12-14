@@ -3,12 +3,33 @@ package ru.kuchanov.scpreaderapi.service.parse.article
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.springframework.stereotype.Service
-import java.util.ArrayList
+import java.util.*
 
 @Service
 class ParseArticleTextService {
 
-    fun getArticlesTextParts(html: String): List<String> {
+    fun parseArticleText(rawText: String, printTextParts: Boolean) {
+        val textParts = mutableListOf<String>()
+        val rawTextParts = getArticlesTextParts(rawText)
+        for (value in rawTextParts) {
+            textParts.add(value)
+        }
+        val textPartsTypes = mutableListOf<TextType>()
+        for (value in getListOfTextTypes(rawTextParts)) {
+            textPartsTypes.add(value)
+        }
+
+        if (printTextParts) {
+            println("textParts: ${textParts.size}")
+            println("textPartsTypes: ${textPartsTypes.size}\n")
+            textParts.forEachIndexed { index, value ->
+                println("$index: ${textPartsTypes[index]}\n")
+                println("$index: $value\n\n")
+            }
+        }
+    }
+
+    private fun getArticlesTextParts(html: String): List<String> {
         val document = Jsoup.parse(html)
         var contentPage: Element? = document.getElementById(ParseConstants.ID_PAGE_CONTENT)
         if (contentPage == null) {
@@ -21,7 +42,7 @@ class ParseArticleTextService {
         return articlesTextParts
     }
 
-    fun getListOfTextTypes(articlesTextParts: Iterable<String>): List<TextType> {
+    private fun getListOfTextTypes(articlesTextParts: Iterable<String>): List<TextType> {
         val listOfTextTypes = mutableListOf<TextType>()
         for (textPart in articlesTextParts) {
             val element = Jsoup.parse(textPart)
