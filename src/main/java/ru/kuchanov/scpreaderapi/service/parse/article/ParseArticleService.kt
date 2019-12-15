@@ -37,7 +37,7 @@ class ParseArticleService @Autowired constructor(
             lang: Lang,
             printTextParts: Boolean = false
     ): ArticleForLang {
-        println("parseArticle: $urlRelative, ${lang.id}, $printTextParts")
+//        println("parseArticle: $urlRelative, ${lang.id}, $printTextParts")
         //some article are in div... I.e. http://scp-wiki-cn.wikidot.com/taboo
         //so check it and extract text
         if (pageContent.children().size == 1 && pageContent.children().first().tagName() == TAG_DIV) {
@@ -135,6 +135,11 @@ class ParseArticleService @Autowired constructor(
         val script = pageContent.getElementsByTag("script")
         for (element in script) {
             element.remove()
+        }
+        //remove bottom navigation bar
+        val bottomNavigationBar = pageContent.getElementsByClass("footer-wikiwalk-nav")
+        if (bottomNavigationBar.isNotEmpty()) {
+            bottomNavigationBar.first().remove()
         }
         //remove audio link from DE version
         val audio = pageContent.getElementsByClass("audio-img-block")
@@ -275,14 +280,23 @@ class ParseArticleService @Autowired constructor(
 
         //this we store as article text
         val rawText = pageContent.toString()
-        parseArticleTextService.parseArticleText(rawText, printTextParts)
+
+        val textParts = parseArticleTextService.parseArticleText(rawText, printTextParts)
+        if (printTextParts) {
+            println("===================== parsed text parts =====================")
+            textParts.forEach {
+                println(it)
+                println("\n")
+            }
+            println("===========END========== parsed text parts ===========END==========")
+        }
 
         //comments url
         val commentsUrl = doc.getElementById("discuss-button")?.attr("href")?.let {
             "${lang.siteBaseUrl}$it"
         }
 
-        println("parseArticle: $urlRelative, ${lang.id}, $printTextParts END")
+//        println("parseArticle: $urlRelative, ${lang.id}, $printTextParts END")
 
         //finally fill article info
         return ArticleForLang(

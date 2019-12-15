@@ -13,7 +13,7 @@ data class TextPart(
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long? = null,
         @Column(name = "article_to_lang_id")
-        var articleToLangId: Long,
+        var articleToLangId: Long? = null,
         @Column(name = "parent_id")
         var parentId: Long? = null,
         @Enumerated(EnumType.STRING)
@@ -22,10 +22,13 @@ data class TextPart(
         @Column(columnDefinition = "TEXT")
         val data: String,
         @Column(name = "order_in_text")
-        var orderInText: Long,
+        var orderInText: Int,
 
         @field:CreationTimestamp
         val created: Timestamp? = null,
         @field:UpdateTimestamp
-        val updated: Timestamp? = null
+        val updated: Timestamp? = null,
+
+        @Transient
+        var innerTextParts: List<TextPart>? = null
 )
