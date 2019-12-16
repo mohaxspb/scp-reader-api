@@ -2,11 +2,15 @@ package ru.kuchanov.scpreaderapi.service.parse.article
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Element
-import org.jsoup.select.Elements
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.articles.text.TextPart
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.CLASS_SPOILER
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.CLASS_TABS
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_BLOCKQUOTE
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_LI
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_P
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_TABLE
 
 
 @Service
@@ -18,14 +22,14 @@ class ParseArticleTextService @Autowired constructor(
         val textParts = getArticlesTextParts(rawText)
         val textPartsTypes = getListOfTextTypes(getArticlesTextParts(rawText))
 
-        if (printTextParts) {
-            println("textParts: ${textParts.size}")
-            println("textPartsTypes: ${textPartsTypes.size}\n")
-            textParts.forEachIndexed { index, value ->
-                println("$index: ${textPartsTypes[index]}\n")
-                println("$index: $value\n\n")
-            }
-        }
+//        if (printTextParts) {
+//            println("textParts: ${textParts.size}")
+//            println("textPartsTypes: ${textPartsTypes.size}\n")
+//            textParts.forEachIndexed { index, value ->
+//                println("$index: ${textPartsTypes[index]}\n")
+//                println("$index: $value\n\n")
+//            }
+//        }
 
         val finalTextParts = mutableListOf<TextPart>()
 
@@ -44,9 +48,6 @@ class ParseArticleTextService @Autowired constructor(
                     spoilerTextPart.innerTextParts = parseArticleText(spoilerData.spoilerData, printTextParts)
                     finalTextParts += spoilerTextPart
                 }
-                TextType.TEXT -> {
-                    finalTextParts += TextPart(data = textPart, type = textPartType, orderInText = order++)
-                }
                 TextType.IMAGE -> {
                     finalTextParts += parseImageData(textPart, order++)
                 }
@@ -59,7 +60,11 @@ class ParseArticleTextService @Autowired constructor(
                     finalTextParts += blockquoteTextPart
                 }
                 TextType.TABS -> {
-                    //todo
+                    finalTextParts += parseTabs(textPart, order++)
+                }
+                /*TextType.TEXT*/
+                else -> {
+                    finalTextParts += TextPart(data = textPart, type = textPartType, orderInText = order++)
                 }
             }
         }
@@ -101,42 +106,52 @@ class ParseArticleTextService @Autowired constructor(
     }
 
     private fun parseSpoilerParts(html: String): SpoilerData {
-//        Timber.d("parseSpoilerParts: %s", html);
         val document = Jsoup.parse(html)
         val element = document.getElementsByClass("collapsible-block-folded").first()
         val elementA = element.getElementsByTag("a").first()
         //replacing non-breaking-spaces
         val collapsedTitle = elementA.text().replace("\\p{Z}".toRegex(), " ")
-        println("spoilerParts: $collapsedTitle")
         val elementUnfolded = document.getElementsByClass("collapsible-block-unfolded").first()
         val elementExpanded = elementUnfolded.getElementsByClass("collapsible-block-link").first()
 
         val expandedTitle = elementExpanded.text().replace("\\p{Z}".toRegex(), " ")
-        println("spoilerParts: $expandedTitle")
-//        Timber.d("elementUnfolded.children().size(): %s", elementUnfolded.children().size());
-//        Timber.d("elementUnfolded.children().get(1).hasText(): %s", elementUnfolded.children().get(1).hasText());
-//        Timber.d("elementUnfolded: %s", elementUnfolded.html());
         val elementContent = elementUnfolded.getElementsByClass("collapsible-block-content").first()
-        val spoilerData: String
-        if (elementContent != null && elementContent.hasText()) {
-            println("elementContent != null && elementContent.hasText()")
-            unwrapTextAlignmentDivs(elementContent)
-            spoilerData = elementContent.html()
+        val spoilerData = if (elementContent != null && elementContent.hasText()) {
+            elementContent.html()
         } else if (elementContent != null && !elementContent.hasText()
                 && elementUnfolded.children().size > 2 && elementUnfolded.children()[2].hasText()) {
-            println("elementContent != null\n" +
-                    "                && !elementContent.hasText()\n" +
-                    "                && elementUnfolded.children().size() > 1\n" +
-                    "                && elementUnfolded.children().get(1).hasText()")
             elementExpanded.parent().remove()
             elementContent.remove()
-            unwrapTextAlignmentDivs(elementUnfolded.children().first())
-            spoilerData = elementUnfolded.html()
+            elementUnfolded.html()
         } else {
             println("ERROR WHILE PARSING SPOILER CONTENT. Please, let developers know about it, if you see this message)")
-            spoilerData = "ERROR WHILE PARSING SPOILER CONTENT. Please, let developers know about it, if you see this message)"
+            "ERROR WHILE PARSING SPOILER CONTENT. Please, let developers know about it, if you see this message)"
         }
         return SpoilerData(collapsedTitle, expandedTitle, spoilerData)
+    }
+
+    fun parseTabs(html: String, order: Int): TextPart {
+        val document = Jsoup.parse(html)
+        val yuiNavset = document.getElementsByClass(CLASS_TABS).first()
+        yuiNavset?.let {
+            val titlesTag = yuiNavset.getElementsByClass("yui-nav").first()
+            val liElements = titlesTag.getElementsByTag(TAG_LI)
+            val tabsTitles = liElements.map { it.text() }
+            val tabsTitlesJson = objectMapper.writeValueAsString(tabsTitles)
+
+            val tabsTextPart = TextPart(data = tabsTitlesJson, type = TextType.TABS, orderInText = order)
+
+            val yuiContent = yuiNavset.getElementsByClass("yui-content").first()
+            var tabOrder = 0
+
+            tabsTextPart.innerTextParts = yuiContent.children().map {
+                val tabTextPart = TextPart(data = null, type = TextType.TAB, orderInText = tabOrder++)
+                tabTextPart.innerTextParts = parseArticleText(it.html(), false)
+                tabTextPart
+            }
+
+            return tabsTextPart
+        } ?: throw IllegalArgumentException("error parse tabs")
     }
 
     private fun getArticlesTextParts(html: String): List<String> {
@@ -152,11 +167,11 @@ class ParseArticleTextService @Autowired constructor(
             val ourElement = element.getElementsByTag(ParseConstants.TAG_BODY).first().children().first()
             when {
                 ourElement == null -> listOfTextTypes.add(TextType.TEXT)
-                ourElement.tagName() == ParseConstants.TAG_P -> listOfTextTypes.add(TextType.TEXT)
-                ourElement.tagName() == ParseConstants.TAG_BLOCKQUOTE -> listOfTextTypes.add(TextType.BLOCKQUOTE)
-                ourElement.tagName() == ParseConstants.TAG_TABLE -> listOfTextTypes.add(TextType.TABLE)
-                ourElement.className() == ParseConstants.CLASS_SPOILER -> listOfTextTypes.add(TextType.SPOILER)
-                ourElement.classNames().contains(ParseConstants.CLASS_TABS) -> listOfTextTypes.add(TextType.TABS)
+                ourElement.tagName() == TAG_P -> listOfTextTypes.add(TextType.TEXT)
+                ourElement.tagName() == TAG_BLOCKQUOTE -> listOfTextTypes.add(TextType.BLOCKQUOTE)
+                ourElement.tagName() == TAG_TABLE -> listOfTextTypes.add(TextType.TABLE)
+                ourElement.className() == CLASS_SPOILER -> listOfTextTypes.add(TextType.SPOILER)
+                ourElement.classNames().contains(CLASS_TABS) -> listOfTextTypes.add(TextType.TABS)
                 ourElement.className() == "rimg"
                         || ourElement.className() == "limg"
                         || ourElement.className() == "cimg"
@@ -166,23 +181,6 @@ class ParseArticleTextService @Autowired constructor(
         }
 
         return listOfTextTypes
-    }
-
-    //todo use it in article
-    private fun unwrapTextAlignmentDivs(element: Element) {
-        val children: Elements = element.children()
-        if (element.tagName() == "div" && element.hasAttr("style")
-                && element.attr("style").contains("text-align")) {
-            element.unwrap()
-        }
-        if (element.tagName() == "div" && element.hasAttr("style")
-                && element.attr("style").contains("float")
-                && element.className() != "scp-image-block") {
-            element.unwrap()
-        }
-        for (child in children) {
-            unwrapTextAlignmentDivs(child)
-        }
     }
 
     private data class SpoilerData(

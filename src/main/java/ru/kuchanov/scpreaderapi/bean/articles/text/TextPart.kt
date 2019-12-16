@@ -31,4 +31,13 @@ data class TextPart(
 
         @Transient
         var innerTextParts: List<TextPart>? = null
-)
+) {
+    override fun toString(): String {
+        val shortenedData = if (data != null && data.length > 30) {
+            data.substring(0, 30)
+        } else {
+            data
+        }
+        return "TextPart(type=$type, order=$orderInText, data=$shortenedData, inner=$innerTextParts)"
+    }
+}

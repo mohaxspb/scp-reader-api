@@ -21,6 +21,8 @@ object ParseConstants {
 
     const val TAG_TABLE = "table"
 
+    const val TAG_LI = "li"
+
 //         const val TAG_LI = "li"
 
     const val ATTR_SRC = "src"
@@ -104,5 +106,6 @@ enum class TextType {
     IMAGE,
     TABLE,
     TABS,
+    TAB,
     BLOCKQUOTE
 }

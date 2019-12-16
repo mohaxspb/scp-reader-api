@@ -199,6 +199,8 @@ class ParseArticleService @Autowired constructor(
 
         //extract tables, which are single tag in div
         extractTablesFromDivs(pageContent)
+        //unwrap divs with text alignment
+        unwrapTextAlignmentDivs(pageContent)
 
         //put all text which is not in any tag in div tag
         for (element in pageContent.children()) {
@@ -376,6 +378,22 @@ class ParseArticleService @Autowired constructor(
                 ourElement.appendChild(ourElement.child(0))
                 ourElement.remove()
             }
+        }
+    }
+
+    private fun unwrapTextAlignmentDivs(element: Element) {
+        val children = element.children()
+        if (element.tagName() == "div" && element.hasAttr("style")
+                && element.attr("style").contains("text-align")) {
+            element.unwrap()
+        }
+        if (element.tagName() == "div" && element.hasAttr("style")
+                && element.attr("style").contains("float")
+                && element.className() != "scp-image-block") {
+            element.unwrap()
+        }
+        for (child in children) {
+            unwrapTextAlignmentDivs(child)
         }
     }
 }
