@@ -15,6 +15,8 @@ object ParseConstants {
 
     const val TAG_P = "p"
 
+    const val TAG_BLOCKQUOTE = "blockquote"
+
     const val TAG_BODY = "body"
 
     const val TAG_TABLE = "table"
@@ -101,5 +103,6 @@ enum class TextType {
     SPOILER,
     IMAGE,
     TABLE,
-    TABS
+    TABS,
+    BLOCKQUOTE
 }

@@ -20,7 +20,7 @@ data class TextPart(
         @Column(columnDefinition = "TEXT")
         val type: TextType,
         @Column(columnDefinition = "TEXT")
-        val data: String,
+        val data: String?,
         @Column(name = "order_in_text")
         var orderInText: Int,
 

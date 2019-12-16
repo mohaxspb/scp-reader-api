@@ -2,13 +2,11 @@ package ru.kuchanov.scpreaderapi.service.parse.article
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.articles.text.TextPart
-import java.util.*
 
 
 @Service
@@ -17,15 +15,8 @@ class ParseArticleTextService @Autowired constructor(
 ) {
 
     fun parseArticleText(rawText: String, printTextParts: Boolean): List<TextPart> {
-        val textParts = mutableListOf<String>()
-        val rawTextParts = getArticlesTextParts(rawText)
-        for (value in rawTextParts) {
-            textParts.add(value)
-        }
-        val textPartsTypes = mutableListOf<TextType>()
-        for (value in getListOfTextTypes(rawTextParts)) {
-            textPartsTypes.add(value)
-        }
+        val textParts = getArticlesTextParts(rawText)
+        val textPartsTypes = getListOfTextTypes(getArticlesTextParts(rawText))
 
         if (printTextParts) {
             println("textParts: ${textParts.size}")
@@ -39,7 +30,7 @@ class ParseArticleTextService @Autowired constructor(
         val finalTextParts = mutableListOf<TextPart>()
 
         var order = 0
-        for (index in 0 until textParts.size) {
+        for (index in textParts.indices) {
             val textPart = textParts[index]
             @Suppress("MoveVariableDeclarationIntoWhen")
             val textPartType = textPartsTypes[index]
@@ -62,6 +53,11 @@ class ParseArticleTextService @Autowired constructor(
                 TextType.TABLE -> {
                     finalTextParts += parseTable(textPart, order++)
                 }
+                TextType.BLOCKQUOTE -> {
+                    val blockquoteTextPart = TextPart(data = null, type = TextType.BLOCKQUOTE, orderInText = order++)
+                    blockquoteTextPart.innerTextParts = parseBlockquote(textPart)
+                    finalTextParts += blockquoteTextPart
+                }
                 TextType.TABS -> {
                     //todo
                 }
@@ -69,6 +65,12 @@ class ParseArticleTextService @Autowired constructor(
         }
 
         return finalTextParts
+    }
+
+    private fun parseBlockquote(textPart: String): List<TextPart> {
+        val document = Jsoup.parse(textPart)
+        val extractedFromBlockquote = document.getElementsByTag("blockquote").first().html()
+        return parseArticleText(extractedFromBlockquote, false)
     }
 
     private fun parseTable(textPart: String, order: Int) =
@@ -100,7 +102,7 @@ class ParseArticleTextService @Autowired constructor(
 
     private fun parseSpoilerParts(html: String): SpoilerData {
 //        Timber.d("parseSpoilerParts: %s", html);
-        val document: Document = Jsoup.parse(html)
+        val document = Jsoup.parse(html)
         val element = document.getElementsByClass("collapsible-block-folded").first()
         val elementA = element.getElementsByTag("a").first()
         //replacing non-breaking-spaces
@@ -139,15 +141,8 @@ class ParseArticleTextService @Autowired constructor(
 
     private fun getArticlesTextParts(html: String): List<String> {
         val document = Jsoup.parse(html)
-        var contentPage: Element? = document.getElementById(ParseConstants.ID_PAGE_CONTENT)
-        if (contentPage == null) {
-            contentPage = document.body()
-        }
-        val articlesTextParts = ArrayList<String>()
-        for (element in contentPage!!.children()) {
-            articlesTextParts.add(element.outerHtml())
-        }
-        return articlesTextParts
+        val contentPage = document.getElementById(ParseConstants.ID_PAGE_CONTENT) ?: document.body()
+        return contentPage!!.children().map { it.outerHtml() }
     }
 
     private fun getListOfTextTypes(articlesTextParts: Iterable<String>): List<TextType> {
@@ -158,9 +153,10 @@ class ParseArticleTextService @Autowired constructor(
             when {
                 ourElement == null -> listOfTextTypes.add(TextType.TEXT)
                 ourElement.tagName() == ParseConstants.TAG_P -> listOfTextTypes.add(TextType.TEXT)
+                ourElement.tagName() == ParseConstants.TAG_BLOCKQUOTE -> listOfTextTypes.add(TextType.BLOCKQUOTE)
+                ourElement.tagName() == ParseConstants.TAG_TABLE -> listOfTextTypes.add(TextType.TABLE)
                 ourElement.className() == ParseConstants.CLASS_SPOILER -> listOfTextTypes.add(TextType.SPOILER)
                 ourElement.classNames().contains(ParseConstants.CLASS_TABS) -> listOfTextTypes.add(TextType.TABS)
-                ourElement.tagName() == ParseConstants.TAG_TABLE -> listOfTextTypes.add(TextType.TABLE)
                 ourElement.className() == "rimg"
                         || ourElement.className() == "limg"
                         || ourElement.className() == "cimg"
