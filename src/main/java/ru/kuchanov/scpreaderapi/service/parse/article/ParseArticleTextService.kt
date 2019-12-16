@@ -36,8 +36,6 @@ class ParseArticleTextService @Autowired constructor(
             }
         }
 
-        //todo parse complex TextParts
-
         val finalTextParts = mutableListOf<TextPart>()
 
         var order = 0
@@ -48,7 +46,6 @@ class ParseArticleTextService @Autowired constructor(
 
             when (textPartType) {
                 TextType.SPOILER -> {
-                    //todo
                     val spoilerData = parseSpoilerParts(textPart)
                     val titles = listOf(spoilerData.collapsedTitle, spoilerData.expandedTitle)
                     val titlesJson = objectMapper.writeValueAsString(titles)
@@ -56,11 +53,14 @@ class ParseArticleTextService @Autowired constructor(
                     spoilerTextPart.innerTextParts = parseArticleText(spoilerData.spoilerData, printTextParts)
                     finalTextParts += spoilerTextPart
                 }
-                TextType.TEXT, TextType.IMAGE -> finalTextParts += TextPart(
+                TextType.TEXT -> finalTextParts += TextPart(
                         data = textPart,
                         type = textPartType,
                         orderInText = order++
                 )
+                TextType.IMAGE -> {
+                    finalTextParts += parseImageData(textPart, order++)
+                }
                 TextType.TABLE -> {
                     //todo
                 }
@@ -71,6 +71,26 @@ class ParseArticleTextService @Autowired constructor(
         }
 
         return finalTextParts
+    }
+
+    private fun parseImageData(data: String, order: Int): TextPart {
+        val document = Jsoup.parse(data)
+        val imageTag = document.getElementsByTag("img").first()
+        val imageUrl = imageTag?.attr("src")
+
+        val spans = document.getElementsByTag("span")
+        val scpImageCaptions = document.getElementsByClass("scp-image-caption")
+        val title = when {
+            !spans.isEmpty() -> spans.html()
+            !scpImageCaptions.isEmpty() -> scpImageCaptions.first().html()
+            else -> null
+        }
+
+        return TextPart(
+                data = objectMapper.writeValueAsString(ImageData(imageUrl, title)),
+                type = TextType.IMAGE,
+                orderInText = order
+        )
     }
 
     private fun parseSpoilerParts(html: String): SpoilerData {
@@ -168,5 +188,10 @@ class ParseArticleTextService @Autowired constructor(
             val collapsedTitle: String,
             val expandedTitle: String,
             val spoilerData: String
+    )
+
+    private data class ImageData(
+            val url: String?,
+            val title: String?
     )
 }
