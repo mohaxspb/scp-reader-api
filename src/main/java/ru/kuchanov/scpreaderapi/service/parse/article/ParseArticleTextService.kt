@@ -53,16 +53,14 @@ class ParseArticleTextService @Autowired constructor(
                     spoilerTextPart.innerTextParts = parseArticleText(spoilerData.spoilerData, printTextParts)
                     finalTextParts += spoilerTextPart
                 }
-                TextType.TEXT -> finalTextParts += TextPart(
-                        data = textPart,
-                        type = textPartType,
-                        orderInText = order++
-                )
+                TextType.TEXT -> {
+                    finalTextParts += TextPart(data = textPart, type = textPartType, orderInText = order++)
+                }
                 TextType.IMAGE -> {
                     finalTextParts += parseImageData(textPart, order++)
                 }
                 TextType.TABLE -> {
-                    //todo
+                    finalTextParts += parseTable(textPart, order++)
                 }
                 TextType.TABS -> {
                     //todo
@@ -72,6 +70,13 @@ class ParseArticleTextService @Autowired constructor(
 
         return finalTextParts
     }
+
+    private fun parseTable(textPart: String, order: Int) =
+            TextPart(
+                    data = createTableHtml(textPart),
+                    type = TextType.TABLE,
+                    orderInText = order
+            )
 
     private fun parseImageData(data: String, order: Int): TextPart {
         val document = Jsoup.parse(data)
@@ -194,4 +199,25 @@ class ParseArticleTextService @Autowired constructor(
             val url: String?,
             val title: String?
     )
+
+    companion object {
+        private const val TABLE_TEXT_COLOR_VAR_NAME = "TABLE_TEXT_COLOR_VAR_NAME"
+        private const val TABLE_BACKGROUND_COLOR_VAR_NAME = "TABLE_BACKGROUND_COLOR_VAR_NAME"
+
+        private fun createTableHtml(tableData: String) = """
+             |<!DOCTYPE html>
+             |  <html>
+             |      <head>
+             |          <meta charset="utf-8">
+             |          <meta name="viewport" content="width=device-width, user-scalable=yes" />
+             |          <style>
+             |              table.wiki-content-table{border-collapse:collapse;border-spacing:0;margin:.5em auto}
+             |              table.wiki-content-table td{border:1px solid $TABLE_TEXT_COLOR_VAR_NAME;color: $TABLE_TEXT_COLOR_VAR_NAME;padding:.3em .7em;background-color: $TABLE_BACKGROUND_COLOR_VAR_NAME}
+             |              table.wiki-content-table th{border:1px solid $TABLE_TEXT_COLOR_VAR_NAME;color: $TABLE_TEXT_COLOR_VAR_NAME;padding:.3em .7em;background-color: $TABLE_BACKGROUND_COLOR_VAR_NAME}
+             |          </style>
+             |      </head>
+             |      <body>$tableData</body>
+             |  </html>
+           """.trimMargin()
+    }
 }
