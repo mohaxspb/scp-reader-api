@@ -21,12 +21,16 @@ class TextPartServiceImpl @Autowired constructor(
             textPartRepository.findAllByParentId(parentId)
 
     override fun findAllByArticleToLangId(articleToLangId: Long): List<TextPart> {
-        val allTextParts = textPartRepository.findAllByArticleToLangId(articleToLangId)
+        val topLevelTextParts = textPartRepository.findAllByArticleToLangIdAndParentIdNull(articleToLangId)
 
-        //todo create multiDimensional structure
-        //todo use DTO
+        topLevelTextParts.forEach { fillInnerTextParts(it) }
 
-        return allTextParts
+        return topLevelTextParts
+    }
+
+    private fun fillInnerTextParts(textPart: TextPart) {
+        textPart.innerTextParts = findAllByParentId(textPart.id!!)
+        textPart.innerTextParts!!.forEach { fillInnerTextParts(it) }
     }
 
     override fun deleteByArticleToLongId(articleToLangId: Long) =

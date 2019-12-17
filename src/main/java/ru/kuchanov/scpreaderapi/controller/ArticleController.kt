@@ -66,4 +66,14 @@ class ArticleController @Autowired constructor(
     ) =
             articleForLangService.getOneByLangAndArticleId(articleId, langEnum.lang)
                     ?: throw ArticleForLangNotFoundException()
+
+    @GetMapping("{langEnum}/{id}/full")
+    fun showArticleForIdAndLangIdFull(
+            @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
+            @PathVariable(value = "id") articleId: Long
+    ): ArticleForLangDto {
+        val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
+        return articleForLangService.getOneByLangIdAndArticleIdAsDto(articleId, lang.id)
+                ?: throw ArticleForLangNotFoundException()
+    }
 }

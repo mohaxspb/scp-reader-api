@@ -600,7 +600,7 @@ class ArticleParsingServiceBase {
     ) {
         val textPartsToSave = articleDownloaded.textParts ?: return
         //clear textPartsInDB
-        textPartService.findAllByArticleToLangId(articleForLangInDb.id!!)
+        textPartService.deleteByArticleToLongId(articleForLangInDb.id!!)
         textPartsToSave.forEach { saveTextPart(it, articleForLangInDb.id, null) }
     }
 

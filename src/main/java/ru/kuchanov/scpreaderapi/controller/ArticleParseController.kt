@@ -6,7 +6,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
-import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.LangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
@@ -87,30 +86,6 @@ class ArticleParseController @Autowired constructor(
                 HttpStatus.ACCEPTED
         )
     }
-
-//    @GetMapping("{langEnum}/parseArticleByUrlRelative")
-//    fun parseArticleByUrlRelativeAndLang(
-//            @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
-//            @RequestParam(value = "urlRelative") urlRelative: String,
-//            @RequestParam(value = "printTextParts", defaultValue = "false") printTextParts: Boolean = false,
-//            @AuthenticationPrincipal user: User?
-//    ): ResponseEntity<*> {
-//        val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
-//        val articleForLang = articleForLangService.getArticleForLangByUrlRelativeAndLang(urlRelative, lang.id)
-//                ?: throw ArticleForLangNotFoundException()
-//
-//        println("parseArticleByUrlRelativeAndLang. lang: ${lang.id}, articleForLang.id: ${articleForLang.id}, article.id: ${articleForLang.articleId}, printTextParts: $printTextParts")
-//
-//        articleParsingService.parseArticleForLang(urlRelative, lang, printTextParts)
-//
-//        return ResponseEntity(
-//                object {
-//                    @Suppress("unused")
-//                    val state = "Parsing started for ArticleForLang id/title ${articleForLang.id}/${articleForLang.title}"
-//                },
-//                HttpStatus.ACCEPTED
-//        )
-//    }
 
     @GetMapping("{langEnum}/parseArticleByUrlRelative")
     fun parseArticleByUrlRelativeAndLang(

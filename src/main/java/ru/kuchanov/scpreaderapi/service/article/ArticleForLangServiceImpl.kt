@@ -8,6 +8,7 @@ import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInListProjection
 import ru.kuchanov.scpreaderapi.repository.article.ArticlesForLangRepository
 import ru.kuchanov.scpreaderapi.repository.article.tags.TagForLangRepository
 import ru.kuchanov.scpreaderapi.service.article.image.ArticlesImagesService
+import ru.kuchanov.scpreaderapi.service.article.text.TextPartService
 import ru.kuchanov.scpreaderapi.service.article.type.ArticleAndArticleTypeService
 
 
@@ -16,7 +17,8 @@ class ArticleForLangServiceImpl @Autowired constructor(
         val articlesForLangRepository: ArticlesForLangRepository,
         val imagesService: ArticlesImagesService,
         val tagsForLangRepository: TagForLangRepository,
-        val articleAndArticleTypeService: ArticleAndArticleTypeService
+        val articleAndArticleTypeService: ArticleAndArticleTypeService,
+        val textPartService: TextPartService
 ) : ArticleForLangService {
 
     override fun insert(articleForLang: ArticleForLang): ArticleForLang =
@@ -49,9 +51,17 @@ class ArticleForLangServiceImpl @Autowired constructor(
     override fun getOneByLangAndArticleId(articleId: Long, langId: String) =
             articlesForLangRepository.getOneByArticleIdAndLangId(articleId, langId)
 
+    override fun getOneByLangIdAndArticleIdAsDto(articleId: Long, langId: String) =
+            articlesForLangRepository
+                    .getOneByArticleIdAndLangIdAsProjection(articleId, langId)
+                    ?.toDto()
+                    ?.withType()
+                    ?.withImages()
+                    ?.withTags()
+                    ?.withTextParts()
+
     fun ArticleInListProjection.toDto() =
             ArticleForLangDto(
-                    //todo add createdOnSite
                     id = this.id,
                     articleId = this.articleId,
                     langId = this.langId,
@@ -74,4 +84,7 @@ class ArticleForLangServiceImpl @Autowired constructor(
 
     fun ArticleForLangDto.withType(): ArticleForLangDto =
             this.apply { articleTypeDto = articleAndArticleTypeService.getByArticleIdAndLangIdAsDto(articleId, langId) }
+
+    fun ArticleForLangDto.withTextParts(): ArticleForLangDto =
+            this.apply { textParts = textPartService.findAllByArticleToLangId(id) }
 }

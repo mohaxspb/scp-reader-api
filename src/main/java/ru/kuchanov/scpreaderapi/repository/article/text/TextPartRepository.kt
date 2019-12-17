@@ -8,7 +8,7 @@ interface TextPartRepository : JpaRepository<TextPart, Long> {
 
     fun findAllByParentId(parentId: Long): List<TextPart>
 
-    fun findAllByArticleToLangId(articleToLangId: Long): List<TextPart>
+    fun findAllByArticleToLangIdAndParentIdNull(articleToLangId: Long): List<TextPart>
 
     @Transactional
     fun deleteByArticleToLangId(articleToLangId: Long)
