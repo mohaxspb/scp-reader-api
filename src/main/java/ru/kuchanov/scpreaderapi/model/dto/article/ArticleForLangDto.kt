@@ -1,6 +1,5 @@
 package ru.kuchanov.scpreaderapi.model.dto.article
 
-import ru.kuchanov.scpreaderapi.bean.articles.text.TextPart
 import java.sql.Timestamp
 
 
@@ -16,5 +15,5 @@ data class ArticleForLangDto(
     var imageUrls: List<ArticlesImagesDto>? = null
     var tagsForLang: List<TagForLangDto>? = null
     var articleTypeDto: ArticleTypeDto? = null
-    var textParts: List<TextPart>? = null
+    var textParts: List<TextPartDto>? = null
 }

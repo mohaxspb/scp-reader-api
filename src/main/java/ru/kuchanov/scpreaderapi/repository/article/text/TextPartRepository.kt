@@ -2,13 +2,14 @@ package ru.kuchanov.scpreaderapi.repository.article.text
 
 import org.springframework.data.jpa.repository.JpaRepository
 import ru.kuchanov.scpreaderapi.bean.articles.text.TextPart
+import ru.kuchanov.scpreaderapi.model.dto.article.TextPartProjection
 import javax.transaction.Transactional
 
 interface TextPartRepository : JpaRepository<TextPart, Long> {
 
-    fun findAllByParentId(parentId: Long): List<TextPart>
+    fun findAllByParentIdOrderByOrderInText(parentId: Long): List<TextPartProjection>
 
-    fun findAllByArticleToLangIdAndParentIdNull(articleToLangId: Long): List<TextPart>
+    fun findAllByArticleToLangIdAndParentIdNullOrderByOrderInText(articleToLangId: Long): List<TextPartProjection>
 
     @Transactional
     fun deleteByArticleToLangId(articleToLangId: Long)
