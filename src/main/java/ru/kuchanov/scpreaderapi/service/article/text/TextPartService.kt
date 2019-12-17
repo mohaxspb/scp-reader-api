@@ -14,4 +14,7 @@ interface TextPartService {
     fun findAllByParentId(parentId: Long): List<TextPart>
 
     fun findAllByArticleToLangId(articleToLangId: Long): List<TextPart>
+
+    @Transactional
+    fun deleteByArticleToLongId(articleToLangId: Long)
 }

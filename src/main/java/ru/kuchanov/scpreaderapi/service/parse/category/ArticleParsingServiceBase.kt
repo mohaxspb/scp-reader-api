@@ -27,6 +27,7 @@ import ru.kuchanov.scpreaderapi.bean.articles.Article
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLangToArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.category.ArticleCategoryForLangToArticleForLang
+import ru.kuchanov.scpreaderapi.bean.articles.text.TextPart
 import ru.kuchanov.scpreaderapi.bean.articles.types.ArticlesAndArticleTypes
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 import ru.kuchanov.scpreaderapi.configuration.NetworkConfiguration
@@ -37,6 +38,7 @@ import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryForArtic
 import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryForLangService
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForLangService
+import ru.kuchanov.scpreaderapi.service.article.text.TextPartService
 import ru.kuchanov.scpreaderapi.service.article.type.ArticleAndArticleTypeService
 import ru.kuchanov.scpreaderapi.service.article.type.ArticleTypeService
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseArticleService
@@ -86,6 +88,9 @@ class ArticleParsingServiceBase {
 
     @Autowired
     private lateinit var categoryToLangService: ArticleCategoryForLangService
+
+    @Autowired
+    private lateinit var textPartService: TextPartService
 
     fun getParsingRealizationForLang(lang: Lang): ArticleParsingServiceBase =
             when (lang.langCode) {
@@ -570,6 +575,8 @@ class ArticleParsingServiceBase {
 
                 manageTagsForArticle(lang.id, articleDownloaded, articleForLangInDb)
 
+                manageArticleTextParts(articleDownloaded, articleForLangInDb)
+
                 //parse inner
                 getAndSaveInnerArticles(lang, articleDownloaded, innerArticlesDepth)
 
@@ -585,6 +592,23 @@ class ArticleParsingServiceBase {
             e.printStackTrace()
             return null
         }
+    }
+
+    private fun manageArticleTextParts(
+            articleDownloaded: ArticleForLang,
+            articleForLangInDb: ArticleForLang
+    ) {
+        val textPartsToSave = articleDownloaded.textParts ?: return
+        //clear textPartsInDB
+        textPartService.findAllByArticleToLangId(articleForLangInDb.id!!)
+        textPartsToSave.forEach { saveTextPart(it, articleForLangInDb.id, null) }
+    }
+
+    private fun saveTextPart(textPart: TextPart, articleToLangId: Long, parentId: Long?) {
+        textPart.articleToLangId = articleToLangId
+        textPart.parentId = parentId
+        val savedTextPart = textPartService.insert(textPart)
+        textPart.innerTextParts?.forEach { saveTextPart(it, articleToLangId, savedTextPart.id) }
     }
 
     @Suppress("DuplicatedCode")

@@ -310,6 +310,7 @@ class ParseArticleService @Autowired constructor(
                 commentsUrl = commentsUrl,
                 images = imgsUrls.map { ArticlesImages(url = it) }.toMutableSet(),
                 tags = articleTags.map { TagForLang(langId = lang.id, title = it) }.toMutableSet(),
+                textParts = textParts,
                 innerArticlesForLang = innerArticlesUrls.map {
                     ArticleForLang(
                             langId = lang.id,

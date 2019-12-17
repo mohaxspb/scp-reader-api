@@ -28,4 +28,7 @@ class TextPartServiceImpl @Autowired constructor(
 
         return allTextParts
     }
+
+    override fun deleteByArticleToLongId(articleToLangId: Long) =
+            textPartRepository.deleteByArticleToLangId(articleToLangId)
 }
