@@ -21,7 +21,7 @@ values ('SCP Series I'),
        ('SCP Series V')
 ON CONFLICT DO NOTHING;
 
-create table if not exists article_category_titles_for_langs
+create table if not exists article_categories__to__langs
 (
     id                  BIGSERIAL not null,
     article_category_id bigint    not null,
@@ -33,23 +33,23 @@ create table if not exists article_category_titles_for_langs
     PRIMARY KEY (id)
 );
 
-ALTER TABLE article_category_titles_for_langs
+ALTER TABLE article_categories__to__langs
     drop constraint IF EXISTS fk_article_category_id__to__article_categories CASCADE;
-alter table article_category_titles_for_langs
+alter table article_categories__to__langs
     add constraint fk_article_category_id__to__article_categories
         foreign key (article_category_id)
             REFERENCES article_categories (id);
 
-ALTER TABLE article_category_titles_for_langs
+ALTER TABLE article_categories__to__langs
     drop constraint IF EXISTS fk_lang_id__to__langs CASCADE;
-alter table article_category_titles_for_langs
+alter table article_categories__to__langs
     add constraint fk_lang_id__to__langs
         foreign key (lang_id)
             REFERENCES langs (id);
 
-alter table article_category_titles_for_langs
+alter table article_categories__to__langs
     drop constraint if exists category_to_lang_unique;
-alter table article_category_titles_for_langs
+alter table article_categories__to__langs
     add constraint category_to_lang_unique unique (article_category_id, lang_id);
 
 with
@@ -70,7 +70,7 @@ with
     ptLang as (select * from langs where lang_code = 'pt'),
     cnLang as (select * from langs where lang_code = 'cn')
 insert
-into article_category_titles_for_langs(article_category_id, lang_id, title, site_url)
+into article_categories__to__langs(article_category_id, lang_id, title, site_url)
 VALUES
 -- ru
 ((select id from SERIES_1), (select id from ruLang), 'Объекты I', '/scp-list'),
@@ -128,26 +128,36 @@ VALUES
 ((select id from SERIES_5), (select id from cnLang), 'SCP系列 5', '/scp-series-5')
 ON CONFLICT DO NOTHING;
 
-create table if not exists article_categories__to__articles
+
+create table if not exists article_categories_to_lang__to__articles_to_lang
 (
-    id                  BIGSERIAL not null,
-    article_category_id bigint    not null,
-    article_id          bigint    not null,
-    created             timestamp,
-    updated             timestamp,
+    id                          BIGSERIAL not null,
+    article_category_to_lang_id bigint    not null,
+    article_to_lang_id          bigint    not null,
+    order_in_category           smallint,
+    created                     timestamp,
+    updated                     timestamp,
     PRIMARY KEY (id)
 );
 
-ALTER TABLE article_categories__to__articles
-    drop constraint IF EXISTS fk_article_category_id__to__article_categories CASCADE;
-alter table article_categories__to__articles
-    add constraint fk_article_category_id__to__article_categories
-        foreign key (article_category_id)
-            REFERENCES article_categories (id);
+-- change fk constraints
+ALTER TABLE if exists article_categories_to_lang__to__articles_to_lang
+    drop constraint IF EXISTS fk_article_to_lang_id__to__articles_langs CASCADE;
+alter table article_categories_to_lang__to__articles_to_lang
+    add constraint fk_article_to_lang_id__to__articles_langs
+        foreign key (article_to_lang_id)
+            REFERENCES articles_langs (id);
 
-ALTER TABLE article_categories__to__articles
-    drop constraint IF EXISTS fk_article_id__to__articles CASCADE;
-alter table article_categories__to__articles
-    add constraint fk_article_id__to__articles
-        foreign key (article_id)
-            REFERENCES articles (id);
+ALTER TABLE if exists article_categories_to_lang__to__articles_to_lang
+    drop constraint IF EXISTS fk_article_category_to_lang_id__to__article_categories_to_langs CASCADE;
+alter table article_categories_to_lang__to__articles_to_lang
+    add constraint fk_article_category_to_lang_id__to__article_categories_to_langs
+        foreign key (article_category_to_lang_id)
+            REFERENCES article_categories__to__langs (id);
+
+-- add unique constraint
+alter table if exists article_categories_to_lang__to__articles_to_lang
+    drop constraint if exists article_category_order_unique;
+alter table article_categories_to_lang__to__articles_to_lang
+    add constraint article_category_order_unique
+        unique (article_category_to_lang_id, article_to_lang_id, order_in_category);

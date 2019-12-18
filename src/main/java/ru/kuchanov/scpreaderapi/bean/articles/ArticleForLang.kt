@@ -5,21 +5,17 @@ import org.hibernate.annotations.UpdateTimestamp
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.ResponseStatus
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
+import ru.kuchanov.scpreaderapi.bean.articles.image.ArticlesImages
 import ru.kuchanov.scpreaderapi.bean.articles.tags.TagForLang
+import ru.kuchanov.scpreaderapi.bean.articles.text.TextPart
+import ru.kuchanov.scpreaderapi.utils.NoArgConstructor
 import java.sql.Timestamp
 import javax.persistence.*
 
 
 @Entity
-@Table(
-        name = "articles_langs",
-        uniqueConstraints = [
-            UniqueConstraint(
-                    columnNames = ["article_id", "lang_id", "url_relative"]
-            )
-        ]
-)
-
+@Table(name = "articles_langs")
+@NoArgConstructor
 data class ArticleForLang(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -86,10 +82,12 @@ data class ArticleForLang(
         //to not write on insert
         @Transient
         var tags: MutableSet<TagForLang> = mutableSetOf(),
+        //to not write on insert
+        @Transient
+        var textParts: List<TextPart>? = null,
 
         //inner articles
         //todo check it and create migration
-
         /**
          * see https://stackoverflow.com/a/13708470/3212712
          */
@@ -139,6 +137,7 @@ data class ArticleForLang(
         /**
          * we have it here to be able to write it to DB while parse Objects for RU and PT.
          */
+        //to not write on insert
         @Transient
         var articleTypeEnumEnumValue: ScpReaderConstants.ArticleTypeEnum? = null,
 

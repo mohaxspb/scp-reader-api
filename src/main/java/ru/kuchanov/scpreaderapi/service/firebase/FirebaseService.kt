@@ -17,9 +17,9 @@ import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.articles.Article
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
-import ru.kuchanov.scpreaderapi.bean.articles.FavoriteArticlesByLang
-import ru.kuchanov.scpreaderapi.bean.articles.FirebaseDataUpdateDate
-import ru.kuchanov.scpreaderapi.bean.articles.ReadArticlesByLang
+import ru.kuchanov.scpreaderapi.bean.articles.favorite.FavoriteArticlesByLang
+import ru.kuchanov.scpreaderapi.bean.FirebaseDataUpdateDate
+import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticlesByLang
 import ru.kuchanov.scpreaderapi.bean.auth.Authority
 import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
 import ru.kuchanov.scpreaderapi.bean.users.Lang
@@ -33,8 +33,8 @@ import ru.kuchanov.scpreaderapi.model.user.LevelsJson
 import ru.kuchanov.scpreaderapi.repository.firebase.FirebaseDataUpdateDateRepository
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.ArticleService
-import ru.kuchanov.scpreaderapi.service.article.FavoriteArticleForLangService
-import ru.kuchanov.scpreaderapi.service.article.ReadArticleForLangService
+import ru.kuchanov.scpreaderapi.service.article.favorite.FavoriteArticleForLangService
+import ru.kuchanov.scpreaderapi.service.article.read.ReadArticleForLangService
 import ru.kuchanov.scpreaderapi.service.auth.AuthorityService
 import ru.kuchanov.scpreaderapi.service.users.LangService
 import ru.kuchanov.scpreaderapi.service.users.UserService

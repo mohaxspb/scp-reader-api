@@ -10,7 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.junit4.SpringRunner
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
-import ru.kuchanov.scpreaderapi.service.parse.ArticleParsingServiceBase
+import ru.kuchanov.scpreaderapi.service.parse.category.ArticleParsingServiceBase
 import ru.kuchanov.scpreaderapi.service.users.LangService
 
 @RunWith(SpringRunner::class)

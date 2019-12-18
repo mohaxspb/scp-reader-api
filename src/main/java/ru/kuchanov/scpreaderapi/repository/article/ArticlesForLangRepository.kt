@@ -64,7 +64,7 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
                 art.article_id as articleId,
                 art.url_relative as urlRelative,
                 art.title,
-                art.rating ,
+                art.rating,
                 art.created_on_site as createdOnSite
                 from articles_langs art
                 join article_categories_to_lang__to__articles_to_lang art_cat on art.id = art_cat.article_to_lang_id
@@ -77,4 +77,21 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
     fun findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId: Long): List<ArticleInListProjection>
 
     fun getOneByArticleIdAndLangId(articleId: Long, langId: String): ArticleForLang?
+
+    @Query(
+            value = """
+                select 
+                art.id, 
+                art.lang_id as langId,
+                art.article_id as articleId,
+                art.url_relative as urlRelative,
+                art.title,
+                art.rating,
+                art.created_on_site as createdOnSite
+                from articles_langs art
+                where art.article_id = :articleId and lang_id = :langId
+            """,
+            nativeQuery = true
+    )
+    fun getOneByArticleIdAndLangIdAsProjection(articleId: Long, langId: String): ArticleInListProjection?
 }
