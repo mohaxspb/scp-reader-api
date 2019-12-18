@@ -133,20 +133,19 @@ class ParseArticleTextService @Autowired constructor(
     fun parseTabs(html: String, order: Int): TextPart {
         val document = Jsoup.parse(html)
         val yuiNavset = document.getElementsByClass(CLASS_TABS).first()
-        yuiNavset?.let {
-            val titlesTag = yuiNavset.getElementsByClass("yui-nav").first()
+        yuiNavset?.let { tabsElement ->
+            val titlesTag = tabsElement.getElementsByClass("yui-nav").first()
             val liElements = titlesTag.getElementsByTag(TAG_LI)
             val tabsTitles = liElements.map { it.text() }
-            val tabsTitlesJson = objectMapper.writeValueAsString(tabsTitles)
 
-            val tabsTextPart = TextPart(data = tabsTitlesJson, type = TextType.TABS, orderInText = order)
+            val tabsTextPart = TextPart(data = null, type = TextType.TABS, orderInText = order)
 
-            val yuiContent = yuiNavset.getElementsByClass("yui-content").first()
+            val yuiContent = tabsElement.getElementsByClass("yui-content").first()
             var tabOrder = 0
 
-            tabsTextPart.innerTextParts = yuiContent.children().map {
-                val tabTextPart = TextPart(data = null, type = TextType.TAB, orderInText = tabOrder++)
-                tabTextPart.innerTextParts = parseArticleText(it.html(), false)
+            tabsTextPart.innerTextParts = yuiContent.children().mapIndexed { index, element ->
+                val tabTextPart = TextPart(data = tabsTitles[index], type = TextType.TAB, orderInText = tabOrder++)
+                tabTextPart.innerTextParts = parseArticleText(element.html(), false)
                 tabTextPart
             }
 

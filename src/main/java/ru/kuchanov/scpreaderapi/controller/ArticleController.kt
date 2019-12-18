@@ -13,6 +13,7 @@ import ru.kuchanov.scpreaderapi.model.dto.article.ArticleForLangDto
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryForLangService
 import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryService
+import ru.kuchanov.scpreaderapi.service.article.text.TextPartService
 import ru.kuchanov.scpreaderapi.service.users.LangService
 
 
@@ -22,7 +23,8 @@ class ArticleController @Autowired constructor(
         val articleForLangService: ArticleForLangService,
         val langService: LangService,
         val categoryForLangService: ArticleCategoryForLangService,
-        val categoryService: ArticleCategoryService
+        val categoryService: ArticleCategoryService,
+        val textPartService: TextPartService
 ) {
 
     @GetMapping("/{langEnum}/recent")
@@ -75,5 +77,17 @@ class ArticleController @Autowired constructor(
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
         return articleForLangService.getOneByLangIdAndArticleIdAsDto(articleId, lang.id)
                 ?: throw ArticleForLangNotFoundException()
+    }
+
+    @DeleteMapping("{langEnum}/{id}/delete")
+    fun deleteArticleTextPartsByLangAndArticleId(
+            @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
+            @PathVariable(value = "id") articleId: Long
+    ): Boolean {
+        val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
+        val articleToLangId = articleForLangService.getOneByLangAndArticleId(articleId, lang.id)?.id
+                ?: throw ArticleForLangNotFoundException()
+        textPartService.deleteByArticleToLongId(articleToLangId)
+        return true
     }
 }

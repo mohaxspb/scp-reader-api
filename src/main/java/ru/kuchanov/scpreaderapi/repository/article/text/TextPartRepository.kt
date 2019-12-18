@@ -12,5 +12,5 @@ interface TextPartRepository : JpaRepository<TextPart, Long> {
     fun findAllByArticleToLangIdAndParentIdNullOrderByOrderInText(articleToLangId: Long): List<TextPartProjection>
 
     @Transactional
-    fun deleteByArticleToLangId(articleToLangId: Long)
+    fun deleteByArticleToLangIdAndParentIdNull(articleToLangId: Long)
 }

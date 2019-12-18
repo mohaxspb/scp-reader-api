@@ -40,7 +40,7 @@ class TextPartServiceImpl @Autowired constructor(
     }
 
     override fun deleteByArticleToLongId(articleToLangId: Long) =
-            textPartRepository.deleteByArticleToLangId(articleToLangId)
+            textPartRepository.deleteByArticleToLangIdAndParentIdNull(articleToLangId)
 
     fun TextPartProjection.toDto(): TextPartDto =
             TextPartDto(id, data, type)

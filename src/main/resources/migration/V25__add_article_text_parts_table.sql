@@ -29,4 +29,5 @@ ALTER TABLE article_to_lang_text_parts
 alter table article_to_lang_text_parts
     add constraint fk_id__to__article_to_lang_text_parts
         foreign key (parent_id)
-            REFERENCES article_to_lang_text_parts (id);
+            REFERENCES article_to_lang_text_parts (id)
+            ON DELETE CASCADE;
