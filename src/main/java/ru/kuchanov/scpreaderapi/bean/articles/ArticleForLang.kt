@@ -39,8 +39,8 @@ data class ArticleForLang(
         var createdOnSite: Timestamp? = null,
         @Column(name = "updated_on_site")
         var updatedOnSite: Timestamp? = null,
-
-        //todo add fields
+        @Column(name = "has_iframe_tag")
+        val hasIframeTag: Boolean = false,
 
         @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
         @JoinColumns(
@@ -87,7 +87,6 @@ data class ArticleForLang(
         var textParts: List<TextPart>? = null,
 
         //inner articles
-        //todo check it and create migration
         /**
          * see https://stackoverflow.com/a/13708470/3212712
          */
