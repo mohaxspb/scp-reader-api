@@ -34,14 +34,14 @@ class TextPartServiceImpl @Autowired constructor(
         return topLevelTextParts
     }
 
+    override fun deleteByArticleToLongId(articleToLangId: Long) =
+            textPartRepository.deleteByArticleToLangIdAndParentIdNull(articleToLangId)
+
     private fun fillInnerTextParts(textPart: TextPartDto) {
         textPart.innerTextParts = findAllByParentId(textPart.id)
         textPart.innerTextParts!!.forEach { fillInnerTextParts(it) }
     }
 
-    override fun deleteByArticleToLongId(articleToLangId: Long) =
-            textPartRepository.deleteByArticleToLangIdAndParentIdNull(articleToLangId)
-
-    fun TextPartProjection.toDto(): TextPartDto =
+    private fun TextPartProjection.toDto(): TextPartDto =
             TextPartDto(id, data, type)
 }
