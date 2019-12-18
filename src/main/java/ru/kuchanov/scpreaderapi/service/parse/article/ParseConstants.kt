@@ -103,6 +103,8 @@ enum class LinkType {
 enum class TextType {
     TEXT,
     SPOILER,
+    SPOILER_EXPANDED,
+    SPOILER_COLLAPSED,
     IMAGE,
     TABLE,
     TABS,

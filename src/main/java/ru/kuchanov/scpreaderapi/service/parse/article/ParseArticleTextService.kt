@@ -36,46 +36,29 @@ class ParseArticleTextService @Autowired constructor(
         var order = 0
         for (index in textParts.indices) {
             val textPart = textParts[index]
-            @Suppress("MoveVariableDeclarationIntoWhen")
-            val textPartType = textPartsTypes[index]
-
-            when (textPartType) {
-                TextType.SPOILER -> {
-                    val spoilerData = parseSpoilerParts(textPart)
-                    val titles = listOf(spoilerData.collapsedTitle, spoilerData.expandedTitle)
-                    val titlesJson = objectMapper.writeValueAsString(titles)
-                    val spoilerTextPart = TextPart(data = titlesJson, type = TextType.SPOILER, orderInText = order++)
-                    spoilerTextPart.innerTextParts = parseArticleText(spoilerData.spoilerData, printTextParts)
-                    finalTextParts += spoilerTextPart
-                }
-                TextType.IMAGE -> {
-                    finalTextParts += parseImageData(textPart, order++)
-                }
-                TextType.TABLE -> {
-                    finalTextParts += parseTable(textPart, order++)
-                }
-                TextType.BLOCKQUOTE -> {
-                    val blockquoteTextPart = TextPart(data = null, type = TextType.BLOCKQUOTE, orderInText = order++)
-                    blockquoteTextPart.innerTextParts = parseBlockquote(textPart)
-                    finalTextParts += blockquoteTextPart
-                }
-                TextType.TABS -> {
-                    finalTextParts += parseTabs(textPart, order++)
-                }
+            finalTextParts += when (textPartsTypes[index]) {
+                TextType.SPOILER -> parseSpoilerParts(textPart, order++)
+                TextType.IMAGE -> parseImageData(textPart, order++)
+                TextType.TABLE -> parseTable(textPart, order++)
+                TextType.BLOCKQUOTE -> parseBlockquote(textPart, order++)
+                TextType.TABS -> parseTabs(textPart, order++)
                 /*TextType.TEXT*/
-                else -> {
-                    finalTextParts += TextPart(data = textPart, type = textPartType, orderInText = order++)
-                }
+                else -> TextPart(data = textPart, type = TextType.TEXT, orderInText = order++)
             }
         }
 
         return finalTextParts
     }
 
-    private fun parseBlockquote(textPart: String): List<TextPart> {
+    private fun parseBlockquote(textPart: String, order: Int): TextPart {
+        val blockquoteTextPart = TextPart(data = null, type = TextType.BLOCKQUOTE, orderInText = order)
+
         val document = Jsoup.parse(textPart)
         val extractedFromBlockquote = document.getElementsByTag("blockquote").first().html()
-        return parseArticleText(extractedFromBlockquote, false)
+
+        blockquoteTextPart.innerTextParts = parseArticleText(extractedFromBlockquote, false)
+
+        return blockquoteTextPart
     }
 
     private fun parseTable(textPart: String, order: Int) =
@@ -105,16 +88,26 @@ class ParseArticleTextService @Autowired constructor(
         )
     }
 
-    private fun parseSpoilerParts(html: String): SpoilerData {
+    private fun parseSpoilerParts(html: String, order: Int): TextPart {
+        val spoilerTextPart = TextPart(data = null, type = TextType.SPOILER, orderInText = order)
+
         val document = Jsoup.parse(html)
+
+        //parse collapsed part
         val element = document.getElementsByClass("collapsible-block-folded").first()
         val elementA = element.getElementsByTag("a").first()
         //replacing non-breaking-spaces
         val collapsedTitle = elementA.text().replace("\\p{Z}".toRegex(), " ")
+        val collapsedSpoilerTextPart = TextPart(data = collapsedTitle, type = TextType.SPOILER_COLLAPSED, orderInText = 0)
+
+        //parse expanded part
         val elementUnfolded = document.getElementsByClass("collapsible-block-unfolded").first()
         val elementExpanded = elementUnfolded.getElementsByClass("collapsible-block-link").first()
 
         val expandedTitle = elementExpanded.text().replace("\\p{Z}".toRegex(), " ")
+        val expandedSpoilerTextPart = TextPart(data = expandedTitle, type = TextType.SPOILER_EXPANDED, orderInText = 1)
+
+        //parse spoiler text
         val elementContent = elementUnfolded.getElementsByClass("collapsible-block-content").first()
         val spoilerData = if (elementContent != null && elementContent.hasText()) {
             elementContent.html()
@@ -124,10 +117,13 @@ class ParseArticleTextService @Autowired constructor(
             elementContent.remove()
             elementUnfolded.html()
         } else {
-            println("ERROR WHILE PARSING SPOILER CONTENT. Please, let developers know about it, if you see this message)")
-            "ERROR WHILE PARSING SPOILER CONTENT. Please, let developers know about it, if you see this message)"
+            throw IllegalStateException("ERROR WHILE PARSING SPOILER CONTENT. Please, let developers know about it, if you see this message)")
         }
-        return SpoilerData(collapsedTitle, expandedTitle, spoilerData)
+
+        //combine data
+        expandedSpoilerTextPart.innerTextParts = parseArticleText(spoilerData, false)
+        spoilerTextPart.innerTextParts = listOf(collapsedSpoilerTextPart, expandedSpoilerTextPart)
+        return spoilerTextPart
     }
 
     fun parseTabs(html: String, order: Int): TextPart {
@@ -181,12 +177,6 @@ class ParseArticleTextService @Autowired constructor(
 
         return listOfTextTypes
     }
-
-    private data class SpoilerData(
-            val collapsedTitle: String,
-            val expandedTitle: String,
-            val spoilerData: String
-    )
 
     private data class ImageData(
             val url: String?,
