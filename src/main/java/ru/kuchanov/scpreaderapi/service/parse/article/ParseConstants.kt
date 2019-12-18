@@ -106,6 +106,8 @@ enum class TextType {
     SPOILER_EXPANDED,
     SPOILER_COLLAPSED,
     IMAGE,
+    IMAGE_URL,
+    IMAGE_TITLE,
     TABLE,
     TABS,
     TAB,

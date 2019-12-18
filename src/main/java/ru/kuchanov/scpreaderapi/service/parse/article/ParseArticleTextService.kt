@@ -1,35 +1,25 @@
 package ru.kuchanov.scpreaderapi.service.parse.article
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.jsoup.Jsoup
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.articles.text.TextPart
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ATTR_SRC
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.CLASS_SPOILER
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.CLASS_TABS
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_BLOCKQUOTE
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_IMG
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_LI
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_P
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_SPAN
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_TABLE
 
 
 @Service
-class ParseArticleTextService @Autowired constructor(
-        val objectMapper: ObjectMapper
-) {
+class ParseArticleTextService {
 
-    fun parseArticleText(rawText: String, printTextParts: Boolean): List<TextPart> {
+    fun parseArticleText(rawText: String, printTextParts: Boolean = false): List<TextPart> {
         val textParts = getArticlesTextParts(rawText)
         val textPartsTypes = getListOfTextTypes(getArticlesTextParts(rawText))
-
-//        if (printTextParts) {
-//            println("textParts: ${textParts.size}")
-//            println("textPartsTypes: ${textPartsTypes.size}\n")
-//            textParts.forEachIndexed { index, value ->
-//                println("$index: ${textPartsTypes[index]}\n")
-//                println("$index: $value\n\n")
-//            }
-//        }
 
         val finalTextParts = mutableListOf<TextPart>()
 
@@ -70,10 +60,10 @@ class ParseArticleTextService @Autowired constructor(
 
     private fun parseImageData(data: String, order: Int): TextPart {
         val document = Jsoup.parse(data)
-        val imageTag = document.getElementsByTag("img").first()
-        val imageUrl = imageTag?.attr("src")
+        val imageTag = document.getElementsByTag(TAG_IMG).first()
+        val imageUrl = imageTag?.attr(ATTR_SRC)
 
-        val spans = document.getElementsByTag("span")
+        val spans = document.getElementsByTag(TAG_SPAN)
         val scpImageCaptions = document.getElementsByClass("scp-image-caption")
         val title = when {
             !spans.isEmpty() -> spans.html()
@@ -81,11 +71,12 @@ class ParseArticleTextService @Autowired constructor(
             else -> null
         }
 
-        return TextPart(
-                data = objectMapper.writeValueAsString(ImageData(imageUrl, title)),
-                type = TextType.IMAGE,
-                orderInText = order
-        )
+        val imageTextPart = TextPart(data = null, type = TextType.IMAGE, orderInText = order)
+        val imageUrlTextPart = TextPart(data = imageUrl, type = TextType.IMAGE_URL, orderInText = 0)
+        val imageTitleTextPart = TextPart(data = title, type = TextType.IMAGE_TITLE, orderInText = 1)
+        imageTextPart.innerTextParts = listOf(imageUrlTextPart, imageTitleTextPart)
+
+        return imageTextPart
     }
 
     private fun parseSpoilerParts(html: String, order: Int): TextPart {
@@ -177,11 +168,6 @@ class ParseArticleTextService @Autowired constructor(
 
         return listOfTextTypes
     }
-
-    private data class ImageData(
-            val url: String?,
-            val title: String?
-    )
 
     companion object {
         private const val TABLE_TEXT_COLOR_VAR_NAME = "TABLE_TEXT_COLOR_VAR_NAME"
