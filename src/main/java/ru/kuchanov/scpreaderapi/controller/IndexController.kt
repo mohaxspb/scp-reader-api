@@ -1,6 +1,5 @@
 package ru.kuchanov.scpreaderapi.controller
 
-import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -8,7 +7,6 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import ru.kuchanov.scpreaderapi.bean.users.User
-import ru.kuchanov.scpreaderapi.service.auth.AuthorityService
 import ru.kuchanov.scpreaderapi.service.users.UserService
 
 
@@ -19,14 +17,7 @@ class IndexController {
     lateinit var userService: UserService
 
     @Autowired
-    lateinit var authoritiesService: AuthorityService
-
-    @Autowired
     private lateinit var passwordEncoder: PasswordEncoder
-
-    @Suppress("unused")
-    @Autowired
-    private lateinit var log: Logger
 
     @GetMapping("/")
     fun index(): String = "Greetings from Spring Boot!"
