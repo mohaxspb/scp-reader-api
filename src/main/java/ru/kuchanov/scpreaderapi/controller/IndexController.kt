@@ -31,20 +31,11 @@ class IndexController {
     @GetMapping("/")
     fun index(): String = "Greetings from Spring Boot!"
 
-    @GetMapping("/hello")
-    fun test(@RequestParam(value = "name", defaultValue = "World") name: String) = "Hello, $name"
-
-    @GetMapping("/showUsers")
-    fun showUsers() = userService.findAll()
-
     @GetMapping("/me")
     fun showMe(
             @AuthenticationPrincipal user: User,
             @RequestParam(value = "showFull") showFull: Boolean = true
     ) = if (showFull) userService.getById(user.id!!) else user
-
-    @GetMapping("/showAuthorities")
-    fun showAuthorities() = authoritiesService.findAll()
 
     @GetMapping("/encrypt")
     fun encrypt(@RequestParam(value = "target") target: String): String =
