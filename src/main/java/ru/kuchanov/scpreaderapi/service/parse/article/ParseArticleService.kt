@@ -23,7 +23,6 @@ import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_IFRAME
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_IMG
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_SPAN
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_TABLE
-import java.util.*
 
 
 @Service
@@ -39,31 +38,38 @@ class ParseArticleService @Autowired constructor(
             printTextParts: Boolean = false
     ): ArticleForLang {
 //        println("parseArticle: $urlRelative, ${lang.id}, $printTextParts")
+
         //some article are in div... I.e. http://scp-wiki-cn.wikidot.com/taboo
         //so check it and extract text
-        if (pageContent.children().size == 1 && pageContent.children().first().tagName() == TAG_DIV) {
-            val theOnlyChildDiv = pageContent.children().first()
+        unwrapDivs(pageContent)
 
-            var child = theOnlyChildDiv.children().first()
-
-            val children = mutableListOf<Node>()
-            while (child != null) {
-                children.add(child)
-                //fixme check casting error in case for /scp-4000 on http://www.scp-wiki.net/scp-series-5
-                child = child.nextSibling() as Element?
+        //some fucking articles have all its content in 2 div... WTF?! One more fucking Kludge.
+        //see http://scpfoundation.net/scp-2111/offset/2
+        val divWithAllContent = pageContent.getElementsByClass("list-pages-box").first()
+        if (divWithAllContent != null) {
+            val innerDiv = divWithAllContent.getElementsByClass("list-pages-item").first()
+            if (innerDiv != null) {
+                var prevElement: Element = divWithAllContent
+                for (contentElement in innerDiv.children()) {
+                    prevElement.after(contentElement)
+                    prevElement = contentElement
+                }
+                divWithAllContent.remove()
             }
-
-            var prev: Node = theOnlyChildDiv
-            for (node in children) {
-                prev.after(node)
-                prev = node
-            }
-
-            theOnlyChildDiv.remove()
         }
 
+        //also delete all divs with no content
+        pageContent.getElementsByTag(TAG_DIV).forEach {
+            if (it.children().isEmpty()) {
+                it.remove()
+            }
+        }
 
-        //замена ссылок в сносках
+        //and remove all mobile divs
+        pageContent.getElementsByClass("warning-mobile").forEach { it.remove() }
+        pageContent.getElementsByClass("pictures4mobile").forEach { it.remove() }
+
+        //replace links in footnote refs
         val footnoterefs = pageContent.getElementsByClass("footnoteref")
         for (snoska in footnoterefs) {
             val aTag = snoska.getElementsByTag(TAG_A).first()
@@ -80,10 +86,9 @@ class ParseArticleService @Autowired constructor(
             val aTag = snoska.getElementsByTag("a").first()
             snoska.prependText(aTag.text())
             aTag.remove()
-            //                    aTag.replaceWith(new Element(Tag.valueOf("pizda"), aTag.text()));
         }
 
-        //замена ссылок в библиографии
+        //replace links in bibliography
         val bibliographi = pageContent.getElementsByClass("bibcite")
         for (snoska in bibliographi) {
             val aTag = snoska.getElementsByTag("a").first()
@@ -92,43 +97,9 @@ class ParseArticleService @Autowired constructor(
             val id = onclickAttr.substring(onclickAttr.indexOf("bibitem-"), onclickAttr.lastIndexOf("'"))
             aTag.attr(ATTR_HREF, id)
         }
-        //remove rating bar
-        var rating: Int? = null
-        val rateDiv = pageContent.getElementsByClass("page-rate-widget-box").first()
-        if (rateDiv != null) {
-            val spanWithRating = rateDiv.getElementsByClass("rate-points").first()
-            if (spanWithRating != null) {
-                val ratingSpan = spanWithRating.getElementsByClass("number").first()
-                if (ratingSpan != null && !TextUtils.isEmpty(ratingSpan.text())) {
-                    try {
-//                        rating = Integer.parseInt(ratingSpan.text().substring(1, ratingSpan.text().length))
-                        rating = Integer.parseInt(ratingSpan.text())
-                        //                            Timber.d("rating: %s", rating);
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }
-            }
 
-            val span1 = rateDiv.getElementsByClass("rateup").first()
-            span1.remove()
-            val span2 = rateDiv.getElementsByClass("ratedown").first()
-            span2.remove()
-            val span3 = rateDiv.getElementsByClass("cancel").first()
-            span3.remove()
+        val rating = parseAndRemoveRatingBar(pageContent)
 
-            val heritageDiv = rateDiv.parent().getElementsByClass("heritage-emblem")
-            if (heritageDiv != null && !heritageDiv.isEmpty()) {
-                heritageDiv.first().remove()
-            }
-
-            //attempt to remove parent div, if it has only this child
-            if (rateDiv.parent().childNodeSize() == 1) {
-                rateDiv.parent().remove()
-            } else {
-                rateDiv.remove()
-            }
-        }
         //remove something more
         val svernut = pageContent.getElementById("toc-action-bar")
         svernut?.remove()
@@ -158,26 +129,9 @@ class ParseArticleService @Autowired constructor(
         //replace all spans with strike-through with <s>
         val spansWithStrike = pageContent.select("span[style=text-decoration: line-through;]")
         for (element in spansWithStrike) {
-            //                    Timber.d("element: %s", element);
             element.tagName("s")
             for (attribute in element.attributes()) {
                 element.removeAttr(attribute.key)
-            }
-            //                    Timber.d("element refactored: %s", element);
-        }
-
-        //some fucking articles have all its content in 2 div... WTF?! One more fucking Kludge.
-        //see http://scpfoundation.net/scp-2111/offset/2
-        val divWithAllContent = pageContent.getElementsByClass("list-pages-box").first()
-        if (divWithAllContent != null) {
-            val innerDiv = divWithAllContent.getElementsByClass("list-pages-item").first()
-            if (innerDiv != null) {
-                var prevElement: Element = divWithAllContent
-                for (contentElement in innerDiv.children()) {
-                    prevElement.after(contentElement)
-                    prevElement = contentElement
-                }
-                divWithAllContent.remove()
             }
         }
 
@@ -337,6 +291,18 @@ class ParseArticleService @Autowired constructor(
         parseRimgLimgCimgImages("rimg", pageContent)
         parseRimgLimgCimgImages("limg", pageContent)
         parseRimgLimgCimgImages("cimg", pageContent)
+
+        extractScpImageBlocks(pageContent)
+    }
+
+    private fun extractScpImageBlocks(element: Element) {
+        val scpImageBlocks = element.children()
+        scpImageBlocks.forEach {
+            if (it.children().size == 1 && it.children().first().classNames().contains("scp-image-block")) {
+                it.after(it.children().first())
+                it.remove()
+            }
+        }
     }
 
     private fun parseRimgLimgCimgImages(className: String, pageContent: Element) {
@@ -347,11 +313,11 @@ class ParseArticleService @Autowired constructor(
                 val imgs = rimg.getElementsByTag(TAG_IMG)
 
                 if (imgs != null && imgs.size > 1) {
-                    val rimgsToAdd = ArrayList<Element>()
+                    val rimgsToAdd = mutableListOf<Element>()
                     for (i in 0 until imgs.size) {
                         val img = imgs[i]
 
-                        var nextImgSibling: Element? = img.nextElementSibling()
+                        var nextImgSibling = img.nextElementSibling()
 
                         val descriptions = Elements()
                         while (nextImgSibling != null && nextImgSibling.tagName() != TAG_IMG) {
@@ -405,5 +371,64 @@ class ParseArticleService @Autowired constructor(
         for (child in children) {
             unwrapTextAlignmentDivs(child)
         }
+    }
+
+    private fun unwrapDivs(element: Element) {
+        if (element.children().size == 1 && element.children().first().tagName() == TAG_DIV) {
+            val theOnlyChildDiv = element.children().first()
+
+            unwrapDivs(theOnlyChildDiv)
+
+            val children = theOnlyChildDiv.children()
+            var prev: Node = theOnlyChildDiv
+            for (node in children) {
+                prev.after(node)
+                prev = node
+            }
+
+            theOnlyChildDiv.remove()
+        }
+    }
+
+    private fun parseAndRemoveRatingBar(element: Element): Int? {
+        var rating: Int? = null
+        val rateDiv = element.getElementsByClass("page-rate-widget-box").first()
+        if (rateDiv != null) {
+            val spanWithRating = rateDiv.getElementsByClass("rate-points").first()
+            if (spanWithRating != null) {
+                val ratingSpan = spanWithRating.getElementsByClass("number").first()
+                if (ratingSpan != null && !TextUtils.isEmpty(ratingSpan.text())) {
+                    try {
+//                        rating = Integer.parseInt(ratingSpan.text().substring(1, ratingSpan.text().length))
+                        rating = Integer.parseInt(ratingSpan.text())
+                        //                            Timber.d("rating: %s", rating);
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+
+            val span1 = rateDiv.getElementsByClass("rateup").first()
+            span1.remove()
+            val span2 = rateDiv.getElementsByClass("ratedown").first()
+            span2.remove()
+            val span3 = rateDiv.getElementsByClass("cancel").first()
+            span3.remove()
+
+            val heritageDiv = rateDiv.parent().getElementsByClass("heritage-emblem")
+            if (heritageDiv != null && !heritageDiv.isEmpty()) {
+                heritageDiv.first().remove()
+            }
+
+            //remove rating bar
+            //attempt to remove parent div, if it has only this child
+            if (rateDiv.parent().childNodeSize() == 1) {
+                rateDiv.parent().remove()
+            } else {
+                rateDiv.remove()
+            }
+        }
+
+        return rating
     }
 }
