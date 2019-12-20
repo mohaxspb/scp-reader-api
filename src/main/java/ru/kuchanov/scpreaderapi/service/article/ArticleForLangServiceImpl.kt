@@ -68,7 +68,8 @@ class ArticleForLangServiceImpl @Autowired constructor(
                     urlRelative = this.urlRelative,
                     rating = this.rating,
                     title = this.title,
-                    createdOnSite = this.createdOnSite
+                    createdOnSite = this.createdOnSite,
+                    hasIframeTag = this.hasIframeTag
             )
 
     fun ArticleForLangDto.withImages(): ArticleForLangDto =
@@ -85,6 +86,11 @@ class ArticleForLangServiceImpl @Autowired constructor(
     fun ArticleForLangDto.withType(): ArticleForLangDto =
             this.apply { articleTypeDto = articleAndArticleTypeService.getByArticleIdAndLangIdAsDto(articleId, langId) }
 
-    fun ArticleForLangDto.withTextParts(): ArticleForLangDto =
+    fun ArticleForLangDto.withTextParts(): ArticleForLangDto {
+        return if (!hasIframeTag) {
             this.apply { textParts = textPartService.findAllByArticleToLangId(id) }
+        } else {
+            this
+        }
+    }
 }
