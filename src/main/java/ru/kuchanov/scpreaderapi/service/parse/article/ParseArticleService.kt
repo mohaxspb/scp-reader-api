@@ -257,6 +257,9 @@ class ParseArticleService @Autowired constructor(
 
         //comments url
         val commentsUrl = doc.getElementById("discuss-button")?.attr("href")?.let {
+            if (it.contains("javascript")) {
+                println("COMMENTS URL ERROR: $urlRelative, ${lang.siteBaseUrl + urlRelative}")
+            }
             "${lang.siteBaseUrl}$it"
         }
 

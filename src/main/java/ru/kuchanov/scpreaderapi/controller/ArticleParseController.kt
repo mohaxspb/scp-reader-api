@@ -87,6 +87,29 @@ class ArticleParseController @Autowired constructor(
         )
     }
 
+    @GetMapping("/{langEnum}/object/{concreteObject}")
+    fun updateConcreteObjectArticles(
+            @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
+            @PathVariable(value = "concreteObject") concreteObject: Int,
+            @RequestParam(value = "maxPageCount") maxPageCount: Int?,
+            @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
+            @RequestParam(value = "innerArticlesDepth") innerArticlesDepth: Int?,
+            @AuthenticationPrincipal user: User?
+    ): ResponseEntity<*> {
+        val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
+        val parsingService = articleParsingService.getParsingRealizationForLang(lang)
+        val objectUrl = parsingService.getObjectArticlesUrls()[concreteObject]
+        parsingService.parseConcreteObjectArticlesForLang(objectUrl, lang, maxPageCount, processOnlyCount, innerArticlesDepth)
+
+        return ResponseEntity(
+                object {
+                    @Suppress("unused")
+                    val state = "parsing started"
+                },
+                HttpStatus.ACCEPTED
+        )
+    }
+
     @GetMapping("{langEnum}/parseArticleByUrlRelative")
     fun parseArticleByUrlRelativeAndLang(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
