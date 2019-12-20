@@ -10,7 +10,8 @@ data class ArticleForLangDto(
         val urlRelative: String,
         val title: String,
         val rating: Int?,
-        val createdOnSite: Timestamp?
+        val createdOnSite: Timestamp?,
+        val hasIframeTag: Boolean
 ) {
     var imageUrls: List<ArticlesImagesDto>? = null
     var tagsForLang: List<TagForLangDto>? = null

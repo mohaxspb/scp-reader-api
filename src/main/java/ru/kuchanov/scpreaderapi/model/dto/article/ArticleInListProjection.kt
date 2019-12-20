@@ -11,4 +11,5 @@ interface ArticleInListProjection {
     val title: String
     val rating: Int?
     val createdOnSite: Timestamp?
+    val hasIframeTag: Boolean
 }

@@ -21,16 +21,17 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
             value =
             """
                 SELECT
-                id,
-                article_id as articleId,
-                lang_id as langId,
-                url_relative as urlRelative,
-                title,
-                rating,
-                created_on_site as createdOnSite
-                FROM articles_langs a
-                WHERE a.lang_id = :langId AND a.created_on_site IS NOT NULL
-                ORDER BY a.created_on_site DESC
+                art.id,
+                art.article_id as articleId,
+                art.lang_id as langId,
+                art.url_relative as urlRelative,
+                art.title,
+                art.rating,
+                art.created_on_site as createdOnSite,
+                art.has_iframe_tag as hasIframeTag 
+                FROM articles_langs art
+                WHERE art.lang_id = :langId AND art.created_on_site IS NOT NULL
+                ORDER BY art.created_on_site DESC
                 OFFSET :offset LIMIT :limit
             """,
             nativeQuery = true
@@ -46,7 +47,8 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
                 art.url_relative as urlRelative,
                 art.title,
                 art.rating,
-                art.created_on_site as createdOnSite
+                art.created_on_site as createdOnSite,
+                art.has_iframe_tag as hasIframeTag 
                 from articles_langs art
                 where lang_id = :langId AND art.rating is not null
                 order by rating desc 
@@ -65,7 +67,8 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
                 art.url_relative as urlRelative,
                 art.title,
                 art.rating,
-                art.created_on_site as createdOnSite
+                art.created_on_site as createdOnSite,
+                art.has_iframe_tag as hasIframeTag 
                 from articles_langs art
                 join article_categories_to_lang__to__articles_to_lang art_cat on art.id = art_cat.article_to_lang_id
                 where art.id in 
@@ -87,7 +90,8 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
                 art.url_relative as urlRelative,
                 art.title,
                 art.rating,
-                art.created_on_site as createdOnSite
+                art.created_on_site as createdOnSite,
+                art.has_iframe_tag as hasIframeTag 
                 from articles_langs art
                 where art.article_id = :articleId and lang_id = :langId
             """,

@@ -19,6 +19,7 @@ import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.NOT_TRANSLA
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.SITE_TAGS_PATH
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_A
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_DIV
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_IFRAME
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_IMG
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_SPAN
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_TABLE
@@ -48,8 +49,7 @@ class ParseArticleService @Autowired constructor(
             val children = mutableListOf<Node>()
             while (child != null) {
                 children.add(child)
-                //todo check casting
-                // fixme error in case for /scp-4000 on http://www.scp-wiki.net/scp-series-5
+                //fixme check casting error in case for /scp-4000 on http://www.scp-wiki.net/scp-series-5
                 child = child.nextSibling() as Element?
             }
 
@@ -283,7 +283,15 @@ class ParseArticleService @Autowired constructor(
         //this we store as article text
         val rawText = pageContent.toString()
 
-        val textParts = parseArticleTextService.parseArticleText(rawText, printTextParts)
+        //do not parse textParts if article has iframe
+        val hasIframeTag = pageContent.getElementsByTag(TAG_IFRAME).isNotEmpty()
+        val textParts = if (hasIframeTag) {
+            println("IFRAME FOUND for article: $urlRelative for lang: ${lang.id}!")
+            emptyList()
+        } else {
+            parseArticleTextService.parseArticleText(rawText, printTextParts)
+        }
+
         if (printTextParts) {
             println("===================== parsed text parts =====================")
             textParts.forEach {
@@ -308,6 +316,7 @@ class ParseArticleService @Autowired constructor(
                 text = rawText,
                 rating = rating,
                 commentsUrl = commentsUrl,
+                hasIframeTag = hasIframeTag,
                 images = imgsUrls.map { ArticlesImages(url = it) }.toMutableSet(),
                 tags = articleTags.map { TagForLang(langId = lang.id, title = it) }.toMutableSet(),
                 textParts = textParts,

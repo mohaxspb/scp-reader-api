@@ -23,7 +23,7 @@ object ParseConstants {
 
     const val TAG_LI = "li"
 
-//         const val TAG_LI = "li"
+    const val TAG_IFRAME = "iframe"
 
     const val ATTR_SRC = "src"
 
