@@ -115,6 +115,7 @@ class ArticleParseController @Autowired constructor(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
             @RequestParam(value = "urlRelative") urlRelative: String,
             @RequestParam(value = "printTextParts", defaultValue = "false") printTextParts: Boolean = false,
+            @RequestParam(value = "async", defaultValue = "false") async: Boolean = false,
             @AuthenticationPrincipal user: User?
     ): ResponseEntity<*> {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
@@ -122,14 +123,21 @@ class ArticleParseController @Autowired constructor(
 
         println("parseArticleByUrlRelativeAndLang. lang: ${lang.id}, articleForLang.id: ${articleForLang?.id}, article.id: ${articleForLang?.articleId}, printTextParts: $printTextParts")
 
-        articleParsingService.parseArticleForLang(urlRelative, lang, printTextParts)
-
-        return ResponseEntity(
-                object {
-                    @Suppress("unused")
-                    val state = "Parsing started for ArticleForLang id/title ${articleForLang?.id}/${articleForLang?.title}"
-                },
-                HttpStatus.ACCEPTED
-        )
+        if (async) {
+            articleParsingService.parseArticleForLang(urlRelative, lang, printTextParts)
+            return ResponseEntity(
+                    object {
+                        @Suppress("unused")
+                        val state = "Parsing started for ArticleForLang id/title ${articleForLang?.id}/${articleForLang?.title}"
+                    },
+                    HttpStatus.ACCEPTED
+            )
+        } else {
+            val savedArticle = articleParsingService.parseArticleForLangSync(urlRelative, lang, printTextParts)
+            return ResponseEntity(
+                    savedArticle?.articleId?.let { articleForLangService.getOneByLangIdAndArticleIdAsDto(it, lang.id) },
+                    HttpStatus.OK
+            )
+        }
     }
 }

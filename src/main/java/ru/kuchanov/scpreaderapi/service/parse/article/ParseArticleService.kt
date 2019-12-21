@@ -3,7 +3,6 @@ package ru.kuchanov.scpreaderapi.service.parse.article
 import org.apache.http.util.TextUtils
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
-import org.jsoup.nodes.Node
 import org.jsoup.parser.Tag
 import org.jsoup.select.Elements
 import org.springframework.beans.factory.annotation.Autowired
@@ -350,12 +349,12 @@ class ParseArticleService @Autowired constructor(
     }
 
     private fun extractTablesFromDivs(pageContent: Element) {
-        for (ourElement in pageContent.getElementsByTag(TAG_DIV)) {
-            if (ourElement.children().size == 1
-                    && ourElement.child(0).tagName() == TAG_TABLE
-                    && !ourElement.hasClass("collapsible-block-content")) {
-                ourElement.appendChild(ourElement.child(0))
-                ourElement.remove()
+        for (divTag in pageContent.getElementsByTag(TAG_DIV)) {
+            //there are articles with many tables in div. see `/operation-overmeta`
+            if (!divTag.hasClass("collapsible-block-content")) {
+                if (divTag.children().find { it.tagName() == TAG_TABLE } != null) {
+                    divTag.unwrap()
+                }
             }
         }
     }
@@ -382,14 +381,9 @@ class ParseArticleService @Autowired constructor(
 
             unwrapDivs(theOnlyChildDiv)
 
-            val children = theOnlyChildDiv.children()
-            var prev: Node = theOnlyChildDiv
-            for (node in children) {
-                prev.after(node)
-                prev = node
+            if (!theOnlyChildDiv.hasClass("collapsible-block-content")) {
+                theOnlyChildDiv.unwrap()
             }
-
-            theOnlyChildDiv.remove()
         }
     }
 

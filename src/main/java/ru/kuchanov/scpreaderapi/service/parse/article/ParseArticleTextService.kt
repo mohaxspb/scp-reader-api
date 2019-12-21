@@ -6,6 +6,7 @@ import ru.kuchanov.scpreaderapi.bean.articles.text.TextPart
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ATTR_SRC
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.CLASS_SPOILER
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.CLASS_TABS
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_A
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_BLOCKQUOTE
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_IMG
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_LI
@@ -84,31 +85,44 @@ class ParseArticleTextService {
 
         val document = Jsoup.parse(html)
 
+        //println("document: $document")
         //parse collapsed part
-        val element = document.getElementsByClass("collapsible-block-folded").first()
-        val elementA = element.getElementsByTag("a").first()
+        val elementFolded = document.getElementsByClass("collapsible-block-folded").first()
+        val elementA = elementFolded.getElementsByTag("a").first()
         //replacing non-breaking-spaces
         val collapsedTitle = elementA.text().replace("\\p{Z}".toRegex(), " ")
         val collapsedSpoilerTextPart = TextPart(data = collapsedTitle, type = TextType.SPOILER_COLLAPSED, orderInText = 0)
 
         //parse expanded part
         val elementUnfolded = document.getElementsByClass("collapsible-block-unfolded").first()
-        val elementExpanded = elementUnfolded.getElementsByClass("collapsible-block-link").first()
+        val elementUnfoldedBlockLink = elementUnfolded.getElementsByClass("collapsible-block-unfolded-link").first()
+        val elementUnfoldedLink = elementUnfolded.getElementsByClass("collapsible-block-link").first()
 
-        val expandedTitle = elementExpanded.text().replace("\\p{Z}".toRegex(), " ")
+        val expandedTitle = elementUnfoldedLink.text().replace("\\p{Z}".toRegex(), " ")
         val expandedSpoilerTextPart = TextPart(data = expandedTitle, type = TextType.SPOILER_EXPANDED, orderInText = 1)
 
         //parse spoiler text
-        val elementContent = elementUnfolded.getElementsByClass("collapsible-block-content").first()
-        val spoilerData = if (elementContent != null && elementContent.hasText()) {
-            elementContent.html()
-        } else if (elementContent != null && !elementContent.hasText()
-                && elementUnfolded.children().size > 2 && elementUnfolded.children()[2].hasText()) {
-            elementExpanded.parent().remove()
-            elementContent.remove()
-            elementUnfolded.html()
+        val elementUnfoldedContent = elementUnfolded.getElementsByClass("collapsible-block-content").first()
+
+        val spoilerData: String
+        if (elementUnfoldedContent != null) {
+            //in /scp-1412 there is only IMG in content... or image div in /scp-1672
+            if (elementUnfoldedContent.hasText() || elementUnfoldedContent.children().isNotEmpty()) {
+                spoilerData = elementUnfoldedContent.html()
+            } else {
+                throw IllegalStateException("ERROR 0 WHILE PARSING SPOILER CONTENT. Please, let developers know about it, if you see this message)")
+            }
         } else {
-            throw IllegalStateException("ERROR WHILE PARSING SPOILER CONTENT. Please, let developers know about it, if you see this message)")
+            //see spoilers in articles `/scp-3003`, `/scp-323` and others
+            //there is no content tag, as we previously remove all empty divs
+            if (elementUnfolded.children().size > 1) {
+                //remove link div. Others - content.
+                elementUnfoldedLink.remove()
+                elementUnfoldedBlockLink?.remove()
+                spoilerData = elementUnfolded.html()
+            } else {
+                throw IllegalStateException("ERROR 1 WHILE PARSING SPOILER CONTENT. Please, let developers know about it, if you see this message)")
+            }
         }
 
         //combine data
@@ -161,6 +175,10 @@ class ParseArticleTextService {
                 ourElement.className() == "rimg"
                         || ourElement.className() == "limg"
                         || ourElement.className() == "cimg"
+                        || ourElement.className() == "image"
+                        //see /operation-overmeta
+                        || (ourElement.tagName() == TAG_A && ourElement.children().size == 1 && ourElement.children().first().tagName() == TAG_IMG)
+                        || ourElement.classNames().contains("image-container")
                         || ourElement.classNames().contains("scp-image-block") -> listOfTextTypes.add(TextType.IMAGE)
                 else -> listOfTextTypes.add(TextType.TEXT)
             }

@@ -552,6 +552,7 @@ class ArticleParsingServiceBase {
             lang: Lang,
             innerArticlesDepth: Int = 0
     ): Single<List<ArticleForLang?>> {
+        println("downloadAndSaveArticles articles size: ${articlesToDownload.size}")
         return Single.just(articlesToDownload)
                 .map { articles ->
                     articles.map { articleToDownload ->
@@ -572,6 +573,7 @@ class ArticleParsingServiceBase {
             innerArticlesDepth: Int = 0,
             printTextParts: Boolean = false
     ): ArticleForLang? {
+        println("parse article: ${articleToSave.urlRelative}")
         try {
             val articleDownloaded = getArticleFromApi(articleToSave.urlRelative, lang, printTextParts)
 
@@ -702,7 +704,29 @@ class ArticleParsingServiceBase {
 
     @Async
     fun parseArticleForLang(urlRelative: String, lang: Lang, printTextParts: Boolean = false) {
-        saveArticle(ArticleForLang(urlRelative = urlRelative, langId = lang.id), lang, printTextParts = printTextParts)
+        val savedArticle = saveArticle(
+                ArticleForLang(
+                        urlRelative = urlRelative,
+                        langId = lang.id
+                ),
+                lang,
+                printTextParts = printTextParts
+        )
+        println("Article saved. id: ${savedArticle?.id}, articleId: ${savedArticle?.articleId}")
+    }
+
+    fun parseArticleForLangSync(urlRelative: String, lang: Lang, printTextParts: Boolean = false): ArticleForLang? {
+        val savedArticle = saveArticle(
+                ArticleForLang(
+                        urlRelative = urlRelative,
+                        langId = lang.id
+                ),
+                lang,
+                printTextParts = printTextParts
+        )
+        println("Article saved. id: ${savedArticle?.id}, articleId: ${savedArticle?.articleId}")
+
+        return savedArticle
     }
 
     fun getArticleFromApi(url: String, lang: Lang, printTextParts: Boolean = false): ArticleForLang? {
