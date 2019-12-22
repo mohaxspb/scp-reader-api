@@ -3,7 +3,6 @@ package ru.kuchanov.scpreaderapi.service.parse.article
 import org.apache.http.util.TextUtils
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
-import org.jsoup.nodes.Node
 import org.jsoup.parser.Tag
 import org.jsoup.select.Elements
 import org.springframework.beans.factory.annotation.Autowired
@@ -257,6 +256,9 @@ class ParseArticleService @Autowired constructor(
 
         //comments url
         val commentsUrl = doc.getElementById("discuss-button")?.attr("href")?.let {
+            if (it.contains("javascript")) {
+                println("COMMENTS URL ERROR: $urlRelative, ${lang.siteBaseUrl + urlRelative}")
+            }
             "${lang.siteBaseUrl}$it"
         }
 
@@ -347,29 +349,29 @@ class ParseArticleService @Autowired constructor(
     }
 
     private fun extractTablesFromDivs(pageContent: Element) {
-        for (ourElement in pageContent.getElementsByTag(TAG_DIV)) {
-            if (ourElement.children().size == 1
-                    && ourElement.child(0).tagName() == TAG_TABLE
-                    && !ourElement.hasClass("collapsible-block-content")) {
-                ourElement.appendChild(ourElement.child(0))
-                ourElement.remove()
+        for (divTag in pageContent.getElementsByTag(TAG_DIV)) {
+            //there are articles with many tables in div. see `/operation-overmeta`
+            //and do not unwrap spoilers and tabs divs
+            val isNotInSpoilerContentParentDiv = !divTag.hasClass("collapsible-block-unfolded")
+            val isNotSpoilerContentDiv = !divTag.hasClass("collapsible-block-content")
+            val isNotTabDiv = !divTag.id().contains("wiki-tab")
+            if (isNotSpoilerContentDiv && isNotTabDiv && isNotInSpoilerContentParentDiv) {
+                if (divTag.children().find { it.tagName() == TAG_TABLE } != null) {
+                    divTag.unwrap()
+                }
             }
         }
     }
 
     private fun unwrapTextAlignmentDivs(element: Element) {
-        val children = element.children()
-        if (element.tagName() == "div" && element.hasAttr("style")
-                && element.attr("style").contains("text-align")) {
-            element.unwrap()
-        }
-        if (element.tagName() == "div" && element.hasAttr("style")
-                && element.attr("style").contains("float")
-                && element.className() != "scp-image-block") {
-            element.unwrap()
-        }
-        for (child in children) {
-            unwrapTextAlignmentDivs(child)
+        element.children().forEach { unwrapTextAlignmentDivs(it) }
+        if (element.tagName() == TAG_DIV && element.hasAttr("style")) {
+            val style = element.attr("style")
+            if (style.contains("text-align")
+                    || style.contains("background")
+                    || (style.contains("float") && element.className() != "scp-image-block")) {
+                element.unwrap()
+            }
         }
     }
 
@@ -379,14 +381,14 @@ class ParseArticleService @Autowired constructor(
 
             unwrapDivs(theOnlyChildDiv)
 
-            val children = theOnlyChildDiv.children()
-            var prev: Node = theOnlyChildDiv
-            for (node in children) {
-                prev.after(node)
-                prev = node
+            if (!theOnlyChildDiv.hasClass("collapsible-block-content")) {
+//                if (theOnlyChildDiv.html().length > 100) {
+//                    println(theOnlyChildDiv.html().substring(0, 100))
+//                } else {
+//                    println(theOnlyChildDiv.html())
+//                }
+                theOnlyChildDiv.unwrap()
             }
-
-            theOnlyChildDiv.remove()
         }
     }
 

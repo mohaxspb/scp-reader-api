@@ -222,6 +222,82 @@ class ArticleParsingServiceBase {
     }
 
     @Async
+    fun parseConcreteObjectArticlesForLang(
+            objectsUrl: String,
+            lang: Lang,
+            totalPageCount: Int? = null,
+            processOnlyCount: Int? = null,
+            innerArticlesDepth: Int? = null
+    ) {
+        downloadAndSaveObjectArticles(lang, objectsUrl, processOnlyCount, innerArticlesDepth)
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .subscribeBy(
+                        onSuccess = { articlesDownloadedAndSavedSuccessfully ->
+                            println("download complete")
+                            println(
+                                    articlesDownloadedAndSavedSuccessfully
+                                            .map { it?.urlRelative }
+                                            .joinToString(separator = "\n========###========\n")
+                            )
+                            println("download complete")
+                        },
+                        onError = {
+                            it.printStackTrace()
+                        }
+                )
+    }
+
+    private fun downloadAndSaveObjectArticles(
+            lang: Lang,
+            objectsUrl: String,
+            processOnlyCount: Int? = null,
+            innerArticlesDepth: Int? = null
+    ): Single<List<ArticleForLang?>> {
+        return getObjectsArticlesForLang(lang, objectsUrl)
+                //test loading and save with less count of articles
+                .map { articlesToDownload ->
+                    processOnlyCount?.let {
+                        articlesToDownload.take(processOnlyCount)
+                    } ?: articlesToDownload
+                }
+                .flatMap { articlesToSave ->
+                    downloadAndSaveArticles(
+                            articlesToSave,
+                            lang,
+                            innerArticlesDepth ?: DEFAULT_INNER_ARTICLES_DEPTH
+                    )
+                }
+                .doOnSuccess { articlesForLangInDb ->
+                    // 1. get articleCategory by lang and objectUrl
+                    // 2. delete articleToCategory relation for lang
+                    // 3. save articleToCategory relation with order
+
+                    val categoryToLang =
+                            categoryToLangService.findByLangIdAndSiteUrl(lang.id, objectsUrl)
+                    println("categoryToLang: $categoryToLang")
+                    if (categoryToLang == null) {
+                        return@doOnSuccess
+                    }
+                    var order = 0
+                    val articlesForCategory = articlesForLangInDb
+                            .filterNotNull()
+                            .map {
+                                ArticleCategoryForLangToArticleForLang(
+                                        articleCategoryToLangId = categoryToLang.id!!,
+                                        articleForLangId = it.id!!,
+                                        orderInCategory = order++
+                                )
+                            }
+
+                    categoryToArticleService.updateCategoryForLangToArticleForLang(
+                            categoryToLang.id!!,
+                            articlesForCategory
+                    )
+                }
+    }
+
+    @Async
     fun parseObjectsArticlesForLang(
             lang: Lang,
             totalPageCount: Int? = null,
@@ -230,47 +306,12 @@ class ArticleParsingServiceBase {
     ) {
         Flowable.fromIterable(getObjectArticlesUrls())
                 .flatMapSingle { objectsUrl ->
-                    getObjectsArticlesForLang(lang, objectsUrl)
-                            //test loading and save with less count of articles
-                            .map { articlesToDownload ->
-                                processOnlyCount?.let {
-                                    articlesToDownload.take(processOnlyCount)
-                                } ?: articlesToDownload
-                            }
-                            .flatMap { articlesToSave ->
-                                downloadAndSaveArticles(
-                                        articlesToSave,
-                                        lang,
-                                        innerArticlesDepth ?: DEFAULT_INNER_ARTICLES_DEPTH
-                                )
-                            }
-                            .doOnSuccess { articlesForLangInDb ->
-                                // 1. get articleCategory by lang and objectUrl
-                                // 2. delete articleToCategory relation for lang
-                                // 3. save articleToCategory relation with order
-
-                                val categoryToLang =
-                                        categoryToLangService.findByLangIdAndSiteUrl(lang.id, objectsUrl)
-                                println("categoryToLang: $categoryToLang")
-                                if (categoryToLang == null) {
-                                    return@doOnSuccess
-                                }
-                                var order = 0
-                                val articlesForCategory = articlesForLangInDb
-                                        .filterNotNull()
-                                        .map {
-                                            ArticleCategoryForLangToArticleForLang(
-                                                    articleCategoryToLangId = categoryToLang.id!!,
-                                                    articleForLangId = it.id!!,
-                                                    orderInCategory = order++
-                                            )
-                                        }
-
-                                categoryToArticleService.updateCategoryForLangToArticleForLang(
-                                        categoryToLang.id!!,
-                                        articlesForCategory
-                                )
-                            }
+                    downloadAndSaveObjectArticles(
+                            lang,
+                            objectsUrl,
+                            processOnlyCount,
+                            innerArticlesDepth
+                    )
                 }
                 .toList()
                 .map { it.flatten() }
@@ -511,6 +552,7 @@ class ArticleParsingServiceBase {
             lang: Lang,
             innerArticlesDepth: Int = 0
     ): Single<List<ArticleForLang?>> {
+        println("downloadAndSaveArticles articles size: ${articlesToDownload.size}")
         return Single.just(articlesToDownload)
                 .map { articles ->
                     articles.map { articleToDownload ->
@@ -531,6 +573,7 @@ class ArticleParsingServiceBase {
             innerArticlesDepth: Int = 0,
             printTextParts: Boolean = false
     ): ArticleForLang? {
+        println("parse article: ${articleToSave.urlRelative}")
         try {
             val articleDownloaded = getArticleFromApi(articleToSave.urlRelative, lang, printTextParts)
 
@@ -661,7 +704,29 @@ class ArticleParsingServiceBase {
 
     @Async
     fun parseArticleForLang(urlRelative: String, lang: Lang, printTextParts: Boolean = false) {
-        saveArticle(ArticleForLang(urlRelative = urlRelative, langId = lang.id), lang, printTextParts = printTextParts)
+        val savedArticle = saveArticle(
+                ArticleForLang(
+                        urlRelative = urlRelative,
+                        langId = lang.id
+                ),
+                lang,
+                printTextParts = printTextParts
+        )
+        println("Article saved. id: ${savedArticle?.id}, articleId: ${savedArticle?.articleId}")
+    }
+
+    fun parseArticleForLangSync(urlRelative: String, lang: Lang, printTextParts: Boolean = false): ArticleForLang? {
+        val savedArticle = saveArticle(
+                ArticleForLang(
+                        urlRelative = urlRelative,
+                        langId = lang.id
+                ),
+                lang,
+                printTextParts = printTextParts
+        )
+        println("Article saved. id: ${savedArticle?.id}, articleId: ${savedArticle?.articleId}")
+
+        return savedArticle
     }
 
     fun getArticleFromApi(url: String, lang: Lang, printTextParts: Boolean = false): ArticleForLang? {
@@ -899,7 +964,7 @@ class ArticleParsingServiceBase {
 
         fun getDateFormatForLang() = SimpleDateFormat(DATE_FORMAT_PATTERN_EN, Locale.ENGLISH)
 
-        const val DEFAULT_INNER_ARTICLES_DEPTH = 1
+        const val DEFAULT_INNER_ARTICLES_DEPTH = 0
     }
 }
 
