@@ -34,8 +34,8 @@ class FirebaseConfiguration {
             log.debug("accountKey: $accountKey")
 
             val databaseUrl = "https://${accountKey.projectId}.firebaseio.com"
-            log.debug("databaseUrl: $databaseUrl")
-            println("databaseUrl: $databaseUrl")
+            //log.debug("databaseUrl: $databaseUrl")
+            //println("databaseUrl: $databaseUrl")
             val options = FirebaseOptions.Builder()
                     .setCredentials(GoogleCredentials.fromStream(ClassPathResource(accountKeyFileName).inputStream))
                     .setDatabaseUrl(databaseUrl)

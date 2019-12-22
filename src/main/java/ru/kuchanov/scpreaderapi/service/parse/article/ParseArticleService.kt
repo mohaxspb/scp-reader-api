@@ -360,18 +360,12 @@ class ParseArticleService @Autowired constructor(
     }
 
     private fun unwrapTextAlignmentDivs(element: Element) {
-        val children = element.children()
-        if (element.tagName() == "div" && element.hasAttr("style")
-                && element.attr("style").contains("text-align")) {
-            element.unwrap()
-        }
-        if (element.tagName() == "div" && element.hasAttr("style")
-                && element.attr("style").contains("float")
-                && element.className() != "scp-image-block") {
-            element.unwrap()
-        }
-        for (child in children) {
-            unwrapTextAlignmentDivs(child)
+        element.children().forEach { unwrapTextAlignmentDivs(it) }
+        if (element.tagName() == TAG_DIV && element.hasAttr("style")) {
+            val style = element.attr("style")
+            if (style.contains("text-align") || (style.contains("float") && element.className() != "scp-image-block")) {
+                element.unwrap()
+            }
         }
     }
 
