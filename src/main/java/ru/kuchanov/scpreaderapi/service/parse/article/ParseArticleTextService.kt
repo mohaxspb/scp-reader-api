@@ -121,7 +121,12 @@ class ParseArticleTextService {
                 elementUnfoldedBlockLink?.remove()
                 spoilerData = elementUnfolded.html()
             } else {
-                throw IllegalStateException("ERROR 1 WHILE PARSING SPOILER CONTENT. Please, let developers know about it, if you see this message)")
+                //in some articles there is really no data in spoiler...
+                //so return empty string...
+                //see `/scp-2747`
+                println("NO DATA IN SPOILER!")
+                spoilerData = ""
+                //throw IllegalStateException("ERROR 1 WHILE PARSING SPOILER CONTENT. Please, let developers know about it, if you see this message)")
             }
         }
 
