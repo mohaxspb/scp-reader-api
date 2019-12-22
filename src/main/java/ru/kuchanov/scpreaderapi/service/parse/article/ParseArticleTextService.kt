@@ -149,6 +149,7 @@ class ParseArticleTextService {
             val yuiContent = tabsElement.getElementsByClass("yui-content").first()
             var tabOrder = 0
 
+            //println("Parse tabs: $yuiContent")
             tabsTextPart.innerTextParts = yuiContent.children().mapIndexed { index, element ->
                 val tabTextPart = TextPart(data = tabsTitles[index], type = TextType.TAB, orderInText = tabOrder++)
                 tabTextPart.innerTextParts = parseArticleText(element.html(), false)

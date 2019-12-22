@@ -351,7 +351,11 @@ class ParseArticleService @Autowired constructor(
     private fun extractTablesFromDivs(pageContent: Element) {
         for (divTag in pageContent.getElementsByTag(TAG_DIV)) {
             //there are articles with many tables in div. see `/operation-overmeta`
-            if (!divTag.hasClass("collapsible-block-content")) {
+            //and do not unwrap spoilers and tabs divs
+            val isNotInSpoilerContentParentDiv = !divTag.hasClass("collapsible-block-unfolded")
+            val isNotSpoilerContentDiv = !divTag.hasClass("collapsible-block-content")
+            val isNotTabDiv = !divTag.id().contains("wiki-tab")
+            if (isNotSpoilerContentDiv && isNotTabDiv && isNotInSpoilerContentParentDiv) {
                 if (divTag.children().find { it.tagName() == TAG_TABLE } != null) {
                     divTag.unwrap()
                 }
@@ -363,7 +367,9 @@ class ParseArticleService @Autowired constructor(
         element.children().forEach { unwrapTextAlignmentDivs(it) }
         if (element.tagName() == TAG_DIV && element.hasAttr("style")) {
             val style = element.attr("style")
-            if (style.contains("text-align") || (style.contains("float") && element.className() != "scp-image-block")) {
+            if (style.contains("text-align")
+                    || style.contains("background")
+                    || (style.contains("float") && element.className() != "scp-image-block")) {
                 element.unwrap()
             }
         }
@@ -376,6 +382,11 @@ class ParseArticleService @Autowired constructor(
             unwrapDivs(theOnlyChildDiv)
 
             if (!theOnlyChildDiv.hasClass("collapsible-block-content")) {
+//                if (theOnlyChildDiv.html().length > 100) {
+//                    println(theOnlyChildDiv.html().substring(0, 100))
+//                } else {
+//                    println(theOnlyChildDiv.html())
+//                }
                 theOnlyChildDiv.unwrap()
             }
         }
