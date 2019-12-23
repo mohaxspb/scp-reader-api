@@ -7,6 +7,8 @@ import java.io.Serializable
 import java.sql.Timestamp
 import javax.persistence.*
 
+
+//todo remove composite key
 @Entity
 @IdClass(KeyReadArticleByLang::class)
 @Table(name = "read_articles_by_lang")

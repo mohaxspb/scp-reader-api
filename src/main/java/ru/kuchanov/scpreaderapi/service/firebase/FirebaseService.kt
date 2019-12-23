@@ -370,6 +370,7 @@ class FirebaseService {
             ))
         }
 
+        @Suppress("DuplicatedCode")
         val dateInFirebase = articleInFirebase.updated
         val dateInDb = favoriteArticleForLang.updated!!.time
 

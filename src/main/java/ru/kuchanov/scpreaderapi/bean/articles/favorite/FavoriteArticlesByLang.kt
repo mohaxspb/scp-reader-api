@@ -7,6 +7,7 @@ import java.io.Serializable
 import java.sql.Timestamp
 import javax.persistence.*
 
+//todo remove composite key
 @Entity
 @IdClass(KeyFavoriteArticleByLang::class)
 @Table(name = "favorite_articles_by_lang")
