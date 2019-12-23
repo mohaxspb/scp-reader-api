@@ -644,7 +644,7 @@ class ArticleParsingServiceBase {
         val textPartsToSave = articleDownloaded.textParts ?: return
         //clear textPartsInDB
         if (textPartsToSave.isNotEmpty()) {
-            textPartService.deleteByArticleToLongId(articleForLangInDb.id!!)
+            textPartService.deleteByArticleToLangId(articleForLangInDb.id!!)
             textPartsToSave.forEach { saveTextPart(it, articleForLangInDb.id, null) }
         } else {
             //todo write error to DB
@@ -676,14 +676,6 @@ class ArticleParsingServiceBase {
             val url = lang.siteBaseUrl + tagA.attr("href")
             //rating
             val rating = Integer.parseInt(listOfTd[1].text())
-
-            //todo authorName and authorUrl
-            //author
-//            val spanWithAuthor = listOfTd[2]
-//                    .getElementsByAttributeValueContaining("class", "printuser")
-//                    .first()
-//            val authorName = spanWithAuthor.text()
-//            val authorUrl = spanWithAuthor.getElementsByTag("a").first()?.attr("href")
 
             val createdDate = listOfTd[3].text().trim()
             val updatedDate = listOfTd[4].text().trim()

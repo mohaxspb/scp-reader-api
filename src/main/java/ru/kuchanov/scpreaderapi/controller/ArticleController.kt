@@ -87,7 +87,7 @@ class ArticleController @Autowired constructor(
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
         val articleToLangId = articleForLangService.getOneByLangAndArticleId(articleId, lang.id)?.id
                 ?: throw ArticleForLangNotFoundException()
-        textPartService.deleteByArticleToLongId(articleToLangId)
+        textPartService.deleteByArticleToLangId(articleToLangId)
         return true
     }
 }

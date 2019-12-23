@@ -34,7 +34,7 @@ class TextPartServiceImpl @Autowired constructor(
         return topLevelTextParts
     }
 
-    override fun deleteByArticleToLongId(articleToLangId: Long) =
+    override fun deleteByArticleToLangId(articleToLangId: Long) =
             textPartRepository.deleteByArticleToLangIdAndParentIdNull(articleToLangId)
 
     private fun fillInnerTextParts(textPart: TextPartDto) {

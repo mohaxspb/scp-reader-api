@@ -2,7 +2,6 @@ package ru.kuchanov.scpreaderapi.service.parse.category
 
 import org.jsoup.nodes.Document
 import org.springframework.stereotype.Service
-import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 
 
@@ -34,14 +33,4 @@ class ArticleParsingServiceImplES : ArticleParsingServiceBase() {
     override fun getArticleRatingStringDelimiter() = " (+"
 
     override fun getArticleRatingStringDelimiterEnd() = ")"
-
-    override fun getArticleFromApi(url: String, lang: Lang, printTextParts: Boolean): ArticleForLang? {
-
-        //TODO check commentsUrl for ES site
-        /*
-        18:31:24.054 error in articles parsing: /hub-del-sarkicismo
-java.lang.NullPointerException: null
-         */
-        return super.getArticleFromApi(url, lang, printTextParts)
-    }
 }
