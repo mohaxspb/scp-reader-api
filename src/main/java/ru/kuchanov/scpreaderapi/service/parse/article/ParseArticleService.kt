@@ -148,30 +148,22 @@ class ParseArticleService @Autowired constructor(
         if (upperDivWithLink != null) {
             pageContent.prependChild(upperDivWithLink)
         }
+
         parseImgsTags(pageContent)
 
         //extract tables, which are single tag in div
         extractTablesFromDivs(pageContent)
         //unwrap divs with text alignment
         unwrapTextAlignmentDivs(pageContent)
+        //unwrap gallery div... see `/transcript-epsilon-12-1555`
+        val galleryDivs = pageContent.getElementsByClass("gallery-box")
+        galleryDivs.forEach { it.unwrap() }
 
         //put all text which is not in any tag in div tag
         for (element in pageContent.children()) {
             val nextSibling = element.nextSibling()
             if (nextSibling != null && nextSibling.toString() != " " && nextSibling.nodeName() == "#text") {
                 element.after(Element(TAG_DIV).appendChild(nextSibling))
-            }
-
-            //also fix scp-3000, where image and spoiler are in div tag, fucking shit! Web monkeys, ARGH!!!
-            if (!element.children().isEmpty()
-                    && element.children().size == 2
-                    && element.child(0).tagName() == TAG_IMG
-                    && element.child(1).className() == "collapsible-block") {
-                val imgTag = element.childNode(0)
-                val spoiler = element.childNode(1)
-                element.before(imgTag)
-                element.after(spoiler)
-                element.remove()
             }
         }
 
