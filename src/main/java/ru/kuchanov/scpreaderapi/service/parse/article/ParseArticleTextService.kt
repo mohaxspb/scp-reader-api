@@ -13,11 +13,15 @@ import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_LI
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_P
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_SPAN
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_TABLE
+import ru.kuchanov.scpreaderapi.service.parse.category.ScpParseException
 
 
 @Service
 class ParseArticleTextService {
 
+    /**
+     * @throws ScpParseException
+     */
     fun parseArticleText(rawText: String, printTextParts: Boolean = false): List<TextPart> {
         val textParts = getArticlesTextParts(rawText)
         val textPartsTypes = getListOfTextTypes(getArticlesTextParts(rawText))
@@ -110,11 +114,12 @@ class ParseArticleTextService {
             if (elementUnfoldedContent.hasText() || elementUnfoldedContent.children().isNotEmpty()) {
                 spoilerData = elementUnfoldedContent.html()
             } else {
-                throw IllegalStateException("ERROR 0 WHILE PARSING SPOILER CONTENT. Please, let developers know about it, if you see this message)")
+                throw ScpParseException("ERROR 0 WHILE PARSING SPOILER CONTENT. Please, let developers know about it, if you see this message)")
             }
         } else {
             //see spoilers in articles `/scp-3003`, `/scp-323` and others
             //there is no content tag, as we previously remove all empty divs
+            @Suppress("LiftReturnOrAssignment")
             if (elementUnfolded.children().size > 1) {
                 //remove link div. Others - content.
                 elementUnfoldedLink.remove()
@@ -136,7 +141,7 @@ class ParseArticleTextService {
         return spoilerTextPart
     }
 
-    fun parseTabs(html: String, order: Int): TextPart {
+    private fun parseTabs(html: String, order: Int): TextPart {
         val document = Jsoup.parse(html)
         val yuiNavset = document.getElementsByClass(CLASS_TABS).first()
         yuiNavset?.let { tabsElement ->
@@ -157,7 +162,7 @@ class ParseArticleTextService {
             }
 
             return tabsTextPart
-        } ?: throw IllegalArgumentException("error parse tabs")
+        } ?: throw ScpParseException("error parse tabs")
     }
 
     private fun getArticlesTextParts(html: String): List<String> {

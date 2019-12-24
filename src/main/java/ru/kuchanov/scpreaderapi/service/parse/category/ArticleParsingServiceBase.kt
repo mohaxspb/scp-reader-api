@@ -20,13 +20,16 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory
 import org.springframework.context.annotation.Primary
+import org.springframework.http.HttpStatus
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
+import org.springframework.web.bind.annotation.ResponseStatus
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.articles.Article
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLangToArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.category.ArticleCategoryForLangToArticleForLang
+import ru.kuchanov.scpreaderapi.bean.articles.error.ArticleParseError
 import ru.kuchanov.scpreaderapi.bean.articles.text.TextPart
 import ru.kuchanov.scpreaderapi.bean.articles.types.ArticlesAndArticleTypes
 import ru.kuchanov.scpreaderapi.bean.users.Lang
@@ -36,13 +39,20 @@ import ru.kuchanov.scpreaderapi.service.article.ArticleForLangToArticleForLangSe
 import ru.kuchanov.scpreaderapi.service.article.ArticleService
 import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryForArticleService
 import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryForLangService
+import ru.kuchanov.scpreaderapi.service.article.error.ArticleParseErrorService
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForLangService
 import ru.kuchanov.scpreaderapi.service.article.text.TextPartService
 import ru.kuchanov.scpreaderapi.service.article.type.ArticleAndArticleTypeService
 import ru.kuchanov.scpreaderapi.service.article.type.ArticleTypeService
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseArticleService
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ATTR_HREF
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ID_PAGE_CONTENT
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_A
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_IMG
 import java.io.IOException
+import java.io.PrintWriter
+import java.io.StringWriter
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.*
@@ -91,6 +101,9 @@ class ArticleParsingServiceBase {
 
     @Autowired
     private lateinit var textPartService: TextPartService
+
+    @Autowired
+    lateinit var articleParseErrorService: ArticleParseErrorService
 
     fun getParsingRealizationForLang(lang: Lang): ArticleParsingServiceBase =
             when (lang.langCode) {
@@ -152,14 +165,11 @@ class ArticleParsingServiceBase {
                             println("download complete")
                             println(
                                     articlesDownloadedAndSavedSuccessfully
-                                            .map { it?.urlRelative }
-                                            .joinToString(separator = "\n========###========\n")
+                                            .joinToString(separator = "\n========###========\n") { it.urlRelative }
                             )
                             println("download complete")
                         },
-                        onError = {
-                            it.printStackTrace()
-                        }
+                        onError = { it.printStackTrace() }
                 )
     }
 
@@ -189,7 +199,6 @@ class ArticleParsingServiceBase {
                 .doOnNext { println("articles size: ${it.size}") }
                 .toList()
                 .map { it.flatten() }
-
                 //test loading and save with less count of articles
                 .map { articlesToDownload ->
                     processOnlyCount?.let {
@@ -210,14 +219,11 @@ class ArticleParsingServiceBase {
                             println("download complete")
                             println(
                                     articlesDownloadedAndSavedSuccessfully
-                                            .map { it?.urlRelative }
-                                            .joinToString(separator = "\n========###========\n")
+                                            .joinToString(separator = "\n========###========\n") { it.urlRelative }
                             )
                             println("download complete")
                         },
-                        onError = {
-                            it.printStackTrace()
-                        }
+                        onError = { it.printStackTrace() }
                 )
     }
 
@@ -225,7 +231,6 @@ class ArticleParsingServiceBase {
     fun parseConcreteObjectArticlesForLang(
             objectsUrl: String,
             lang: Lang,
-            totalPageCount: Int? = null,
             processOnlyCount: Int? = null,
             innerArticlesDepth: Int? = null
     ) {
@@ -237,14 +242,11 @@ class ArticleParsingServiceBase {
                             println("download complete")
                             println(
                                     articlesDownloadedAndSavedSuccessfully
-                                            .map { it?.urlRelative }
-                                            .joinToString(separator = "\n========###========\n")
+                                            .joinToString(separator = "\n========###========\n") { it.urlRelative }
                             )
                             println("download complete")
                         },
-                        onError = {
-                            it.printStackTrace()
-                        }
+                        onError = { it.printStackTrace() }
                 )
     }
 
@@ -253,7 +255,7 @@ class ArticleParsingServiceBase {
             objectsUrl: String,
             processOnlyCount: Int? = null,
             innerArticlesDepth: Int? = null
-    ): Single<List<ArticleForLang?>> {
+    ): Single<List<ArticleForLang>> {
         return getObjectsArticlesForLang(lang, objectsUrl)
                 //test loading and save with less count of articles
                 .map { articlesToDownload ->
@@ -281,7 +283,6 @@ class ArticleParsingServiceBase {
                     }
                     var order = 0
                     val articlesForCategory = articlesForLangInDb
-                            .filterNotNull()
                             .map {
                                 ArticleCategoryForLangToArticleForLang(
                                         articleCategoryToLangId = categoryToLang.id!!,
@@ -322,14 +323,11 @@ class ArticleParsingServiceBase {
                             println("download complete")
                             println(
                                     articlesDownloadedAndSavedSuccessfully
-                                            .map { it?.urlRelative }
-                                            .joinToString(separator = "\n========###========\n")
+                                            .joinToString(separator = "\n========###========\n") { it.urlRelative }
                             )
                             println("download complete")
                         },
-                        onError = {
-                            it.printStackTrace()
-                        }
+                        onError = { it.printStackTrace() }
                 )
     }
 
@@ -346,7 +344,7 @@ class ArticleParsingServiceBase {
                 if (body != null) {
                     responseBody = body.string()
                 } else {
-                    subscriber.onError(ScpParseException("error while getRecentArticlesPageCountForLang"))
+                    subscriber.onError(ScpParseException("body is null while getRecentArticlesPageCountForLang", NullPointerException()))
                     return@create
                 }
             } catch (e: IOException) {
@@ -384,7 +382,7 @@ class ArticleParsingServiceBase {
                     .execute()
                     .body()
                     ?.string()
-                    ?: throw IOException("error while getRecentArticlesForPage: $page")
+                    ?: throw IOException("body is null for page: $page")
             val doc: Document = Jsoup.parse(responseBody)
 
             val articles = parseForRecentArticles(lang, doc)
@@ -405,11 +403,11 @@ class ArticleParsingServiceBase {
                 if (body != null) {
                     body.string()
                 } else {
-                    subscriber.onError(ScpParseException("parse error getRatedArticlesForLang!"))
+                    subscriber.onError(ScpParseException("body is null!", NullPointerException()))
                     return@create
                 }
             } catch (e: IOException) {
-                subscriber.onError(IOException("connection error!"))
+                subscriber.onError(IOException("Connection error!"))
                 return@create
             }
             try {
@@ -417,10 +415,10 @@ class ArticleParsingServiceBase {
                 val articles = parseForRatedArticles(lang, doc)
                 subscriber.onSuccess(articles)
             } catch (e: Exception) {
-                println("error while get arts list")
+                println("error 0 while get arts list")
                 subscriber.onError(e)
             } catch (e: ScpParseException) {
-                println("error while get arts list")
+                println("error 1 while get arts list")
                 subscriber.onError(e)
             }
         }
@@ -429,17 +427,17 @@ class ArticleParsingServiceBase {
     @Suppress("DuplicatedCode")
     protected fun parseForRatedArticles(lang: Lang, doc: Document): List<ArticleForLang> {
         println("start parsing rated articles for lang: $lang")
-        val pageContent = doc.getElementById("page-content")
-                ?: throw ScpParseException("parse error!")
+        val pageContent = doc.getElementById(ID_PAGE_CONTENT)
+                ?: throw ScpParseException("$ID_PAGE_CONTENT not found!", NullPointerException())
         val listPagesBox = pageContent.getElementsByClass("list-pages-box").first()
-                ?: throw ScpParseException("parse error!")
+                ?: throw ScpParseException("list-pages-box not found!", NullPointerException())
         val articles = mutableListOf<ArticleForLang>()
         val listOfElements = listPagesBox.getElementsByClass("list-pages-item")
         for (element in listOfElements) {
             val tagP = element.getElementsByTag("p").first()
-            val tagA = tagP.getElementsByTag("a").first()
+            val tagA = tagP.getElementsByTag(TAG_A).first()
             val title = tagP.text().substring(0, tagP.text().indexOf(getArticleRatingStringDelimiter()))
-            val url: String = lang.siteBaseUrl + tagA.attr("href")
+            val url: String = lang.siteBaseUrl + tagA.attr(ATTR_HREF)
             //remove a tag to leave only text with rating
             tagA.remove()
             tagP.text(tagP.text().replace(", рейтинг ", ""))
@@ -469,11 +467,11 @@ class ArticleParsingServiceBase {
                 if (body != null) {
                     body.string()
                 } else {
-                    subscriber.onError(ScpParseException("parse error!"))
+                    subscriber.onError(ScpParseException("Body is null!", NullPointerException()))
                     return@create
                 }
             } catch (e: IOException) {
-                subscriber.onError(IOException("connection error!"))
+                subscriber.onError(IOException("Connection error!"))
                 return@create
             }
             try {
@@ -481,10 +479,10 @@ class ArticleParsingServiceBase {
                 val articles = parseForObjectArticles(lang, doc)
                 subscriber.onSuccess(articles)
             } catch (e: Exception) {
-                println("error while get arts list")
+                println("error 0 while get arts list")
                 subscriber.onError(e)
             } catch (e: ScpParseException) {
-                println("error while get arts list")
+                println("error 1 while get arts list")
                 subscriber.onError(e)
             }
         }
@@ -492,8 +490,8 @@ class ArticleParsingServiceBase {
 
     @Suppress("DuplicatedCode")
     protected fun parseForObjectArticles(lang: Lang, doc: Document): List<ArticleForLang> {
-        val pageContent = doc.getElementById("page-content")
-                ?: throw ScpParseException("parse error!")
+        val pageContent = doc.getElementById(ID_PAGE_CONTENT)
+                ?: throw ScpParseException("$ID_PAGE_CONTENT not found!", NullPointerException())
         //parse
         val listPagesBox = pageContent.getElementsByClass("list-pages-box").first()
         listPagesBox?.remove()
@@ -506,15 +504,15 @@ class ArticleParsingServiceBase {
         //now we will remove all html code before tag h2,with id toc1
         var allHtml = pageContent.html()
         val indexOfh2WithIdToc1 = allHtml.indexOf("<h2 id=\"toc1\">")
-        var indexOfhr = allHtml.indexOf("<hr>")
+        var indexOfHr = allHtml.indexOf("<hr>")
         //for other objects filials there is no HR tag at the end...
-        if (indexOfhr < indexOfh2WithIdToc1) {
-            indexOfhr = allHtml.indexOf("<p style=\"text-align: center;\">= = = =</p>")
+        if (indexOfHr < indexOfh2WithIdToc1) {
+            indexOfHr = allHtml.indexOf("<p style=\"text-align: center;\">= = = =</p>")
         }
-        if (indexOfhr < indexOfh2WithIdToc1) {
-            indexOfhr = allHtml.length
+        if (indexOfHr < indexOfh2WithIdToc1) {
+            indexOfHr = allHtml.length
         }
-        allHtml = allHtml.substring(indexOfh2WithIdToc1, indexOfhr)
+        allHtml = allHtml.substring(indexOfh2WithIdToc1, indexOfHr)
         val document = Jsoup.parse(allHtml)
         val h2withIdToc1 = document.getElementById("toc1")
         h2withIdToc1.remove()
@@ -532,7 +530,7 @@ class ArticleParsingServiceBase {
             }
             val arrayItemParsed = Jsoup.parse(arrayItem)
             //type of object
-            val imageURL = arrayItemParsed.getElementsByTag("img").first().attr("src")
+            val imageURL = arrayItemParsed.getElementsByTag(TAG_IMG).first().attr("src")
             val type = getObjectTypeByImageUrl(imageURL)
             val url = lang.siteBaseUrl + arrayItemParsed.getElementsByTag("a").first().attr("href")
             val title = arrayItemParsed.text()
@@ -551,90 +549,124 @@ class ArticleParsingServiceBase {
             articlesToDownload: List<ArticleForLang>,
             lang: Lang,
             innerArticlesDepth: Int = 0
-    ): Single<List<ArticleForLang?>> {
+    ): Single<List<ArticleForLang>> {
         println("downloadAndSaveArticles articles size: ${articlesToDownload.size}")
         return Single.just(articlesToDownload)
                 .map { articles ->
-                    articles.map { articleToDownload ->
-                        saveArticle(
-                                articleToDownload,
-                                lang,
-                                innerArticlesDepth
-                        )
+                    articles.mapNotNull { articleToDownload ->
+                        try {
+                            saveArticle(
+                                    articleToDownload,
+                                    lang,
+                                    innerArticlesDepth
+                            )
+                        } catch (e: Exception) {
+                            null
+                        }
                     }
                 }
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
     }
 
+    /**
+     * @throws ScpParseException
+     */
     protected fun saveArticle(
             articleToSave: ArticleForLang,
             lang: Lang,
             innerArticlesDepth: Int = 0,
             printTextParts: Boolean = false
-    ): ArticleForLang? {
+    ): ArticleForLang {
         println("parse article: ${articleToSave.urlRelative}")
         try {
             val articleDownloaded = getArticleFromApi(articleToSave.urlRelative, lang, printTextParts)
 
-            if (articleDownloaded != null) {
-                var articleInDb = articleService.getArticleByUrlRelative(articleDownloaded.urlRelative)
-                if (articleInDb == null) {
-                    articleInDb = articleService.insert(Article())
-                }
-                var articleForLangInDb = articleForLangService
-                        .getArticleForLangByUrlRelativeAndLang(
-                                articleDownloaded.urlRelative,
-                                lang.id
-                        )
-
-                //set keys for article images.
-                articleDownloaded.images.forEach {
-                    it.articleForLangId = articleDownloaded.id
-                }
-
-                if (articleForLangInDb == null) {
-                    articleForLangInDb = articleForLangService.insert(articleDownloaded.apply {
-                        articleId = articleInDb.id
-                        this.createdOnSite = articleToSave.createdOnSite
-                        this.updatedOnSite = articleToSave.updatedOnSite
-                    })
-                } else {
-                    articleForLangInDb = articleForLangService.insert(
-                            articleForLangInDb.apply {
-                                commentsUrl = articleDownloaded.commentsUrl
-                                rating = articleDownloaded.rating
-                                title = articleDownloaded.title
-                                text = articleDownloaded.text
-                                this.createdOnSite = articleToSave.createdOnSite
-                                this.updatedOnSite = articleToSave.updatedOnSite
-                            }
-                    )
-                }
-
-                articleToSave.articleTypeEnumEnumValue?.let {
-                    manageArticleType(it, articleForLangInDb)
-                }
-
-                manageTagsForArticle(lang.id, articleDownloaded, articleForLangInDb)
-
-                manageArticleTextParts(articleDownloaded, articleForLangInDb)
-
-                //parse inner
-                getAndSaveInnerArticles(lang, articleDownloaded, innerArticlesDepth)
-
-                createArticleToArticleRelation(articleDownloaded, articleForLangInDb.id!!, lang)
-
-                return articleForLangInDb
-            } else {
-                println("error in articles parsing: ${articleToSave.urlRelative}")
-                return null
+            var articleInDb = articleService.getArticleByUrlRelative(articleDownloaded.urlRelative)
+            if (articleInDb == null) {
+                articleInDb = articleService.insert(Article())
             }
+            var articleForLangInDb = articleForLangService
+                    .getArticleForLangByUrlRelativeAndLang(
+                            articleDownloaded.urlRelative,
+                            lang.id
+                    )
+
+            //set keys for article images.
+            articleDownloaded.images.forEach {
+                it.articleForLangId = articleDownloaded.id
+            }
+
+            if (articleForLangInDb == null) {
+                articleForLangInDb = articleForLangService.insert(articleDownloaded.apply {
+                    articleId = articleInDb.id
+                    this.createdOnSite = articleToSave.createdOnSite
+                    this.updatedOnSite = articleToSave.updatedOnSite
+                })
+            } else {
+                articleForLangInDb = articleForLangService.insert(
+                        articleForLangInDb.apply {
+                            commentsUrl = articleDownloaded.commentsUrl
+                            rating = articleDownloaded.rating
+                            title = articleDownloaded.title
+                            text = articleDownloaded.text
+                            this.createdOnSite = articleToSave.createdOnSite
+                            this.updatedOnSite = articleToSave.updatedOnSite
+                        }
+                )
+            }
+
+            articleToSave.articleTypeEnumEnumValue?.let {
+                manageArticleType(it, articleForLangInDb)
+            }
+
+            manageTagsForArticle(lang.id, articleDownloaded, articleForLangInDb)
+
+            manageArticleTextParts(articleDownloaded, articleForLangInDb)
+
+            //parse inner
+            getAndSaveInnerArticles(lang, articleDownloaded, innerArticlesDepth)
+
+            createArticleToArticleRelation(articleDownloaded, articleForLangInDb.id!!, lang)
+
+            return articleForLangInDb
         } catch (e: Exception) {
-            println("error in articles parsing: ${articleToSave.urlRelative} $e")
+            println("Error in article parsing: ${articleToSave.urlRelative}")
             e.printStackTrace()
-            return null
+
+            saveArticleParseError(articleToSave, e)
+
+            throw e
         }
+    }
+
+    private fun saveArticleParseError(articleToLang: ArticleForLang, e: Exception) {
+        val stringWriter = StringWriter()
+        e.printStackTrace(PrintWriter(stringWriter))
+        val stacktraceAsString = stringWriter.toString()
+
+        val error = ArticleParseError(
+                langId = articleToLang.langId,
+                urlRelative = articleToLang.urlRelative,
+                errorClass = e::class.java.simpleName,
+                errorMessage = e.message,
+                stacktrace = stacktraceAsString
+        )
+
+        val cause = e.cause
+        if (cause != null) {
+            val causeErrorClass = cause::class.java.simpleName
+            val causeErrorMessage = cause.message
+            stringWriter.buffer.setLength(0)
+            cause.printStackTrace(PrintWriter(stringWriter))
+            val causeStacktraceAsString = stringWriter.toString()
+
+            error.causeErrorClass = causeErrorClass
+            error.causeErrorMessage = causeErrorMessage
+            error.causeStacktrace = causeStacktraceAsString
+        }
+
+        articleParseErrorService.save(error)
     }
 
     private fun manageArticleTextParts(
@@ -642,13 +674,10 @@ class ArticleParsingServiceBase {
             articleForLangInDb: ArticleForLang
     ) {
         val textPartsToSave = articleDownloaded.textParts ?: return
-        //clear textPartsInDB
         if (textPartsToSave.isNotEmpty()) {
+            //clear textPartsInDB before write
             textPartService.deleteByArticleToLangId(articleForLangInDb.id!!)
             textPartsToSave.forEach { saveTextPart(it, articleForLangInDb.id, null) }
-        } else {
-            //todo write error to DB
-            return
         }
     }
 
@@ -662,7 +691,7 @@ class ArticleParsingServiceBase {
     @Suppress("DuplicatedCode")
     protected fun parseForRecentArticles(lang: Lang, doc: Document): List<ArticleForLang> {
         val table = doc.getElementsByClass("wiki-content-table").first()
-                ?: throw NullPointerException("Can't find element for class \"wiki-content-table\"")
+                ?: throw ScpParseException("Can't find element for class \"wiki-content-table\"", NullPointerException())
 
         val articles = mutableListOf<ArticleForLang>()
         val listOfElements = table.getElementsByTag("tr")
@@ -704,7 +733,7 @@ class ArticleParsingServiceBase {
                 lang,
                 printTextParts = printTextParts
         )
-        println("Article saved. id: ${savedArticle?.id}, articleId: ${savedArticle?.articleId}")
+        println("Article saved. id: ${savedArticle.id}, articleId: ${savedArticle.articleId}")
     }
 
     fun parseArticleForLangSync(urlRelative: String, lang: Lang, printTextParts: Boolean = false): ArticleForLang? {
@@ -716,36 +745,34 @@ class ArticleParsingServiceBase {
                 lang,
                 printTextParts = printTextParts
         )
-        println("Article saved. id: ${savedArticle?.id}, articleId: ${savedArticle?.articleId}")
+        println("Article saved. id: ${savedArticle.id}, articleId: ${savedArticle.articleId}")
 
         return savedArticle
     }
 
-    fun getArticleFromApi(url: String, lang: Lang, printTextParts: Boolean = false): ArticleForLang? {
+    /**
+     * @throws ScpParseException
+     */
+    private fun getArticleFromApi(url: String, lang: Lang, printTextParts: Boolean = false): ArticleForLang {
         val request = Request.Builder()
                 .url(lang.siteBaseUrl + url)
                 .build()
 
         var responseBody = okHttpClient.newCall(request).execute().body()?.string()
-                ?: throw ScpParseException("error while getArticleFromApi")
+                ?: throw ScpParseException("Response body is NULL for url: $url", NullPointerException())
 
         //remove all fucking RTL(&lrm) used for text-alignment. What a fucking idiots!..
         responseBody = responseBody.replace("[\\p{Cc}\\p{Cf}]".toRegex(), "")
 
         val doc = Jsoup.parse(responseBody)
         val pageContent = getArticlePageContentTag(doc)
-                ?: throw ScpParseException("pageContent is NULL for: $url")
+                ?: throw ScpParseException("pageContent is NULL for url: $url", NullPointerException())
         val p404 = pageContent.getElementById("404-message")
         if (p404 != null) {
-            return ArticleForLang(
-                    langId = lang.id,
-                    urlRelative = url,
-                    title = "404",
-                    text = p404.outerHtml()
-            )
+            throw ScpParseException("404 page for url: $url")
+        } else {
+            return parseArticleService.parseArticle(url, doc, pageContent, lang, printTextParts)
         }
-
-        return parseArticleService.parseArticle(url, doc, pageContent, lang, printTextParts)
     }
 
     /**
@@ -849,13 +876,12 @@ class ArticleParsingServiceBase {
             println("save inner article: $innerUrl")
             try {
                 val articleForLang = ArticleForLang(urlRelative = innerUrl, langId = lang.id)
-                val innerArticleDownloaded = saveArticle(articleForLang, lang) ?: continue
+                val innerArticleDownloaded = saveArticle(articleForLang, lang)
 
                 getAndSaveInnerArticles(lang, innerArticleDownloaded, maxDepth, currentDepthLevel + 1)
             } catch (e: Exception) {
-                println("error while save inner article: $e")
-            } catch (e: ScpParseException) {
-                println("error while save inner article: $e")
+                e.printStackTrace()
+                println("error while save inner article for url: $innerUrl")
             }
         }
     }
@@ -960,7 +986,8 @@ class ArticleParsingServiceBase {
     }
 }
 
+@ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR)
 class ScpParseException(
         override val message: String?,
         override val cause: Throwable? = null
-) : Throwable(message, cause)
+) : RuntimeException(message, cause)

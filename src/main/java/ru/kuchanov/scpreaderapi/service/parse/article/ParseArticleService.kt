@@ -22,6 +22,7 @@ import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_IFRAME
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_IMG
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_SPAN
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_TABLE
+import ru.kuchanov.scpreaderapi.service.parse.category.ScpParseException
 
 
 @Service
@@ -29,6 +30,9 @@ class ParseArticleService @Autowired constructor(
         val parseArticleTextService: ParseArticleTextService
 ) {
 
+    /**
+     * @throws ScpParseException
+     */
     fun parseArticle(
             urlRelative: String,
             doc: Document,
