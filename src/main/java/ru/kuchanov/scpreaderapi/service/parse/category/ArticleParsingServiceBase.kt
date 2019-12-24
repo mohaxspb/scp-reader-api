@@ -29,6 +29,7 @@ import ru.kuchanov.scpreaderapi.bean.articles.Article
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLangToArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.category.ArticleCategoryForLangToArticleForLang
+import ru.kuchanov.scpreaderapi.bean.articles.error.ArticleParseError
 import ru.kuchanov.scpreaderapi.bean.articles.text.TextPart
 import ru.kuchanov.scpreaderapi.bean.articles.types.ArticlesAndArticleTypes
 import ru.kuchanov.scpreaderapi.bean.users.Lang
@@ -38,6 +39,7 @@ import ru.kuchanov.scpreaderapi.service.article.ArticleForLangToArticleForLangSe
 import ru.kuchanov.scpreaderapi.service.article.ArticleService
 import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryForArticleService
 import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryForLangService
+import ru.kuchanov.scpreaderapi.service.article.error.ArticleParseErrorService
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForLangService
 import ru.kuchanov.scpreaderapi.service.article.text.TextPartService
@@ -49,6 +51,8 @@ import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ID_PAGE_CON
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_A
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_IMG
 import java.io.IOException
+import java.io.PrintWriter
+import java.io.StringWriter
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.*
@@ -97,6 +101,9 @@ class ArticleParsingServiceBase {
 
     @Autowired
     private lateinit var textPartService: TextPartService
+
+    @Autowired
+    lateinit var articleParseErrorService: ArticleParseErrorService
 
     fun getParsingRealizationForLang(lang: Lang): ArticleParsingServiceBase =
             when (lang.langCode) {
@@ -624,11 +631,42 @@ class ArticleParsingServiceBase {
 
             return articleForLangInDb
         } catch (e: Exception) {
-            println("Error in articles parsing: ${articleToSave.urlRelative} $e")
+            println("Error in article parsing: ${articleToSave.urlRelative}")
             e.printStackTrace()
-            //todo write error to DB
+
+            saveArticleParseError(articleToSave, e)
+
             throw e
         }
+    }
+
+    private fun saveArticleParseError(articleToLang: ArticleForLang, e: Exception) {
+        val stringWriter = StringWriter()
+        e.printStackTrace(PrintWriter(stringWriter))
+        val stacktraceAsString = stringWriter.toString()
+
+        val error = ArticleParseError(
+                langId = articleToLang.langId,
+                urlRelative = articleToLang.urlRelative,
+                errorClass = e::class.java.simpleName,
+                errorMessage = e.message,
+                stacktrace = stacktraceAsString
+        )
+
+        val cause = e.cause
+        if (cause != null) {
+            val causeErrorClass = cause::class.java.simpleName
+            val causeErrorMessage = cause.message
+            stringWriter.buffer.setLength(0)
+            cause.printStackTrace(PrintWriter(stringWriter))
+            val causeStacktraceAsString = stringWriter.toString()
+
+            error.causeErrorClass = causeErrorClass
+            error.causeErrorMessage = causeErrorMessage
+            error.causeStacktrace = causeStacktraceAsString
+        }
+
+        articleParseErrorService.save(error)
     }
 
     private fun manageArticleTextParts(
