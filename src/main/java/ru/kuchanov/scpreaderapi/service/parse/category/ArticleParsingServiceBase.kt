@@ -559,7 +559,6 @@ class ArticleParsingServiceBase {
                 .observeOn(Schedulers.io())
     }
 
-    //todo throw, do not return null
     /**
      * @throws ScpParseException
      */
@@ -634,13 +633,10 @@ class ArticleParsingServiceBase {
             articleForLangInDb: ArticleForLang
     ) {
         val textPartsToSave = articleDownloaded.textParts ?: return
-        //clear textPartsInDB
         if (textPartsToSave.isNotEmpty()) {
+            //clear textPartsInDB before write
             textPartService.deleteByArticleToLangId(articleForLangInDb.id!!)
             textPartsToSave.forEach { saveTextPart(it, articleForLangInDb.id, null) }
-        } else {
-            //todo write error to DB
-            return
         }
     }
 
@@ -722,16 +718,15 @@ class ArticleParsingServiceBase {
                 .build()
 
         var responseBody = okHttpClient.newCall(request).execute().body()?.string()
-                ?: throw ScpParseException("Response body is NULL for url: $url")
+                ?: throw ScpParseException("Response body is NULL for url: $url", NullPointerException())
 
         //remove all fucking RTL(&lrm) used for text-alignment. What a fucking idiots!..
         responseBody = responseBody.replace("[\\p{Cc}\\p{Cf}]".toRegex(), "")
 
         val doc = Jsoup.parse(responseBody)
         val pageContent = getArticlePageContentTag(doc)
-                ?: throw ScpParseException("pageContent is NULL for url: $url")
+                ?: throw ScpParseException("pageContent is NULL for url: $url", NullPointerException())
         val p404 = pageContent.getElementById("404-message")
-        // todo write error to DB
         if (p404 != null) {
             throw ScpParseException("404 page for url: $url")
         } else {
@@ -844,11 +839,8 @@ class ArticleParsingServiceBase {
 
                 getAndSaveInnerArticles(lang, innerArticleDownloaded, maxDepth, currentDepthLevel + 1)
             } catch (e: Exception) {
-                //todo write error to DB
-                println("error while save inner article: $e")
-            } catch (e: ScpParseException) {
-                //todo write error to DB
-                println("error while save inner article: $e")
+                e.printStackTrace()
+                println("error while save inner article for url: $innerUrl")
             }
         }
     }
