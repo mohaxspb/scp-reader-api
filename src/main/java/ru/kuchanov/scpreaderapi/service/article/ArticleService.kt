@@ -4,12 +4,11 @@ import ru.kuchanov.scpreaderapi.bean.articles.Article
 import javax.transaction.Transactional
 
 interface ArticleService {
+
     fun getById(id: Long): Article
 
     @Transactional
     fun insert(article: Article): Article
-
-    fun insert(articles: List<Article>): List<Article>
 
     fun getArticleByUrlRelative(urlRelative: String): Article?
 
