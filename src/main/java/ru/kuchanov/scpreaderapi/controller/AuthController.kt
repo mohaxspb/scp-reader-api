@@ -35,7 +35,7 @@ import javax.security.auth.message.AuthException
 
 
 @RestController
-@RequestMapping("/${ScpReaderConstants.Path.AUTH}")
+@RequestMapping("/" + ScpReaderConstants.Path.AUTH)
 class AuthController {
 
     @Autowired
@@ -176,7 +176,7 @@ class AuthController {
                         firebaseService.manageFirebaseArticlesForUser(
                                 firebaseUserData.firebaseUser.articles?.values?.toList()
                                         ?: listOf(),
-                                userInDb,
+                                userInDb.id!!,
                                 langService.getById(firebaseUserData.lang.lang)
                                         ?: throw IllegalArgumentException("Unknown lang: ${firebaseUserData.lang}")
                         )

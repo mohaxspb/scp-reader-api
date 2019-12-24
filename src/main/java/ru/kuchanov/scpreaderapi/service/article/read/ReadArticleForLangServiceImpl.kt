@@ -4,22 +4,21 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticlesByLang
 import ru.kuchanov.scpreaderapi.repository.article.read.ReadArticlesForLangRepository
+import javax.transaction.Transactional
 
 
 @Service
-class ReadArticleForLangServiceImpl : ReadArticleForLangService {
+class ReadArticleForLangServiceImpl @Autowired constructor(
+        val repository: ReadArticlesForLangRepository
+) : ReadArticleForLangService {
 
-    @Autowired
-    private lateinit var repository: ReadArticlesForLangRepository
+    override fun deleteById(id: Long) =
+            repository.deleteById(id)
 
-    override fun findAll() = repository.findAll().toList()
+    @Transactional
+    override fun save(article: ReadArticlesByLang): ReadArticlesByLang =
+            repository.save(article)
 
-    override fun update(articleForLang: ReadArticlesByLang): ReadArticlesByLang = repository.save(articleForLang)
-
-    override fun insert(article: ReadArticlesByLang): ReadArticlesByLang = repository.save(article)
-
-    override fun insert(articles: List<ReadArticlesByLang>): List<ReadArticlesByLang> = repository.saveAll(articles)
-
-    override fun getReadArticleForArticleIdLangIdAndUserId(articleId: Long, langId: String, userId: Long) =
-            repository.getReadArticleForArticleIdLangIdAndUserId(articleId, langId, userId)
+    override fun findByArticleToLangIdAndUserId(articleToLangId: Long, userId: Long): ReadArticlesByLang? =
+            repository.findByArticleToLangIdAndUserId(articleToLangId, userId)
 }

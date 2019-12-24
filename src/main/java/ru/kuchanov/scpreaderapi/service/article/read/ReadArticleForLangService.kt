@@ -4,18 +4,12 @@ import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticlesByLang
 import javax.transaction.Transactional
 
 interface ReadArticleForLangService {
-    fun findAll(): List<ReadArticlesByLang>
-
-    fun update(articleForLang: ReadArticlesByLang): ReadArticlesByLang
 
     @Transactional
-    fun insert(article: ReadArticlesByLang): ReadArticlesByLang
+    fun deleteById(id: Long)
 
-    fun insert(articles: List<ReadArticlesByLang>): List<ReadArticlesByLang>
+    @Transactional
+    fun save(article: ReadArticlesByLang): ReadArticlesByLang
 
-    fun getReadArticleForArticleIdLangIdAndUserId(
-            articleId: Long,
-            langId: String,
-            userId: Long
-    ): ReadArticlesByLang?
+    fun findByArticleToLangIdAndUserId(articleToLangId: Long, userId: Long): ReadArticlesByLang?
 }

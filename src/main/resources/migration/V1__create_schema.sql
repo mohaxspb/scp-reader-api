@@ -111,17 +111,56 @@ create table if not exists banners
     updated timestamp
 );
 
-create table if not exists favorite_articles_by_lang
+
+create table if not exists read__articles_to_lang__to__users
 (
-    article_id bigint not null,
-    lang_id varchar(255) not null,
+    id bigserial not null,
+    article_to_lang_id bigint not null,
     user_id bigint not null,
     created timestamp,
-    is_favorite boolean,
     updated timestamp,
-    constraint favorite_articles_by_lang_pkey
-        primary key (article_id, lang_id, user_id)
+    primary key (id)
 );
+
+ALTER TABLE read__articles_to_lang__to__users
+    drop constraint IF EXISTS fk_article_to_lang_id__to__articles_langs CASCADE;
+alter table read__articles_to_lang__to__users
+    add constraint fk_article_to_lang_id__to__articles_langs
+        foreign key (article_to_lang_id)
+            REFERENCES articles_langs (id);
+
+ALTER TABLE read__articles_to_lang__to__users
+    drop constraint IF EXISTS fk_user_id__to__users CASCADE;
+alter table read__articles_to_lang__to__users
+    add constraint fk_user_id__to__users
+        foreign key (user_id)
+            REFERENCES users (id);
+
+
+create table if not exists favorite__articles_to_lang__to__users
+(
+    id bigserial not null,
+    article_to_lang_id bigint not null,
+    user_id bigint not null,
+    created timestamp,
+    updated timestamp,
+    primary key (id)
+);
+
+ALTER TABLE favorite__articles_to_lang__to__users
+    drop constraint IF EXISTS fk_article_to_lang_id__to__articles_langs CASCADE;
+alter table favorite__articles_to_lang__to__users
+    add constraint fk_article_to_lang_id__to__articles_langs
+        foreign key (article_to_lang_id)
+            REFERENCES articles_langs (id);
+
+ALTER TABLE favorite__articles_to_lang__to__users
+    drop constraint IF EXISTS fk_user_id__to__users CASCADE;
+alter table favorite__articles_to_lang__to__users
+    add constraint fk_user_id__to__users
+        foreign key (user_id)
+            REFERENCES users (id);
+
 
 create table if not exists firebase_data_update_date
 (
@@ -215,17 +254,6 @@ create table if not exists oauth_refresh_token
     updated timestamp default CURRENT_TIMESTAMP
 );
 
-create table if not exists read_articles_by_lang
-(
-    article_id bigint not null,
-    lang_id varchar(255) not null,
-    user_id bigint not null,
-    created timestamp,
-    is_read boolean,
-    updated timestamp,
-    constraint read_articles_by_lang_pkey
-        primary key (article_id, lang_id, user_id)
-);
 
 create table if not exists users
 (
