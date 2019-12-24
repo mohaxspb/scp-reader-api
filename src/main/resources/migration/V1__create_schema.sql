@@ -148,45 +148,6 @@ create table if not exists flyway_schema_history
     success boolean not null
 );
 
-create index if not exists flyway_schema_history_s_idx
-    on flyway_schema_history (success);
-
-create table if not exists gallery_image
-(
-    id bigserial not null
-        constraint gallery_image_pkey
-            primary key,
-    approved boolean not null,
-    approver_id bigint,
-    author_id bigint,
-    created timestamp,
-    image_url varchar(255),
-    updated timestamp,
-    vk_id bigint
-        constraint uk_d2l82o5ddcryaf0vfc4o144i8
-            unique
-);
-
-create table if not exists gallery_image_translations
-(
-    id bigserial not null
-        constraint gallery_image_translations_pkey
-            primary key,
-    approved boolean not null,
-    approver_id bigint,
-    author_id bigint,
-    created timestamp,
-    lang_code varchar(255),
-    translation text,
-    updated timestamp,
-    gallery_image_id bigint
-        constraint fkdsxj1vgncn28yvuk36box8o5t
-            references gallery_image,
-    gallery_image bigint
-        constraint fk40lwhc9f9hk47d9rlaqlrpuaj
-            references gallery_image
-);
-
 create table if not exists langs
 (
     id varchar(255) not null

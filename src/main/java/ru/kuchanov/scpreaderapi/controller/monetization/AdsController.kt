@@ -11,7 +11,6 @@ import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.ads.Banner
 import ru.kuchanov.scpreaderapi.bean.ads.BannerNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.User
-import ru.kuchanov.scpreaderapi.controller.GalleryController
 import ru.kuchanov.scpreaderapi.model.dto.monetization.BannerDto
 import ru.kuchanov.scpreaderapi.model.dto.monetization.toBanner
 import ru.kuchanov.scpreaderapi.service.monetization.ads.BannersService
@@ -77,7 +76,7 @@ class AdsController {
             val inputStream = FileInputStream(fileName)
             return IOUtils.toByteArray(inputStream)
         } else {
-            throw GalleryController.MyFileNotFoundException("File not found $fileName", IOException())
+            throw RuntimeException("File not found $fileName", IOException())
         }
     }
 
