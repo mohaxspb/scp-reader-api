@@ -20,8 +20,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory
 import org.springframework.context.annotation.Primary
+import org.springframework.http.HttpStatus
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
+import org.springframework.web.bind.annotation.ResponseStatus
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.articles.Article
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
@@ -42,6 +44,10 @@ import ru.kuchanov.scpreaderapi.service.article.text.TextPartService
 import ru.kuchanov.scpreaderapi.service.article.type.ArticleAndArticleTypeService
 import ru.kuchanov.scpreaderapi.service.article.type.ArticleTypeService
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseArticleService
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ATTR_HREF
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ID_PAGE_CONTENT
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_A
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_IMG
 import java.io.IOException
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
@@ -156,9 +162,7 @@ class ArticleParsingServiceBase {
                             )
                             println("download complete")
                         },
-                        onError = {
-                            it.printStackTrace()
-                        }
+                        onError = { it.printStackTrace() }
                 )
     }
 
@@ -188,7 +192,6 @@ class ArticleParsingServiceBase {
                 .doOnNext { println("articles size: ${it.size}") }
                 .toList()
                 .map { it.flatten() }
-
                 //test loading and save with less count of articles
                 .map { articlesToDownload ->
                     processOnlyCount?.let {
@@ -213,9 +216,7 @@ class ArticleParsingServiceBase {
                             )
                             println("download complete")
                         },
-                        onError = {
-                            it.printStackTrace()
-                        }
+                        onError = { it.printStackTrace() }
                 )
     }
 
@@ -239,9 +240,7 @@ class ArticleParsingServiceBase {
                             )
                             println("download complete")
                         },
-                        onError = {
-                            it.printStackTrace()
-                        }
+                        onError = { it.printStackTrace() }
                 )
     }
 
@@ -322,9 +321,7 @@ class ArticleParsingServiceBase {
                             )
                             println("download complete")
                         },
-                        onError = {
-                            it.printStackTrace()
-                        }
+                        onError = { it.printStackTrace() }
                 )
     }
 
@@ -341,7 +338,7 @@ class ArticleParsingServiceBase {
                 if (body != null) {
                     responseBody = body.string()
                 } else {
-                    subscriber.onError(ScpParseException("error while getRecentArticlesPageCountForLang"))
+                    subscriber.onError(ScpParseException("body is null while getRecentArticlesPageCountForLang", NullPointerException()))
                     return@create
                 }
             } catch (e: IOException) {
@@ -379,7 +376,7 @@ class ArticleParsingServiceBase {
                     .execute()
                     .body()
                     ?.string()
-                    ?: throw IOException("error while getRecentArticlesForPage: $page")
+                    ?: throw IOException("body is null for page: $page")
             val doc: Document = Jsoup.parse(responseBody)
 
             val articles = parseForRecentArticles(lang, doc)
@@ -400,11 +397,11 @@ class ArticleParsingServiceBase {
                 if (body != null) {
                     body.string()
                 } else {
-                    subscriber.onError(ScpParseException("parse error getRatedArticlesForLang!"))
+                    subscriber.onError(ScpParseException("body is null!", NullPointerException()))
                     return@create
                 }
             } catch (e: IOException) {
-                subscriber.onError(IOException("connection error!"))
+                subscriber.onError(IOException("Connection error!"))
                 return@create
             }
             try {
@@ -412,10 +409,10 @@ class ArticleParsingServiceBase {
                 val articles = parseForRatedArticles(lang, doc)
                 subscriber.onSuccess(articles)
             } catch (e: Exception) {
-                println("error while get arts list")
+                println("error 0 while get arts list")
                 subscriber.onError(e)
             } catch (e: ScpParseException) {
-                println("error while get arts list")
+                println("error 1 while get arts list")
                 subscriber.onError(e)
             }
         }
@@ -424,17 +421,17 @@ class ArticleParsingServiceBase {
     @Suppress("DuplicatedCode")
     protected fun parseForRatedArticles(lang: Lang, doc: Document): List<ArticleForLang> {
         println("start parsing rated articles for lang: $lang")
-        val pageContent = doc.getElementById("page-content")
-                ?: throw ScpParseException("parse error!")
+        val pageContent = doc.getElementById(ID_PAGE_CONTENT)
+                ?: throw ScpParseException("$ID_PAGE_CONTENT not found!", NullPointerException())
         val listPagesBox = pageContent.getElementsByClass("list-pages-box").first()
-                ?: throw ScpParseException("parse error!")
+                ?: throw ScpParseException("list-pages-box not found!", NullPointerException())
         val articles = mutableListOf<ArticleForLang>()
         val listOfElements = listPagesBox.getElementsByClass("list-pages-item")
         for (element in listOfElements) {
             val tagP = element.getElementsByTag("p").first()
-            val tagA = tagP.getElementsByTag("a").first()
+            val tagA = tagP.getElementsByTag(TAG_A).first()
             val title = tagP.text().substring(0, tagP.text().indexOf(getArticleRatingStringDelimiter()))
-            val url: String = lang.siteBaseUrl + tagA.attr("href")
+            val url: String = lang.siteBaseUrl + tagA.attr(ATTR_HREF)
             //remove a tag to leave only text with rating
             tagA.remove()
             tagP.text(tagP.text().replace(", рейтинг ", ""))
@@ -464,11 +461,11 @@ class ArticleParsingServiceBase {
                 if (body != null) {
                     body.string()
                 } else {
-                    subscriber.onError(ScpParseException("parse error!"))
+                    subscriber.onError(ScpParseException("Body is null!", NullPointerException()))
                     return@create
                 }
             } catch (e: IOException) {
-                subscriber.onError(IOException("connection error!"))
+                subscriber.onError(IOException("Connection error!"))
                 return@create
             }
             try {
@@ -476,10 +473,10 @@ class ArticleParsingServiceBase {
                 val articles = parseForObjectArticles(lang, doc)
                 subscriber.onSuccess(articles)
             } catch (e: Exception) {
-                println("error while get arts list")
+                println("error 0 while get arts list")
                 subscriber.onError(e)
             } catch (e: ScpParseException) {
-                println("error while get arts list")
+                println("error 1 while get arts list")
                 subscriber.onError(e)
             }
         }
@@ -487,8 +484,8 @@ class ArticleParsingServiceBase {
 
     @Suppress("DuplicatedCode")
     protected fun parseForObjectArticles(lang: Lang, doc: Document): List<ArticleForLang> {
-        val pageContent = doc.getElementById("page-content")
-                ?: throw ScpParseException("parse error!")
+        val pageContent = doc.getElementById(ID_PAGE_CONTENT)
+                ?: throw ScpParseException("$ID_PAGE_CONTENT not found!", NullPointerException())
         //parse
         val listPagesBox = pageContent.getElementsByClass("list-pages-box").first()
         listPagesBox?.remove()
@@ -501,15 +498,15 @@ class ArticleParsingServiceBase {
         //now we will remove all html code before tag h2,with id toc1
         var allHtml = pageContent.html()
         val indexOfh2WithIdToc1 = allHtml.indexOf("<h2 id=\"toc1\">")
-        var indexOfhr = allHtml.indexOf("<hr>")
+        var indexOfHr = allHtml.indexOf("<hr>")
         //for other objects filials there is no HR tag at the end...
-        if (indexOfhr < indexOfh2WithIdToc1) {
-            indexOfhr = allHtml.indexOf("<p style=\"text-align: center;\">= = = =</p>")
+        if (indexOfHr < indexOfh2WithIdToc1) {
+            indexOfHr = allHtml.indexOf("<p style=\"text-align: center;\">= = = =</p>")
         }
-        if (indexOfhr < indexOfh2WithIdToc1) {
-            indexOfhr = allHtml.length
+        if (indexOfHr < indexOfh2WithIdToc1) {
+            indexOfHr = allHtml.length
         }
-        allHtml = allHtml.substring(indexOfh2WithIdToc1, indexOfhr)
+        allHtml = allHtml.substring(indexOfh2WithIdToc1, indexOfHr)
         val document = Jsoup.parse(allHtml)
         val h2withIdToc1 = document.getElementById("toc1")
         h2withIdToc1.remove()
@@ -527,7 +524,7 @@ class ArticleParsingServiceBase {
             }
             val arrayItemParsed = Jsoup.parse(arrayItem)
             //type of object
-            val imageURL = arrayItemParsed.getElementsByTag("img").first().attr("src")
+            val imageURL = arrayItemParsed.getElementsByTag(TAG_IMG).first().attr("src")
             val type = getObjectTypeByImageUrl(imageURL)
             val url = lang.siteBaseUrl + arrayItemParsed.getElementsByTag("a").first().attr("href")
             val title = arrayItemParsed.text()
@@ -657,7 +654,7 @@ class ArticleParsingServiceBase {
     @Suppress("DuplicatedCode")
     protected fun parseForRecentArticles(lang: Lang, doc: Document): List<ArticleForLang> {
         val table = doc.getElementsByClass("wiki-content-table").first()
-                ?: throw NullPointerException("Can't find element for class \"wiki-content-table\"")
+                ?: throw ScpParseException("Can't find element for class \"wiki-content-table\"", NullPointerException())
 
         val articles = mutableListOf<ArticleForLang>()
         val listOfElements = table.getElementsByTag("tr")
@@ -956,7 +953,7 @@ class ArticleParsingServiceBase {
     }
 }
 
-//todo spring annotation
+@ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR)
 class ScpParseException(
         override val message: String?,
         override val cause: Throwable? = null
