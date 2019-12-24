@@ -224,7 +224,6 @@ class ArticleParsingServiceBase {
     fun parseConcreteObjectArticlesForLang(
             objectsUrl: String,
             lang: Lang,
-            totalPageCount: Int? = null,
             processOnlyCount: Int? = null,
             innerArticlesDepth: Int? = null
     ) {
@@ -547,12 +546,16 @@ class ArticleParsingServiceBase {
         println("downloadAndSaveArticles articles size: ${articlesToDownload.size}")
         return Single.just(articlesToDownload)
                 .map { articles ->
-                    articles.map { articleToDownload ->
-                        saveArticle(
-                                articleToDownload,
-                                lang,
-                                innerArticlesDepth
-                        )
+                    articles.mapNotNull { articleToDownload ->
+                        try {
+                            saveArticle(
+                                    articleToDownload,
+                                    lang,
+                                    innerArticlesDepth
+                            )
+                        } catch (e: Exception) {
+                            null
+                        }
                     }
                 }
                 .subscribeOn(Schedulers.io())
@@ -949,4 +952,4 @@ class ArticleParsingServiceBase {
 class ScpParseException(
         override val message: String?,
         override val cause: Throwable? = null
-) : Throwable(message, cause)
+) : RuntimeException(message, cause)
