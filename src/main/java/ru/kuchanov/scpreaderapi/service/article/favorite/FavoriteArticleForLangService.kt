@@ -4,18 +4,14 @@ import ru.kuchanov.scpreaderapi.bean.articles.favorite.FavoriteArticlesByLang
 import javax.transaction.Transactional
 
 interface FavoriteArticleForLangService {
-    fun findAll(): List<FavoriteArticlesByLang>
 
-    fun update(articleForLang: FavoriteArticlesByLang): FavoriteArticlesByLang
+    fun deleteById(id: Long)
 
     @Transactional
-    fun insert(article: FavoriteArticlesByLang): FavoriteArticlesByLang
-
-    fun insert(articles: List<FavoriteArticlesByLang>): List<FavoriteArticlesByLang>
+    fun save(article: FavoriteArticlesByLang): FavoriteArticlesByLang
 
     fun getFavoriteArticleForArticleIdLangIdAndUserId(
-            articleId: Long,
-            langId: String,
+            articleToLangId: Long,
             userId: Long
     ): FavoriteArticlesByLang?
 }

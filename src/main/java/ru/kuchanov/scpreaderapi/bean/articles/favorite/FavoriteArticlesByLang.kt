@@ -7,31 +7,21 @@ import java.io.Serializable
 import java.sql.Timestamp
 import javax.persistence.*
 
-//todo remove composite key
 @Entity
-@IdClass(KeyFavoriteArticleByLang::class)
-@Table(name = "favorite_articles_by_lang")
+@Table(name = "favorite__articles_to_lang__to__users")
+@NoArgConstructor
 data class FavoriteArticlesByLang(
         @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        val id: Long? = null,
+
         @Column(name = "user_id")
         var userId: Long,
-        @Id
-        @Column(name = "article_id")
-        var articleId: Long,
-        @Id
-        @Column(name = "lang_id")
-        var langId: String,
-        @Column(name = "is_favorite")
-        var isFavorite: Boolean = false,
+        @Column(name = "article_to_lang_id")
+        var articleToLangId: Long,
+
         @field:CreationTimestamp
         val created: Timestamp? = null,
         @field:UpdateTimestamp
         val updated: Timestamp? = null
 )
-
-@NoArgConstructor
-data class KeyFavoriteArticleByLang(
-        val userId: Long? = null,
-        val articleId: Long? = null,
-        val langId: String? = null
-) : Serializable

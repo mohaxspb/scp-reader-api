@@ -15,10 +15,9 @@ import org.springframework.dao.IncorrectResultSizeDataAccessException
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
-import ru.kuchanov.scpreaderapi.bean.articles.Article
+import ru.kuchanov.scpreaderapi.bean.FirebaseDataUpdateDate
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.favorite.FavoriteArticlesByLang
-import ru.kuchanov.scpreaderapi.bean.FirebaseDataUpdateDate
 import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticlesByLang
 import ru.kuchanov.scpreaderapi.bean.auth.Authority
 import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
@@ -289,7 +288,7 @@ class FirebaseService {
                     }
 
                     //insert read/favorite articles if need
-                    manageFirebaseArticlesForUser(userUidArticles.articles, userInDb, lang)
+                    manageFirebaseArticlesForUser(userUidArticles.articles, userInDb.id!!, lang)
                 }
 
         println("newUsersInserted = $newUsersInserted, newLangForExistedUsers = $newLangForExistedUsers")
@@ -300,121 +299,80 @@ class FirebaseService {
      */
     fun manageFirebaseArticlesForUser(
             articlesInFirebase: List<FirebaseArticle>,
-            user: User,
+            userId: Long,
             lang: Lang
     ) {
 //        println("manageFirebaseArticlesForUser: ${lang.id}/${user.username}")
-        articlesInFirebase.forEachIndexed { _, articleInFirebase ->
+        articlesInFirebase.forEach { articleInFirebase ->
             if (articleInFirebase.url == null) {
 //                println("manageFirebaseArticlesForUser: ${lang.id}/${user.username}")
 //                println("articleInFirebase: $index/$articleInFirebase")
-                return@forEachIndexed
+                return@forEach
             }
             val urlRelative = articleInFirebase.url!!.replace("${lang.siteBaseUrl}/", "")
             //for other langs we should not pass urlRelative
-            var articleInDb = articleService.getArticleByUrlRelative(urlRelative)
+            val articleInDb = articleService.getArticleByUrlRelative(urlRelative)
 //            println("articleInDb: $articleInDb $urlRelative")
             //insert new article and article-lang connection if need
             if (articleInDb == null) {
-                articleInDb = articleService.insert(Article())
+                //do nothing!
+                return
+            } else {
+                //check if we do not have article-lang connection for given article
+                var articleToLang: ArticleForLang? = null
+                try {
+                    //todo check what the hell is going on here. We get 2 results here...
+                    articleToLang = articleForLangService.getOneByLangAndArticleId(articleInDb.id!!, lang.id)
+                } catch (e: Exception) {
+                    if (e is IncorrectResultSizeDataAccessException) {
+                        println("IncorrectResultSizeDataAccessException while get ArticleForLang: ${articleInDb.id}/$urlRelative")
+                        log.error("IncorrectResultSizeDataAccessException while get ArticleForLangL ${articleInDb.id}/$urlRelative")
+                    } else {
+                        println("error while get ArticleForLang, ${e.message}")
+                        log.error("error while get ArticleForLang", e)
+                    }
+                }
+
+                if (articleToLang != null) {
+                    articleInFirebase.isFavorite?.let { manageFavoriteArticlesForUserForLang(userId, it, articleToLang.id!!) }
+                    articleInFirebase.isRead?.let { manageReadArticlesForUserForLang(userId, it, articleToLang.id!!) }
+                }
             }
-            //check if we do not have article-lang connection for given article
-            try {
-                //todo check what the hell is going on here. We get 2 results here...
-                if (articleForLangService.getOneByLangAndArticleId(articleInDb.id!!, lang.id) == null) {
-                    articleForLangService.insert(
-                            ArticleForLang(
-                                    articleId = articleInDb.id!!,
-                                    langId = lang.id,
-                                    urlRelative = urlRelative,
-                                    title = articleInFirebase.title
-                            )
+        }
+    }
+
+    private fun manageFavoriteArticlesForUserForLang(userId: Long, isFavorite: Boolean, articleToLangId: Long) {
+        val favoriteArticleForLang = favoriteArticleForLangService.getFavoriteArticleForArticleIdLangIdAndUserId(
+                userId = userId,
+                articleToLangId = articleToLangId
+        )
+
+        if (isFavorite && favoriteArticleForLang == null) {
+            favoriteArticleForLangService.save(
+                    FavoriteArticlesByLang(
+                            userId = userId,
+                            articleToLangId = articleToLangId
                     )
-                }
-            } catch (e: Exception) {
-                if (e is IncorrectResultSizeDataAccessException) {
-                    println("IncorrectResultSizeDataAccessException while insert new ArticleForLang: ${articleInDb.id}/$urlRelative")
-                    log.error("IncorrectResultSizeDataAccessException while insert new ArticleForLangL ${articleInDb.id}/$urlRelative")
-                } else {
-                    println("error while insert new ArticleForLang, ${e.message}")
-                    log.error("error while insert new ArticleForLang", e)
-                }
-            }
-
-            //update favorite if need
-            manageFavoriteArticlesForUserForLang(user, articleInFirebase, articleInDb, lang)
-
-            //update read if need
-            manageReadArticlesForUserForLang(user, articleInFirebase, articleInDb, lang)
+            )
         }
     }
 
-    private fun manageFavoriteArticlesForUserForLang(
-            user: User,
-            articleInFirebase: FirebaseArticle,
-            articleInDb: Article,
-            lang: Lang
-    ) {
-        var favoriteArticleForLang = favoriteArticleForLangService.getFavoriteArticleForArticleIdLangIdAndUserId(
-                userId = user.id!!,
-                articleId = articleInDb.id!!,
-                langId = lang.id
+    /**
+     * we'll write to DB only if article in firebase is read and there is no row for this article in DB
+     */
+    private fun manageReadArticlesForUserForLang(userId: Long, isRead: Boolean, articleToLangId: Long) {
+        val readArticleForLang = readArticleForLangService.findByArticleToLangIdAndUserId(
+                userId = userId,
+                articleToLangId = articleToLangId
         )
 
-        if (favoriteArticleForLang == null) {
-            favoriteArticleForLang = favoriteArticleForLangService.insert(FavoriteArticlesByLang(
-                    userId = user.id,
-                    articleId = articleInDb.id,
-                    langId = lang.id,
-                    isFavorite = articleInFirebase.isFavorite!!
-            ))
-        }
-
-        @Suppress("DuplicatedCode")
-        val dateInFirebase = articleInFirebase.updated
-        val dateInDb = favoriteArticleForLang.updated!!.time
-
-        //check timestamp and update if need
-        if (dateInDb < dateInFirebase!!) {
-            //outdated info in DB, so update it if value changed
-            if (favoriteArticleForLang.isFavorite != articleInFirebase.isFavorite) {
-                favoriteArticleForLang.isFavorite = articleInFirebase.isFavorite!!
-                favoriteArticleForLangService.update(favoriteArticleForLang)
-            }
-        }
-    }
-
-    private fun manageReadArticlesForUserForLang(
-            user: User,
-            articleInFirebase: FirebaseArticle,
-            articleInDb: Article,
-            lang: Lang
-    ) {
-        var readArticleForLang = readArticleForLangService.getReadArticleForArticleIdLangIdAndUserId(
-                userId = user.id!!,
-                articleId = articleInDb.id!!,
-                langId = lang.id
-        )
-
-        if (readArticleForLang == null) {
-            readArticleForLang = readArticleForLangService.insert(ReadArticlesByLang(
-                    userId = user.id,
-                    articleId = articleInDb.id,
-                    langId = lang.id,
-                    isRead = articleInFirebase.isRead!!
-            ))
-        }
-
-        val dateInFirebase = articleInFirebase.updated
-        val dateInDb = readArticleForLang.updated!!.time
-
-        //check timestamp and update if need
-        if (dateInDb < dateInFirebase!!) {
-            //outdated info in DB, so update it if value changed
-            if (readArticleForLang.isRead != articleInFirebase.isRead) {
-                readArticleForLang.isRead = articleInFirebase.isRead!!
-                readArticleForLangService.update(readArticleForLang)
-            }
+        if (isRead && readArticleForLang == null) {
+            readArticleForLangService.save(
+                    ReadArticlesByLang(
+                            userId = userId,
+                            articleToLangId = articleToLangId
+                    )
+            )
         }
     }
 
