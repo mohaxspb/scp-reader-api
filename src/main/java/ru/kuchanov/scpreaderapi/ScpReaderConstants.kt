@@ -2,10 +2,6 @@ package ru.kuchanov.scpreaderapi
 
 object ScpReaderConstants {
     /**
-     * 24 hours
-     */
-    const val GALLERY_UPDATE_FROM_VK_RATE_MILLIS = 1000L * 60 * 60 * 24
-    /**
      * 12 hours
      */
     const val FIREBASE_USERS_DATA_UPDATE_RATE_MILLIS = 1000L * 60 * 60 * 12
@@ -18,7 +14,6 @@ object ScpReaderConstants {
     const val NUM_OF_ARTICLES_RATED_PAGE = 20
 
     object Path {
-        const val GALLERY = "gallery"
         const val FIREBASE = "firebase"
         const val AUTH = "auth"
         const val PURCHASE = "purchase"
@@ -30,7 +25,6 @@ object ScpReaderConstants {
     }
 
     object FilesPaths {
-        const val GALLERY = "gallery"
         const val BANNERS = "banners"
     }
 

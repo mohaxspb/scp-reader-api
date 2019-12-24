@@ -51,8 +51,6 @@ apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 apply plugin: 'war'
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
 
 //artifacts
 bootWar {
@@ -116,9 +114,6 @@ dependencies {
 
     //firebase
     implementation 'com.google.firebase:firebase-admin:6.8.1'
-
-    //vk
-    implementation 'com.vk.api:sdk:0.5.12'
 
     //Retrofit
     implementation('com.squareup.retrofit2:retrofit:2.4.0') { exclude module: 'okhttp' }

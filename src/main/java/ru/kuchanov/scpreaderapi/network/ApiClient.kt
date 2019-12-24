@@ -3,9 +3,6 @@ package ru.kuchanov.scpreaderapi.network
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier
-import com.vk.api.sdk.client.VkApiClient
-import com.vk.api.sdk.client.actors.ServiceActor
-import com.vk.api.sdk.objects.photos.responses.GetResponse
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -32,19 +29,6 @@ class ApiClient {
     //google auth
     @Autowired
     private lateinit var googleIdTokenVerifier: GoogleIdTokenVerifier
-
-    //vk
-    @Value("\${my.api.vk.art_scp.group_id}")
-    var artScpVkGroupId: Int? = null
-
-    @Value("\${my.api.vk.art_scp.album_id}")
-    var artScpVkAlbumId: Int? = null
-
-    @Autowired
-    private lateinit var vkApiClient: VkApiClient
-
-    @Autowired
-    private lateinit var serviceActor: ServiceActor
 
     //facebook values
     @Value("\${my.api.ru.facebook.client_id}")
@@ -121,16 +105,6 @@ class ApiClient {
                 ScpReaderConstants.Firebase.FirebaseInstance.CH to facebookClientSecretCh
         )
     }
-
-    fun getVkAppAccessToken(): String = vkApiClient.oauth()
-            .serviceClientCredentialsFlow(serviceActor.id, serviceActor.clientSecret)
-            .execute().accessToken
-
-    fun getScpArtPhotosFromVk(): GetResponse? = vkApiClient.photos().get(serviceActor)
-            .ownerId(artScpVkGroupId)
-            .albumId(artScpVkAlbumId.toString())
-            .photoSizes(true)
-            .execute()
 
     fun getUserDataFromProvider(
             provider: ScpReaderConstants.SocialProvider,

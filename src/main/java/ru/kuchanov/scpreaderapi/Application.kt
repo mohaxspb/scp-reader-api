@@ -9,7 +9,6 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 import org.springframework.context.annotation.Bean
 import org.springframework.scheduling.annotation.EnableAsync
 import org.springframework.scheduling.annotation.EnableScheduling
-import ru.kuchanov.scpreaderapi.network.ModelConverter
 
 
 @SpringBootApplication
@@ -24,11 +23,7 @@ class Application : SpringBootServletInitializer() {
     fun logger(): Logger =
             LoggerFactory.getLogger("application")
 
-    @Bean
-    fun modelConverter() =
-            ModelConverter()
-
-    companion object{
+    companion object {
         @JvmStatic
         fun main(args: Array<String>) {
             SpringApplication.run(Application::class.java, *args)
