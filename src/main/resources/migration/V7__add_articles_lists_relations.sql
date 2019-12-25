@@ -67,7 +67,7 @@ with
     itLang as (select * from langs where lang_code = 'it'),
     esLang as (select * from langs where lang_code = 'es'),
     ptLang as (select * from langs where lang_code = 'pt'),
-    cnLang as (select * from langs where lang_code = 'cn')
+    zhLang as (select * from langs where lang_code = 'zh')
 insert
 into article_categories__to__langs(article_category_id, lang_id, title, site_url)
 VALUES
@@ -119,12 +119,12 @@ VALUES
 ((select id from SERIES_3), (select id from ptLang), 'SCP Série 3', '/scp-series-3'),
 ((select id from SERIES_4), (select id from ptLang), 'SCP Série 4', '/scp-series-4'),
 ((select id from SERIES_5), (select id from ptLang), 'SCP Série 5', '/scp-series-5'),
--- cn
-((select id from SERIES_1), (select id from cnLang), 'SCP系列 1', '/scp-series'),
-((select id from SERIES_2), (select id from cnLang), 'SCP系列 2', '/scp-series-2'),
-((select id from SERIES_3), (select id from cnLang), 'SCP系列 3', '/scp-series-3'),
-((select id from SERIES_4), (select id from cnLang), 'SCP系列 4', '/scp-series-4'),
-((select id from SERIES_5), (select id from cnLang), 'SCP系列 5', '/scp-series-5')
+-- zh
+((select id from SERIES_1), (select id from zhLang), 'SCP系列 1', '/scp-series'),
+((select id from SERIES_2), (select id from zhLang), 'SCP系列 2', '/scp-series-2'),
+((select id from SERIES_3), (select id from zhLang), 'SCP系列 3', '/scp-series-3'),
+((select id from SERIES_4), (select id from zhLang), 'SCP系列 4', '/scp-series-4'),
+((select id from SERIES_5), (select id from zhLang), 'SCP系列 5', '/scp-series-5')
 ON CONFLICT DO NOTHING;
 
 

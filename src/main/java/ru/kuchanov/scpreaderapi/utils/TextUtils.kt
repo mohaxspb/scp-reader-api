@@ -1,7 +1,7 @@
 package ru.kuchanov.scpreaderapi.utils
 
 
-fun String.isDigistOnly(): Boolean {
+fun String.isDigitsOnly(): Boolean {
     val len = this.length
     var cp: Int
     var i = 0

@@ -90,7 +90,7 @@ class ApiClient {
                 ScpReaderConstants.Firebase.FirebaseInstance.ES to facebookClientIdEs!!,
                 ScpReaderConstants.Firebase.FirebaseInstance.IT to facebookClientIdIt!!,
                 ScpReaderConstants.Firebase.FirebaseInstance.PT to facebookClientIdPt!!,
-                ScpReaderConstants.Firebase.FirebaseInstance.CH to facebookClientIdCh!!
+                ScpReaderConstants.Firebase.FirebaseInstance.ZH to facebookClientIdCh!!
         )
 
         facebookClientSecrets = mapOf(
@@ -102,7 +102,7 @@ class ApiClient {
                 ScpReaderConstants.Firebase.FirebaseInstance.ES to facebookClientSecretEs,
                 ScpReaderConstants.Firebase.FirebaseInstance.IT to facebookClientSecretIt,
                 ScpReaderConstants.Firebase.FirebaseInstance.PT to facebookClientSecretPt,
-                ScpReaderConstants.Firebase.FirebaseInstance.CH to facebookClientSecretCh
+                ScpReaderConstants.Firebase.FirebaseInstance.ZH to facebookClientSecretCh
         )
     }
 
