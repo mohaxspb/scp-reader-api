@@ -598,13 +598,13 @@ class ArticleParsingServiceBase {
             }
 
             if (articleForLangInDb == null) {
-                articleForLangInDb = articleForLangService.insert(articleDownloaded.apply {
+                articleForLangInDb = articleForLangService.save(articleDownloaded.apply {
                     articleId = articleInDb.id
                     this.createdOnSite = articleToSave.createdOnSite
                     this.updatedOnSite = articleToSave.updatedOnSite
                 })
             } else {
-                articleForLangInDb = articleForLangService.insert(
+                articleForLangInDb = articleForLangService.save(
                         articleForLangInDb.apply {
                             commentsUrl = articleDownloaded.commentsUrl
                             rating = articleDownloaded.rating

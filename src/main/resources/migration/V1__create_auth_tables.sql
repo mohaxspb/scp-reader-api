@@ -121,7 +121,7 @@ ON CONFLICT DO NOTHING;
 create table if not exists authorities__to__users
 (
     id        bigserial not null,
-    authority bigint    not null,
+    authority text      not null,
     user_id   bigint    not null,
     created   timestamp,
     updated   timestamp,
@@ -167,7 +167,7 @@ create table if not exists users_langs
     firebase_uid text,
     created      timestamp,
     updated      timestamp,
-        primary key (id)
+    primary key (id)
 );
 
 alter table users_langs

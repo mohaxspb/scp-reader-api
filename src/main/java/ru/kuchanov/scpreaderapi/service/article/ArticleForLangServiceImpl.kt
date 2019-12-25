@@ -21,11 +21,8 @@ class ArticleForLangServiceImpl @Autowired constructor(
         val textPartService: TextPartService
 ) : ArticleForLangService {
 
-    override fun insert(articleForLang: ArticleForLang): ArticleForLang =
+    override fun save(articleForLang: ArticleForLang): ArticleForLang =
             articlesForLangRepository.save(articleForLang)
-
-    override fun insert(articleForLang: List<ArticleForLang>): List<ArticleForLang> =
-            articlesForLangRepository.saveAll(articleForLang)
 
     override fun getArticleForLangByUrlRelativeAndLang(urlRelative: String, langId: String) =
             articlesForLangRepository.findByUrlRelativeAndLangId(urlRelative, langId)

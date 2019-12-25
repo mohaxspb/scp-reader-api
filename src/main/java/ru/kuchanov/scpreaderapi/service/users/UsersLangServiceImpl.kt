@@ -7,15 +7,12 @@ import ru.kuchanov.scpreaderapi.repository.users.UsersLangsRepository
 
 
 @Service
-class UsersLangServiceImpl : UsersLangsService {
-
-    @Autowired
-    private lateinit var repository: UsersLangsRepository
+class UsersLangServiceImpl @Autowired constructor(
+        val repository: UsersLangsRepository
+) : UsersLangsService {
 
     override fun getByUserIdAndLangId(userId: Long, langId: String): UsersLangs? =
             repository.getOneByUserIdAndLangId(userId, langId)
 
     override fun insert(userLang: UsersLangs): UsersLangs = repository.save(userLang)
-
-    override fun insert(usersLangs: List<UsersLangs>): List<UsersLangs> = repository.saveAll(usersLangs)
 }
