@@ -6,8 +6,10 @@ import ru.kuchanov.scpreaderapi.bean.articles.text.TextPart
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ATTR_SRC
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.CLASS_SPOILER
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.CLASS_TABS
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ID_PAGE_CONTENT
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_A
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_BLOCKQUOTE
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_BODY
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_IMG
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_LI
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_P
@@ -24,7 +26,9 @@ class ParseArticleTextService {
      */
     fun parseArticleText(rawText: String, printTextParts: Boolean = false): List<TextPart> {
         val textParts = getArticlesTextParts(rawText)
-        val textPartsTypes = getListOfTextTypes(getArticlesTextParts(rawText))
+        //println("textParts: ${textParts.size}")
+        val textPartsTypes = getListOfTextTypes(textParts)
+        //println("textPartsTypes: ${textPartsTypes.size}")
 
         val finalTextParts = mutableListOf<TextPart>()
 
@@ -166,8 +170,9 @@ class ParseArticleTextService {
     }
 
     private fun getArticlesTextParts(html: String): List<String> {
+        //println("getArticlesTextParts: $html")
         val document = Jsoup.parse(html)
-        val contentPage = document.getElementById(ParseConstants.ID_PAGE_CONTENT) ?: document.body()
+        val contentPage = document.getElementById(ID_PAGE_CONTENT) ?: document.body()
         return contentPage!!.children().map { it.outerHtml() }
     }
 
@@ -175,7 +180,7 @@ class ParseArticleTextService {
         val listOfTextTypes = mutableListOf<TextType>()
         for (textPart in articlesTextParts) {
             val element = Jsoup.parse(textPart)
-            val ourElement = element.getElementsByTag(ParseConstants.TAG_BODY).first().children().first()
+            val ourElement = element.getElementsByTag(TAG_BODY).first().children().first()
             when {
                 ourElement == null -> listOfTextTypes.add(TextType.TEXT)
                 ourElement.tagName() == TAG_P -> listOfTextTypes.add(TextType.TEXT)

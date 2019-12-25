@@ -15,7 +15,7 @@ class ArticleServiceImpl @Autowired constructor(
     override fun getById(id: Long) =
             repository.getOne(id) ?: throw ArticleNotFoundException()
 
-    override fun insert(article: Article): Article =
+    override fun save(article: Article): Article =
             repository.save(article)
 
     override fun getArticleByUrlRelative(urlRelative: String) =

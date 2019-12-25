@@ -13,6 +13,7 @@ import ru.kuchanov.scpreaderapi.bean.articles.tags.TagForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ATTR_HREF
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ATTR_SRC
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ID_PAGE_CONTENT
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.NOT_TRANSLATED_ARTICLE_URL_DELIMITER
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.NOT_TRANSLATED_ARTICLE_UTIL_URL
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.SITE_TAGS_PATH
@@ -40,11 +41,13 @@ class ParseArticleService @Autowired constructor(
             lang: Lang,
             printTextParts: Boolean = false
     ): ArticleForLang {
-//        println("parseArticle: $urlRelative, ${lang.id}, $printTextParts")
+        //println("parseArticle: $urlRelative, ${lang.id}, $printTextParts")
+        //println("PageContent before parsing: ${pageContent.toString().length}")
 
         //some article are in div... I.e. http://scp-wiki-cn.wikidot.com/taboo
         //so check it and extract text
         unwrapDivs(pageContent)
+        //println("PageContent after unwrap divs: ${pageContent.toString().length}")
 
         //some fucking articles have all its content in 2 div... WTF?! One more fucking Kludge.
         //see http://scpfoundation.net/scp-2111/offset/2
@@ -60,6 +63,7 @@ class ParseArticleService @Autowired constructor(
                 divWithAllContent.remove()
             }
         }
+        //println("PageContent after fix articles like scp-2111/offset/2: ${pageContent.toString().length}")
 
         //also delete all divs with no content
         pageContent.getElementsByTag(TAG_DIV).forEach {
@@ -67,6 +71,7 @@ class ParseArticleService @Autowired constructor(
                 it.remove()
             }
         }
+        //println("PageContent after remove empty divs: ${pageContent.toString().length}")
 
         //and remove all mobile divs
         pageContent.getElementsByClass("warning-mobile").forEach { it.remove() }
@@ -86,7 +91,7 @@ class ParseArticleService @Autowired constructor(
         }
         val footnoterefsFooter = pageContent.getElementsByClass("footnote-footer")
         for (snoska in footnoterefsFooter) {
-            val aTag = snoska.getElementsByTag("a").first()
+            val aTag = snoska.getElementsByTag(TAG_A).first()
             snoska.prependText(aTag.text())
             aTag.remove()
         }
@@ -94,7 +99,7 @@ class ParseArticleService @Autowired constructor(
         //replace links in bibliography
         val bibliographi = pageContent.getElementsByClass("bibcite")
         for (snoska in bibliographi) {
-            val aTag = snoska.getElementsByTag("a").first()
+            val aTag = snoska.getElementsByTag(TAG_A).first()
             val onclickAttr = aTag.attr("onclick")
 
             val id = onclickAttr.substring(onclickAttr.indexOf("bibitem-"), onclickAttr.lastIndexOf("'"))
@@ -154,14 +159,18 @@ class ParseArticleService @Autowired constructor(
         }
 
         parseImgsTags(pageContent)
+        //println("PageContent after parse img tags: ${pageContent.toString().length}")
 
         //extract tables, which are single tag in div
         extractTablesFromDivs(pageContent)
+        //println("PageContent after extract tables from div: ${pageContent.toString().length}")
         //unwrap divs with text alignment
         unwrapTextAlignmentDivs(pageContent)
+        //println("PageContent after unwrap text-alignment divs: ${pageContent.toString().length}")
         //unwrap gallery div... see `/transcript-epsilon-12-1555`
         val galleryDivs = pageContent.getElementsByClass("gallery-box")
         galleryDivs.forEach { it.unwrap() }
+        //println("PageContent after unwrap gallery: ${pageContent.toString().length}")
 
         //put all text which is not in any tag in div tag
         for (element in pageContent.children()) {
@@ -170,6 +179,7 @@ class ParseArticleService @Autowired constructor(
                 element.after(Element(TAG_DIV).appendChild(nextSibling))
             }
         }
+        //println("PageContent after put untaged children: ${pageContent.toString().length}")
 
         //replace styles with underline and strike
         val spans = pageContent.getElementsByTag(TAG_SPAN)
@@ -185,6 +195,7 @@ class ParseArticleService @Autowired constructor(
                 element.replaceWith(sTag)
             }
         }
+        //println("PageContent after underline: ${pageContent.toString().length}")
 
         //search for relative urls to add domain
         for (a in pageContent.getElementsByTag(TAG_A)) {
@@ -230,6 +241,7 @@ class ParseArticleService @Autowired constructor(
         }
 
         //this we store as article text
+        //println("PageContent result: ${pageContent.toString().length}")
         val rawText = pageContent.toString()
 
         //do not parse textParts if article has iframe
@@ -345,18 +357,22 @@ class ParseArticleService @Autowired constructor(
     }
 
     private fun extractTablesFromDivs(pageContent: Element) {
-        for (divTag in pageContent.getElementsByTag(TAG_DIV)) {
+        //println("extractTablesFromDivs START")
+        pageContent.getElementsByTag(TAG_DIV).forEachIndexed { _, divTag ->
+            //println("divTag index: $index, content: $divTag")
+            val isNotPageContentDiv = divTag.id() != ID_PAGE_CONTENT
             //there are articles with many tables in div. see `/operation-overmeta`
             //and do not unwrap spoilers and tabs divs
             val isNotInSpoilerContentParentDiv = !divTag.hasClass("collapsible-block-unfolded")
             val isNotSpoilerContentDiv = !divTag.hasClass("collapsible-block-content")
             val isNotTabDiv = !divTag.id().contains("wiki-tab")
-            if (isNotSpoilerContentDiv && isNotTabDiv && isNotInSpoilerContentParentDiv) {
+            if (isNotPageContentDiv && isNotSpoilerContentDiv && isNotTabDiv && isNotInSpoilerContentParentDiv) {
                 if (divTag.children().find { it.tagName() == TAG_TABLE } != null) {
                     divTag.unwrap()
                 }
             }
         }
+        //println("extractTablesFromDivs END")
     }
 
     private fun unwrapTextAlignmentDivs(element: Element) {

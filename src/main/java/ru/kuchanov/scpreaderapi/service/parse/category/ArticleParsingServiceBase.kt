@@ -57,6 +57,7 @@ import java.io.StringWriter
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.*
+import javax.transaction.Transactional
 
 
 @Primary
@@ -580,6 +581,7 @@ class ArticleParsingServiceBase {
     /**
      * @throws ScpParseException
      */
+    @Transactional
     protected fun saveArticle(
             articleToSave: ArticleForLang,
             lang: Lang,
@@ -592,7 +594,7 @@ class ArticleParsingServiceBase {
 
             var articleInDb = articleService.getArticleByUrlRelative(articleDownloaded.urlRelative)
             if (articleInDb == null) {
-                articleInDb = articleService.insert(Article())
+                articleInDb = articleService.save(Article())
             }
             var articleForLangInDb = articleForLangService
                     .getArticleForLangByUrlRelativeAndLang(
@@ -601,11 +603,13 @@ class ArticleParsingServiceBase {
                     )
 
             if (articleForLangInDb == null) {
-                articleForLangInDb = articleForLangService.save(articleDownloaded.apply {
-                    articleId = articleInDb.id
-                    this.createdOnSite = articleToSave.createdOnSite
-                    this.updatedOnSite = articleToSave.updatedOnSite
-                })
+                articleForLangInDb = articleForLangService.save(
+                        articleDownloaded.apply {
+                            articleId = articleInDb.id
+                            createdOnSite = articleToSave.createdOnSite
+                            updatedOnSite = articleToSave.updatedOnSite
+                        }
+                )
             } else {
                 articleForLangInDb = articleForLangService.save(
                         articleForLangInDb.apply {
@@ -613,8 +617,8 @@ class ArticleParsingServiceBase {
                             rating = articleDownloaded.rating
                             title = articleDownloaded.title
                             text = articleDownloaded.text
-                            this.createdOnSite = articleToSave.createdOnSite
-                            this.updatedOnSite = articleToSave.updatedOnSite
+                            createdOnSite = articleToSave.createdOnSite
+                            updatedOnSite = articleToSave.updatedOnSite
                         }
                 )
             }
@@ -709,9 +713,9 @@ class ArticleParsingServiceBase {
             val listOfTd = tableRow.getElementsByTag("td")
             //title and url
             val firstTd = listOfTd.first()
-            val tagA = firstTd.getElementsByTag("a").first()
+            val tagA = firstTd.getElementsByTag(TAG_A).first()
             val title = tagA.text()
-            val url = lang.siteBaseUrl + tagA.attr("href")
+            val url = lang.siteBaseUrl + tagA.attr(ATTR_HREF)
             //rating
             val rating = Integer.parseInt(listOfTd[1].text())
 

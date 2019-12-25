@@ -80,7 +80,7 @@ create table if not exists articles_langs
     article_id      bigint       not null,
     lang_id         varchar(255) not null,
     url_relative    text         not null,
-    title           varchar(255),
+    title           text,
     rating          integer,
     text            text,
     comments_url    text,
@@ -92,8 +92,10 @@ create table if not exists articles_langs
     primary key (id)
 );
 
-DROP INDEX IF EXISTS articles_langs_unique;
-create unique index if not exists articles_langs_unique on articles_langs (article_id, lang_id, url_relative);
+alter table articles_langs
+    drop constraint if exists articles_langs_unique;
+alter table articles_langs
+    add constraint articles_langs_unique unique (article_id, lang_id, url_relative);
 
 ALTER TABLE articles_langs
     drop constraint IF EXISTS fk_article_id__to_articles CASCADE;
@@ -203,16 +205,13 @@ create table if not exists tags_langs
 (
     id      bigserial    not null,
     tag_id  bigint
-        constraint fk_tags
-            references tags,
+        constraint fk_tags references tags,
     lang_id varchar(255) not null
-        constraint fk_langs
-            references langs,
+        constraint fk_langs references langs,
     title   text         not null,
     created timestamp,
     updated timestamp,
-    constraint tags_langs_lang_id_title_key
-        unique (lang_id, title),
+    constraint tags_langs_lang_id_title_key unique (lang_id, title),
     primary key (id)
 );
 

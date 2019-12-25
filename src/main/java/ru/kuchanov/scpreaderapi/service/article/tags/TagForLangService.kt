@@ -15,6 +15,4 @@ interface TagForLangService {
 
     @Transactional
     fun insert(data: TagForLang): TagForLang
-
-    fun insert(data: List<TagForLang>): List<TagForLang>
 }

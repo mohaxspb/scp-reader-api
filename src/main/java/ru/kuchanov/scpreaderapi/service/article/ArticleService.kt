@@ -8,7 +8,7 @@ interface ArticleService {
     fun getById(id: Long): Article
 
     @Transactional
-    fun insert(article: Article): Article
+    fun save(article: Article): Article
 
     fun getArticleByUrlRelative(urlRelative: String): Article?
 
