@@ -8,6 +8,12 @@ import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ATTR_HREF
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ATTR_SRC
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ID_PAGE_CONTENT
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_A
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_IMG
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_P
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
@@ -35,17 +41,17 @@ class ArticleParsingServiceImplPT : ArticleParsingServiceBase() {
     @Suppress("DuplicatedCode")
     override fun parseForRatedArticles(lang: Lang, doc: Document): List<ArticleForLang> {
         println("start parsing rated articles for lang: $lang")
-        val pageContent = doc.getElementById("page-content")
-                ?: throw ScpParseException("parse error!")
+        val pageContent = doc.getElementById(ID_PAGE_CONTENT)
+                ?: throw ScpParseException("$ID_PAGE_CONTENT is null!", NullPointerException())
         val listPagesBox = pageContent.getElementsByClass("panel-body").last()
                 ?: throw ScpParseException("parse error!")
         val articlesDivs = listPagesBox.getElementsByClass("list-pages-item")
         val articles = mutableListOf<ArticleForLang>()
         for (element in articlesDivs) {
-            val aTag = element.getElementsByTag("a").first()
-            val url: String = lang.siteBaseUrl + aTag.attr("href")
+            val aTag = element.getElementsByTag(TAG_A).first()
+            val url: String = lang.siteBaseUrl + aTag.attr(ATTR_HREF)
             val title = aTag.text()
-            val pTag = element.getElementsByTag("p").first()
+            val pTag = element.getElementsByTag(TAG_P).first()
             var ratingString = pTag.text().substring(pTag.text().indexOf(getArticleRatingStringDelimiter()) + getArticleRatingStringDelimiter().length)
             ratingString = ratingString.substring(0, ratingString.indexOf(getArticleRatingStringDelimiterEnd()))
             val rating = ratingString.toInt()
@@ -62,8 +68,8 @@ class ArticleParsingServiceImplPT : ArticleParsingServiceBase() {
 
     @Suppress("DuplicatedCode")
     override fun parseForObjectArticles(lang: Lang, doc: Document): List<ArticleForLang> {
-        val pageContent: Element = doc.getElementById("page-content")
-                ?: throw ScpParseException("Parse error. \"page-content is null!\"")
+        val pageContent: Element = doc.getElementById(ID_PAGE_CONTENT)
+                ?: throw ScpParseException("Parse error. $ID_PAGE_CONTENT is null!", NullPointerException())
 
         //parse
         val innerPageContent = pageContent
@@ -119,18 +125,18 @@ class ArticleParsingServiceImplPT : ArticleParsingServiceBase() {
             val arrayItemAsDocument = Jsoup.parse(arrayItem)
 
             val url = arrayItemAsDocument
-                    .getElementsByTag("a")
+                    .getElementsByTag(TAG_A)
                     .first()
-                    .attr("href")
+                    .attr(ATTR_HREF)
                     .replace(lang.siteBaseUrl, "")
             val title = arrayItemAsDocument.text()
 
             //type of object
             val imageURL = arrayItemAsDocument
-                    .getElementsByTag("img")
+                    .getElementsByTag(TAG_IMG)
                     .ifEmpty { null }
                     ?.first()
-                    ?.attr("src")
+                    ?.attr(ATTR_SRC)
 //            println("title: $title, imageURL: $imageURL, ${imageURL?.let{URLDecoder.decode(it, StandardCharsets.UTF_8)}}")
 
             val type = imageURL?.let { getObjectTypeByImageUrl(URLDecoder.decode(it, StandardCharsets.UTF_8)) }

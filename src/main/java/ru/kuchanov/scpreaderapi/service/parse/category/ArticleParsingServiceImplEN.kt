@@ -7,6 +7,10 @@ import org.jsoup.select.Elements
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ATTR_HREF
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ID_PAGE_CONTENT
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_A
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_P
 import java.sql.Timestamp
 
 
@@ -45,23 +49,27 @@ fun parseForRatedArticlesENStyle(
         lang: Lang,
         doc: Document,
         articleRatingStringDelimiter: String,
-        articleRatingStringDelimiterEnd: String
+        articleRatingStringDelimiterEnd: String,
+        articlesListContainerNumber: Int = 0
 ): List<ArticleForLang> {
     println("start parsing rated articles for lang: $lang")
-    val pageContent = doc.getElementById("page-content")
-            ?: throw ScpParseException("parse error!")
-    val listPagesBox = pageContent.getElementsByClass("list-pages-box").first()
-            ?: throw ScpParseException("parse error!")
-    val allArticles = listPagesBox.getElementsByTag("p").first().html()
+    val pageContent = doc.getElementById(ID_PAGE_CONTENT)
+            ?: throw ScpParseException("$ID_PAGE_CONTENT is null!", NullPointerException())
+    val listPagesBox = pageContent.getElementsByClass("list-pages-box")[articlesListContainerNumber]
+            ?: throw ScpParseException("list-pages-box is null!", NullPointerException())
+    val allArticles = listPagesBox.getElementsByTag(TAG_P).first().html()
     val arrayOfArticles = allArticles.split("<br>").toTypedArray()
     println("arrayOfArticles: ${arrayOfArticles.size}")
     val articles = mutableListOf<ArticleForLang>()
     for (arrayItem in arrayOfArticles) {
         val currentDocument = Jsoup.parse(arrayItem)
-        val aTag = currentDocument.getElementsByTag("a").first()
-        val url: String = lang.siteBaseUrl + aTag.attr("href")
+        val aTag = currentDocument.getElementsByTag(TAG_A).first()
+        val url: String = lang.siteBaseUrl + aTag.attr(ATTR_HREF)
         val title = aTag.text()
         val rating = arrayItem.substring(arrayItem.indexOf(articleRatingStringDelimiter) + articleRatingStringDelimiter.length)
+        //println("rating: $rating")
+        //println("articleRatingStringDelimiterEnd: $articleRatingStringDelimiterEnd")
+        //println("rating.indexOf(articleRatingStringDelimiterEnd): ${rating.indexOf(articleRatingStringDelimiterEnd)}")
         val ratingCuted = rating.substring(0, rating.indexOf(articleRatingStringDelimiterEnd))
         val article = ArticleForLang(
                 langId = lang.id,

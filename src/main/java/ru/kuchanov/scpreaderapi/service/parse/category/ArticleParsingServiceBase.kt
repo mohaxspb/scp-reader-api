@@ -173,6 +173,7 @@ class ArticleParsingServiceBase {
                             )
                             println("download complete")
                         },
+                        //todo write error to DB
                         onError = { it.printStackTrace() }
                 )
     }
@@ -227,6 +228,7 @@ class ArticleParsingServiceBase {
                             )
                             println("download complete")
                         },
+                        //todo write error to DB
                         onError = { it.printStackTrace() }
                 )
     }
@@ -250,6 +252,7 @@ class ArticleParsingServiceBase {
                             )
                             println("download complete")
                         },
+                        //todo write error to DB
                         onError = { it.printStackTrace() }
                 )
     }
@@ -331,6 +334,7 @@ class ArticleParsingServiceBase {
                             )
                             println("download complete")
                         },
+                        //todo write error to DB
                         onError = { it.printStackTrace() }
                 )
     }
@@ -396,8 +400,8 @@ class ArticleParsingServiceBase {
     }
 
     fun getRatedArticlesForLang(lang: Lang, page: Int): Single<List<ArticleForLang>> {
+        println("getRatedArticlesForLang: ${lang.langCode}, url: ${lang.siteBaseUrl}${getRatedArticlesUrl()}$page")
         return Single.create { subscriber: SingleEmitter<List<ArticleForLang>> ->
-
             val request = Request.Builder()
                     .url(lang.siteBaseUrl + getRatedArticlesUrl() + page)
                     .build()
@@ -786,7 +790,7 @@ class ArticleParsingServiceBase {
      * @return Element with article content
      */
     protected fun getArticlePageContentTag(doc: Document): Element? =
-            doc.getElementById(HTML_ID_PAGE_CONTENT)
+            doc.getElementById(ID_PAGE_CONTENT)
 
     private fun createArticleToArticleRelation(
             articleDownloaded: ArticleForLang,
@@ -981,8 +985,6 @@ class ArticleParsingServiceBase {
     }
 
     companion object {
-        const val HTML_ID_PAGE_CONTENT = "page-content"
-
         private const val DATE_FORMAT_PATTERN_EN = "dd MMM yyyy HH:mm"
 
         fun getDateFormatForLang() = SimpleDateFormat(DATE_FORMAT_PATTERN_EN, Locale.ENGLISH)
