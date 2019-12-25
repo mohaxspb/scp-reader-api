@@ -1,3 +1,12 @@
+-- article
+create table if not exists articles
+(
+    id bigserial not null,
+    primary key (id)
+);
+
+
+-- article type
 create table if not exists article_types
 (
     id        bigserial not null,
@@ -5,41 +14,36 @@ create table if not exists article_types
     primary key (id)
 );
 
-create table if not exists articles
+create table if not exists article__to__article_type
 (
-    id bigserial not null,
-    primary key (id)
-);
-
-create table if not exists articles_article_types
-(
-    id bigserial not null,
-    article_id      bigint not null,
-    article_type_id bigint not null,
+    id              bigserial not null,
+    article_id      bigint    not null,
+    article_type_id bigint    not null,
     created         timestamp,
     updated         timestamp,
     primary key (id)
 );
 
-alter table articles_article_types
+alter table article__to__article_type
     drop constraint if exists articles_article_types_unique;
-alter table articles_article_types
+alter table article__to__article_type
     add constraint articles_article_types_unique
         unique (article_id, article_type_id);
 
-ALTER TABLE articles_article_types
+ALTER TABLE article__to__article_type
     drop constraint IF EXISTS fk_article_id_to_articles CASCADE;
-alter table articles_article_types
+alter table article__to__article_type
     add constraint fk_article_id_to_articles
         foreign key (article_id)
             REFERENCES articles (id);
 
-ALTER TABLE articles_article_types
+ALTER TABLE article__to__article_type
     drop constraint IF EXISTS fk_article_type_id_to_articles CASCADE;
-alter table articles_article_types
+alter table article__to__article_type
     add constraint fk_article_type_id_to_articles
         foreign key (article_type_id)
             REFERENCES article_types (id);
+
 
 CREATE TABLE IF NOT EXISTS article_types__to__langs
 (
@@ -66,7 +70,10 @@ alter table article_types__to__langs
     add constraint fk_lang_id_to_langs
         foreign key (lang_id)
             REFERENCES langs (id);
+-- article type END
 
+
+-- article to lang
 create table if not exists articles_langs
 (
     id              bigserial    not null,
@@ -77,7 +84,7 @@ create table if not exists articles_langs
     rating          integer,
     text            text,
     comments_url    text,
-    has_iframe_tag boolean not null default false,
+    has_iframe_tag  boolean      not null default false,
     updated_on_site timestamp,
     created_on_site timestamp,
     updated         timestamp,
@@ -115,39 +122,23 @@ CREATE TABLE IF NOT EXISTS articles_langs__to__articles_langs
     constraint fk_article_for_lang foreign key (article_for_lang_id) REFERENCES articles_langs (id),
     unique (parent_article_for_lang_id, article_for_lang_id)
 );
+-- article to lang END
 
 
+-- article images
 create table if not exists articles_images
 (
     id                  bigserial not null,
     url                 text      not null,
+    article_for_lang_id bigint    not null,
     created             timestamp,
     updated             timestamp,
-    article_for_lang_id bigint
-        constraint fk_article_image_article_langs
-            references articles_langs,
-    primary key (id)
+    primary key (id),
+    constraint fk_article_image_article_langs foreign key (article_for_lang_id) REFERENCES articles_langs (id)
 );
 
 
-create table if not exists banners
-(
-    id              bigserial    not null,
-    image_url       varchar(255),
-    logo_url        varchar(255),
-    title           varchar(255) not null,
-    sub_title       varchar(255) not null,
-    cta_button_text varchar(255) not null,
-    redirect_url    varchar(255) not null,
-    banner_type     varchar(255) not null,
-    enabled         boolean,
-    author_id       bigint,
-    created         timestamp,
-    updated         timestamp,
-    primary key (id)
-);
-
-
+-- read/favorite articles to users
 create table if not exists read__articles_to_lang__to__users
 (
     id                 bigserial not null,
@@ -196,8 +187,10 @@ alter table favorite__articles_to_lang__to__users
     add constraint fk_user_id__to__users
         foreign key (user_id)
             REFERENCES users (id);
+-- read/favorite articles to users END
 
 
+-- tags
 create table if not exists tags
 (
     id      bigserial not null,
@@ -248,79 +241,4 @@ alter table tags_articles_langs
     add constraint fk_tag_for_lang_id__to__tags_langs
         foreign key (tag_for_lang_id)
             REFERENCES tags_langs (id);
-
-
-create table if not exists firebase_data_update_date
-(
-    id      bigserial not null,
-    lang_id varchar(255),
-    updated timestamp,
-    primary key (id)
-);
-
-create table if not exists android_products
-(
-    id                   bigserial not null,
-    android_package      varchar(255),
-    consumption_state    integer,
-    created              timestamp,
-    order_id             varchar(255),
-    purchase_state       integer,
-    purchase_time_millis timestamp,
-    purchase_token       varchar(255),
-    purchase_type        integer,
-    updated              timestamp,
-    primary key (id)
-);
-
-create table if not exists android_subscriptions
-(
-    id                            bigserial not null,
-    android_package               varchar(255),
-    auto_renewing                 boolean,
-    created                       timestamp,
-    expiry_time_millis            timestamp,
-    linked_purchase_token         varchar(255),
-    order_id                      varchar(255),
-    price_amount_micros           bigint,
-    price_currency_code           varchar(255),
-    purchase_token                varchar(255),
-    start_time_millis             timestamp,
-    updated                       timestamp,
-    user_cancellation_time_millis timestamp,
-    primary key (id)
-);
-
-
-create table if not exists users_android_products
-(
-    android_product_id bigint not null,
-    user_id            bigint not null,
-    created            timestamp,
-    updated            timestamp,
-    primary key (android_product_id, user_id)
-);
-
-ALTER TABLE users_android_products
-    drop constraint IF EXISTS fk_user_id__to__users CASCADE;
-alter table users_android_products
-    add constraint fk_user_id__to__users
-        foreign key (user_id)
-            REFERENCES users (id);
-
-
-create table if not exists users_android_subscriptions
-(
-    android_subscription_id bigint not null,
-    user_id                 bigint not null,
-    created                 timestamp,
-    updated                 timestamp,
-    primary key (android_subscription_id, user_id)
-);
-
-ALTER TABLE users_android_subscriptions
-    drop constraint IF EXISTS fk_user_id__to__users CASCADE;
-alter table users_android_subscriptions
-    add constraint fk_user_id__to__users
-        foreign key (user_id)
-            REFERENCES users (id);
+-- tags END

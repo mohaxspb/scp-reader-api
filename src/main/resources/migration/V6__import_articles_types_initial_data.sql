@@ -35,7 +35,7 @@ with
     ptLang as (select * from langs where lang_code = 'pt'),
     cnLang as (select * from langs where lang_code = 'cn')
 insert
-into article_types_to_titles_for_lang (article_type_id, lang_id, title)
+into article_types__to__langs (article_type_id, lang_id, title)
 values
     -- ru
     ((select id from NEUTRAL), (select id from ruLang), 'Не назначен или нейтрализован'),
