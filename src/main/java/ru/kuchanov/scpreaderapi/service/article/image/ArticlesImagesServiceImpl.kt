@@ -15,9 +15,6 @@ class ArticlesImagesServiceImpl @Autowired constructor(
     override fun findAllByArticleForLangId(articleForLangId: Long): List<ArticlesImagesDto> =
             repository.findAllByArticleForLangId(articleForLangId)
 
-    override fun insert(articlesImages: ArticlesImages): ArticlesImages =
-            repository.save(articlesImages)
-
-    override fun insert(articlesImages: List<ArticlesImages>): List<ArticlesImages> =
+    override fun save(articlesImages: List<ArticlesImages>): List<ArticlesImages> =
             repository.saveAll(articlesImages)
 }

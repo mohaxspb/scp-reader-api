@@ -40,6 +40,7 @@ import ru.kuchanov.scpreaderapi.service.article.ArticleService
 import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryForArticleService
 import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryForLangService
 import ru.kuchanov.scpreaderapi.service.article.error.ArticleParseErrorService
+import ru.kuchanov.scpreaderapi.service.article.image.ArticlesImagesService
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForLangService
 import ru.kuchanov.scpreaderapi.service.article.text.TextPartService
@@ -77,6 +78,9 @@ class ArticleParsingServiceBase {
 
     @Autowired
     private lateinit var articleForLangService: ArticleForLangService
+
+    @Autowired
+    private lateinit var articlesImagesService: ArticlesImagesService
 
     @Autowired
     private lateinit var articleForLangToArticleForLangService: ArticleForLangToArticleForLangService
@@ -592,11 +596,6 @@ class ArticleParsingServiceBase {
                             lang.id
                     )
 
-            //set keys for article images.
-            articleDownloaded.images.forEach {
-                it.articleForLangId = articleDownloaded.id
-            }
-
             if (articleForLangInDb == null) {
                 articleForLangInDb = articleForLangService.save(articleDownloaded.apply {
                     articleId = articleInDb.id
@@ -615,6 +614,12 @@ class ArticleParsingServiceBase {
                         }
                 )
             }
+
+            //set keys for article images.
+            val imagesToSave = articleDownloaded.images.map {
+                it.apply { articleForLangId = articleForLangInDb.id!! }
+            }
+            articlesImagesService.save(imagesToSave)
 
             articleToSave.articleTypeEnumEnumValue?.let {
                 manageArticleType(it, articleForLangInDb)

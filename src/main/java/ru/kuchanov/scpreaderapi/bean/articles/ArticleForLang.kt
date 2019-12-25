@@ -42,12 +42,7 @@ data class ArticleForLang(
         @Column(name = "has_iframe_tag")
         val hasIframeTag: Boolean = false,
 
-        @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
-        @JoinColumns(
-                value = [
-                    JoinColumn(name = "article_for_lang_id", referencedColumnName = "id")
-                ]
-        )
+        @Transient
         var images: MutableSet<ArticlesImages> = mutableSetOf(),
 
         //seems to be we do not need this field at all...
@@ -120,18 +115,6 @@ data class ArticleForLang(
         //to not write on insert
         @Transient
         val parentArticlesForLang: Set<ArticleForLang> = mutableSetOf(),
-
-//@ManyToMany(mappedBy = "following", cascade = CascadeType.ALL)
-//@JoinTable(name="UserRel",
-//                joinColumns={@JoinColumn(name="ParentId")},
-//                inverseJoinColumns={@JoinColumn(name="UserId")})
-//private Set<User> followers = new HashSet<User>();
-//
-//@ManyToMany(cascade = CascadeType.ALL)
-//@JoinTable(name="UserRel",
-//                joinColumns={@JoinColumn(name="UserId")},
-//                inverseJoinColumns={@JoinColumn(name="ParentId")})
-//private Set<User> following = new HashSet<User>();
 
         /**
          * we have it here to be able to write it to DB while parse Objects for RU and PT.
