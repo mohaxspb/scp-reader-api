@@ -1,4 +1,5 @@
-/.idea/
+/.idea/*
+!/.idea/dictionaries
 /build
 /src/main/resources/*.properties
 /src/main/resources/*.yml
@@ -13,4 +14,3 @@
 /banners/*
 /.gradle/
 /out/
-!/.idea/dictionaries/*
