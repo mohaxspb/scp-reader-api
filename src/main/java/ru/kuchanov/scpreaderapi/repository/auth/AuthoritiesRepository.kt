@@ -5,6 +5,4 @@ import org.springframework.stereotype.Repository
 import org.springframework.web.bind.annotation.CrossOrigin
 import ru.kuchanov.scpreaderapi.bean.auth.Authority
 
-@Repository
-@CrossOrigin(origins = ["http://localhost:4200"])
-interface AuthoritiesRepository : JpaRepository<Authority, Long>
+interface AuthoritiesRepository : JpaRepository<Authority, String>

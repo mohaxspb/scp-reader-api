@@ -1,6 +1,5 @@
 package ru.kuchanov.scpreaderapi.controller
 
-import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
@@ -14,18 +13,11 @@ import ru.kuchanov.scpreaderapi.service.users.UserService
 
 
 @RestController
-@RequestMapping("/${ScpReaderConstants.Path.USER}")
-class UserController {
-
-    @Suppress("unused")
-    @Autowired
-    private lateinit var log: Logger
-
-    @Autowired
-    lateinit var userService: UserService
-
-    @Autowired
-    lateinit var userAndroidPurchaseService: UserAndroidPurchaseService
+@RequestMapping("/" + ScpReaderConstants.Path.USER)
+class UserController @Autowired constructor(
+        val userService: UserService,
+        val userAndroidPurchaseService: UserAndroidPurchaseService
+) {
 
     @GetMapping("/me")
     fun showMe(
