@@ -358,7 +358,7 @@ class ParseArticleService @Autowired constructor(
 
     private fun extractTablesFromDivs(pageContent: Element) {
         //println("extractTablesFromDivs START")
-        pageContent.getElementsByTag(TAG_DIV).forEachIndexed { index, divTag ->
+        pageContent.getElementsByTag(TAG_DIV).forEachIndexed { _, divTag ->
             //println("divTag index: $index, content: $divTag")
             val isNotPageContentDiv = divTag.id() != ID_PAGE_CONTENT
             //there are articles with many tables in div. see `/operation-overmeta`
