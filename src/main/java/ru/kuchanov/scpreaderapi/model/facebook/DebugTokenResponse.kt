@@ -8,7 +8,7 @@ data class DebugTokenResponse(var data: Data? = null) {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     data class Data(
-            @JsonProperty("app_id") var appId: Long? = null,
+            @JsonProperty("app_id") var appId: String? = null,
             @JsonProperty("is_valid") var isValid: Boolean? = null
     )
 }

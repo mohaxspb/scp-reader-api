@@ -9,7 +9,6 @@ create table if not exists article_categories
 
 alter table article_categories
     drop constraint if exists default_title_unique;
-
 alter table article_categories
     add constraint default_title_unique unique (default_title);
 
@@ -140,7 +139,7 @@ create table if not exists article_categories_to_lang__to__articles_to_lang
     PRIMARY KEY (id)
 );
 
--- change fk constraints
+-- add fk constraints
 ALTER TABLE if exists article_categories_to_lang__to__articles_to_lang
     drop constraint IF EXISTS fk_article_to_lang_id__to__articles_langs CASCADE;
 alter table article_categories_to_lang__to__articles_to_lang

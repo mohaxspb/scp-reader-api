@@ -19,8 +19,8 @@ import ru.kuchanov.scpreaderapi.bean.FirebaseDataUpdateDate
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.favorite.FavoriteArticlesByLang
 import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticlesByLang
-import ru.kuchanov.scpreaderapi.bean.auth.Authority
 import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
+import ru.kuchanov.scpreaderapi.bean.auth.UserToAuthority
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.UsersLangs
@@ -34,7 +34,7 @@ import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.ArticleService
 import ru.kuchanov.scpreaderapi.service.article.favorite.FavoriteArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.read.ReadArticleForLangService
-import ru.kuchanov.scpreaderapi.service.auth.AuthorityService
+import ru.kuchanov.scpreaderapi.service.auth.UserToAuthorityService
 import ru.kuchanov.scpreaderapi.service.users.LangService
 import ru.kuchanov.scpreaderapi.service.users.UserService
 import ru.kuchanov.scpreaderapi.service.users.UsersLangsService
@@ -56,7 +56,7 @@ class FirebaseService {
     private lateinit var userService: UserService
 
     @Autowired
-    private lateinit var authorityService: AuthorityService
+    private lateinit var userToAuthorityService: UserToAuthorityService
 
     @Autowired
     private lateinit var langService: LangService
@@ -262,7 +262,7 @@ class FirebaseService {
                         }
                         userInDb = userService.insert(userUidArticles.user)
 
-                        authorityService.insert(Authority(userInDb.id, AuthorityType.USER.name))
+                        userToAuthorityService.save(UserToAuthority(userId = userInDb.id!!, authority = AuthorityType.USER))
                         newUsersInserted++
                     }
 
@@ -270,7 +270,7 @@ class FirebaseService {
 //                    println("userInDb.id: ${userInDb.id}/${userInDb}")
                     if (usersLangsService.getByUserIdAndLangId(userInDb.id!!, lang.id) == null) {
 //                        println("add user-lang connection if need: ${userInDb.id}/${lang.id}, ${userUidArticles.uid}")
-                        usersLangsService.insert(UsersLangs(userInDb.id!!, lang.id, userUidArticles.uid))
+                        usersLangsService.insert(UsersLangs(userId = userInDb.id!!, langId = lang.id, firebaseUid = userUidArticles.uid))
                         newLangForExistedUsers++
                     }
 
@@ -284,7 +284,7 @@ class FirebaseService {
                         userInDb.curLevelScore = curLevel.score
                         userInDb.scoreToNextLevel = levelsJson.scoreToNextLevel(userInDb.score!!, curLevel)
                         //update user in DB
-                        userService.update(userInDb)
+                        userService.insert(userInDb)
                     }
 
                     //insert read/favorite articles if need

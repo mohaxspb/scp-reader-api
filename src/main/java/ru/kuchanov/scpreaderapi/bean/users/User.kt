@@ -8,7 +8,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.bind.annotation.ResponseStatus
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
-import ru.kuchanov.scpreaderapi.bean.auth.Authority
+import ru.kuchanov.scpreaderapi.bean.auth.UserToAuthority
 import ru.kuchanov.scpreaderapi.bean.purchase.UsersAndroidProduct
 import ru.kuchanov.scpreaderapi.bean.purchase.UsersAndroidSubscription
 import ru.kuchanov.scpreaderapi.model.user.LeaderboardUser
@@ -47,7 +47,7 @@ data class User(
         val enabled: Boolean = true,
 
         @OneToMany(cascade = [CascadeType.ALL], mappedBy = "userId", fetch = FetchType.EAGER)
-        var userAuthorities: Set<Authority>,
+        var userAuthorities: Set<UserToAuthority>,
         //dates
         @field:CreationTimestamp
         val created: Timestamp? = null,
@@ -105,7 +105,7 @@ data class User(
 ) : UserDetails {
 
     override fun getAuthorities(): MutableCollection<out GrantedAuthority> =
-            userAuthorities.map { SimpleGrantedAuthority(it.authority) }.toMutableList()
+            userAuthorities.map { SimpleGrantedAuthority(it.authority.name) }.toMutableList()
 
     override fun isEnabled() = enabled
 

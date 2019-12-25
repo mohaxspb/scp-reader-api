@@ -11,27 +11,18 @@ import javax.persistence.EntityManager
 
 
 @Service
-class UserServiceImpl : UserService {
-
-    @Autowired
-    private lateinit var entityManager: EntityManager
-
-    @Autowired
-    private lateinit var repository: UsersRepository
-
-    override fun findAll() = repository.findAll().toList()
+class UserServiceImpl @Autowired constructor(
+        val entityManager: EntityManager,
+        val repository: UsersRepository
+) : UserService {
 
     override fun getById(id: Long) = repository.getOne(id) ?: throw UserNotFoundException()
 
     override fun getByUsername(username: String) = repository.findOneByMyUsername(username)
 
-    override fun update(user: User): User = repository.save(user)
-
     override fun loadUserByUsername(username: String): User? = repository.findOneByMyUsername(username)
 
     override fun insert(user: User): User = repository.save(user)
-
-    override fun insert(users: List<User>): List<User> = repository.saveAll(users)
 
     override fun getAllUsersByLangId(langId: String): List<User> = repository.getUsersByLang(langId)
 
@@ -43,6 +34,7 @@ class UserServiceImpl : UserService {
             limit: Int
     ) = repository.getUsersByLangWithOffsetAndLimitSortedByScore(langId, offset, limit)
 
+    //todo refactor, move to repository
     override fun getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(
             langId: String,
             offset: Int,

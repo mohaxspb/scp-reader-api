@@ -40,6 +40,7 @@ import ru.kuchanov.scpreaderapi.service.article.ArticleService
 import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryForArticleService
 import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryForLangService
 import ru.kuchanov.scpreaderapi.service.article.error.ArticleParseErrorService
+import ru.kuchanov.scpreaderapi.service.article.image.ArticlesImagesService
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForLangService
 import ru.kuchanov.scpreaderapi.service.article.text.TextPartService
@@ -77,6 +78,9 @@ class ArticleParsingServiceBase {
 
     @Autowired
     private lateinit var articleForLangService: ArticleForLangService
+
+    @Autowired
+    private lateinit var articlesImagesService: ArticlesImagesService
 
     @Autowired
     private lateinit var articleForLangToArticleForLangService: ArticleForLangToArticleForLangService
@@ -169,6 +173,7 @@ class ArticleParsingServiceBase {
                             )
                             println("download complete")
                         },
+                        //todo write error to DB
                         onError = { it.printStackTrace() }
                 )
     }
@@ -223,6 +228,7 @@ class ArticleParsingServiceBase {
                             )
                             println("download complete")
                         },
+                        //todo write error to DB
                         onError = { it.printStackTrace() }
                 )
     }
@@ -246,6 +252,7 @@ class ArticleParsingServiceBase {
                             )
                             println("download complete")
                         },
+                        //todo write error to DB
                         onError = { it.printStackTrace() }
                 )
     }
@@ -327,6 +334,7 @@ class ArticleParsingServiceBase {
                             )
                             println("download complete")
                         },
+                        //todo write error to DB
                         onError = { it.printStackTrace() }
                 )
     }
@@ -392,8 +400,8 @@ class ArticleParsingServiceBase {
     }
 
     fun getRatedArticlesForLang(lang: Lang, page: Int): Single<List<ArticleForLang>> {
+        println("getRatedArticlesForLang: ${lang.langCode}, url: ${lang.siteBaseUrl}${getRatedArticlesUrl()}$page")
         return Single.create { subscriber: SingleEmitter<List<ArticleForLang>> ->
-
             val request = Request.Builder()
                     .url(lang.siteBaseUrl + getRatedArticlesUrl() + page)
                     .build()
@@ -592,19 +600,14 @@ class ArticleParsingServiceBase {
                             lang.id
                     )
 
-            //set keys for article images.
-            articleDownloaded.images.forEach {
-                it.articleForLangId = articleDownloaded.id
-            }
-
             if (articleForLangInDb == null) {
-                articleForLangInDb = articleForLangService.insert(articleDownloaded.apply {
+                articleForLangInDb = articleForLangService.save(articleDownloaded.apply {
                     articleId = articleInDb.id
                     this.createdOnSite = articleToSave.createdOnSite
                     this.updatedOnSite = articleToSave.updatedOnSite
                 })
             } else {
-                articleForLangInDb = articleForLangService.insert(
+                articleForLangInDb = articleForLangService.save(
                         articleForLangInDb.apply {
                             commentsUrl = articleDownloaded.commentsUrl
                             rating = articleDownloaded.rating
@@ -615,6 +618,12 @@ class ArticleParsingServiceBase {
                         }
                 )
             }
+
+            //set keys for article images.
+            val imagesToSave = articleDownloaded.images.map {
+                it.apply { articleForLangId = articleForLangInDb.id!! }
+            }
+            articlesImagesService.save(imagesToSave)
 
             articleToSave.articleTypeEnumEnumValue?.let {
                 manageArticleType(it, articleForLangInDb)
@@ -781,7 +790,7 @@ class ArticleParsingServiceBase {
      * @return Element with article content
      */
     protected fun getArticlePageContentTag(doc: Document): Element? =
-            doc.getElementById(HTML_ID_PAGE_CONTENT)
+            doc.getElementById(ID_PAGE_CONTENT)
 
     private fun createArticleToArticleRelation(
             articleDownloaded: ArticleForLang,
@@ -976,8 +985,6 @@ class ArticleParsingServiceBase {
     }
 
     companion object {
-        const val HTML_ID_PAGE_CONTENT = "page-content"
-
         private const val DATE_FORMAT_PATTERN_EN = "dd MMM yyyy HH:mm"
 
         fun getDateFormatForLang() = SimpleDateFormat(DATE_FORMAT_PATTERN_EN, Locale.ENGLISH)

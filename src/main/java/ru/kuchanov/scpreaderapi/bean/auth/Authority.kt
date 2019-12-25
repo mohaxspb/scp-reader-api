@@ -2,20 +2,18 @@ package ru.kuchanov.scpreaderapi.bean.auth
 
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
+import ru.kuchanov.scpreaderapi.utils.NoArgConstructor
 import java.io.Serializable
 import java.sql.Timestamp
 import javax.persistence.*
 
 @Entity
-@IdClass(KeyUserAuthority::class)
 @Table(name = "authorities")
+@NoArgConstructor
 data class Authority(
         @Id
-        @Column(name = "user_id")
-        var userId: Long?,
-        @Id
-        @Column(name = "authority")
-        var authority: String,
+        @Enumerated(EnumType.STRING)
+        val authority: AuthorityType,
         @field:CreationTimestamp
         val created: Timestamp? = null,
         @field:UpdateTimestamp

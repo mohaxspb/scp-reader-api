@@ -1,10 +1,11 @@
-/.idea/
+/.idea/*
+!/.idea/dictionaries
 /build
 /src/main/resources/*.properties
 /src/main/resources/*.yml
 /src/main/resources/*.properties-backup
 /src/test/resources/*.yml
-/src/main/resources/migration/V3__import_initial_data.sql
+/src/main/resources/migration/V4__import_secret_data.sql
 /logs
 !src/main/resources/firebase/keys/.gitkeep
 /src/main/resources/firebase/keys/
@@ -13,4 +14,3 @@
 /banners/*
 /.gradle/
 /out/
-!/.idea/dictionaries/*

@@ -26,12 +26,18 @@ class ArticleParsingServiceImplFR : ArticleParsingServiceBase() {
             parseForRecentArticlesENStyle(lang, doc)
 
     override fun parseForRatedArticles(lang: Lang, doc: Document) =
-            parseForRatedArticlesENStyle(lang, doc, getArticleRatingStringDelimiter(), getArticleRatingStringDelimiterEnd())
+            parseForRatedArticlesENStyle(
+                    lang,
+                    doc,
+                    getArticleRatingStringDelimiter(),
+                    getArticleRatingStringDelimiterEnd(),
+                    1
+            )
 
     override fun parseForObjectArticles(lang: Lang, doc: Document) =
             parseForObjectArticlesENStyle(lang, doc)
 
-    override fun getArticleRatingStringDelimiter() = "note : "
+    override fun getArticleRatingStringDelimiter() = " ("
 
-    override fun getArticleRatingStringDelimiterEnd() = ","
+    override fun getArticleRatingStringDelimiterEnd() = ")"
 }

@@ -10,18 +10,12 @@ interface UserService : UserDetailsService {
 
     override fun loadUserByUsername(username: String): User?
 
-    fun findAll(): List<User>
-
     fun getById(id: Long): User
     fun getByUsername(username: String): User?
     fun getByProviderId(id: String, provider: ScpReaderConstants.SocialProvider): User?
 
-    fun update(user: User): User
-
     @Transactional
     fun insert(user: User): User
-
-    fun insert(users: List<User>): List<User>
 
     fun getAllUsersByLangId(langId: String): List<User>
 

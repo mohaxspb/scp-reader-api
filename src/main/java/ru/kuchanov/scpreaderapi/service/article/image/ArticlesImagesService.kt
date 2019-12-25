@@ -9,8 +9,5 @@ interface ArticlesImagesService {
     fun findAllByArticleForLangId(articleForLangId: Long): List<ArticlesImagesDto>
 
     @Transactional
-    fun insert(articlesImages: ArticlesImages): ArticlesImages
-
-    @Transactional
-    fun insert(articlesImages: List<ArticlesImages>): List<ArticlesImages>
+    fun save(articlesImages: List<ArticlesImages>): List<ArticlesImages>
 }

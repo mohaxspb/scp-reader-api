@@ -1,1 +1,0 @@
-UPDATE langs SET site_base_url = 'http://scp-es.com' WHERE id = 'es';

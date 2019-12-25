@@ -1,29 +1,25 @@
-package ru.kuchanov.scpreaderapi.bean.articles
+package ru.kuchanov.scpreaderapi.bean.auth
 
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
 import ru.kuchanov.scpreaderapi.utils.NoArgConstructor
+import java.io.Serializable
 import java.sql.Timestamp
 import javax.persistence.*
 
-
 @Entity
-@Table(name = "articles_langs__to__articles_langs")
+@Table(name = "authorities__to__users")
 @NoArgConstructor
-data class ArticleForLangToArticleForLang(
+data class UserToAuthority(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long? = null,
-
-        //relations
-        @Column(name = "parent_article_for_lang_id")
-        var parentArticleForLangId: Long,
-        @Column(name = "article_for_lang_id")
-        var articleForLangId: Long,
-
-        //dates
+        @Column(name = "user_id")
+        val userId: Long,
+        @Enumerated(EnumType.STRING)
+        val authority: AuthorityType,
         @field:CreationTimestamp
         val created: Timestamp? = null,
         @field:UpdateTimestamp
         val updated: Timestamp? = null
-)
+) : Serializable

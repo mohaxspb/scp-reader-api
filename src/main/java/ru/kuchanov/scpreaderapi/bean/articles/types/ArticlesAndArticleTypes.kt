@@ -2,20 +2,13 @@ package ru.kuchanov.scpreaderapi.bean.articles.types
 
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
+import ru.kuchanov.scpreaderapi.utils.NoArgConstructor
 import java.sql.Timestamp
 import javax.persistence.*
 
 @Entity
-@Table(
-        name = "articles_article_types",
-        indexes = [
-            Index(
-                    name = "index_articles_article_types_ids",
-                    columnList = "article_id,article_type_id",
-                    unique = true
-            )
-        ]
-)
+@Table(name = "article__to__article_type")
+@NoArgConstructor
 data class ArticlesAndArticleTypes(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)

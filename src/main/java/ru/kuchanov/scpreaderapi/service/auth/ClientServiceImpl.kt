@@ -9,12 +9,10 @@ import ru.kuchanov.scpreaderapi.repository.auth.ClientDetailsRepository
 
 
 @Service
-class ClientServiceImpl : ClientDetailsService {
+class ClientServiceImpl @Autowired constructor(
+        val repository: ClientDetailsRepository
+) : ClientDetailsService {
 
-    @Autowired
-    private lateinit var repository: ClientDetailsRepository
-
-    override fun loadClientByClientId(clientId: String): ClientDetails {
-        return repository.getOne(clientId) ?: throw ClientNotFoundError()
-    }
+    override fun loadClientByClientId(clientId: String): ClientDetails =
+            repository.getOne(clientId) ?: throw ClientNotFoundError()
 }
