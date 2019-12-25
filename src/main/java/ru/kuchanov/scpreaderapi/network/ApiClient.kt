@@ -32,51 +32,51 @@ class ApiClient {
 
     //facebook values
     @Value("\${my.api.ru.facebook.client_id}")
-    private var facebookClientIdRu: Long? = null
+    private var facebookClientIdRu: String? = null
     @Value("\${my.api.ru.facebook.client_secret}")
     private lateinit var facebookClientSecretRu: String
 
     @Value("\${my.api.en.facebook.client_id}")
-    private var facebookClientIdEn: Long? = null
+    private var facebookClientIdEn: String? = null
     @Value("\${my.api.en.facebook.client_secret}")
     private lateinit var facebookClientSecretEn: String
 
     @Value("\${my.api.pl.facebook.client_id}")
-    private var facebookClientIdPl: Long? = null
+    private var facebookClientIdPl: String? = null
     @Value("\${my.api.pl.facebook.client_secret}")
     private lateinit var facebookClientSecretPl: String
 
     @Value("\${my.api.de.facebook.client_id}")
-    private var facebookClientIdDe: Long? = null
+    private var facebookClientIdDe: String? = null
     @Value("\${my.api.de.facebook.client_secret}")
     private lateinit var facebookClientSecretDe: String
 
     @Value("\${my.api.fr.facebook.client_id}")
-    private var facebookClientIdFr: Long? = null
+    private var facebookClientIdFr: String? = null
     @Value("\${my.api.fr.facebook.client_secret}")
     private lateinit var facebookClientSecretFr: String
 
     @Value("\${my.api.es.facebook.client_id}")
-    private var facebookClientIdEs: Long? = null
+    private var facebookClientIdEs: String? = null
     @Value("\${my.api.es.facebook.client_secret}")
     private lateinit var facebookClientSecretEs: String
 
     @Value("\${my.api.it.facebook.client_id}")
-    private var facebookClientIdIt: Long? = null
+    private var facebookClientIdIt: String? = null
     @Value("\${my.api.it.facebook.client_secret}")
     private lateinit var facebookClientSecretIt: String
 
     @Value("\${my.api.pt.facebook.client_id}")
-    private var facebookClientIdPt: Long? = null
+    private var facebookClientIdPt: String? = null
     @Value("\${my.api.pt.facebook.client_secret}")
     private lateinit var facebookClientSecretPt: String
 
     @Value("\${my.api.ch.facebook.client_id}")
-    private var facebookClientIdCh: Long? = null
+    private var facebookClientIdCh: String? = null
     @Value("\${my.api.ch.facebook.client_secret}")
     private lateinit var facebookClientSecretCh: String
 
-    private lateinit var facebookClientIds: Map<ScpReaderConstants.Firebase.FirebaseInstance, Long>
+    private lateinit var facebookClientIds: Map<ScpReaderConstants.Firebase.FirebaseInstance, String>
     private lateinit var facebookClientSecrets: Map<ScpReaderConstants.Firebase.FirebaseInstance, String>
 
     @PostConstruct
