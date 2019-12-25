@@ -1,7 +1,7 @@
 package ru.kuchanov.scpreaderapi.service.parse.article
 
 import ru.kuchanov.scpreaderapi.bean.users.Lang
-import ru.kuchanov.scpreaderapi.utils.isDigistOnly
+import ru.kuchanov.scpreaderapi.utils.isDigitsOnly
 
 object ParseConstants {
 
@@ -53,7 +53,7 @@ enum class LinkType {
             if (link.contains("javascript")) {
                 return JAVASCRIPT
             }
-            if (link.isDigistOnly() || link.startsWith("scp://")) {
+            if (link.isDigitsOnly() || link.startsWith("scp://")) {
                 return SNOSKA
             }
             if (link.startsWith("bibitem-")) {

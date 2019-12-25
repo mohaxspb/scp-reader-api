@@ -1,11 +1,6 @@
 package ru.kuchanov.scpreaderapi
 
 object ScpReaderConstants {
-    /**
-     * 12 hours
-     */
-    const val FIREBASE_USERS_DATA_UPDATE_RATE_MILLIS = 1000L * 60 * 60 * 12
-//    const val FIREBASE_USERS_DATA_UPDATE_RATE_MILLIS = 1000L * 30 //30 sec for test
 
     const val DEFAULT_AVATAR_URL = "https://pp.userapi.com/c604519/v604519296/46a5/cRsRzeBpbGE.jpg"
     const val DEFAULT_FULL_NAME = "N/A"
@@ -42,7 +37,7 @@ object ScpReaderConstants {
             ES("es"),
             IT("it"),
             PT("pt"),
-            CH("ch")
+            ZH("zh")
         }
     }
 

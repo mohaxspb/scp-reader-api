@@ -86,61 +86,60 @@ class FirebaseService {
     fun getUsersDataFromFirebaseByEmail(email: String): List<FirebaseUserData> {
         val firebaseUsersData = mutableListOf<FirebaseUserData>()
 
-        ScpReaderConstants.Firebase.FirebaseInstance.values()
-                .forEach { lang ->
-                    //                    println("query for lang: $lang")
-                    val firebaseApp = FirebaseApp.getInstance(lang.lang)
-                    val firebaseAuth = FirebaseAuth.getInstance(firebaseApp)
-                    val firebaseAuthUser = try {
-                        firebaseAuth.getUserByEmail(email)
-                    } catch (e: Exception) {
-                        return@forEach
-                    } ?: return@forEach
-                    val firebaseDatabase = FirebaseDatabase.getInstance(firebaseApp)
-                    val firebaseDatabaseUser: FirebaseUser
-                    //todo wrap to nullable fun
-                    try {
-                        firebaseDatabaseUser = Single.create<FirebaseUser> { subscriber ->
-                            val userQuery = firebaseDatabase
-                                    .getReference("users")
-                                    .child(firebaseAuthUser.uid)
-                            userQuery.addListenerForSingleValueEvent(object : ValueEventListener {
-                                override fun onCancelled(error: DatabaseError?) {
-                                    println("error?.message: ${error?.message}")
-                                    subscriber.onError(error?.toException()!!)
-                                }
+        ScpReaderConstants.Firebase.FirebaseInstance.values().forEach { lang ->
+            //                    println("query for lang: $lang")
+            val firebaseApp = FirebaseApp.getInstance(lang.lang)
+            val firebaseAuth = FirebaseAuth.getInstance(firebaseApp)
+            val firebaseAuthUser = try {
+                firebaseAuth.getUserByEmail(email)
+            } catch (e: Exception) {
+                return@forEach
+            } ?: return@forEach
+            val firebaseDatabase = FirebaseDatabase.getInstance(firebaseApp)
+            val firebaseDatabaseUser: FirebaseUser
+            //todo wrap to nullable fun
+            try {
+                firebaseDatabaseUser = Single.create<FirebaseUser> { subscriber ->
+                    val userQuery = firebaseDatabase
+                            .getReference("users")
+                            .child(firebaseAuthUser.uid)
+                    userQuery.addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onCancelled(error: DatabaseError?) {
+                            println("error?.message: ${error?.message}")
+                            subscriber.onError(error?.toException()!!)
+                        }
 
-                                override fun onDataChange(snapshot: DataSnapshot?) {
-                                    try {
-                                        val firebaseUser = snapshot?.getValue(FirebaseUser::class.java)
+                        override fun onDataChange(snapshot: DataSnapshot?) {
+                            try {
+                                val firebaseUser = snapshot?.getValue(FirebaseUser::class.java)
 //                                        println("firebaseUser: ${firebaseUser?.email}")
-                                        if (firebaseUser != null) {
-                                            subscriber.onSuccess(firebaseUser)
-                                        } else {
-                                            subscriber.onError(IllegalStateException("Failed to parse user: ${snapshot?.key}"))
-                                        }
-                                    } catch (e: Exception) {
-                                        println("error while parse user: $e")
-                                        println("KEY IS: ${snapshot?.key}")
-                                        log.error("error while parse user: ", e)
-                                        log.error("KEY IS: ${snapshot?.key}")
-                                        subscriber.onError(e)
-                                    }
+                                if (firebaseUser != null) {
+                                    subscriber.onSuccess(firebaseUser)
+                                } else {
+                                    subscriber.onError(IllegalStateException("Failed to parse user: ${snapshot?.key}"))
                                 }
-                            })
-                        }.blockingGet()
-                    } catch (e: Exception) {
-                        log.error("Error while get user data from firebase: ${firebaseAuthUser.uid}", e)
-                        println(e)
-                        return@forEach
-                    }
+                            } catch (e: Exception) {
+                                println("error while parse user: $e")
+                                println("KEY IS: ${snapshot?.key}")
+                                log.error("error while parse user: ", e)
+                                log.error("KEY IS: ${snapshot?.key}")
+                                subscriber.onError(e)
+                            }
+                        }
+                    })
+                }.blockingGet()
+            } catch (e: Exception) {
+                log.error("Error while get user data from firebase: ${firebaseAuthUser.uid}", e)
+                println(e)
+                return@forEach
+            }
 
-                    firebaseUsersData += FirebaseUserData(
-                            firebaseAuthUser,
-                            firebaseDatabaseUser,
-                            lang
-                    )
-                }
+            firebaseUsersData += FirebaseUserData(
+                    firebaseAuthUser,
+                    firebaseDatabaseUser,
+                    lang
+            )
+        }
 
         return firebaseUsersData
     }

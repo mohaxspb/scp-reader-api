@@ -33,7 +33,7 @@ with
     itLang as (select * from langs where lang_code = 'it'),
     esLang as (select * from langs where lang_code = 'es'),
     ptLang as (select * from langs where lang_code = 'pt'),
-    cnLang as (select * from langs where lang_code = 'cn')
+    zhLang as (select * from langs where lang_code = 'zh')
 insert
 into article_types__to__langs (article_type_id, lang_id, title)
 values
@@ -93,11 +93,11 @@ values
     ((select id from KETER), (select id from ptLang), 'Keter'),
     ((select id from THAUMIEL), (select id from ptLang), 'Thaumiel'),
     ((select id from NONE), (select id from ptLang), ''),
-    -- cn
-    ((select id from NEUTRAL), (select id from cnLang), 'Neutralized'),
-    ((select id from SAFE), (select id from cnLang), 'Safe'),
-    ((select id from EUCLID), (select id from cnLang), 'Euclid'),
-    ((select id from KETER), (select id from cnLang), 'Keter'),
-    ((select id from THAUMIEL), (select id from cnLang), 'Thaumiel'),
-    ((select id from NONE), (select id from cnLang), '')
+    -- zh
+    ((select id from NEUTRAL), (select id from zhLang), 'Neutralized'),
+    ((select id from SAFE), (select id from zhLang), 'Safe'),
+    ((select id from EUCLID), (select id from zhLang), 'Euclid'),
+    ((select id from KETER), (select id from zhLang), 'Keter'),
+    ((select id from THAUMIEL), (select id from zhLang), 'Thaumiel'),
+    ((select id from NONE), (select id from zhLang), '')
 on conflict DO NOTHING;
