@@ -283,17 +283,58 @@ create table if not exists users
     main_lang_id text
 );
 
+
 create table if not exists authorities
 (
-    authority varchar(255) not null,
-    user_id bigint not null
-        constraint fkk91upmbueyim93v469wj7b2qh
-            references users,
+    authority text not null,
     created timestamp,
     updated timestamp,
-    constraint authorities_pkey
-        primary key (authority, user_id)
+    primary key (authority)
 );
+
+ALTER TABLE authorities
+    DROP CONSTRAINT IF EXISTS check_upper_authority;
+ALTER TABLE authorities
+    ADD CONSTRAINT check_upper_authority CHECK (UPPER(authority) = authority);
+
+INSERT INTO authorities (authority)
+VALUES ('ADMIN'),
+       ('BANNER'),
+       ('USER')
+ON CONFLICT DO NOTHING;
+
+
+create table if not exists authorities__to__users
+(
+    id bigserial not null,
+    authority bigint not null,
+    user_id bigint not null,
+    created timestamp,
+    updated timestamp,
+    primary key (id)
+);
+
+alter table authorities__to__users
+    drop constraint if exists authority_id_and_user_id_unique;
+alter table authorities__to__users
+    add constraint authority_id_and_user_id_unique unique (authority, user_id);
+
+ALTER TABLE authorities__to__users
+    drop constraint IF EXISTS fkk91upmbueyim93v469wj7b2qh CASCADE;
+ALTER TABLE authorities__to__users
+    drop constraint IF EXISTS fk_user_id__to__users CASCADE;
+alter table authorities__to__users
+    add constraint fk_user_id__to__users
+        foreign key (user_id)
+            REFERENCES users (id);
+
+ALTER TABLE authorities__to__users
+    drop constraint IF EXISTS fk_authority_id__to__authorities CASCADE;
+alter table authorities__to__users
+    add constraint fk_authority_id__to__authorities
+        foreign key (authority)
+            REFERENCES authorities (authority);
+
 
 create table if not exists users_android_products
 (
@@ -301,9 +342,16 @@ create table if not exists users_android_products
     user_id bigint not null,
     created timestamp,
     updated timestamp,
-    constraint users_android_products_pkey
-        primary key (android_product_id, user_id)
+    primary key (android_product_id, user_id)
 );
+
+ALTER TABLE users_android_products
+    drop constraint IF EXISTS fk_user_id__to__users CASCADE;
+alter table users_android_products
+    add constraint fk_user_id__to__users
+        foreign key (user_id)
+            REFERENCES users (id);
+
 
 create table if not exists users_android_subscriptions
 (
@@ -311,9 +359,16 @@ create table if not exists users_android_subscriptions
     user_id bigint not null,
     created timestamp,
     updated timestamp,
-    constraint users_android_subscriptions_pkey
-        primary key (android_subscription_id, user_id)
+    primary key (android_subscription_id, user_id)
 );
+
+ALTER TABLE users_android_subscriptions
+    drop constraint IF EXISTS fk_user_id__to__users CASCADE;
+alter table users_android_subscriptions
+    add constraint fk_user_id__to__users
+        foreign key (user_id)
+            REFERENCES users (id);
+
 
 create table if not exists users_langs
 (
@@ -326,13 +381,27 @@ create table if not exists users_langs
         primary key (lang_id, user_id)
 );
 
+ALTER TABLE users_langs
+    drop constraint IF EXISTS fk_user_id__to__users CASCADE;
+alter table users_langs
+    add constraint fk_user_id__to__users
+        foreign key (user_id)
+            REFERENCES users (id);
+
+ALTER TABLE users_langs
+    drop constraint IF EXISTS fk_lang_id__to__langs CASCADE;
+alter table users_langs
+    add constraint fk_lang_id__to__langs
+        foreign key (lang_id)
+            REFERENCES langs (id);
+
+
 create table if not exists tags
 (
-    id bigserial not null
-        constraint tags_pkey
-            primary key,
+    id bigserial not null,
     created timestamp,
-    updated timestamp
+    updated timestamp,
+    primary key(id)
 );
 
 create table if not exists tags_langs
