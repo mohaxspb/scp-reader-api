@@ -24,7 +24,9 @@ class ParseArticleTextService {
      */
     fun parseArticleText(rawText: String, printTextParts: Boolean = false): List<TextPart> {
         val textParts = getArticlesTextParts(rawText)
+        println("textParts: ${textParts.size}")
         val textPartsTypes = getListOfTextTypes(getArticlesTextParts(rawText))
+        println("textPartsTypes: ${textPartsTypes.size}")
 
         val finalTextParts = mutableListOf<TextPart>()
 

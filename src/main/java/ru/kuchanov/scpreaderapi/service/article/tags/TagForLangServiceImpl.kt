@@ -6,12 +6,10 @@ import ru.kuchanov.scpreaderapi.bean.articles.tags.TagForLang
 import ru.kuchanov.scpreaderapi.repository.article.tags.TagForLangRepository
 
 
-@Suppress("unused")
 @Service
-class TagForLangServiceImpl : TagForLangService {
-
-    @Autowired
-    private lateinit var repository: TagForLangRepository
+class TagForLangServiceImpl @Autowired constructor(
+        val repository: TagForLangRepository
+) : TagForLangService {
 
     override fun findOneById(id: Long) =
             repository.getOneById(id)
@@ -28,7 +26,4 @@ class TagForLangServiceImpl : TagForLangService {
 
     override fun insert(data: TagForLang): TagForLang =
             repository.save(data)
-
-    override fun insert(data: List<TagForLang>) =
-            repository.saveAll(data)
 }
