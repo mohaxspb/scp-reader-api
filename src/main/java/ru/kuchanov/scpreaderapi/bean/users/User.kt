@@ -105,7 +105,7 @@ data class User(
 ) : UserDetails {
 
     override fun getAuthorities(): MutableCollection<out GrantedAuthority> =
-            userAuthorities.map { SimpleGrantedAuthority(it.authority) }.toMutableList()
+            userAuthorities.map { SimpleGrantedAuthority(it.authority.name) }.toMutableList()
 
     override fun isEnabled() = enabled
 

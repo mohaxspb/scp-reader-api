@@ -17,14 +17,14 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
-import ru.kuchanov.scpreaderapi.bean.auth.Authority
 import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
+import ru.kuchanov.scpreaderapi.bean.auth.UserToAuthority
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.UsersLangs
 import ru.kuchanov.scpreaderapi.model.user.LevelsJson
 import ru.kuchanov.scpreaderapi.network.ApiClient
-import ru.kuchanov.scpreaderapi.service.auth.AuthorityService
+import ru.kuchanov.scpreaderapi.service.auth.UserToAuthorityService
 import ru.kuchanov.scpreaderapi.service.firebase.FirebaseService
 import ru.kuchanov.scpreaderapi.service.users.LangService
 import ru.kuchanov.scpreaderapi.service.users.UserService
@@ -48,7 +48,7 @@ class AuthController {
     private lateinit var clientDetailsService: ClientDetailsService
 
     @Autowired
-    private lateinit var authorityService: AuthorityService
+    private lateinit var userToAuthorityService: UserToAuthorityService
 
     @Autowired
     private lateinit var firebaseService: FirebaseService
@@ -103,7 +103,7 @@ class AuthController {
                 ScpReaderConstants.SocialProvider.GOOGLE -> {
                     if (userInDb.googleId.isNullOrEmpty()) {
                         userInDb.googleId = commonUserData.id
-                        usersService.update(userInDb)
+                        usersService.insert(userInDb)
                     } else if (userInDb.googleId != commonUserData.id) {
                         log.error("login with ${commonUserData.id}/$email for user with mismatched googleId: ${userInDb.googleId}")
                     }
@@ -111,7 +111,7 @@ class AuthController {
                 ScpReaderConstants.SocialProvider.FACEBOOK -> {
                     if (userInDb.facebookId.isNullOrEmpty()) {
                         userInDb.facebookId = commonUserData.id
-                        usersService.update(userInDb)
+                        usersService.insert(userInDb)
                     } else if (userInDb.facebookId != commonUserData.id) {
                         log.error("login with ${commonUserData.id}/$email for user with mismatched facebookId: ${userInDb.facebookId}")
                     }
@@ -119,7 +119,7 @@ class AuthController {
                 ScpReaderConstants.SocialProvider.VK -> {
                     if (userInDb.vkId.isNullOrEmpty()) {
                         userInDb.vkId = commonUserData.id
-                        usersService.update(userInDb)
+                        usersService.insert(userInDb)
                     } else if (userInDb.vkId != commonUserData.id) {
                         log.error("login with ${commonUserData.id}/$email for user with mismatched vkId: ${userInDb.vkId}")
                     }
@@ -164,13 +164,13 @@ class AuthController {
                         }
                     })
 
-                    authorityService.insert(Authority(userInDb.id, AuthorityType.USER.name))
+                    userToAuthorityService.save(UserToAuthority(userId = userInDb.id!!, authority = AuthorityType.USER))
 
                     //and save his read/favorite articles
                     userDataFromFirebase.forEach { firebaseUserData ->
                         //add user-lang connection if need
                         if (usersLangsService.getByUserIdAndLangId(userInDb.id!!, lang.id) == null) {
-                            usersLangsService.insert(UsersLangs(userInDb.id!!, lang.id))
+                            usersLangsService.insert(UsersLangs(userId = userInDb.id!!, langId = lang.id))
                         }
 
                         firebaseService.manageFirebaseArticlesForUser(
@@ -211,8 +211,8 @@ class AuthController {
                         }
                     })
 
-                    authorityService.insert(Authority(newUserInDb.id, AuthorityType.USER.name))
-                    usersLangsService.insert(UsersLangs(newUserInDb.id!!, lang.id))
+                    userToAuthorityService.save(UserToAuthority(userId = newUserInDb.id!!, authority = AuthorityType.USER))
+                    usersLangsService.insert(UsersLangs(userId = newUserInDb.id, langId = lang.id))
 
                     return getAccessToken(newUserInDb.username, clientId)
                 }

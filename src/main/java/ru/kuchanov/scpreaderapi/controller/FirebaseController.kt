@@ -11,15 +11,13 @@ import ru.kuchanov.scpreaderapi.service.users.UserService
 
 
 @RestController
-@RequestMapping("/${ScpReaderConstants.Path.FIREBASE}")
-class FirebaseController {
+@RequestMapping("/" + ScpReaderConstants.Path.FIREBASE)
+class FirebaseController @Autowired constructor(
+        val firebaseService: FirebaseService,
+        val usersService: UserService
+) {
 
-    @Autowired
-    private lateinit var firebaseService: FirebaseService
-
-    @Autowired
-    private lateinit var usersService: UserService
-
+    //fixme remove periodic update
     @Scheduled(
 //            fixedDelay = ScpReaderConstants.FIREBASE_USERS_DATA_UPDATE_RATE_MILLIS,
 //            initialDelay = ScpReaderConstants.FIREBASE_USERS_DATA_UPDATE_RATE_MILLIS

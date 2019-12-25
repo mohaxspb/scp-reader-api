@@ -2,11 +2,13 @@ package ru.kuchanov.scpreaderapi.bean.articles.types
 
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
+import ru.kuchanov.scpreaderapi.utils.NoArgConstructor
 import java.sql.Timestamp
 import javax.persistence.*
 
 @Entity
-@Table(name = "article_types_to_titles_for_lang")
+@Table(name = "article_types__to__langs")
+@NoArgConstructor
 data class ArticleTypeForLang(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
