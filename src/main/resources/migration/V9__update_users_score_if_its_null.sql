@@ -1,1 +1,0 @@
-UPDATE users SET score = '0' WHERE score IS NULL;

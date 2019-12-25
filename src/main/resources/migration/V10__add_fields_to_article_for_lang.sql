@@ -1,3 +1,0 @@
-ALTER TABLE articles_langs ADD COLUMN IF NOT EXISTS text TEXT;
-ALTER TABLE articles_langs ADD COLUMN IF NOT EXISTS rating INT8;
-ALTER TABLE articles_langs ADD COLUMN IF NOT EXISTS comments_url VARCHAR(255);

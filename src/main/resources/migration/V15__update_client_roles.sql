@@ -1,1 +1,0 @@
-UPDATE oauth_client_details SET authorities = 'ADMIN,USER,BANNER' WHERE client_id='client_id';

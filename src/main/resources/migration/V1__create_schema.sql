@@ -40,41 +40,105 @@ create table if not exists article_types
 
 create table if not exists articles
 (
-    id              bigserial not null,
-    article_type_id bigint,
+    id bigserial not null,
     primary key (id)
 );
 
 create table if not exists articles_article_types
 (
+    id bigserial not null,
     article_id      bigint not null,
     article_type_id bigint not null,
     created         timestamp,
     updated         timestamp,
-    primary key (article_id, article_type_id)
-);
-
-create table if not exists articles_langs
-(
-    id              serial       not null,
-    article_id      bigint       not null,
-    lang_id         varchar(255) not null,
-    url_relative    text         not null,
-    comments_url    text,
-    created         timestamp,
-    created_on_site timestamp,
-    rating          integer,
-    text            text,
-    title           varchar(255),
-    updated         timestamp,
-    updated_on_site timestamp,
     primary key (id)
 );
 
+alter table articles_article_types
+    drop constraint if exists articles_article_types_unique;
+alter table articles_article_types
+    add constraint articles_article_types_unique
+        unique (article_id, article_type_id);
+
+ALTER TABLE articles_article_types
+    drop constraint IF EXISTS fk_article_id_to_articles CASCADE;
+alter table articles_article_types
+    add constraint fk_article_id_to_articles
+        foreign key (article_id)
+            REFERENCES articles (id);
+
+ALTER TABLE articles_article_types
+    drop constraint IF EXISTS fk_article_type_id_to_articles CASCADE;
+alter table articles_article_types
+    add constraint fk_article_type_id_to_articles
+        foreign key (article_type_id)
+            REFERENCES article_types (id);
+
+CREATE TABLE IF NOT EXISTS article_types__to__langs
+(
+    id              bigserial not null,
+    article_type_id bigint    not null,
+    lang_id         varchar   not null,
+    title           text      not null,
+    created         timestamp,
+    updated         timestamp,
+    primary key (id),
+    unique (article_type_id, lang_id)
+);
+
+ALTER TABLE article_types__to__langs
+    drop constraint IF EXISTS fk_article_type_id_to_article_type CASCADE;
+alter table article_types__to__langs
+    add constraint fk_article_type_id_to_article_type
+        foreign key (article_type_id)
+            REFERENCES article_types (id);
+
+ALTER TABLE article_types__to__langs
+    drop constraint IF EXISTS fk_lang_id_to_langs CASCADE;
+alter table article_types__to__langs
+    add constraint fk_lang_id_to_langs
+        foreign key (lang_id)
+            REFERENCES langs (id);
+
+create table if not exists articles_langs
+(
+    id              bigserial    not null,
+    article_id      bigint       not null,
+    lang_id         varchar(255) not null,
+    url_relative    text         not null,
+    title           varchar(255),
+    rating          integer,
+    text            text,
+    comments_url    text,
+    has_iframe_tag boolean not null default false,
+    updated_on_site timestamp,
+    created_on_site timestamp,
+    updated         timestamp,
+    created         timestamp,
+    primary key (id)
+);
+
+DROP INDEX IF EXISTS articles_langs_unique;
+create unique index if not exists articles_langs_unique on articles_langs (article_id, lang_id, url_relative);
+
+ALTER TABLE articles_langs
+    drop constraint IF EXISTS fk_article_id__to_articles CASCADE;
+alter table articles_langs
+    add constraint fk_article_id__to_articles
+        foreign key (article_id)
+            REFERENCES articles (id);
+
+ALTER TABLE articles_langs
+    drop constraint IF EXISTS fk_lang_id__to_langs CASCADE;
+alter table articles_langs
+    add constraint fk_lang_id__to_langs
+        foreign key (lang_id)
+            REFERENCES langs (id);
+
 create table if not exists articles_images
 (
-    id                  serial not null,
-    url                 text   not null,
+    id                  bigserial not null,
+    url                 text      not null,
     created             timestamp,
     updated             timestamp,
     article_for_lang_id bigint
@@ -83,8 +147,6 @@ create table if not exists articles_images
     primary key (id)
 );
 
-create unique index if not exists articles_langs_unique
-    on articles_langs (article_id, lang_id, url_relative);
 
 create table if not exists banners
 (
@@ -241,7 +303,7 @@ create table if not exists users
     name_first            text,
     name_second           text,
     name_third            text,
-    score                 integer,
+    score                 integer   not null default 0,
     score_to_next_level   integer,
     sign_in_reward_gained boolean,
     updated               timestamp,
@@ -375,9 +437,7 @@ create table if not exists tags
 
 create table if not exists tags_langs
 (
-    id      bigserial    not null
-        constraint tags_langs_pkey
-            primary key,
+    id      bigserial    not null,
     tag_id  bigint
         constraint fk_tags
             references tags,
@@ -388,39 +448,46 @@ create table if not exists tags_langs
     created timestamp,
     updated timestamp,
     constraint tags_langs_lang_id_title_key
-        unique (lang_id, title)
+        unique (lang_id, title),
+    primary key (id)
 );
 
 create table if not exists tags_articles_langs
 (
-    id                  bigserial not null
-        constraint tags_articles_langs_pkey
-            primary key,
-    tag_for_lang_id     bigint    not null
-        constraint fk_tags
-            references tags_langs,
-    article_for_lang_id bigint    not null
-        constraint fk_langs
-            references articles_langs,
+    id                  bigserial not null,
+    tag_for_lang_id     bigint    not null,
+    article_for_lang_id bigint    not null,
     created             timestamp,
     updated             timestamp,
     constraint tags_articles_langs_tag_for_lang_id_article_for_lang_id_key
-        unique (tag_for_lang_id, article_for_lang_id)
+        unique (tag_for_lang_id, article_for_lang_id),
+    primary key (id)
 );
 
-create table if not exists articles_langs_to_articles_langs
+ALTER TABLE tags_articles_langs
+    drop constraint IF EXISTS fk_article_for_lang_id__to__articles_langs CASCADE;
+alter table tags_articles_langs
+    add constraint fk_article_for_lang_id__to__articles_langs
+        foreign key (article_for_lang_id)
+            REFERENCES articles_langs (id);
+
+ALTER TABLE tags_articles_langs
+    drop constraint IF EXISTS fk_tag_for_lang_id__to__tags_langs CASCADE;
+alter table tags_articles_langs
+    add constraint fk_tag_for_lang_id__to__tags_langs
+        foreign key (tag_for_lang_id)
+            REFERENCES tags_langs (id);
+
+
+CREATE TABLE IF NOT EXISTS articles_langs__to__articles_langs
 (
-    id                         bigserial not null
-        constraint articles_langs_to_articles_langs_pkey
-            primary key,
-    parent_article_for_lang_id bigint    not null
-        constraint fk_parent_article_for_lang
-            references articles_langs,
-    article_for_lang_id        bigint    not null
-        constraint fk_article_for_lang
-            references articles_langs,
+    id                         bigserial not null,
+    parent_article_for_lang_id bigint    not null,
+    article_for_lang_id        bigint    not null,
     created                    timestamp,
     updated                    timestamp,
-    constraint articles_langs_to_articles_la_parent_article_for_lang_id_ar_key
-        unique (parent_article_for_lang_id, article_for_lang_id)
+    primary key (id),
+    constraint fk_parent_article_for_lang foreign key (parent_article_for_lang_id) REFERENCES articles_langs (id),
+    constraint fk_article_for_lang foreign key (article_for_lang_id) REFERENCES articles_langs (id),
+    unique (parent_article_for_lang_id, article_for_lang_id)
 );

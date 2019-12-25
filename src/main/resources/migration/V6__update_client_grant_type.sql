@@ -1,1 +1,0 @@
-UPDATE oauth_client_details SET authorized_grant_types = 'password,refresh_token' WHERE client_id='client_id';
