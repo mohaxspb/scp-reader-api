@@ -23,6 +23,10 @@ object ParseConstants {
 
     const val TAG_TABLE = "table"
 
+    const val TAG_UL = "ul"
+
+    const val TAG_OL = "ol"
+
     const val TAG_LI = "li"
 
     const val TAG_IFRAME = "iframe"
@@ -114,5 +118,8 @@ enum class TextType {
     TABS,
     TAB,
     BLOCKQUOTE,
-    HR
+    HR,
+    NUMBERED_LIST,
+    BULLET_LIST,
+    LIST_ITEM
 }

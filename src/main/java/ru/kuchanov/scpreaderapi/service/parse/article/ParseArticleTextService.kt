@@ -13,9 +13,11 @@ import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_BODY
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_HR
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_IMG
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_LI
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_OL
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_P
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_SPAN
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_TABLE
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_UL
 import ru.kuchanov.scpreaderapi.service.parse.category.ScpParseException
 
 
@@ -42,6 +44,7 @@ class ParseArticleTextService {
                 TextType.TABLE -> parseTable(textPart, order++)
                 TextType.BLOCKQUOTE -> parseBlockquote(textPart, order++)
                 TextType.TABS -> parseTabs(textPart, order++)
+                TextType.BULLET_LIST, TextType.NUMBERED_LIST -> parseList(textPart, order++, textPartsTypes[index])
                 TextType.HR -> TextPart(data = null, type = TextType.HR, orderInText = order++)
                 /*TextType.TEXT*/
                 //do not use inner textTypes, such as ImageUrl, Tab, SpoilerCollapsed and so on.
@@ -172,6 +175,20 @@ class ParseArticleTextService {
         } ?: throw ScpParseException("error parse tabs")
     }
 
+    private fun parseList(html: String, order: Int, textType: TextType): TextPart {
+        val listTextPart = TextPart(data = null, type = textType, orderInText = order)
+
+        //todo parse list items
+        val document = Jsoup.parse(html)
+        val tagToParse = if (textType == TextType.NUMBERED_LIST) TAG_OL else TAG_UL
+        val listTag = document.getElementsByTag(tagToParse).first()
+                ?: throw ScpParseException("Error in list parsing. No list tag found", NullPointerException())
+
+        val listItems = TODO()
+
+        return listTextPart
+    }
+
     private fun getArticlesTextParts(html: String): List<String> {
         //println("getArticlesTextParts: $html")
         val document = Jsoup.parse(html)
@@ -188,6 +205,8 @@ class ParseArticleTextService {
                 ourElement == null -> listOfTextTypes.add(TextType.TEXT)
                 ourElement.tagName() == TAG_P -> listOfTextTypes.add(TextType.TEXT)
                 ourElement.tagName() == TAG_HR -> listOfTextTypes.add(TextType.HR)
+                ourElement.tagName() == TAG_OL -> listOfTextTypes.add(TextType.NUMBERED_LIST)
+                ourElement.tagName() == TAG_UL -> listOfTextTypes.add(TextType.BULLET_LIST)
                 ourElement.tagName() == TAG_BLOCKQUOTE -> listOfTextTypes.add(TextType.BLOCKQUOTE)
                 ourElement.tagName() == TAG_TABLE -> listOfTextTypes.add(TextType.TABLE)
                 ourElement.className() == CLASS_SPOILER -> listOfTextTypes.add(TextType.SPOILER)
