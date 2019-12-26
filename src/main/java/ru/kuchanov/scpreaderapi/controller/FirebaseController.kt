@@ -1,7 +1,6 @@
 package ru.kuchanov.scpreaderapi.controller
 
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
@@ -17,12 +16,6 @@ class FirebaseController @Autowired constructor(
         val usersService: UserService
 ) {
 
-    //fixme remove periodic update
-    @Scheduled(
-//            fixedDelay = ScpReaderConstants.FIREBASE_USERS_DATA_UPDATE_RATE_MILLIS,
-//            initialDelay = ScpReaderConstants.FIREBASE_USERS_DATA_UPDATE_RATE_MILLIS
-            cron = "0 0 6 * * *"
-    )
     @GetMapping("/users/updateFromFirebase")
     fun updateDataFromFirebase() = firebaseService.updateDataFromFirebase()
 
