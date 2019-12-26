@@ -1,6 +1,7 @@
 package ru.kuchanov.scpreaderapi.service.parse.article
 
 import org.jsoup.Jsoup
+import org.jsoup.nodes.Element
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.articles.text.TextPart
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ATTR_SRC
@@ -178,15 +179,33 @@ class ParseArticleTextService {
     private fun parseList(html: String, order: Int, textType: TextType): TextPart {
         val listTextPart = TextPart(data = null, type = textType, orderInText = order)
 
-        //todo parse list items
         val document = Jsoup.parse(html)
-        val tagToParse = if (textType == TextType.NUMBERED_LIST) TAG_OL else TAG_UL
+        val tagToParse = if (textType == TextType.NUMBERED_LIST) {
+            TAG_OL
+        } else if (textType == TextType.BULLET_LIST) {
+            TAG_UL
+        } else {
+            throw ScpParseException("Wrong textType while parse list tag: $textType", IllegalArgumentException())
+        }
         val listTag = document.getElementsByTag(tagToParse).first()
                 ?: throw ScpParseException("Error in list parsing. No list tag found", NullPointerException())
 
-        val listItems = TODO()
+        val listItems = listTag
+                .children()
+                .filter { it.tagName() == TAG_LI }
+                .mapIndexed { index, element -> parseListItem(element, index) }
+
+        listTextPart.innerTextParts = listItems
 
         return listTextPart
+    }
+
+    private fun parseListItem(element: Element, order: Int): TextPart {
+        val divTag = Element(TAG_SPAN)
+        divTag.html(element.html())
+        val listItem = TextPart(data = null, type = TextType.LIST_ITEM, orderInText = order)
+        listItem.innerTextParts = parseArticleText(divTag.outerHtml(), false)
+        return listItem
     }
 
     private fun getArticlesTextParts(html: String): List<String> {
