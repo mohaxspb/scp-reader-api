@@ -104,9 +104,13 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
                 .permitAll()
         http
                 .authorizeRequests()
-                .antMatchers("/${ScpReaderConstants.Path.FIREBASE}/**")
+                .antMatchers(
+                        "/${ScpReaderConstants.Path.FIREBASE}/**",
+                        "/${ScpReaderConstants.Path.ARTICLE}/${ScpReaderConstants.Path.PARSE}/**"
+                )
                 .hasAuthority(AuthorityType.ADMIN.name)
-        http.authorizeRequests()
+        http
+                .authorizeRequests()
                 .anyRequest()
                 .authenticated()
 
@@ -157,9 +161,7 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
                 "/${ScpReaderConstants.Path.ARTICLE}/**/category/**",
                 "/${ScpReaderConstants.Path.ARTICLE}/**/full",
                 //todo remove. Allow only admin access on PROD
-                "/${ScpReaderConstants.Path.ARTICLE}/**/delete",
-                //todo remove. Allow only admin access on PROD
-                "/${ScpReaderConstants.Path.ARTICLE}/${ScpReaderConstants.Path.PARSE}/**"
+                "/${ScpReaderConstants.Path.ARTICLE}/**/delete"
         )
     }
 }
