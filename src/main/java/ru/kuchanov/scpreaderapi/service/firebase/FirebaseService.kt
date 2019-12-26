@@ -69,10 +69,8 @@ class FirebaseService @Autowired constructor(
                 return@forEach
             } ?: return@forEach
             val firebaseDatabase = FirebaseDatabase.getInstance(firebaseApp)
-            val firebaseDatabaseUser: FirebaseUser
-            //todo wrap to nullable fun
-            try {
-                firebaseDatabaseUser = Single.create<FirebaseUser> { subscriber ->
+            val firebaseDatabaseUser = try {
+                Single.create<FirebaseUser> { subscriber ->
                     val userQuery = firebaseDatabase
                             .getReference("users")
                             .child(firebaseAuthUser.uid)
