@@ -6,6 +6,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import io.reactivex.Flowable
 import io.reactivex.Single
 import io.reactivex.processors.BehaviorProcessor
 import io.reactivex.rxkotlin.subscribeBy
@@ -123,12 +124,11 @@ class FirebaseService @Autowired constructor(
         println("updateDataFromFirebase")
         log.error("updateDataFromFirebase start")
 
-        //todo use rx for whole method
-        ScpReaderConstants.Firebase.FirebaseInstance.values()
+        Flowable
+                .fromIterable(ScpReaderConstants.Firebase.FirebaseInstance.values().toList())
                 .filter { if (langToParse == null) true else it == langToParse }
-                .forEach { lang ->
-                    //                    println("query for lang: $lang")
-
+                .flatMapSingle { lang ->
+                    println("Start parsing firebase for lang: ${lang.lang}")
                     val langInDb = lang.let { langService.getById(it.lang) }
                             ?: throw IllegalArgumentException("Unknown lang: $lang")
 
@@ -149,22 +149,25 @@ class FirebaseService @Autowired constructor(
                                     subject.onNext(users.last().uid)
                                 }
                             }
-//                            .doOnNext { println("users size: ${it.size}") }
+                            //.doOnNext { println("users size: ${it.size}") }
                             .toList()
-                            .map { it.flatten() }
-                            .subscribeBy(
-                                    onSuccess = {
-                                        updateFirebaseUpdateDate(lang.lang)
-
-                                        log.error("done updating users for lang: ${lang.lang}, totalCount: ${it.size}")
-                                        println("done updating users for lang: ${lang.lang}, totalCount: ${it.size}")
-                                    },
-                                    onError = {
-                                        println("error in update users observable: $it")
-                                        log.error("error in update users observable: ", it)
-                                    }
-                            )
+                            .map { Pair(lang, it.flatten()) }
+                            .doOnSuccess { updateFirebaseUpdateDate(lang.lang) }
                 }
+                .subscribeBy(
+                        onNext = {
+                            log.error("done updating users for lang: ${it.first.lang}, totalCount: ${it.second.size}")
+                            println("done updating users for lang: ${it.first.lang}, totalCount: ${it.second.size}")
+                        },
+                        onComplete = {
+                            log.error("done updating users from firebase")
+                            println("done updating users from firebase")
+                        },
+                        onError = {
+                            println("error in update users observable: $it")
+                            log.error("error in update users observable: ", it)
+                        }
+                )
     }
 
     private fun updateFirebaseUpdateDate(langId: String) {
@@ -179,7 +182,8 @@ class FirebaseService @Autowired constructor(
         }
     }
 
-    fun getAllFirebaseUpdatedDataDates(): MutableList<FirebaseDataUpdateDate> = firebaseDataUpdateDateRepository.findAll()
+    fun getAllFirebaseUpdatedDataDates(): List<FirebaseDataUpdateDate> =
+            firebaseDataUpdateDateRepository.findAll()
 
     @Transactional
     fun insertUsers(firebaseUsers: List<FirebaseUser>, lang: Lang) {
@@ -246,13 +250,13 @@ class FirebaseService @Autowired constructor(
 
                     //increase score if need
                     val firebaseUser = userUidArticles.user
-                    if (userInDb.score!! <= firebaseUser.score!!) {
+                    if (userInDb.score <= firebaseUser.score) {
                         userInDb.score = firebaseUser.score
                         //set level info
-                        val curLevel = levelsJson.getLevelForScore(userInDb.score!!)!!
+                        val curLevel = levelsJson.getLevelForScore(userInDb.score)!!
                         userInDb.levelNum = curLevel.id
                         userInDb.curLevelScore = curLevel.score
-                        userInDb.scoreToNextLevel = levelsJson.scoreToNextLevel(userInDb.score!!, curLevel)
+                        userInDb.scoreToNextLevel = levelsJson.scoreToNextLevel(userInDb.score, curLevel)
                         //update user in DB
                         userService.save(userInDb)
                     }
@@ -291,7 +295,6 @@ class FirebaseService @Autowired constructor(
                 //check if we do not have article-lang connection for given article
                 var articleToLang: ArticleForLang? = null
                 try {
-                    //todo check what the hell is going on here. We get 2 results here...
                     articleToLang = articleForLangService.getOneByLangAndArticleId(articleInDb.id!!, lang.id)
                 } catch (e: Exception) {
                     if (e is IncorrectResultSizeDataAccessException) {
