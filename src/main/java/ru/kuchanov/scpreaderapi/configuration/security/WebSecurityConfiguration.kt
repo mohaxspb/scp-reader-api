@@ -21,6 +21,7 @@ import org.springframework.security.oauth2.provider.token.TokenStore
 import org.springframework.security.web.DefaultRedirectStrategy
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
+import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
 import ru.kuchanov.scpreaderapi.service.auth.ClientServiceImpl
 import ru.kuchanov.scpreaderapi.service.users.UserServiceImpl
 import javax.servlet.Filter
@@ -103,6 +104,9 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
                 .permitAll()
         http
                 .authorizeRequests()
+                .antMatchers("/${ScpReaderConstants.Path.FIREBASE}/**")
+                .hasAuthority(AuthorityType.ADMIN.name)
+        http.authorizeRequests()
                 .anyRequest()
                 .authenticated()
 
@@ -143,8 +147,6 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
     override fun configure(web: WebSecurity) {
         web.ignoring().antMatchers(
                 "/image/**",
-                //todo remove. Allow only admin access on PROD
-                "/${ScpReaderConstants.Path.FIREBASE}/**/**/**",
                 "/${ScpReaderConstants.Path.AUTH}/**",
                 "/${ScpReaderConstants.Path.PURCHASE}/**",
                 "/${ScpReaderConstants.Path.ADS}/all",

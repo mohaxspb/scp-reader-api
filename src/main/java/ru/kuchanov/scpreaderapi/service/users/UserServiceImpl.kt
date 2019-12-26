@@ -22,7 +22,7 @@ class UserServiceImpl @Autowired constructor(
 
     override fun loadUserByUsername(username: String): User? = repository.findOneByMyUsername(username)
 
-    override fun insert(user: User): User = repository.save(user)
+    override fun save(user: User): User = repository.save(user)
 
     override fun getAllUsersByLangId(langId: String): List<User> = repository.getUsersByLang(langId)
 

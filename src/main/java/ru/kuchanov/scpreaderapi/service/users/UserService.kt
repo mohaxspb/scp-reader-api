@@ -15,7 +15,7 @@ interface UserService : UserDetailsService {
     fun getByProviderId(id: String, provider: ScpReaderConstants.SocialProvider): User?
 
     @Transactional
-    fun insert(user: User): User
+    fun save(user: User): User
 
     fun getAllUsersByLangId(langId: String): List<User>
 

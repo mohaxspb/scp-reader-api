@@ -73,29 +73,35 @@ create table if not exists oauth_refresh_token
 create table if not exists users
 (
     id                    bigserial not null,
-    avatar                text,
-    created               timestamp,
-    cur_level_score       integer,
-    enabled               boolean   not null,
+    username              text not null,
+    password              text not null,
     full_name             text,
-    level_num             integer,
-    password              text,
-    username              text
-        constraint uk_r43af9ap4edm43mmtq01oddj6
-            unique,
-    name_first            text,
-    name_second           text,
-    name_third            text,
+    avatar                text,
+
+    enabled               boolean   not null default true,
+
     score                 integer   not null default 0,
+    level_num             integer,
+    cur_level_score       integer,
     score_to_next_level   integer,
+
     sign_in_reward_gained boolean,
-    updated               timestamp,
+
     facebook_id           text,
     google_id             text,
     vk_id                 text,
-    main_lang_id          text,
+
+    main_lang_id          text not null default 'en',
+
+    created               timestamp,
+    updated               timestamp,
     primary key (id)
 );
+
+alter table users
+    drop constraint if exists username_unique;
+alter table users
+    add constraint username_unique unique (username);
 
 
 create table if not exists authorities
