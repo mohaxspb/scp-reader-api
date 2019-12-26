@@ -3,7 +3,6 @@ package ru.kuchanov.scpreaderapi.service.parse.category
 import io.reactivex.Flowable
 import io.reactivex.Observable
 import io.reactivex.Single
-import io.reactivex.SingleEmitter
 import io.reactivex.processors.BehaviorProcessor
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
@@ -174,7 +173,6 @@ class ArticleParsingServiceBase {
                             )
                             println("download complete")
                         },
-                        //todo write error to DB
                         onError = { it.printStackTrace() }
                 )
     }
@@ -229,7 +227,6 @@ class ArticleParsingServiceBase {
                             )
                             println("download complete")
                         },
-                        //todo write error to DB
                         onError = { it.printStackTrace() }
                 )
     }
@@ -253,7 +250,6 @@ class ArticleParsingServiceBase {
                             )
                             println("download complete")
                         },
-                        //todo write error to DB
                         onError = { it.printStackTrace() }
                 )
     }
@@ -304,6 +300,7 @@ class ArticleParsingServiceBase {
                             articlesForCategory
                     )
                 }
+                .doOnError { saveArticleParseError(lang.id, objectsUrl, it) }
     }
 
     @Async
@@ -335,7 +332,6 @@ class ArticleParsingServiceBase {
                             )
                             println("download complete")
                         },
-                        //todo write error to DB
                         onError = { it.printStackTrace() }
                 )
     }
@@ -346,91 +342,47 @@ class ArticleParsingServiceBase {
                     .url(lang.siteBaseUrl + getRecentArticlesUrl())
                     .build()
 
-            val responseBody: String
-            try {
-                val response = okHttpClient.newCall(request).execute()
-                val body = response.body()
-                if (body != null) {
-                    responseBody = body.string()
-                } else {
-                    subscriber.onError(ScpParseException("body is null while getRecentArticlesPageCountForLang", NullPointerException()))
-                    return@create
-                }
-            } catch (e: IOException) {
-                subscriber.onError(IOException("error while getRecentArticlesPageCountForLang", e))
-                return@create
-            }
+            val responseBody = getResponseBody(request)
 
-            try {
-                val doc = Jsoup.parse(responseBody)
+            val doc = Jsoup.parse(responseBody)
 
-                //get num of pages
-                val spanWithNumber = doc.getElementsByClass("pager-no").first()
-                val text = spanWithNumber.text()
-                val numOfPages = Integer.valueOf(text.substring(text.lastIndexOf(" ") + 1))
+            //get num of pages
+            val spanWithNumber = doc.getElementsByClass("pager-no").first()
+            val text = spanWithNumber.text()
+            val numOfPages = Integer.valueOf(text.substring(text.lastIndexOf(" ") + 1))
 
-                subscriber.onSuccess(numOfPages)
-            } catch (e: Exception) {
-                println("error while get arts list")
-                subscriber.onError(e)
-            }
+            subscriber.onSuccess(numOfPages)
         }
     }
 
     fun getRecentArticlesForPage(lang: Lang, page: Int): Single<List<ArticleForLang>> {
-        return Single.create<List<ArticleForLang>> {
-
-            val request = Request.Builder()
-                    .url(lang.siteBaseUrl + getRecentArticlesUrl() + page)
-                    .build()
-
-            println("start request to: ${lang.siteBaseUrl + getRecentArticlesUrl() + page}")
-
-            val responseBody = okHttpClient
-                    .newCall(request)
-                    .execute()
-                    .body()
-                    ?.string()
-                    ?: throw IOException("body is null for page: $page")
-            val doc: Document = Jsoup.parse(responseBody)
-
-            val articles = parseForRecentArticles(lang, doc)
-
-            it.onSuccess(articles)
-        }
+        println("start request to: ${lang.siteBaseUrl + getRecentArticlesUrl() + page}")
+        return Single
+                .create<List<ArticleForLang>> { subscriber ->
+                    val request = Request.Builder()
+                            .url(lang.siteBaseUrl + getRecentArticlesUrl() + page)
+                            .build()
+                    val responseBody = getResponseBody(request)
+                    val doc: Document = Jsoup.parse(responseBody)
+                    val articles = parseForRecentArticles(lang, doc)
+                    subscriber.onSuccess(articles)
+                }
+                .doOnError { saveArticleParseError(lang.id, lang.siteBaseUrl + getRecentArticlesUrl() + page, it) }
     }
 
     fun getRatedArticlesForLang(lang: Lang, page: Int): Single<List<ArticleForLang>> {
         println("getRatedArticlesForLang: ${lang.langCode}, url: ${lang.siteBaseUrl}${getRatedArticlesUrl()}$page")
-        return Single.create { subscriber: SingleEmitter<List<ArticleForLang>> ->
-            val request = Request.Builder()
-                    .url(lang.siteBaseUrl + getRatedArticlesUrl() + page)
-                    .build()
-            val responseBody = try {
-                val response: Response = okHttpClient.newCall(request).execute()
-                val body = response.body()
-                if (body != null) {
-                    body.string()
-                } else {
-                    subscriber.onError(ScpParseException("body is null!", NullPointerException()))
-                    return@create
+        return Single
+                .create<List<ArticleForLang>> { subscriber ->
+                    val request = Request.Builder()
+                            .url(lang.siteBaseUrl + getRatedArticlesUrl() + page)
+                            .build()
+                    val responseBody = getResponseBody(request)
+                    val doc = Jsoup.parse(responseBody)
+                    val articles = parseForRatedArticles(lang, doc)
+                    subscriber.onSuccess(articles)
                 }
-            } catch (e: IOException) {
-                subscriber.onError(IOException("Connection error!"))
-                return@create
-            }
-            try {
-                val doc = Jsoup.parse(responseBody)
-                val articles = parseForRatedArticles(lang, doc)
-                subscriber.onSuccess(articles)
-            } catch (e: Exception) {
-                println("error 0 while get arts list")
-                subscriber.onError(e)
-            } catch (e: ScpParseException) {
-                println("error 1 while get arts list")
-                subscriber.onError(e)
-            }
-        }
+                .doOnError { saveArticleParseError(lang.id, lang.siteBaseUrl + getRatedArticlesUrl() + page, it) }
     }
 
     @Suppress("DuplicatedCode")
@@ -469,8 +421,7 @@ class ArticleParsingServiceBase {
             val request = Request.Builder()
                     .url(lang.siteBaseUrl + objectsLink)
                     .build()
-            val responseBody: String
-            responseBody = try {
+            val responseBody = try {
                 val response: Response = okHttpClient.newCall(request).execute()
                 val body = response.body()
                 if (body != null) {
@@ -488,10 +439,7 @@ class ArticleParsingServiceBase {
                 val articles = parseForObjectArticles(lang, doc)
                 subscriber.onSuccess(articles)
             } catch (e: Exception) {
-                println("error 0 while get arts list")
-                subscriber.onError(e)
-            } catch (e: ScpParseException) {
-                println("error 1 while get arts list")
+                println("error in getObjectsArticlesForLang")
                 subscriber.onError(e)
             }
         }
@@ -647,20 +595,20 @@ class ArticleParsingServiceBase {
             println("Error in article parsing: ${articleToSave.urlRelative}")
             e.printStackTrace()
 
-            saveArticleParseError(articleToSave, e)
+            saveArticleParseError(articleToSave.langId, articleToSave.urlRelative, e)
 
             throw e
         }
     }
 
-    private fun saveArticleParseError(articleToLang: ArticleForLang, e: Exception) {
+    private fun saveArticleParseError(langId: String, url: String, e: Throwable) {
         val stringWriter = StringWriter()
         e.printStackTrace(PrintWriter(stringWriter))
         val stacktraceAsString = stringWriter.toString()
 
         val error = ArticleParseError(
-                langId = articleToLang.langId,
-                urlRelative = articleToLang.urlRelative,
+                langId = langId,
+                urlRelative = url,
                 errorClass = e::class.java.simpleName,
                 errorMessage = e.message,
                 stacktrace = stacktraceAsString
@@ -873,7 +821,7 @@ class ArticleParsingServiceBase {
         }
     }
 
-    fun getAndSaveInnerArticles(
+    private fun getAndSaveInnerArticles(
             lang: Lang,
             articleDownloaded: ArticleForLang,
             maxDepth: Int = 0,
@@ -899,7 +847,17 @@ class ArticleParsingServiceBase {
         }
     }
 
-    fun getObjectTypeByImageUrl(imageURL: String): ScpReaderConstants.ArticleTypeEnum {
+    private fun getResponseBody(request: Request): String {
+        val response = okHttpClient.newCall(request).execute()
+        val body = response.body()
+        if (body != null) {
+            return body.string()
+        } else {
+            throw ScpParseException("body is null!", NullPointerException())
+        }
+    }
+
+    protected fun getObjectTypeByImageUrl(imageURL: String): ScpReaderConstants.ArticleTypeEnum {
         val typeEnum: ScpReaderConstants.ArticleTypeEnum
 
         when (imageURL) {
