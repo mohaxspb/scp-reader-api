@@ -10,6 +10,7 @@ import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ID_PAGE_CON
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_A
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_BLOCKQUOTE
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_BODY
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_HR
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_IMG
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_LI
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_P
@@ -41,7 +42,9 @@ class ParseArticleTextService {
                 TextType.TABLE -> parseTable(textPart, order++)
                 TextType.BLOCKQUOTE -> parseBlockquote(textPart, order++)
                 TextType.TABS -> parseTabs(textPart, order++)
+                TextType.HR -> TextPart(data = null, type = TextType.HR, orderInText = order++)
                 /*TextType.TEXT*/
+                //do not use inner textTypes, such as ImageUrl, Tab, SpoilerCollapsed and so on.
                 else -> TextPart(data = textPart, type = TextType.TEXT, orderInText = order++)
             }
         }
@@ -184,6 +187,7 @@ class ParseArticleTextService {
             when {
                 ourElement == null -> listOfTextTypes.add(TextType.TEXT)
                 ourElement.tagName() == TAG_P -> listOfTextTypes.add(TextType.TEXT)
+                ourElement.tagName() == TAG_HR -> listOfTextTypes.add(TextType.HR)
                 ourElement.tagName() == TAG_BLOCKQUOTE -> listOfTextTypes.add(TextType.BLOCKQUOTE)
                 ourElement.tagName() == TAG_TABLE -> listOfTextTypes.add(TextType.TABLE)
                 ourElement.className() == CLASS_SPOILER -> listOfTextTypes.add(TextType.SPOILER)
