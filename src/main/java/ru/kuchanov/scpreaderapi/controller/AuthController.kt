@@ -103,7 +103,7 @@ class AuthController {
                 ScpReaderConstants.SocialProvider.GOOGLE -> {
                     if (userInDb.googleId.isNullOrEmpty()) {
                         userInDb.googleId = commonUserData.id
-                        usersService.insert(userInDb)
+                        usersService.save(userInDb)
                     } else if (userInDb.googleId != commonUserData.id) {
                         log.error("login with ${commonUserData.id}/$email for user with mismatched googleId: ${userInDb.googleId}")
                     }
@@ -111,7 +111,7 @@ class AuthController {
                 ScpReaderConstants.SocialProvider.FACEBOOK -> {
                     if (userInDb.facebookId.isNullOrEmpty()) {
                         userInDb.facebookId = commonUserData.id
-                        usersService.insert(userInDb)
+                        usersService.save(userInDb)
                     } else if (userInDb.facebookId != commonUserData.id) {
                         log.error("login with ${commonUserData.id}/$email for user with mismatched facebookId: ${userInDb.facebookId}")
                     }
@@ -119,7 +119,7 @@ class AuthController {
                 ScpReaderConstants.SocialProvider.VK -> {
                     if (userInDb.vkId.isNullOrEmpty()) {
                         userInDb.vkId = commonUserData.id
-                        usersService.insert(userInDb)
+                        usersService.save(userInDb)
                     } else if (userInDb.vkId != commonUserData.id) {
                         log.error("login with ${commonUserData.id}/$email for user with mismatched vkId: ${userInDb.vkId}")
                     }
@@ -141,7 +141,7 @@ class AuthController {
                     val maxScore = userDataFromFirebase.maxBy { it.firebaseUser.score }!!.firebaseUser.score
                     val curLevel = levelsJson.getLevelForScore(maxScore)!!
                     val firebaseUser = userDataFromFirebase.first().firebaseUser
-                    userInDb = usersService.insert(User(
+                    userInDb = usersService.save(User(
                             myUsername = email,
                             myPassword = email,
                             avatar = firebaseUser.avatar,
@@ -188,7 +188,7 @@ class AuthController {
                     val score = ScpReaderConstants.DEFAULT_NEW_USER_SCORE
                     val curLevel = levelsJson.getLevelForScore(score)!!
 
-                    val newUserInDb = usersService.insert(User(
+                    val newUserInDb = usersService.save(User(
                             myUsername = email,
                             myPassword = email,
                             avatar = commonUserData.avatarUrl,

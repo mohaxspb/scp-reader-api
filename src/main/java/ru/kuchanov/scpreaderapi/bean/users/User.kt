@@ -48,12 +48,6 @@ data class User(
 
         @OneToMany(cascade = [CascadeType.ALL], mappedBy = "userId", fetch = FetchType.EAGER)
         var userAuthorities: Set<UserToAuthority>,
-        //dates
-        @field:CreationTimestamp
-        val created: Timestamp? = null,
-
-        @field:UpdateTimestamp
-        val updated: Timestamp? = null,
         //firebase
         @Column(name = "full_name", columnDefinition = "TEXT")
         var fullName: String? = null,
@@ -61,7 +55,7 @@ data class User(
         @Column(name = "sign_in_reward_gained")
         var signInRewardGained: Boolean? = null,
 
-        var score: Int? = null,
+        var score: Int = 0,
 
         //level
         @Column(name = "level_num")
@@ -84,15 +78,6 @@ data class User(
         var vkId: String? = null,
 
         //misc
-        @Column(name = "name_first", columnDefinition = "TEXT")
-        var nameFirst: String? = null,
-
-        @Column(name = "name_second", columnDefinition = "TEXT")
-        var nameSecond: String? = null,
-
-        @Column(name = "name_third", columnDefinition = "TEXT")
-        var nameThird: String? = null,
-
         @Column(columnDefinition = "TEXT")
         var avatar: String? = null,
 
@@ -101,7 +86,14 @@ data class User(
         @OneToMany(cascade = [CascadeType.ALL], mappedBy = "userId", fetch = FetchType.EAGER)
         var userAndroidSubscriptions: Set<UsersAndroidSubscription> = setOf(),
         @OneToMany(cascade = [CascadeType.ALL], mappedBy = "userId", fetch = FetchType.EAGER)
-        var userAndroidProduct: Set<UsersAndroidProduct> = setOf()
+        var userAndroidProduct: Set<UsersAndroidProduct> = setOf(),
+
+        //dates
+        @field:CreationTimestamp
+        val created: Timestamp? = null,
+
+        @field:UpdateTimestamp
+        val updated: Timestamp? = null
 ) : UserDetails {
 
     override fun getAuthorities(): MutableCollection<out GrantedAuthority> =

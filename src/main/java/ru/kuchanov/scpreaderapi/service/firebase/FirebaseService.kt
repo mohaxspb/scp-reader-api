@@ -43,45 +43,18 @@ import java.time.Instant
 import javax.transaction.Transactional
 
 @Service
-class FirebaseService {
-
-    companion object {
-        const val QUERY_LIMIT = 100
-    }
-
-    @Autowired
-    private lateinit var log: Logger
-
-    @Autowired
-    private lateinit var userService: UserService
-
-    @Autowired
-    private lateinit var userToAuthorityService: UserToAuthorityService
-
-    @Autowired
-    private lateinit var langService: LangService
-
-    @Autowired
-    private lateinit var usersLangsService: UsersLangsService
-
-    @Autowired
-    private lateinit var articleService: ArticleService
-
-    @Autowired
-    private lateinit var articleForLangService: ArticleForLangService
-
-    @Autowired
-    private lateinit var favoriteArticleForLangService: FavoriteArticleForLangService
-
-    @Autowired
-    private lateinit var readArticleForLangService: ReadArticleForLangService
-
-    @Autowired
-    private lateinit var firebaseDataUpdateDateRepository: FirebaseDataUpdateDateRepository
-
-    fun getAllUsersForLang(langId: String) = userService.getAllUsersByLangId(langId)
-
-    fun getUsersByLangIdCount(langId: String) = userService.getUsersByLangIdCount(langId)
+class FirebaseService @Autowired constructor(
+        val log: Logger,
+        val userService: UserService,
+        val userToAuthorityService: UserToAuthorityService,
+        val langService: LangService,
+        val usersLangsService: UsersLangsService,
+        val articleService: ArticleService,
+        val articleForLangService: ArticleForLangService,
+        val favoriteArticleForLangService: FavoriteArticleForLangService,
+        val readArticleForLangService: ReadArticleForLangService,
+        val firebaseDataUpdateDateRepository: FirebaseDataUpdateDateRepository
+) {
 
     fun getUsersDataFromFirebaseByEmail(email: String): List<FirebaseUserData> {
         val firebaseUsersData = mutableListOf<FirebaseUserData>()
@@ -96,10 +69,8 @@ class FirebaseService {
                 return@forEach
             } ?: return@forEach
             val firebaseDatabase = FirebaseDatabase.getInstance(firebaseApp)
-            val firebaseDatabaseUser: FirebaseUser
-            //todo wrap to nullable fun
-            try {
-                firebaseDatabaseUser = Single.create<FirebaseUser> { subscriber ->
+            val firebaseDatabaseUser = try {
+                Single.create<FirebaseUser> { subscriber ->
                     val userQuery = firebaseDatabase
                             .getReference("users")
                             .child(firebaseAuthUser.uid)
@@ -259,7 +230,7 @@ class FirebaseService {
                             userUidArticles.user.avatar = ScpReaderConstants.DEFAULT_AVATAR_URL
 //                            println("insert user with base64 avatar: ${userUidArticles.user}")
                         }
-                        userInDb = userService.insert(userUidArticles.user)
+                        userInDb = userService.save(userUidArticles.user)
 
                         userToAuthorityService.save(UserToAuthority(userId = userInDb.id!!, authority = AuthorityType.USER))
                         newUsersInserted++
@@ -283,7 +254,7 @@ class FirebaseService {
                         userInDb.curLevelScore = curLevel.score
                         userInDb.scoreToNextLevel = levelsJson.scoreToNextLevel(userInDb.score!!, curLevel)
                         //update user in DB
-                        userService.insert(userInDb)
+                        userService.save(userInDb)
                     }
 
                     //insert read/favorite articles if need
@@ -413,5 +384,9 @@ class FirebaseService {
                 }
             })
         }
+    }
+
+    companion object {
+        const val QUERY_LIMIT = 100
     }
 }
