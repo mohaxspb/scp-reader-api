@@ -135,6 +135,7 @@ class AuthController {
             } else {
                 //search in firebase auth api for all apps
                 //and collect user data from all apps (score and read/favorite articles)
+                //fixme remove it as we will already store it in DB after deploy
                 val userDataFromFirebase = firebaseService.getUsersDataFromFirebaseByEmail(email)
                 if (userDataFromFirebase.isNotEmpty()) {
                     //register user with max score and providerId
@@ -173,6 +174,7 @@ class AuthController {
                             usersLangsService.insert(UsersLangs(userId = userInDb.id!!, langId = lang.id))
                         }
 
+                        //fixme remove it as we will already store it in DB after deploy
                         firebaseService.manageFirebaseArticlesForUser(
                                 firebaseUserData.firebaseUser.articles?.values?.toList()
                                         ?: listOf(),
