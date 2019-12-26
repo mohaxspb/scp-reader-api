@@ -1,7 +1,6 @@
 package ru.kuchanov.scpreaderapi.configuration.security
 
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
@@ -18,7 +17,6 @@ import org.springframework.security.oauth2.provider.authentication.OAuth2Authent
 import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationProcessingFilter
 import org.springframework.security.oauth2.provider.token.DefaultTokenServices
 import org.springframework.security.oauth2.provider.token.TokenStore
-import org.springframework.security.web.DefaultRedirectStrategy
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
@@ -86,12 +84,6 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
                 setStateless(false)
             }
 
-    @Value("\${angular.port}")
-    lateinit var angularServerPort: String
-
-    @Value("\${angular.href}")
-    lateinit var angularServerHref: String
-
     override fun configure(http: HttpSecurity) {
         http
                 .cors()
@@ -106,7 +98,8 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
                 .authorizeRequests()
                 .antMatchers(
                         "/${ScpReaderConstants.Path.FIREBASE}/**",
-                        "/${ScpReaderConstants.Path.ARTICLE}/${ScpReaderConstants.Path.PARSE}/**"
+                        "/${ScpReaderConstants.Path.ARTICLE}/${ScpReaderConstants.Path.PARSE}/**",
+                        "/${ScpReaderConstants.Path.ARTICLE}/**/delete"
                 )
                 .hasAuthority(AuthorityType.ADMIN.name)
         http
@@ -116,29 +109,8 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
 
         http
                 .formLogin()
-                .successHandler { request, response, _ ->
-                    println("request data: ${request.localName}/${request.localAddr}/${request.localPort}/${request.serverName}")
-                    println("request: ${request.remotePort}")
-                    println("request: ${request.serverPort}")
-                    println("request: ${request.scheme}")
-                    DefaultRedirectStrategy().sendRedirect(
-                            request,
-                            response,
-                            "${request.scheme}://${request.serverName}$angularServerPort$angularServerHref"
-                    )
-                }
                 .and()
                 .logout()
-                .logoutSuccessHandler { request, response, _ ->
-                    println("request data: ${request.localName}/${request.localAddr}/${request.localPort}/${request.serverName}")
-                    println("request: ${request.protocol}")
-                    println("request: ${request.scheme}")
-                    DefaultRedirectStrategy().sendRedirect(
-                            request,
-                            response,
-                            "${request.scheme}://${request.serverName}$angularServerPort$angularServerHref"
-                    )
-                }
                 .permitAll()
 
         http
@@ -154,14 +126,7 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
                 "/${ScpReaderConstants.Path.AUTH}/**",
                 "/${ScpReaderConstants.Path.PURCHASE}/**",
                 "/${ScpReaderConstants.Path.ADS}/all",
-                "/${ScpReaderConstants.Path.ADS}/files/**",
-                "/${ScpReaderConstants.Path.ARTICLE}/**/recent/**",
-                "/${ScpReaderConstants.Path.ARTICLE}/**/rated/**",
-                "/${ScpReaderConstants.Path.ARTICLE}/**/object/**",
-                "/${ScpReaderConstants.Path.ARTICLE}/**/category/**",
-                "/${ScpReaderConstants.Path.ARTICLE}/**/full",
-                //todo remove. Allow only admin access on PROD
-                "/${ScpReaderConstants.Path.ARTICLE}/**/delete"
+                "/${ScpReaderConstants.Path.ADS}/files/**"
         )
     }
 }

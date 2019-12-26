@@ -79,10 +79,10 @@ class ArticleController @Autowired constructor(
                 ?: throw ArticleForLangNotFoundException()
     }
 
-    @DeleteMapping("{langEnum}/{id}/delete")
+    @DeleteMapping("{langEnum}/{articleId}/delete")
     fun deleteArticleTextPartsByLangAndArticleId(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
-            @PathVariable(value = "id") articleId: Long
+            @PathVariable(value = "articleId") articleId: Long
     ): Boolean {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
         val articleToLangId = articleForLangService.getOneByLangAndArticleId(articleId, lang.id)?.id
