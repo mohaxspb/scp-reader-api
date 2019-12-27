@@ -119,7 +119,8 @@ class FirebaseService @Autowired constructor(
     @Async
     fun updateDataFromFirebase(
             startKey: String = "",
-            langToParse: ScpReaderConstants.Firebase.FirebaseInstance? = null
+            langToParse: ScpReaderConstants.Firebase.FirebaseInstance? = null,
+            maxUsersCount: Int? = null
     ) {
         println("updateDataFromFirebase")
         log.error("updateDataFromFirebase start")
@@ -139,6 +140,13 @@ class FirebaseService @Autowired constructor(
                     subject
                             .concatMap { startKey -> usersObservable(firebaseDatabase, startKey).toFlowable() }
                             .map {
+                                if (maxUsersCount != null && maxUsersCount < it.size) {
+                                    it.take(maxUsersCount)
+                                } else {
+                                    it
+                                }
+                            }
+                            .map {
                                 insertUsers(it, langInDb)
                                 it
                             }
@@ -146,7 +154,11 @@ class FirebaseService @Autowired constructor(
                                 if (users.size != QUERY_LIMIT) {
                                     subject.onComplete()
                                 } else {
-                                    subject.onNext(users.last().uid)
+                                    if (maxUsersCount != null && maxUsersCount < users.size) {
+                                        subject.onComplete()
+                                    } else {
+                                        subject.onNext(users.last().uid)
+                                    }
                                 }
                             }
                             //.doOnNext { println("users size: ${it.size}") }
@@ -168,18 +180,6 @@ class FirebaseService @Autowired constructor(
                             log.error("error in update users observable: ", it)
                         }
                 )
-    }
-
-    private fun updateFirebaseUpdateDate(langId: String) {
-        var firebaseUpdateDate = firebaseDataUpdateDateRepository.findOneByLangId(langId)
-
-        if (firebaseUpdateDate == null) {
-            firebaseUpdateDate = FirebaseDataUpdateDate(langId = langId, updated = Timestamp.from(Instant.now()))
-            firebaseDataUpdateDateRepository.save(firebaseUpdateDate)
-        } else {
-            firebaseUpdateDate.updated = Timestamp.from(Instant.now())
-            firebaseDataUpdateDateRepository.save(firebaseUpdateDate)
-        }
     }
 
     fun getAllFirebaseUpdatedDataDates(): List<FirebaseDataUpdateDate> =
@@ -276,33 +276,34 @@ class FirebaseService @Autowired constructor(
             userId: Long,
             lang: Lang
     ) {
-//        println("manageFirebaseArticlesForUser: ${lang.id}/${user.username}")
-        articlesInFirebase.forEach { articleInFirebase ->
+//        println("manageFirebaseArticlesForUser lang/userId/articles.size: ${lang.id}/$userId/${articlesInFirebase.size}")
+        articlesInFirebase.forEachIndexed { _, articleInFirebase ->
             if (articleInFirebase.url == null) {
 //                println("manageFirebaseArticlesForUser: ${lang.id}/${user.username}")
 //                println("articleInFirebase: $index/$articleInFirebase")
-                return@forEach
+                return@forEachIndexed
             }
-            val urlRelative = articleInFirebase.url!!.replace("${lang.siteBaseUrl}/", "")
+            val urlRelative = articleInFirebase.url!!.replace(lang.siteBaseUrl, "")
             //for other langs we should not pass urlRelative
             val articleInDb = articleService.getArticleByUrlRelative(urlRelative)
 //            println("articleInDb: $articleInDb $urlRelative")
             //insert new article and article-lang connection if need
             if (articleInDb == null) {
                 //do nothing!
-                return
+                return@forEachIndexed
             } else {
                 //check if we do not have article-lang connection for given article
-                var articleToLang: ArticleForLang? = null
-                try {
-                    articleToLang = articleForLangService.getOneByLangAndArticleId(articleInDb.id!!, lang.id)
+                val articleToLang: ArticleForLang? = try {
+                    articleForLangService.getOneByLangAndArticleId(articleInDb.id!!, lang.id)
                 } catch (e: Exception) {
                     if (e is IncorrectResultSizeDataAccessException) {
                         println("IncorrectResultSizeDataAccessException while get ArticleForLang: ${articleInDb.id}/$urlRelative")
                         log.error("IncorrectResultSizeDataAccessException while get ArticleForLangL ${articleInDb.id}/$urlRelative")
+                        null
                     } else {
                         println("error while get ArticleForLang, ${e.message}")
                         log.error("error while get ArticleForLang", e)
+                        null
                     }
                 }
 
@@ -315,10 +316,11 @@ class FirebaseService @Autowired constructor(
     }
 
     private fun manageFavoriteArticlesForUserForLang(userId: Long, isFavorite: Boolean, articleToLangId: Long) {
-        val favoriteArticleForLang = favoriteArticleForLangService.getFavoriteArticleForArticleIdLangIdAndUserId(
-                userId = userId,
-                articleToLangId = articleToLangId
-        )
+        val favoriteArticleForLang = favoriteArticleForLangService
+                .getFavoriteArticleForArticleIdLangIdAndUserId(
+                        userId = userId,
+                        articleToLangId = articleToLangId
+                )
 
         if (isFavorite && favoriteArticleForLang == null) {
             favoriteArticleForLangService.save(
@@ -386,6 +388,18 @@ class FirebaseService @Autowired constructor(
                     subscriber.onSuccess(firebaseUsers!!)
                 }
             })
+        }
+    }
+
+    private fun updateFirebaseUpdateDate(langId: String) {
+        var firebaseUpdateDate = firebaseDataUpdateDateRepository.findOneByLangId(langId)
+
+        if (firebaseUpdateDate == null) {
+            firebaseUpdateDate = FirebaseDataUpdateDate(langId = langId, updated = Timestamp.from(Instant.now()))
+            firebaseDataUpdateDateRepository.save(firebaseUpdateDate)
+        } else {
+            firebaseUpdateDate.updated = Timestamp.from(Instant.now())
+            firebaseDataUpdateDateRepository.save(firebaseUpdateDate)
         }
     }
 

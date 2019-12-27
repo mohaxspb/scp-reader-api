@@ -18,8 +18,9 @@ class FirebaseController @Autowired constructor(
     @GetMapping("/{langEnum}/updateFromFirebaseFromStartKey")
     fun updateDataFromFirebaseFromStartKeyForLang(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
-            @RequestParam(value = "startKey", defaultValue = "") startKey: String
-    ) = firebaseService.updateDataFromFirebase(startKey, langEnum)
+            @RequestParam(value = "startKey", defaultValue = "") startKey: String,
+            @RequestParam(value = "maxUsersCount") maxUsersCount: Int?
+    ) = firebaseService.updateDataFromFirebase(startKey, langEnum, maxUsersCount)
 
     @GetMapping("/updateDataDates")
     fun getUpdateDataDates() = firebaseService.getAllFirebaseUpdatedDataDates()

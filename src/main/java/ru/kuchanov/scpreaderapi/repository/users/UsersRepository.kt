@@ -40,11 +40,15 @@ interface UsersRepository : JpaRepository<User, Long> {
                 u.level_num as levelNum, 
                 u.score_to_next_level as scoreToNextLevel, 
                 u.cur_level_score as curLevelScore, 
-                COUNT(ra.user_id) as numOfReadArticles 
+                COALESCE(read_count.count, 0) as numOfReadArticles 
                 FROM users u 
-                JOIN users_langs ul ON u.id = ul.user_id 
-                LEFT OUTER JOIN read__articles_to_lang__to__users ra ON ra.user_id = u.id 
-                GROUP BY u.id, u.score  
+                LEFT OUTER JOIN (
+                    select ra.user_id as user_id, count(distinct al.article_id) as count
+                    from read__articles_to_lang__to__users ra
+                    join articles_langs al on ra.article_to_lang_id = al.id
+                    group by ra.user_id
+                ) read_count on read_count.user_id = u.id
+                GROUP BY u.id, u.score, read_count.count
                 ORDER BY u.score DESC OFFSET :offset LIMIT :limit
             """,
             nativeQuery = true
