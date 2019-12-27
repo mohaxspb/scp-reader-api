@@ -1,7 +1,7 @@
 /.idea/*
 !/.idea/dictionaries
 /build
-/src/main/resources/application.*
+/src/main/resources/application*.*
 /src/test/resources/application.*
 /src/main/resources/migration/V4__import_secret_data.sql
 /logs
