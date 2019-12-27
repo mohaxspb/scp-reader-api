@@ -1,6 +1,7 @@
 package ru.kuchanov.scpreaderapi.service.auth
 
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.oauth2.provider.ClientDetails
 import org.springframework.security.oauth2.provider.ClientDetailsService
 import org.springframework.stereotype.Service
@@ -14,5 +15,5 @@ class ClientServiceImpl @Autowired constructor(
 ) : ClientDetailsService {
 
     override fun loadClientByClientId(clientId: String): ClientDetails =
-            repository.getOne(clientId) ?: throw ClientNotFoundError()
+            repository.findByIdOrNull(clientId) ?: throw ClientNotFoundError()
 }

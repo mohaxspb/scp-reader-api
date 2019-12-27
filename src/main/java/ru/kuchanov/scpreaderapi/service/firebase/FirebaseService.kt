@@ -1,7 +1,6 @@
 package ru.kuchanov.scpreaderapi.service.firebase
 
 import com.google.firebase.FirebaseApp
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -25,7 +24,6 @@ import ru.kuchanov.scpreaderapi.bean.auth.UserToAuthority
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.UsersLangs
-import ru.kuchanov.scpreaderapi.model.dto.firebase.FirebaseUserData
 import ru.kuchanov.scpreaderapi.model.dto.firebase.UserUidArticles
 import ru.kuchanov.scpreaderapi.model.firebase.FirebaseArticle
 import ru.kuchanov.scpreaderapi.model.firebase.FirebaseUser
@@ -56,65 +54,6 @@ class FirebaseService @Autowired constructor(
         val readArticleForLangService: ReadArticleForLangService,
         val firebaseDataUpdateDateRepository: FirebaseDataUpdateDateRepository
 ) {
-
-    fun getUsersDataFromFirebaseByEmail(email: String): List<FirebaseUserData> {
-        val firebaseUsersData = mutableListOf<FirebaseUserData>()
-
-        ScpReaderConstants.Firebase.FirebaseInstance.values().forEach { lang ->
-            //                    println("query for lang: $lang")
-            val firebaseApp = FirebaseApp.getInstance(lang.lang)
-            val firebaseAuth = FirebaseAuth.getInstance(firebaseApp)
-            val firebaseAuthUser = try {
-                firebaseAuth.getUserByEmail(email)
-            } catch (e: Exception) {
-                return@forEach
-            } ?: return@forEach
-            val firebaseDatabase = FirebaseDatabase.getInstance(firebaseApp)
-            val firebaseDatabaseUser = try {
-                Single.create<FirebaseUser> { subscriber ->
-                    val userQuery = firebaseDatabase
-                            .getReference("users")
-                            .child(firebaseAuthUser.uid)
-                    userQuery.addListenerForSingleValueEvent(object : ValueEventListener {
-                        override fun onCancelled(error: DatabaseError?) {
-                            println("error?.message: ${error?.message}")
-                            subscriber.onError(error?.toException()!!)
-                        }
-
-                        override fun onDataChange(snapshot: DataSnapshot?) {
-                            try {
-                                val firebaseUser = snapshot?.getValue(FirebaseUser::class.java)
-//                                        println("firebaseUser: ${firebaseUser?.email}")
-                                if (firebaseUser != null) {
-                                    subscriber.onSuccess(firebaseUser)
-                                } else {
-                                    subscriber.onError(IllegalStateException("Failed to parse user: ${snapshot?.key}"))
-                                }
-                            } catch (e: Exception) {
-                                println("error while parse user: $e")
-                                println("KEY IS: ${snapshot?.key}")
-                                log.error("error while parse user: ", e)
-                                log.error("KEY IS: ${snapshot?.key}")
-                                subscriber.onError(e)
-                            }
-                        }
-                    })
-                }.blockingGet()
-            } catch (e: Exception) {
-                log.error("Error while get user data from firebase: ${firebaseAuthUser.uid}", e)
-                println(e)
-                return@forEach
-            }
-
-            firebaseUsersData += FirebaseUserData(
-                    firebaseAuthUser,
-                    firebaseDatabaseUser,
-                    lang
-            )
-        }
-
-        return firebaseUsersData
-    }
 
     @Async
     fun updateDataFromFirebase(

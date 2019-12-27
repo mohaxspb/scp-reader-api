@@ -16,11 +16,8 @@ import javax.annotation.PostConstruct
 @Service
 class ApiClient {
 
-    companion object {
-        const val OK_HTTP_CONNECT_TIMEOUT = 30L
-        const val OK_HTTP_READ_TIMEOUT = 30L
-        const val OK_HTTP_WRITE_TIMEOUT = 30L
-    }
+    @Autowired
+    private lateinit var objectMapper: ObjectMapper
 
     //facebook
     @Autowired
@@ -170,12 +167,18 @@ class ApiClient {
             )
         }
         ScpReaderConstants.SocialProvider.VK -> {
-            val commonUserData = ObjectMapper().readValue(token, CommonUserData::class.java)
+            val commonUserData = objectMapper.readValue(token, CommonUserData::class.java)
             if (commonUserData.email == null) {
                 throw IllegalStateException("Can't login without email!")
             }
 
             commonUserData
         }
+    }
+
+    companion object {
+        const val OK_HTTP_CONNECT_TIMEOUT = 30L
+        const val OK_HTTP_READ_TIMEOUT = 30L
+        const val OK_HTTP_WRITE_TIMEOUT = 30L
     }
 }
