@@ -5,14 +5,13 @@ import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
-import ru.kuchanov.scpreaderapi.model.user.LeaderboardUser
+import ru.kuchanov.scpreaderapi.model.dto.user.LeaderboardUserProjection
+import ru.kuchanov.scpreaderapi.model.user.LeaderboardUserDto
 import ru.kuchanov.scpreaderapi.repository.users.UsersRepository
-import javax.persistence.EntityManager
 
 
 @Service
 class UserServiceImpl @Autowired constructor(
-        val entityManager: EntityManager,
         val repository: UsersRepository
 ) : UserService {
 
@@ -34,39 +33,10 @@ class UserServiceImpl @Autowired constructor(
             limit: Int
     ) = repository.getUsersByLangWithOffsetAndLimitSortedByScore(langId, offset, limit)
 
-    //todo refactor, move to repository
-    override fun getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(
-            langId: String,
-            offset: Int,
-            limit: Int
-    ): List<LeaderboardUser> {
-        val query = entityManager.createNativeQuery(
-                "SELECT " +
-                        "u.id, " +
-                        "u.full_name as fullName, " +
-                        "u.avatar, score, " +
-                        "u.level_num as levelNum, " +
-                        "u.score_to_next_level as scoreToNextLevel, " +
-                        "u.cur_level_score as curLevelScore, " +
-                        "COUNT(ra.user_id) as numOfReadArticles " +
-                        "FROM users u " +
-                        "JOIN users_langs ul ON u.id = ul.user_id " +
-                        "LEFT OUTER JOIN read_articles_by_lang ra ON ra.user_id = u.id AND ra.lang_id = :langId " +
-                        "WHERE ul.lang_id = :langId " +
-                        "GROUP BY u.id " +
-                        "ORDER BY u.score DESC OFFSET :offset LIMIT :limit ",
-                "LeaderBoardResult"
-        )
-
-        query.setParameter("offset", offset)
-        query.setParameter("limit", limit)
-        query.setParameter("langId", langId)
-
-        val result = query.resultList
-
-        @Suppress("UNCHECKED_CAST")
-        return result as List<LeaderboardUser>
-    }
+    override fun getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(langId: String, offset: Int, limit: Int): List<LeaderboardUserDto> =
+            repository
+                    .getLeaderboardUsersWithOffsetAndLimitSortedByScore(offset, limit)
+                    .map { it.toDto() }
 
     override fun getByProviderId(id: String, provider: ScpReaderConstants.SocialProvider) = when (provider) {
         ScpReaderConstants.SocialProvider.GOOGLE -> repository.findOneByGoogleId(id)
@@ -76,4 +46,7 @@ class UserServiceImpl @Autowired constructor(
 
     override fun getUserPositionInLeaderboard(userId: Long, langId: String): Int =
             repository.getUserPositionInLeaderboard(userId, langId)
+
+    fun LeaderboardUserProjection.toDto() =
+            LeaderboardUserDto(id, avatar, fullName, score, levelNum, scoreToNextLevel, curLevelScore, numOfReadArticles)
 }
