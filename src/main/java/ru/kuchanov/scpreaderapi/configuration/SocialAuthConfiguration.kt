@@ -14,50 +14,21 @@ import retrofit2.Retrofit
 import ru.kuchanov.scpreaderapi.network.FacebookApi
 
 @Configuration
-class SocialAuthConfiguration {
+class SocialAuthConfiguration @Autowired constructor(
+        val okHttpClient: OkHttpClient,
+        val converterFactory: Converter.Factory,
+        val callAdapterFactory: CallAdapter.Factory
+) {
 
     //google auth
-    @Value("\${my.api.ru.google.client_id}")
-    private lateinit var googleClientIdRu: String
-    @Value("\${my.api.en.google.client_id}")
-    private lateinit var googleClientIdEn: String
-    @Value("\${my.api.pl.google.client_id}")
-    private lateinit var googleClientIdPl: String
-    @Value("\${my.api.de.google.client_id}")
-    private lateinit var googleClientIdDe: String
-    @Value("\${my.api.fr.google.client_id}")
-    private lateinit var googleClientIdFr: String
-    @Value("\${my.api.es.google.client_id}")
-    private lateinit var googleClientIdEs: String
-    @Value("\${my.api.it.google.client_id}")
-    private lateinit var googleClientIdIt: String
-    @Value("\${my.api.pt.google.client_id}")
-    private lateinit var googleClientIdPt: String
-    @Value("\${my.api.ch.google.client_id}")
-    private lateinit var googleClientIdCh: String
+    @Value("\${my.api.google.client_id}")
+    private lateinit var googleClientId: String
 
     @Bean
-    fun googleIdTokenVerifier(): GoogleIdTokenVerifier = GoogleIdTokenVerifier.Builder(NetHttpTransport(), JacksonFactory())
-            .setAudience(listOf(
-                    googleClientIdRu,
-                    googleClientIdEn,
-                    googleClientIdPl,
-                    googleClientIdDe,
-                    googleClientIdFr,
-                    googleClientIdEs,
-                    googleClientIdIt,
-                    googleClientIdPt,
-                    googleClientIdCh
-            ))
+    fun googleIdTokenVerifier(): GoogleIdTokenVerifier = GoogleIdTokenVerifier
+            .Builder(NetHttpTransport(), JacksonFactory())
+            .setAudience(listOf(googleClientId))
             .build()
-
-    //facebook
-    @Autowired
-    private lateinit var okHttpClient: OkHttpClient
-    @Autowired
-    private lateinit var converterFactory: Converter.Factory
-    @Autowired
-    private lateinit var callAdapterFactory: CallAdapter.Factory
 
     @Bean
     fun retrofit(): Retrofit = Retrofit.Builder()
