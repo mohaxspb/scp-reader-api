@@ -15,10 +15,9 @@ import ru.kuchanov.scpreaderapi.model.firebase.FirebaseAccountKey
 import java.nio.charset.Charset
 
 @Configuration
-class FirebaseConfiguration {
-
-    @Autowired
-    private lateinit var log: Logger
+class FirebaseConfiguration @Autowired constructor(
+        val log: Logger
+) {
 
     @Bean
     fun provideFirebase(): FirebaseApp? {

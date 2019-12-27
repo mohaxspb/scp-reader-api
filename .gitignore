@@ -1,10 +1,8 @@
 /.idea/*
 !/.idea/dictionaries
 /build
-/src/main/resources/*.properties
-/src/main/resources/*.yml
-/src/main/resources/*.properties-backup
-/src/test/resources/*.yml
+/src/main/resources/application*.*
+/src/test/resources/application.*
 /src/main/resources/migration/V4__import_secret_data.sql
 /logs
 !src/main/resources/firebase/keys/.gitkeep

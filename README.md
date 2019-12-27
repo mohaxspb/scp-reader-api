@@ -1,24 +1,25 @@
+### Run configurations
+
+To define profile add this to `arguments` in `gradle` run configuration:
+
+>-Dspring.profiles.active=dev
+
+### Secret files
+
+To build project you need: 
+
+1. Google Api `clientId` and `clientSecret` in `application{OPTIONAL_PROFILE_HERE}.yml`.
+2. Facebook Api `clientId` and `clientSecret`.
+3. `V4__import_secret_data.sql` migration file in `/resources/migration/` with insertion of admin user with authorities and oauth clients with `password,refresh_token` and `client_credentials`.  
+4. Key for validating purchases for GooglePlay. Add file `googlePlayAndroidDeveloperServiceKey.json` to `/resources/googlePlay/`
+5. Firebase admin access keys for all langs. Add files `serviceAccountKey{LANG_CODE_HERE}.json` to `/resources/firebase/keys/`.
+
 ### Properties and securing data
 
-To ignore changes in file execute: `git update-index --assume-unchanged src/test/resources/application.yml`
+To ignore changes in file execute: 
 
-### Connection pool issue
+>git update-index --assume-unchanged src/test/resources/application.yml
 
-try to add this to application.properties
+To unignore it execute:
 
-```
-#connection pool
-#maximum number of milliseconds that a client will wait for a connection
-spring.datasource.hikari.connection-timeout=20000
-#minimum number of idle connections maintained by HikariCP in a connection pool
-spring.datasource.hikari.minimum-idle=10
-#maximum pool size
-spring.datasource.hikari.maximum-pool-size=20
-#maximum idle time for connection
-spring.datasource.hikari.idle-timeout=10000
-# maximum lifetime in milliseconds of a connection in the pool after it is closed.
-spring.datasource.hikari.max-lifetime=1000
-#default auto-commit behavior.
-spring.datasource.hikari.auto-commit=true
-#connection pool END
-```
+>git update-index --no-assume-unchanged src/test/resources/application.yml
