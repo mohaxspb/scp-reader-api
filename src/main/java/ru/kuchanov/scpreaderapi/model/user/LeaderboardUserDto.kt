@@ -1,6 +1,6 @@
 package ru.kuchanov.scpreaderapi.model.user
 
-data class LeaderboardUser(
+data class LeaderboardUserDto(
         val id: Long,
         val avatar: String?,
         var fullName: String?,

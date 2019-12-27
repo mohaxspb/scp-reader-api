@@ -3,7 +3,7 @@ package ru.kuchanov.scpreaderapi.service.users
 import org.springframework.security.core.userdetails.UserDetailsService
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.users.User
-import ru.kuchanov.scpreaderapi.model.user.LeaderboardUser
+import ru.kuchanov.scpreaderapi.model.user.LeaderboardUserDto
 import javax.transaction.Transactional
 
 interface UserService : UserDetailsService {
@@ -22,7 +22,7 @@ interface UserService : UserDetailsService {
     fun getUsersByLangIdCount(langId: String): Long
 
     fun getUsersByLangWithOffsetAndLimitSortedByScore(langId: String, offset: Int, limit: Int): List<User>
-    fun getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(langId: String, offset: Int, limit: Int): List<LeaderboardUser>
+    fun getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(langId: String, offset: Int, limit: Int): List<LeaderboardUserDto>
 
     fun getUserPositionInLeaderboard(userId: Long, langId: String): Int
 }

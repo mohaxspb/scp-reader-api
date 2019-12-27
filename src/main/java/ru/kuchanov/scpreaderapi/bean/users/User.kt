@@ -11,26 +11,12 @@ import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.auth.UserToAuthority
 import ru.kuchanov.scpreaderapi.bean.purchase.UsersAndroidProduct
 import ru.kuchanov.scpreaderapi.bean.purchase.UsersAndroidSubscription
-import ru.kuchanov.scpreaderapi.model.user.LeaderboardUser
 import ru.kuchanov.scpreaderapi.utils.EncryptionConverter
 import java.sql.Timestamp
 import javax.persistence.*
 
 @Entity
 @Table(name = "users")
-@SqlResultSetMapping(name = "LeaderBoardResult", classes = [
-    ConstructorResult(targetClass = LeaderboardUser::class,
-            columns = [
-                ColumnResult(name = "id", type = Long::class),
-                ColumnResult(name = "avatar"),
-                ColumnResult(name = "fullName"),
-                ColumnResult(name = "score", type = Int::class),
-                ColumnResult(name = "levelNum", type = Int::class),
-                ColumnResult(name = "scoreToNextLevel", type = Int::class),
-                ColumnResult(name = "curLevelScore", type = Int::class),
-                ColumnResult(name = "numOfReadArticles", type = Int::class)
-            ])
-])
 data class User(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
