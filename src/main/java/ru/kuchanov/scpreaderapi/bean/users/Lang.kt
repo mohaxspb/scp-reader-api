@@ -2,6 +2,7 @@ package ru.kuchanov.scpreaderapi.bean.users
 
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.ResponseStatus
+import ru.kuchanov.scpreaderapi.utils.NoArgConstructor
 import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.Id
@@ -9,6 +10,7 @@ import javax.persistence.Table
 
 @Entity
 @Table(name = "langs")
+@NoArgConstructor
 data class Lang(
         @Id
         var id: String,
@@ -19,5 +21,5 @@ data class Lang(
 )
 
 
-@ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "No such lang")
-class LangNotFoundException : RuntimeException()
+@ResponseStatus(value = HttpStatus.NOT_FOUND)
+class LangNotFoundException(override val message: String? = "No such lang") : RuntimeException(message)

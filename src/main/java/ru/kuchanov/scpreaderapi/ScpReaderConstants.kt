@@ -16,6 +16,8 @@ object ScpReaderConstants {
         const val ADS_FILES = "files"
         const val USER = "user"
         const val ARTICLE = "article"
+        const val READ = "read"
+        const val FAVORITE = "favorite"
         const val PARSE = "parse"
     }
 

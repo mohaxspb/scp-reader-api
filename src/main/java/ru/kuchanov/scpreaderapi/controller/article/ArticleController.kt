@@ -31,8 +31,7 @@ class ArticleController @Autowired constructor(
     fun showRecentArticles(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
             @RequestParam(value = "offset") offset: Int,
-            @RequestParam(value = "limit") limit: Int,
-            @AuthenticationPrincipal user: User?
+            @RequestParam(value = "limit") limit: Int
     ) =
             articleForLangService.getMostRecentArticlesForLang(langEnum.lang, offset, limit)
 
@@ -40,8 +39,7 @@ class ArticleController @Autowired constructor(
     fun showRatedArticles(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
             @RequestParam(value = "offset") offset: Int,
-            @RequestParam(value = "limit") limit: Int,
-            @AuthenticationPrincipal user: User?
+            @RequestParam(value = "limit") limit: Int
     ) =
             articleForLangService.getMostRatedArticlesForLang(langEnum.lang, offset, limit)
 

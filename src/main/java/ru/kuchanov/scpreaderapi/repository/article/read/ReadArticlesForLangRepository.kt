@@ -1,9 +1,9 @@
 package ru.kuchanov.scpreaderapi.repository.article.read
 
 import org.springframework.data.jpa.repository.JpaRepository
-import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticlesByLang
+import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticleByLang
 
-interface ReadArticlesForLangRepository : JpaRepository<ReadArticlesByLang, Long> {
+interface ReadArticlesForLangRepository : JpaRepository<ReadArticleByLang, Long> {
 
-    fun findByArticleToLangIdAndUserId(articleToLangId: Long, userId: Long): ReadArticlesByLang?
+    fun findByArticleToLangIdAndUserId(articleToLangId: Long, userId: Long): ReadArticleByLang?
 }

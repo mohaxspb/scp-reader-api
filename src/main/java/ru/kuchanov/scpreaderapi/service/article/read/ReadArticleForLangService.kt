@@ -1,6 +1,7 @@
 package ru.kuchanov.scpreaderapi.service.article.read
 
-import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticlesByLang
+import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticleByLang
+import ru.kuchanov.scpreaderapi.model.dto.article.ArticleForLangDto
 import javax.transaction.Transactional
 
 interface ReadArticleForLangService {
@@ -9,7 +10,7 @@ interface ReadArticleForLangService {
     fun deleteById(id: Long)
 
     @Transactional
-    fun save(article: ReadArticlesByLang): ReadArticlesByLang
+    fun save(article: ReadArticleByLang): ReadArticleByLang
 
     fun findByArticleToLangIdAndUserId(articleToLangId: Long, userId: Long): ReadArticlesByLang?
 }

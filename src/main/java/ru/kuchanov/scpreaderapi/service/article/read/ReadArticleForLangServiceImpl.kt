@@ -2,7 +2,8 @@ package ru.kuchanov.scpreaderapi.service.article.read
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticlesByLang
+import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticleByLang
+import ru.kuchanov.scpreaderapi.model.dto.article.ArticleForLangDto
 import ru.kuchanov.scpreaderapi.repository.article.read.ReadArticlesForLangRepository
 import javax.transaction.Transactional
 
@@ -16,9 +17,9 @@ class ReadArticleForLangServiceImpl @Autowired constructor(
             repository.deleteById(id)
 
     @Transactional
-    override fun save(article: ReadArticlesByLang): ReadArticlesByLang =
+    override fun save(article: ReadArticleByLang): ReadArticleByLang =
             repository.save(article)
 
-    override fun findByArticleToLangIdAndUserId(articleToLangId: Long, userId: Long): ReadArticlesByLang? =
+    override fun findByArticleToLangIdAndUserId(articleToLangId: Long, userId: Long): ReadArticleByLang? =
             repository.findByArticleToLangIdAndUserId(articleToLangId, userId)
 }
