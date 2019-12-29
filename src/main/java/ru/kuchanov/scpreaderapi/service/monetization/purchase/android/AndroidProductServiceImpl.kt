@@ -6,10 +6,9 @@ import ru.kuchanov.scpreaderapi.bean.purchase.AndroidProduct
 import ru.kuchanov.scpreaderapi.repository.monetization.purchase.android.AndroidProductRepository
 
 @Service
-class AndroidProductServiceImpl : AndroidProductService {
-
-    @Autowired
-    private lateinit var androidProductRepository: AndroidProductRepository
+class AndroidProductServiceImpl @Autowired constructor(
+        val androidProductRepository: AndroidProductRepository
+) : AndroidProductService {
 
     override fun getById(id: Long) = androidProductRepository.getOneById(id)
 
@@ -18,8 +17,6 @@ class AndroidProductServiceImpl : AndroidProductService {
 
     override fun getByOrderId(orderId: String): AndroidProduct? =
             androidProductRepository.getOneByOrderId(orderId)
-
-    override fun findAll(): List<AndroidProduct> = androidProductRepository.findAll()
 
     override fun saveAll(androidProducts: List<AndroidProduct>): List<AndroidProduct> =
             androidProductRepository.saveAll(androidProducts)

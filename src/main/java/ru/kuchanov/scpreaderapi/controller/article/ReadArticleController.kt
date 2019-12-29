@@ -9,7 +9,7 @@ import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticleByLangAlreadyExist
 import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticleByLangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.LangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.User
-import ru.kuchanov.scpreaderapi.model.dto.article.ArticleToLangDto
+import ru.kuchanov.scpreaderapi.model.dto.article.ReadOrFavoriteArticleToLangDto
 import ru.kuchanov.scpreaderapi.service.article.read.ReadArticleForLangService
 import ru.kuchanov.scpreaderapi.service.users.LangService
 
@@ -29,17 +29,21 @@ class ReadArticleController @Autowired constructor(
             @RequestParam(value = "offset") offset: Int,
             @RequestParam(value = "limit") limit: Int,
             @AuthenticationPrincipal user: User
-    ): List<ArticleToLangDto> {
+    ): List<ReadOrFavoriteArticleToLangDto> {
         val lang = langEnum?.lang?.let { langService.getById(it) ?: throw LangNotFoundException() }
 
-        if (lang == null) {
+        return if (lang == null) {
             //get read articles for all langs
-
+            TODO()
         } else {
             //get read articles for concrete lang
+            readArticleForLangService.findAllByUserIdAndLangId(
+                    userId = user.id!!,
+                    langId = lang.id,
+                    offset = offset,
+                    limit = limit
+            )
         }
-
-        return TODO()
     }
 
     @PostMapping("/add")
