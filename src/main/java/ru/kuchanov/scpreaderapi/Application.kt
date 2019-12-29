@@ -16,12 +16,12 @@ import org.springframework.scheduling.annotation.EnableScheduling
 @EnableAsync
 class Application : SpringBootServletInitializer() {
 
-    override fun configure(application: SpringApplicationBuilder): SpringApplicationBuilder =
-            application.sources(Application::class.java)
-
     @Bean
     fun logger(): Logger =
             LoggerFactory.getLogger("application")
+
+    override fun configure(application: SpringApplicationBuilder): SpringApplicationBuilder =
+            application.sources(Application::class.java)
 
     companion object {
         @JvmStatic

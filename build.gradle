@@ -55,7 +55,9 @@ apply plugin: 'war'
 //artifacts
 bootWar {
     version ""
-    baseName = 'scp-reader'
+    //we need to specify context path here if we use war file in external tomcat
+    //we use `#` instead of `/` to deploy `scp-reader/api` on tomcat
+    baseName = "scp-reader#api"
 }
 
 //to be able to run with task args to define correct properties file
