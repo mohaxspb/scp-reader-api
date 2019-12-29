@@ -3,7 +3,7 @@ package ru.kuchanov.scpreaderapi.service.article
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
-import ru.kuchanov.scpreaderapi.model.dto.article.ArticleForLangDto
+import ru.kuchanov.scpreaderapi.model.dto.article.ArticleToLangDto
 import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInListProjection
 import ru.kuchanov.scpreaderapi.repository.article.ArticlesForLangRepository
 import ru.kuchanov.scpreaderapi.repository.article.tags.TagForLangRepository
@@ -13,7 +13,7 @@ import ru.kuchanov.scpreaderapi.service.article.type.ArticleAndArticleTypeServic
 
 
 @Service
-class ArticleForLangServiceImpl @Autowired constructor(
+class ArticleToLangServiceImpl @Autowired constructor(
         val articlesForLangRepository: ArticlesForLangRepository,
         val imagesService: ArticlesImagesService,
         val tagsForLangRepository: TagForLangRepository,
@@ -35,7 +35,7 @@ class ArticleForLangServiceImpl @Autowired constructor(
                     .getMostRecentArticlesForLang(langId, offset, limit)
                     .map { it.toDto().withImages().withTags().withType() }
 
-    override fun getMostRatedArticlesForLang(langId: String, offset: Int, limit: Int): List<ArticleForLangDto> =
+    override fun getMostRatedArticlesForLang(langId: String, offset: Int, limit: Int): List<ArticleToLangDto> =
             articlesForLangRepository
                     .getMostRatedArticlesForLang(langId, offset, limit)
                     .map { it.toDto().withImages().withTags().withType() }
@@ -58,7 +58,7 @@ class ArticleForLangServiceImpl @Autowired constructor(
                     ?.withTextParts()
 
     fun ArticleInListProjection.toDto() =
-            ArticleForLangDto(
+            ArticleToLangDto(
                     id = this.id,
                     articleId = this.articleId,
                     langId = this.langId,
@@ -69,10 +69,10 @@ class ArticleForLangServiceImpl @Autowired constructor(
                     hasIframeTag = this.hasIframeTag
             )
 
-    fun ArticleForLangDto.withImages(): ArticleForLangDto =
+    fun ArticleToLangDto.withImages(): ArticleToLangDto =
             this.apply { imageUrls = imagesService.findAllByArticleForLangId(articleForLangId = id) }
 
-    fun ArticleForLangDto.withTags(): ArticleForLangDto =
+    fun ArticleToLangDto.withTags(): ArticleToLangDto =
             this.apply {
                 tagsForLang = tagsForLangRepository.getAllForLangIdAndArticleForLangIdAsDto(
                         langId = langId,
@@ -80,10 +80,10 @@ class ArticleForLangServiceImpl @Autowired constructor(
                 )
             }
 
-    fun ArticleForLangDto.withType(): ArticleForLangDto =
+    fun ArticleToLangDto.withType(): ArticleToLangDto =
             this.apply { articleTypeDto = articleAndArticleTypeService.getByArticleIdAndLangIdAsDto(articleId, langId) }
 
-    fun ArticleForLangDto.withTextParts(): ArticleForLangDto {
+    fun ArticleToLangDto.withTextParts(): ArticleToLangDto {
         return if (!hasIframeTag) {
             this.apply { textParts = textPartService.findAllByArticleToLangId(id) }
         } else {

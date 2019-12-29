@@ -6,10 +6,9 @@ import ru.kuchanov.scpreaderapi.bean.purchase.AndroidSubscription
 import ru.kuchanov.scpreaderapi.repository.monetization.purchase.android.AndroidSubscriptionRepository
 
 @Service
-class AndroidSubscriptionServiceImpl : AndroidSubscriptionService {
-
-    @Autowired
-    private lateinit var androidSubscriptionRepository: AndroidSubscriptionRepository
+class AndroidSubscriptionServiceImpl @Autowired constructor(
+        val androidSubscriptionRepository: AndroidSubscriptionRepository
+) : AndroidSubscriptionService {
 
     override fun getById(id: Long) = androidSubscriptionRepository.getOneById(id)
 
@@ -18,8 +17,6 @@ class AndroidSubscriptionServiceImpl : AndroidSubscriptionService {
 
     override fun getByOrderId(orderId: String): AndroidSubscription? =
             androidSubscriptionRepository.getOneByOrderId(orderId)
-
-    override fun findAll(): List<AndroidSubscription> = androidSubscriptionRepository.findAll()
 
     override fun saveAll(subscriptions: List<AndroidSubscription>): List<AndroidSubscription> =
             androidSubscriptionRepository.saveAll(subscriptions)

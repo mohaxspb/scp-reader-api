@@ -17,8 +17,8 @@ import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.FirebaseDataUpdateDate
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
-import ru.kuchanov.scpreaderapi.bean.articles.favorite.FavoriteArticlesByLang
-import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticlesByLang
+import ru.kuchanov.scpreaderapi.bean.articles.favorite.FavoriteArticleByLang
+import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticleByLang
 import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
 import ru.kuchanov.scpreaderapi.bean.auth.UserToAuthority
 import ru.kuchanov.scpreaderapi.bean.users.Lang
@@ -263,7 +263,7 @@ class FirebaseService @Autowired constructor(
 
         if (isFavorite && favoriteArticleForLang == null) {
             favoriteArticleForLangService.save(
-                    FavoriteArticlesByLang(
+                    FavoriteArticleByLang(
                             userId = userId,
                             articleToLangId = articleToLangId
                     )
@@ -282,7 +282,7 @@ class FirebaseService @Autowired constructor(
 
         if (isRead && readArticleForLang == null) {
             readArticleForLangService.save(
-                    ReadArticlesByLang(
+                    ReadArticleByLang(
                             userId = userId,
                             articleToLangId = articleToLangId
                     )

@@ -1,15 +1,13 @@
-package ru.kuchanov.scpreaderapi.controller
+package ru.kuchanov.scpreaderapi.controller.article
 
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.articles.category.ArticleCategoryForLangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.articles.category.ArticleCategoryNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.LangNotFoundException
-import ru.kuchanov.scpreaderapi.bean.users.User
-import ru.kuchanov.scpreaderapi.model.dto.article.ArticleForLangDto
+import ru.kuchanov.scpreaderapi.model.dto.article.ArticleToLangDto
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryForLangService
 import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryService
@@ -31,8 +29,7 @@ class ArticleController @Autowired constructor(
     fun showRecentArticles(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
             @RequestParam(value = "offset") offset: Int,
-            @RequestParam(value = "limit") limit: Int,
-            @AuthenticationPrincipal user: User?
+            @RequestParam(value = "limit") limit: Int
     ) =
             articleForLangService.getMostRecentArticlesForLang(langEnum.lang, offset, limit)
 
@@ -40,8 +37,7 @@ class ArticleController @Autowired constructor(
     fun showRatedArticles(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
             @RequestParam(value = "offset") offset: Int,
-            @RequestParam(value = "limit") limit: Int,
-            @AuthenticationPrincipal user: User?
+            @RequestParam(value = "limit") limit: Int
     ) =
             articleForLangService.getMostRatedArticlesForLang(langEnum.lang, offset, limit)
 
@@ -49,7 +45,7 @@ class ArticleController @Autowired constructor(
     fun getArticlesByCategoryForLang(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
             @PathVariable(value = "categoryId") categoryId: Long
-    ): List<ArticleForLangDto> {
+    ): List<ArticleToLangDto> {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
         val category = categoryService.getById(categoryId)
                 ?: throw ArticleCategoryNotFoundException()
@@ -73,7 +69,7 @@ class ArticleController @Autowired constructor(
     fun showArticleForIdAndLangIdFull(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
             @PathVariable(value = "id") articleId: Long
-    ): ArticleForLangDto {
+    ): ArticleToLangDto {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
         return articleForLangService.getOneByLangIdAndArticleIdAsDto(articleId, lang.id)
                 ?: throw ArticleForLangNotFoundException()

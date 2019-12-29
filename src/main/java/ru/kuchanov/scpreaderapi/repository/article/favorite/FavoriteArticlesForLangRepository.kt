@@ -1,9 +1,64 @@
 package ru.kuchanov.scpreaderapi.repository.article.favorite
 
 import org.springframework.data.jpa.repository.JpaRepository
-import ru.kuchanov.scpreaderapi.bean.articles.favorite.FavoriteArticlesByLang
+import org.springframework.data.jpa.repository.Query
+import ru.kuchanov.scpreaderapi.bean.articles.favorite.FavoriteArticleByLang
+import ru.kuchanov.scpreaderapi.model.dto.article.ReadOrFavoriteArticleProjection
 
-interface FavoriteArticlesForLangRepository : JpaRepository<FavoriteArticlesByLang, Long> {
+interface FavoriteArticlesForLangRepository : JpaRepository<FavoriteArticleByLang, Long> {
 
-    fun findByArticleToLangIdAndUserId(articleToLangId: Long, userId: Long): FavoriteArticlesByLang?
+    fun findByArticleToLangIdAndUserId(articleToLangId: Long, userId: Long): FavoriteArticleByLang?
+
+    @Query(
+            """
+                select 
+                ra.id,
+                ra.created as statusChangedDate,
+                art.id as articleToLangId,
+                art.article_id as articleId,
+                art.lang_id as langId,
+                art.url_relative as urlRelative,
+                art.title,
+                art.rating,
+                art.created_on_site as createdOnSite,
+                art.has_iframe_tag as hasIframeTag 
+                from favorite__articles_to_lang__to__users ra
+                join articles_langs art on art.id = ra.article_to_lang_id
+                where ra.user_id = :userId and art.lang_id = :langId
+                OFFSET :offset LIMIT :limit
+            """,
+            nativeQuery = true
+    )
+    fun findAllByUserIdAndLangId(
+            userId: Long,
+            langId: String,
+            offset: Int,
+            limit: Int
+    ): List<ReadOrFavoriteArticleProjection>
+
+    @Query(
+            """
+                select 
+                ra.id,
+                ra.created as statusChangedDate,
+                art.id as articleToLangId,
+                art.article_id as articleId,
+                art.lang_id as langId,
+                art.url_relative as urlRelative,
+                art.title,
+                art.rating,
+                art.created_on_site as createdOnSite,
+                art.has_iframe_tag as hasIframeTag 
+                from favorite__articles_to_lang__to__users ra
+                join articles_langs art on art.id = ra.article_to_lang_id
+                where ra.user_id = :userId
+                OFFSET :offset LIMIT :limit
+            """,
+            nativeQuery = true
+    )
+    fun findAllByUserId(
+            userId: Long,
+            offset: Int,
+            limit: Int
+    ): List<ReadOrFavoriteArticleProjection>
 }
