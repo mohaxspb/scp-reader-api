@@ -3,7 +3,7 @@ package ru.kuchanov.scpreaderapi.model.dto.article
 import java.sql.Timestamp
 
 
-data class ArticleForLangDto(
+data class ArticleToLangDto(
         val id: Long,
         val articleId: Long,
         val langId: String,

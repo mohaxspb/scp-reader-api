@@ -9,8 +9,7 @@ import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticleByLangAlreadyExist
 import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticleByLangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.LangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.User
-import ru.kuchanov.scpreaderapi.model.dto.article.ArticleForLangDto
-import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
+import ru.kuchanov.scpreaderapi.model.dto.article.ArticleToLangDto
 import ru.kuchanov.scpreaderapi.service.article.read.ReadArticleForLangService
 import ru.kuchanov.scpreaderapi.service.users.LangService
 
@@ -19,7 +18,6 @@ import ru.kuchanov.scpreaderapi.service.users.LangService
 @RequestMapping("/" + ScpReaderConstants.Path.ARTICLE + "/" + ScpReaderConstants.Path.READ)
 class ReadArticleController @Autowired constructor(
         val readArticleForLangService: ReadArticleForLangService,
-        val articleForLangService: ArticleForLangService,
         val langService: LangService
 ) {
 
@@ -31,7 +29,7 @@ class ReadArticleController @Autowired constructor(
             @RequestParam(value = "offset") offset: Int,
             @RequestParam(value = "limit") limit: Int,
             @AuthenticationPrincipal user: User
-    ): List<ArticleForLangDto> {
+    ): List<ArticleToLangDto> {
         val lang = langEnum?.lang?.let { langService.getById(it) ?: throw LangNotFoundException() }
 
         if (lang == null) {
