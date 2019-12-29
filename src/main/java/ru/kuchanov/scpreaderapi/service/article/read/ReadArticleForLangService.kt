@@ -12,5 +12,12 @@ interface ReadArticleForLangService {
     @Transactional
     fun save(article: ReadArticleByLang): ReadArticleByLang
 
-    fun findByArticleToLangIdAndUserId(articleToLangId: Long, userId: Long): ReadArticlesByLang?
+    fun findByArticleToLangIdAndUserId(articleToLangId: Long, userId: Long): ReadArticleByLang?
+
+    fun findAllByUserIdAndLangId(
+            userId: Long,
+            langId: String,
+            offset: Int,
+            limit: Int
+    ): List<ArticleForLangDto>
 }

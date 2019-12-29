@@ -22,4 +22,13 @@ class ReadArticleForLangServiceImpl @Autowired constructor(
 
     override fun findByArticleToLangIdAndUserId(articleToLangId: Long, userId: Long): ReadArticleByLang? =
             repository.findByArticleToLangIdAndUserId(articleToLangId, userId)
+
+    override fun findAllByUserIdAndLangId(
+            userId: Long,
+            langId: String,
+            offset: Int,
+            limit: Int
+    ): List<ArticleForLangDto> {
+        TODO()
+    }
 }
