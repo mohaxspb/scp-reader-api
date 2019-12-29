@@ -22,7 +22,7 @@ interface FavoriteArticlesForLangRepository : JpaRepository<FavoriteArticleByLan
                 art.rating,
                 art.created_on_site as createdOnSite,
                 art.has_iframe_tag as hasIframeTag 
-                from read__articles_to_lang__to__users ra
+                from favorite__articles_to_lang__to__users ra
                 join articles_langs art on art.id = ra.article_to_lang_id
                 where ra.user_id = :userId and art.lang_id = :langId
                 OFFSET :offset LIMIT :limit
@@ -49,7 +49,7 @@ interface FavoriteArticlesForLangRepository : JpaRepository<FavoriteArticleByLan
                 art.rating,
                 art.created_on_site as createdOnSite,
                 art.has_iframe_tag as hasIframeTag 
-                from read__articles_to_lang__to__users ra
+                from favorite__articles_to_lang__to__users ra
                 join articles_langs art on art.id = ra.article_to_lang_id
                 where ra.user_id = :userId
                 OFFSET :offset LIMIT :limit
