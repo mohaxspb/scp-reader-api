@@ -8,10 +8,8 @@ interface AndroidProductService {
     fun getByPurchaseToken(purchaseToken: String): AndroidProduct?
     fun getByOrderId(orderId: String): AndroidProduct?
 
-    fun findAll(): List<AndroidProduct>
-
-    fun saveAll(androidProducts: List<AndroidProduct>): List<AndroidProduct>
     fun save(androidProduct: AndroidProduct): AndroidProduct
+    fun saveAll(androidProducts: List<AndroidProduct>): List<AndroidProduct>
 
     fun deleteById(id: Long)
 }

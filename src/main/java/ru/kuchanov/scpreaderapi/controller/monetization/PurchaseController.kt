@@ -2,7 +2,6 @@ package ru.kuchanov.scpreaderapi.controller.monetization
 
 import com.google.api.services.androidpublisher.model.ProductPurchase
 import com.google.api.services.androidpublisher.model.SubscriptionPurchase
-import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
@@ -26,24 +25,15 @@ import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.UserAndroi
 import java.sql.Timestamp
 
 
+//todo refactor for amazon/apple/google/huawei
 @RestController
-@RequestMapping("/${ScpReaderConstants.Path.PURCHASE}")
-class PurchaseController {
-
-    @Autowired
-    private lateinit var log: Logger
-
-    @Autowired
-    private lateinit var androidPurchaseService: AndroidPurchaseService
-
-    @Autowired
-    private lateinit var androidProductService: AndroidProductService
-
-    @Autowired
-    private lateinit var androidSubscriptionService: AndroidSubscriptionService
-
-    @Autowired
-    private lateinit var userAndroidPurchaseService: UserAndroidPurchaseService
+@RequestMapping("/" + ScpReaderConstants.Path.PURCHASE)
+class PurchaseController @Autowired constructor(
+        val androidPurchaseService: AndroidPurchaseService,
+        val androidProductService: AndroidProductService,
+        val androidSubscriptionService: AndroidSubscriptionService,
+        val userAndroidPurchaseService: UserAndroidPurchaseService
+) {
 
     @GetMapping("/validateAndroidProduct")
     fun validateAndroidProduct(
@@ -144,10 +134,4 @@ class PurchaseController {
 
         return ValidationResponse(subscriptionResponse.status)
     }
-
-    @GetMapping("/android/subscription/all")
-    fun showAndroidSubscriptions() = androidSubscriptionService.findAll()
-
-    @GetMapping("/android/product/all")
-    fun showAndroidProducts() = androidProductService.findAll()
 }

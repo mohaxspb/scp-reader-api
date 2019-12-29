@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.controller
+package ru.kuchanov.scpreaderapi.controller.article
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.annotation.AuthenticationPrincipal

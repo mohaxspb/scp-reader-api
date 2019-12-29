@@ -20,13 +20,11 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 
-@CrossOrigin(origins = ["http://localhost:4200"])
 @RestController
-@RequestMapping("/${ScpReaderConstants.Path.ADS}")
-class AdsController {
-
-    @Autowired
-    private lateinit var bannersService: BannersService
+@RequestMapping("/" + ScpReaderConstants.Path.ADS)
+class AdsController @Autowired constructor(
+        val bannersService: BannersService
+) {
 
     @GetMapping("/all")
     fun getAll() =
@@ -60,7 +58,7 @@ class AdsController {
 
     @ResponseBody
     @GetMapping(
-            value = ["/${ScpReaderConstants.Path.ADS_FILES}/{id}/{name}"],
+            value = ["/" + ScpReaderConstants.Path.ADS_FILES + "/{id}/{name}"],
             produces = [
                 MediaType.IMAGE_JPEG_VALUE,
                 MediaType.IMAGE_PNG_VALUE,
