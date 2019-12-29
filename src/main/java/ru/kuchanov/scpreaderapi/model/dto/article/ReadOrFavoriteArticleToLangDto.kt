@@ -5,7 +5,7 @@ import java.sql.Timestamp
 
 data class ReadOrFavoriteArticleToLangDto(
         val id: Long,
-        val readDate: Timestamp,
+        val statusChangedDate: Timestamp,
         val articleToLangId: Long,
         val articleId: Long,
         val langId: String,

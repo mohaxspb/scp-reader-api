@@ -20,6 +20,7 @@ class ReadArticleForLangServiceImpl @Autowired constructor(
         val articleAndArticleTypeService: ArticleAndArticleTypeService
 ) : ReadArticleForLangService {
 
+    @Transactional
     override fun deleteById(id: Long) =
             repository.deleteById(id)
 
@@ -47,7 +48,7 @@ class ReadArticleForLangServiceImpl @Autowired constructor(
     fun ReadOrFavoriteArticleProjection.toDto() =
             ReadOrFavoriteArticleToLangDto(
                     id = id,
-                    readDate = readDate,
+                    statusChangedDate = statusChangedDate,
                     articleToLangId = articleToLangId,
                     articleId = articleId,
                     langId = langId,

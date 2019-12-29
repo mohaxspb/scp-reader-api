@@ -13,7 +13,7 @@ interface ReadArticlesForLangRepository : JpaRepository<ReadArticleByLang, Long>
             """
                 select 
                 ra.id,
-                ra.created as readDate,
+                ra.created as statusChangedDate,
                 art.id as articleToLangId,
                 art.article_id as articleId,
                 art.lang_id as langId,
@@ -40,7 +40,7 @@ interface ReadArticlesForLangRepository : JpaRepository<ReadArticleByLang, Long>
             """
                 select 
                 ra.id,
-                ra.created as readDate,
+                ra.created as statusChangedDate,
                 art.id as articleToLangId,
                 art.article_id as articleId,
                 art.lang_id as langId,

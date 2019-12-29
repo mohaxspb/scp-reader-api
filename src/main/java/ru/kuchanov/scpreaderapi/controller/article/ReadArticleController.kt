@@ -43,12 +43,14 @@ class ReadArticleController @Autowired constructor(
             @RequestParam(value = "articleToLangId") articleToLangId: Long,
             @AuthenticationPrincipal user: User
     ): ReadArticleByLang {
-        val alreadySavedReadArticle = readArticleForLangService.findByArticleToLangIdAndUserId(
-                articleToLangId = articleToLangId,
-                userId = user.id!!
-        )
+        val alreadySavedReadArticle = readArticleForLangService
+                .findByArticleToLangIdAndUserId(
+                        articleToLangId = articleToLangId,
+                        userId = user.id!!
+                )
         if (alreadySavedReadArticle == null) {
-            return readArticleForLangService.save(ReadArticleByLang(articleToLangId = articleToLangId, userId = user.id))
+            return readArticleForLangService
+                    .save(ReadArticleByLang(articleToLangId = articleToLangId, userId = user.id))
         } else {
             throw ReadArticleByLangAlreadyExistsException()
         }
@@ -59,10 +61,11 @@ class ReadArticleController @Autowired constructor(
             @RequestParam(value = "articleToLangId") articleToLangId: Long,
             @AuthenticationPrincipal user: User
     ): ReadArticleByLang {
-        val alreadySavedReadArticle = readArticleForLangService.findByArticleToLangIdAndUserId(
-                articleToLangId = articleToLangId,
-                userId = user.id!!
-        )
+        val alreadySavedReadArticle = readArticleForLangService
+                .findByArticleToLangIdAndUserId(
+                        articleToLangId = articleToLangId,
+                        userId = user.id!!
+                )
         if (alreadySavedReadArticle != null) {
             readArticleForLangService.deleteById(alreadySavedReadArticle.id!!)
             return alreadySavedReadArticle
