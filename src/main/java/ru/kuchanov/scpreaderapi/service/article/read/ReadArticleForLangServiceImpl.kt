@@ -32,34 +32,40 @@ class ReadArticleForLangServiceImpl @Autowired constructor(
 
     override fun findAllByUserIdAndLangId(
             userId: Long,
-            langId: String,
+            langId: String?,
             offset: Int,
             limit: Int
-    ): List<ReadOrFavoriteArticleToLangDto> = repository.findAllByUserIdAndLangId(userId, langId, offset, limit)
-            .map { it.toDto().withImages().withTags().withType() }
+    ): List<ReadOrFavoriteArticleToLangDto> =
+            if (langId != null) {
+                repository.findAllByUserIdAndLangId(userId, langId, offset, limit)
+            } else {
+                repository.findAllByUserId(userId, offset, limit)
+            }
+                    .map { it.toDto().withImages().withTags().withType() }
+
 
     fun ReadOrFavoriteArticleProjection.toDto() =
             ReadOrFavoriteArticleToLangDto(
-                    id = this.id,
-                    readDate = this.readDate,
-                    articleToLangId = this.articleToLangId,
-                    articleId = this.articleId,
-                    langId = this.langId,
-                    urlRelative = this.urlRelative,
-                    rating = this.rating,
-                    title = this.title,
-                    createdOnSite = this.createdOnSite,
-                    hasIframeTag = this.hasIframeTag
+                    id = id,
+                    readDate = readDate,
+                    articleToLangId = articleToLangId,
+                    articleId = articleId,
+                    langId = langId,
+                    urlRelative = urlRelative,
+                    rating = rating,
+                    title = title,
+                    createdOnSite = createdOnSite,
+                    hasIframeTag = hasIframeTag
             )
 
     fun ReadOrFavoriteArticleToLangDto.withImages(): ReadOrFavoriteArticleToLangDto =
-            this.apply { imageUrls = imagesService.findAllByArticleForLangId(articleForLangId = id) }
+            this.apply { imageUrls = imagesService.findAllByArticleForLangId(articleForLangId = articleToLangId) }
 
     fun ReadOrFavoriteArticleToLangDto.withTags(): ReadOrFavoriteArticleToLangDto =
             this.apply {
                 tagsForLang = tagsForLangRepository.getAllForLangIdAndArticleForLangIdAsDto(
                         langId = langId,
-                        articleForLangId = id
+                        articleForLangId = articleToLangId
                 )
             }
 

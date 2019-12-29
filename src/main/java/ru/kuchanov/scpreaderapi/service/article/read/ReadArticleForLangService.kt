@@ -16,7 +16,7 @@ interface ReadArticleForLangService {
 
     fun findAllByUserIdAndLangId(
             userId: Long,
-            langId: String,
+            langId: String? = null,
             offset: Int,
             limit: Int
     ): List<ReadOrFavoriteArticleToLangDto>
