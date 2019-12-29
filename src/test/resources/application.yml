@@ -1,5 +1,7 @@
+# controllers prefix, on prod it sets via WAR file name.
 server:
-  port: 8080
+  servlet:
+    context-path: /scp-reader/api
 
 hibernate:
   show_sql: false

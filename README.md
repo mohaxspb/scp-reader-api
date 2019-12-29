@@ -4,6 +4,16 @@ To define profile add this to `arguments` in `gradle` run configuration:
 
 >-Dspring.profiles.active=dev
 
+### Deployment 
+
+1. **Windows**
+ 
+    To test on Tomcat on windows use `services.msc` from `cmd` to run/stop Tomcat service
+
+2. **Linux**
+
+    Deploy to `%Tomcat root%/webapps`
+
 ### Secret files
 
 To build project you need: 
