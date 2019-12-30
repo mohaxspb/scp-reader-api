@@ -22,4 +22,6 @@ interface ArticleForLangService {
     fun getMostRatedArticlesForLang(langId: String, offset: Int, limit: Int): List<ArticleToLangDto>
 
     fun findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId: Long): List<ArticleToLangDto>
+
+    fun getRandomArticle(langId: String?): ArticleToLangDto
 }
