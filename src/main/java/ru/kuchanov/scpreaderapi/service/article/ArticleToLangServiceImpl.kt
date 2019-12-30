@@ -3,8 +3,8 @@ package ru.kuchanov.scpreaderapi.service.article
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
-import ru.kuchanov.scpreaderapi.model.dto.article.ArticleToLangDto
 import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInListProjection
+import ru.kuchanov.scpreaderapi.model.dto.article.ArticleToLangDto
 import ru.kuchanov.scpreaderapi.repository.article.ArticlesForLangRepository
 import ru.kuchanov.scpreaderapi.repository.article.tags.TagForLangRepository
 import ru.kuchanov.scpreaderapi.service.article.image.ArticlesImagesService
@@ -57,6 +57,18 @@ class ArticleToLangServiceImpl @Autowired constructor(
                     ?.withTags()
                     ?.withTextParts()
 
+    override fun getRandomArticle(langId: String?): ArticleToLangDto =
+            if (langId == null) {
+                articlesForLangRepository.getRandomArticle()
+            } else {
+                articlesForLangRepository.getRandomArticle(langId)
+            }
+                    .toDto()
+                    .withImages()
+                    .withTags()
+                    .withType()
+                    .withTextParts()
+
     fun ArticleInListProjection.toDto() =
             ArticleToLangDto(
                     id = this.id,
@@ -69,10 +81,10 @@ class ArticleToLangServiceImpl @Autowired constructor(
                     hasIframeTag = this.hasIframeTag
             )
 
-    fun ArticleToLangDto.withImages(): ArticleToLangDto =
+    private fun ArticleToLangDto.withImages(): ArticleToLangDto =
             this.apply { imageUrls = imagesService.findAllByArticleForLangId(articleForLangId = id) }
 
-    fun ArticleToLangDto.withTags(): ArticleToLangDto =
+    private fun ArticleToLangDto.withTags(): ArticleToLangDto =
             this.apply {
                 tagsForLang = tagsForLangRepository.getAllForLangIdAndArticleForLangIdAsDto(
                         langId = langId,
@@ -80,10 +92,10 @@ class ArticleToLangServiceImpl @Autowired constructor(
                 )
             }
 
-    fun ArticleToLangDto.withType(): ArticleToLangDto =
+    private fun ArticleToLangDto.withType(): ArticleToLangDto =
             this.apply { articleTypeDto = articleAndArticleTypeService.getByArticleIdAndLangIdAsDto(articleId, langId) }
 
-    fun ArticleToLangDto.withTextParts(): ArticleToLangDto {
+    private fun ArticleToLangDto.withTextParts(): ArticleToLangDto {
         return if (!hasIframeTag) {
             this.apply { textParts = textPartService.findAllByArticleToLangId(id) }
         } else {

@@ -98,4 +98,45 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
             nativeQuery = true
     )
     fun getOneByArticleIdAndLangIdAsProjection(articleId: Long, langId: String): ArticleInListProjection?
+
+    @Query(
+            """
+                select 
+                art.id, 
+                art.lang_id as langId,
+                art.article_id as articleId,
+                art.url_relative as urlRelative,
+                art.title,
+                art.rating,
+                art.created_on_site as createdOnSite,
+                art.has_iframe_tag as hasIframeTag 
+                from articles_langs art
+                where art.has_iframe_tag='false'
+                order by random() 
+                limit 1
+            """,
+            nativeQuery = true
+    )
+    fun getRandomArticle(): ArticleInListProjection
+
+    @Query(
+            """
+                select 
+                art.id, 
+                art.lang_id as langId,
+                art.article_id as articleId,
+                art.url_relative as urlRelative,
+                art.title,
+                art.rating,
+                art.created_on_site as createdOnSite,
+                art.has_iframe_tag as hasIframeTag 
+                from articles_langs art
+                where art.has_iframe_tag='false'
+                and art.lang_id=:langId
+                order by random() 
+                limit 1
+            """,
+            nativeQuery = true
+    )
+    fun getRandomArticle(langId: String): ArticleInListProjection
 }

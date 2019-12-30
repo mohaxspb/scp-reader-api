@@ -86,4 +86,11 @@ class ArticleController @Autowired constructor(
         textPartService.deleteByArticleToLangId(articleToLangId)
         return true
     }
+
+    @GetMapping("random")
+    fun getRandomArticle(@RequestParam(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance?):ArticleToLangDto {
+        val lang = langEnum?.lang?.let { langService.getById(it) ?: throw LangNotFoundException() }
+        return articleForLangService.getRandomArticle(lang?.id)
+    }
+
 }
