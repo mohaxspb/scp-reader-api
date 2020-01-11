@@ -41,8 +41,8 @@ class ArticleController @Autowired constructor(
     ) =
             articleForLangService.getMostRatedArticlesForLang(langEnum.lang, offset, limit)
 
-    @GetMapping("/{langEnum}/category/{categoryId}/")
-    fun getArticlesByCategoryForLang(
+    @GetMapping("/{langEnum}/category/{categoryId}")
+    fun getArticlesByCategoryAndLang(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
             @PathVariable(value = "categoryId") categoryId: Long
     ): List<ArticleToLangDto> {
@@ -75,6 +75,7 @@ class ArticleController @Autowired constructor(
                 ?: throw ArticleForLangNotFoundException()
     }
 
+    //todo only admin access
     @DeleteMapping("{langEnum}/{articleId}/delete")
     fun deleteArticleTextPartsByLangAndArticleId(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
