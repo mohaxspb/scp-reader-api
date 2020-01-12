@@ -24,8 +24,29 @@ class ArticleToLangServiceImpl @Autowired constructor(
     override fun save(articleForLang: ArticleForLang): ArticleForLang =
             articlesForLangRepository.save(articleForLang)
 
+    override fun getOneByLangIdAndArticleId(articleId: Long, langId: String) =
+            articlesForLangRepository.getOneByArticleIdAndLangId(articleId, langId)
+
+    override fun getOneByLangIdAndArticleIdAsDto(articleId: Long, langId: String) =
+            articlesForLangRepository
+                    .getOneByArticleIdAndLangIdAsProjection(articleId, langId)
+                    ?.toDto()
+                    ?.withType()
+                    ?.withImages()
+                    ?.withTags()
+                    ?.withTextParts()
+
     override fun getArticleForLangByUrlRelativeAndLang(urlRelative: String, langId: String) =
             articlesForLangRepository.findByUrlRelativeAndLangId(urlRelative, langId)
+
+    override fun getArticleForLangByUrlRelativeAndLangAsDto(urlRelative: String, langId: String) =
+            articlesForLangRepository
+                    .findByUrlRelativeAndLangIdAsProjection(urlRelative, langId)
+                    ?.toDto()
+                    ?.withType()
+                    ?.withImages()
+                    ?.withTags()
+                    ?.withTextParts()
 
     override fun getIdByUrlRelativeAndLangId(urlRelative: String, langId: String) =
             articlesForLangRepository.getIdByUrlRelativeAndLangId(urlRelative, langId)
@@ -44,18 +65,6 @@ class ArticleToLangServiceImpl @Autowired constructor(
             articlesForLangRepository
                     .findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId)
                     .map { it.toDto().withImages().withTags().withType() }
-
-    override fun getOneByLangAndArticleId(articleId: Long, langId: String) =
-            articlesForLangRepository.getOneByArticleIdAndLangId(articleId, langId)
-
-    override fun getOneByLangIdAndArticleIdAsDto(articleId: Long, langId: String) =
-            articlesForLangRepository
-                    .getOneByArticleIdAndLangIdAsProjection(articleId, langId)
-                    ?.toDto()
-                    ?.withType()
-                    ?.withImages()
-                    ?.withTags()
-                    ?.withTextParts()
 
     override fun getRandomArticle(langId: String?): ArticleToLangDto =
             if (langId == null) {

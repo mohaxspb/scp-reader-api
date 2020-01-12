@@ -62,7 +62,7 @@ class ArticleController @Autowired constructor(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
             @PathVariable(value = "id") articleId: Long
     ) =
-            articleForLangService.getOneByLangAndArticleId(articleId, langEnum.lang)
+            articleForLangService.getOneByLangIdAndArticleId(articleId, langEnum.lang)
                     ?: throw ArticleForLangNotFoundException()
 
     @GetMapping("{langEnum}/{id}/full")
@@ -75,6 +75,16 @@ class ArticleController @Autowired constructor(
                 ?: throw ArticleForLangNotFoundException()
     }
 
+    @GetMapping("{langEnum}/full")
+    fun showArticleForUrlRelativeAndLangIdFull(
+            @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
+            @RequestParam(value = "urlRelative") urlRelative: String
+    ): ArticleToLangDto {
+        val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
+        return articleForLangService.getArticleForLangByUrlRelativeAndLangAsDto(urlRelative, lang.id)
+                ?: throw ArticleForLangNotFoundException()
+    }
+
     //todo only admin access
     @DeleteMapping("{langEnum}/{articleId}/delete")
     fun deleteArticleTextPartsByLangAndArticleId(
@@ -82,16 +92,18 @@ class ArticleController @Autowired constructor(
             @PathVariable(value = "articleId") articleId: Long
     ): Boolean {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
-        val articleToLangId = articleForLangService.getOneByLangAndArticleId(articleId, lang.id)?.id
+        val articleToLangId = articleForLangService.getOneByLangIdAndArticleId(articleId, lang.id)?.id
                 ?: throw ArticleForLangNotFoundException()
         textPartService.deleteByArticleToLangId(articleToLangId)
         return true
     }
 
-    @GetMapping("random")
-    fun getRandomArticle(@RequestParam(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance?):ArticleToLangDto {
-        val lang = langEnum?.lang?.let { langService.getById(it) ?: throw LangNotFoundException() }
-        return articleForLangService.getRandomArticle(lang?.id)
+    @GetMapping("{langEnum}/random")
+    fun getRandomArticle(
+            @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance
+    ): ArticleToLangDto {
+        val lang = langEnum.lang.let { langService.getById(it) ?: throw LangNotFoundException() }
+        return articleForLangService.getRandomArticle(lang.id)
     }
 
 }
