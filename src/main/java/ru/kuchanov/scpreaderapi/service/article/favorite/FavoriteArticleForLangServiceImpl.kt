@@ -70,5 +70,5 @@ class FavoriteArticleForLangServiceImpl constructor(
             }
 
     fun ReadOrFavoriteArticleToLangDto.withType(): ReadOrFavoriteArticleToLangDto =
-            this.apply { articleTypeDto = articleAndArticleTypeService.getByArticleIdAndLangIdAsDto(articleId, langId) }
+            this.apply { articleTypeToArticleDto = articleAndArticleTypeService.getByArticleIdAndLangIdAsDto(articleId, langId) }
 }

@@ -29,7 +29,7 @@ interface TagForLangRepository : JpaRepository<TagForLang, Long> {
     @Query(
             value =
             """
-                SELECT tl.id, tl.title FROM tags_langs tl
+                SELECT tl.id, tl.title, tl.tag_id FROM tags_langs tl
                 JOIN tags_articles_langs tal
                 ON tal.tag_for_lang_id = tl.id AND tal.article_for_lang_id = :articleForLangId
                 WHERE tl.lang_id = :langId

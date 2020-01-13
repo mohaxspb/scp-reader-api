@@ -17,5 +17,5 @@ data class ReadOrFavoriteArticleToLangDto(
 ) {
     var imageUrls: List<ArticlesImagesDto>? = null
     var tagsForLang: List<TagForLangDto>? = null
-    var articleTypeDto: ArticleTypeDto? = null
+    var articleTypeToArticleDto: ArticleTypeToArticleDto? = null
 }

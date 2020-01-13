@@ -102,7 +102,7 @@ class ArticleToLangServiceImpl @Autowired constructor(
             }
 
     private fun ArticleToLangDto.withType(): ArticleToLangDto =
-            this.apply { articleTypeDto = articleAndArticleTypeService.getByArticleIdAndLangIdAsDto(articleId, langId) }
+            this.apply { articleTypeToArticleDto = articleAndArticleTypeService.getByArticleIdAndLangIdAsDto(articleId, langId) }
 
     private fun ArticleToLangDto.withTextParts(): ArticleToLangDto {
         return if (!hasIframeTag) {
