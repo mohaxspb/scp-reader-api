@@ -282,7 +282,7 @@ class ParseArticleService @Autowired constructor(
                 commentsUrl = commentsUrl,
                 hasIframeTag = hasIframeTag,
                 images = imgsUrls.map { ArticlesImages(url = it) }.toMutableSet(),
-                tags = articleTags.map { TagForLang(langId = lang.id, title = it) }.toMutableSet(),
+                tags = articleTags.map { TagForLang(langId = lang.id, title = it, tagId = TagForLang.NO_ID) }.toMutableSet(),
                 textParts = textParts,
                 innerArticlesForLang = innerArticlesUrls.map {
                     ArticleForLang(

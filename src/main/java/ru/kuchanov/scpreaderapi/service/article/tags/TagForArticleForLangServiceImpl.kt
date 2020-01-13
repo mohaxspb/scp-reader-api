@@ -6,7 +6,6 @@ import ru.kuchanov.scpreaderapi.bean.articles.tags.TagForArticleForLang
 import ru.kuchanov.scpreaderapi.repository.article.tags.TagForArticleForLangRepository
 
 
-@Suppress("unused")
 @Service
 class TagForArticleForLangServiceImpl : TagForArticleForLangService {
 
@@ -16,10 +15,10 @@ class TagForArticleForLangServiceImpl : TagForArticleForLangService {
     override fun findAll() =
             repository.findAll().toList()
 
-    override fun insert(data: TagForArticleForLang) =
+    override fun insert(data: TagForArticleForLang): TagForArticleForLang =
             repository.save(data)
 
-    override fun insert(data: List<TagForArticleForLang>) =
+    override fun insert(data: List<TagForArticleForLang>): List<TagForArticleForLang> =
             repository.saveAll(data)
 
     override fun findOneById(id: Long) =

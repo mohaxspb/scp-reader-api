@@ -17,10 +17,6 @@ class TagForLangServiceImpl @Autowired constructor(
     override fun findOneByLangIdAndTitle(langId: String, title: String) =
             repository.findOneByLangIdAndTitle(langId, title)
 
-    override fun getByLangIdAndTitleOrCreate(langId: String, title: String) =
-            findOneByLangIdAndTitle(langId, title)
-                    ?: insert(TagForLang(title = title, langId = langId))
-
     override fun findAll() =
             repository.findAll().toList()
 

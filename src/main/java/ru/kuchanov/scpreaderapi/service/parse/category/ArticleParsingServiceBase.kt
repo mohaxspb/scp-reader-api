@@ -29,6 +29,7 @@ import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLangToArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.category.ArticleCategoryForLangToArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.error.ArticleParseError
+import ru.kuchanov.scpreaderapi.bean.articles.tags.TagForLang
 import ru.kuchanov.scpreaderapi.bean.articles.text.TextPart
 import ru.kuchanov.scpreaderapi.bean.articles.types.ArticlesAndArticleTypes
 import ru.kuchanov.scpreaderapi.bean.users.Lang
@@ -42,6 +43,7 @@ import ru.kuchanov.scpreaderapi.service.article.error.ArticleParseErrorService
 import ru.kuchanov.scpreaderapi.service.article.image.ArticlesImagesService
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.tags.TagForLangService
+import ru.kuchanov.scpreaderapi.service.article.tags.TagService
 import ru.kuchanov.scpreaderapi.service.article.text.TextPartService
 import ru.kuchanov.scpreaderapi.service.article.type.ArticleAndArticleTypeService
 import ru.kuchanov.scpreaderapi.service.article.type.ArticleTypeService
@@ -57,6 +59,7 @@ import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.transaction.Transactional
+import ru.kuchanov.scpreaderapi.bean.articles.tags.Tag as ArticleTag
 
 
 @Primary
@@ -86,10 +89,13 @@ class ArticleParsingServiceBase {
     private lateinit var articleForLangToArticleForLangService: ArticleForLangToArticleForLangService
 
     @Autowired
-    private lateinit var tagForArticleForLangService: TagForArticleForLangService
+    private lateinit var tagService: TagService
 
     @Autowired
     private lateinit var tagForLangService: TagForLangService
+
+    @Autowired
+    private lateinit var tagForArticleForLangService: TagForArticleForLangService
 
     @Autowired
     private lateinit var articleTypeService: ArticleTypeService
@@ -779,7 +785,17 @@ class ArticleParsingServiceBase {
     ) {
         //save tagsForLang if not exists
         val tagsForLang = articleDownloaded.tags.map {
-            tagForLangService.getByLangIdAndTitleOrCreate(langId, it.title)
+            tagForLangService.findOneByLangIdAndTitle(langId, it.title)
+                    ?: kotlin.run {
+                        val tag = tagService.insert(ArticleTag())
+
+                        val tagToLang = TagForLang(
+                                title = it.title,
+                                langId = langId,
+                                tagId = tag.id!!
+                        )
+                        tagForLangService.insert(tagToLang)
+                    }
         }
 
         //save tagsForArticleForLang
