@@ -9,10 +9,16 @@ create table if not exists articles
 -- article type
 create table if not exists article_types
 (
-    id        bigserial not null,
-    image_url text,
+    id         bigserial not null,
+    enum_value text default 'NONE',
+    image_url  text,
     primary key (id)
 );
+
+alter table if exists article_types
+    drop constraint if exists enum_value_unique;
+alter table if exists article_types
+    add constraint enum_value_unique unique (enum_value);
 
 create table if not exists article__to__article_type
 (
@@ -204,7 +210,7 @@ create table if not exists tags
 create table if not exists tags_langs
 (
     id      bigserial    not null,
-    tag_id  bigint not null
+    tag_id  bigint       not null
         constraint fk_tags references tags,
     lang_id varchar(255) not null
         constraint fk_langs references langs,

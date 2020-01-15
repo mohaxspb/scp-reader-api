@@ -1,11 +1,3 @@
-alter table if exists article_types
-    add column if not exists enum_value TEXT not null default 'NONE';
-
-alter table if exists article_types
-    drop constraint if exists enum_value_unique;
-alter table if exists article_types
-    add constraint enum_value_unique unique (enum_value);
-
 insert into article_types (enum_value, image_url)
 VALUES ('NEUTRAL_OR_NOT_ADDED', '/image/ic_not_add_big.png'),
        ('SAFE', '/image/safe_big.png'),
