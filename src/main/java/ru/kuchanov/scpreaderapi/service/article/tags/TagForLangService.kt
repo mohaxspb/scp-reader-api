@@ -9,8 +9,6 @@ interface TagForLangService {
 
     fun findOneByLangIdAndTitle(langId: String, title: String): TagForLang?
 
-    fun getByLangIdAndTitleOrCreate(langId: String, title: String): TagForLang
-
     fun findAll(): List<TagForLang>
 
     @Transactional

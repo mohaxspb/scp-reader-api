@@ -204,7 +204,7 @@ create table if not exists tags
 create table if not exists tags_langs
 (
     id      bigserial    not null,
-    tag_id  bigint
+    tag_id  bigint not null
         constraint fk_tags references tags,
     lang_id varchar(255) not null
         constraint fk_langs references langs,

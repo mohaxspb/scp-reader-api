@@ -3,7 +3,7 @@ package ru.kuchanov.scpreaderapi.service.article.type
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.articles.types.ArticlesAndArticleTypes
-import ru.kuchanov.scpreaderapi.model.dto.article.ArticleTypeDto
+import ru.kuchanov.scpreaderapi.model.dto.article.ArticleTypeToArticleDto
 import ru.kuchanov.scpreaderapi.repository.article.type.ArticleAndArticleTypeRepository
 
 @Service
@@ -19,11 +19,12 @@ class ArticleAndArticleTypeServiceImpl @Autowired constructor(
     override fun getByArticleId(articleId: Long): ArticlesAndArticleTypes? =
             repository.findByArticleId(articleId)
 
-    override fun getByArticleIdAndLangIdAsDto(articleId: Long, langId: String): ArticleTypeDto? =
+    override fun getByArticleIdAndLangIdAsDto(articleId: Long, langId: String): ArticleTypeToArticleDto? =
             repository.findByArticleId(articleId)?.toDto(langId)
 
-    private fun ArticlesAndArticleTypes.toDto(langId: String): ArticleTypeDto =
-            ArticleTypeDto(
+    private fun ArticlesAndArticleTypes.toDto(langId: String): ArticleTypeToArticleDto =
+            ArticleTypeToArticleDto(
+                    id = id!!,
                     articleTypeId = articleTypeId,
                     enumValue = articleTypeService.getEnumValueById(articleTypeId),
                     titleForLang = articleTypeForLangService.getByArticleTypeIdAndLangId(articleTypeId, langId)?.title

@@ -64,12 +64,12 @@ class ReadArticleForLangServiceImpl @Autowired constructor(
 
     fun ReadOrFavoriteArticleToLangDto.withTags(): ReadOrFavoriteArticleToLangDto =
             this.apply {
-                tagsForLang = tagsForLangRepository.getAllForLangIdAndArticleForLangIdAsDto(
+                tagDtos = tagsForLangRepository.getAllForLangIdAndArticleForLangIdAsDto(
                         langId = langId,
                         articleForLangId = articleToLangId
                 )
             }
 
     fun ReadOrFavoriteArticleToLangDto.withType(): ReadOrFavoriteArticleToLangDto =
-            this.apply { articleTypeDto = articleAndArticleTypeService.getByArticleIdAndLangIdAsDto(articleId, langId) }
+            this.apply { articleTypeToArticleDto = articleAndArticleTypeService.getByArticleIdAndLangIdAsDto(articleId, langId) }
 }

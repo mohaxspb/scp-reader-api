@@ -7,7 +7,45 @@ import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInListProjection
 
 interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
 
+    fun getOneByArticleIdAndLangId(articleId: Long, langId: String): ArticleForLang?
+
+    @Query(
+            value = """
+                select 
+                art.id, 
+                art.lang_id as langId,
+                art.article_id as articleId,
+                art.url_relative as urlRelative,
+                art.title,
+                art.rating,
+                art.created_on_site as createdOnSite,
+                art.has_iframe_tag as hasIframeTag 
+                from articles_langs art
+                where art.article_id = :articleId and lang_id = :langId
+            """,
+            nativeQuery = true
+    )
+    fun getOneByArticleIdAndLangIdAsProjection(articleId: Long, langId: String): ArticleInListProjection?
+
     fun findByUrlRelativeAndLangId(urlRelative: String, langId: String): ArticleForLang?
+
+    @Query(
+            value = """
+                select 
+                art.id, 
+                art.lang_id as langId,
+                art.article_id as articleId,
+                art.url_relative as urlRelative,
+                art.title,
+                art.rating,
+                art.created_on_site as createdOnSite,
+                art.has_iframe_tag as hasIframeTag 
+                from articles_langs art
+                where art.url_relative = :urlRelative and lang_id = :langId
+            """,
+            nativeQuery = true
+    )
+    fun findByUrlRelativeAndLangIdAsProjection(urlRelative: String, langId: String): ArticleInListProjection?
 
     @Query(
             """
@@ -78,26 +116,6 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
             nativeQuery = true
     )
     fun findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId: Long): List<ArticleInListProjection>
-
-    fun getOneByArticleIdAndLangId(articleId: Long, langId: String): ArticleForLang?
-
-    @Query(
-            value = """
-                select 
-                art.id, 
-                art.lang_id as langId,
-                art.article_id as articleId,
-                art.url_relative as urlRelative,
-                art.title,
-                art.rating,
-                art.created_on_site as createdOnSite,
-                art.has_iframe_tag as hasIframeTag 
-                from articles_langs art
-                where art.article_id = :articleId and lang_id = :langId
-            """,
-            nativeQuery = true
-    )
-    fun getOneByArticleIdAndLangIdAsProjection(articleId: Long, langId: String): ArticleInListProjection?
 
     @Query(
             """

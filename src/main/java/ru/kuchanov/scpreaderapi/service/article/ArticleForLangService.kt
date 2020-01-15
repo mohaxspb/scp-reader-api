@@ -6,11 +6,13 @@ import javax.transaction.Transactional
 
 interface ArticleForLangService {
 
-    fun getOneByLangAndArticleId(articleId: Long, langId: String): ArticleForLang?
+    fun getOneByLangIdAndArticleId(articleId: Long, langId: String): ArticleForLang?
 
     fun getOneByLangIdAndArticleIdAsDto(articleId: Long, langId: String): ArticleToLangDto?
 
     fun getArticleForLangByUrlRelativeAndLang(urlRelative: String, langId: String): ArticleForLang?
+
+    fun getArticleForLangByUrlRelativeAndLangAsDto(urlRelative: String, langId: String): ArticleToLangDto?
 
     fun getIdByUrlRelativeAndLangId(urlRelative: String, langId: String): Long?
 

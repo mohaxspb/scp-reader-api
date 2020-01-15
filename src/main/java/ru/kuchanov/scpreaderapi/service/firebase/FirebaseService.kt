@@ -233,7 +233,7 @@ class FirebaseService @Autowired constructor(
             } else {
                 //check if we do not have article-lang connection for given article
                 val articleToLang: ArticleForLang? = try {
-                    articleForLangService.getOneByLangAndArticleId(articleInDb.id!!, lang.id)
+                    articleForLangService.getOneByLangIdAndArticleId(articleInDb.id!!, lang.id)
                 } catch (e: Exception) {
                     if (e is IncorrectResultSizeDataAccessException) {
                         println("IncorrectResultSizeDataAccessException while get ArticleForLang: ${articleInDb.id}/$urlRelative")
