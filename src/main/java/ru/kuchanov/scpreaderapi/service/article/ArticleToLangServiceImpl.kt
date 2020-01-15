@@ -95,7 +95,7 @@ class ArticleToLangServiceImpl @Autowired constructor(
 
     private fun ArticleToLangDto.withTags(): ArticleToLangDto =
             this.apply {
-                tagsForLang = tagsForLangRepository.getAllForLangIdAndArticleForLangIdAsDto(
+                tagDtos = tagsForLangRepository.getAllForLangIdAndArticleForLangIdAsDto(
                         langId = langId,
                         articleForLangId = id
                 )

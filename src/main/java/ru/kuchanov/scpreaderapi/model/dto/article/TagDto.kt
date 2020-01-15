@@ -1,7 +1,8 @@
 package ru.kuchanov.scpreaderapi.model.dto.article
 
-interface TagForLangDto {
-    val id: Long
+interface TagDto {
     val tagId: Long
+    val tagToLangId: Long
+    val tagToLangToArticleToLangId: Long
     val title: String
 }

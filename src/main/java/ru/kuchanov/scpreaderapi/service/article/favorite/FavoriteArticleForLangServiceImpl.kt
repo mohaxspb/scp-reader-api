@@ -63,7 +63,7 @@ class FavoriteArticleForLangServiceImpl constructor(
 
     fun ReadOrFavoriteArticleToLangDto.withTags(): ReadOrFavoriteArticleToLangDto =
             this.apply {
-                tagsForLang = tagsForLangRepository.getAllForLangIdAndArticleForLangIdAsDto(
+                tagDtos = tagsForLangRepository.getAllForLangIdAndArticleForLangIdAsDto(
                         langId = langId,
                         articleForLangId = articleToLangId
                 )
