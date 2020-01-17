@@ -241,10 +241,11 @@ class ArticleParsingServiceBase {
     fun parseConcreteObjectArticlesForLang(
             objectsUrl: String,
             lang: Lang,
+            offset: Int? = null,
             processOnlyCount: Int? = null,
             innerArticlesDepth: Int? = null
     ) {
-        downloadAndSaveObjectArticles(lang, objectsUrl, processOnlyCount, innerArticlesDepth)
+        downloadAndSaveObjectArticles(lang, objectsUrl, offset, processOnlyCount, innerArticlesDepth)
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
                 .subscribeBy(
@@ -263,15 +264,25 @@ class ArticleParsingServiceBase {
     private fun downloadAndSaveObjectArticles(
             lang: Lang,
             objectsUrl: String,
+            offset: Int? = null,
             processOnlyCount: Int? = null,
             innerArticlesDepth: Int? = null
     ): Single<List<ArticleForLang>> {
         return getObjectsArticlesForLang(lang, objectsUrl)
                 //test loading and save with less count of articles
                 .map { articlesToDownload ->
-                    processOnlyCount?.let {
-                        articlesToDownload.take(processOnlyCount)
-                    } ?: articlesToDownload
+                    if (processOnlyCount == null && offset == null) {
+                        articlesToDownload
+                    } else {
+                        var result = articlesToDownload
+                        if (offset != null) {
+                            result = articlesToDownload.subList(offset + 1, articlesToDownload.size - 1)
+                        }
+                        if (processOnlyCount != null) {
+                            result = result.take(processOnlyCount)
+                        }
+                        result
+                    }
                 }
                 .flatMap { articlesToSave ->
                     downloadAndSaveArticles(
@@ -319,10 +330,10 @@ class ArticleParsingServiceBase {
         Flowable.fromIterable(getObjectArticlesUrls())
                 .flatMapSingle { objectsUrl ->
                     downloadAndSaveObjectArticles(
-                            lang,
-                            objectsUrl,
-                            processOnlyCount,
-                            innerArticlesDepth
+                            lang = lang,
+                            objectsUrl = objectsUrl,
+                            processOnlyCount = processOnlyCount,
+                            innerArticlesDepth = innerArticlesDepth
                     )
                 }
                 .toList()
