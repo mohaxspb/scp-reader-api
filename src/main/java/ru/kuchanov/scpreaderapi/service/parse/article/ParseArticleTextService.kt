@@ -81,9 +81,22 @@ class ParseArticleTextService {
 
         val spans = document.getElementsByTag(TAG_SPAN)
         val scpImageCaptions = document.getElementsByClass("scp-image-caption")
+        //see `scp-1267`
+        val trTags = document.getElementsByTag("tr")
+        val descriptionInTable = if (trTags.size == 2) {
+            val descriptionTr = trTags[1]
+            if (descriptionTr.children().isNotEmpty()) {
+                descriptionTr.child(0).text()
+            } else {
+                null
+            }
+        } else {
+            null
+        }
         val title = when {
             !spans.isEmpty() -> spans.html()
             !scpImageCaptions.isEmpty() -> scpImageCaptions.first().html()
+            descriptionInTable != null -> descriptionInTable
             else -> null
         }
 
@@ -180,12 +193,10 @@ class ParseArticleTextService {
         val listTextPart = TextPart(data = null, type = textType, orderInText = order)
 
         val document = Jsoup.parse(html)
-        val tagToParse = if (textType == TextType.NUMBERED_LIST) {
-            TAG_OL
-        } else if (textType == TextType.BULLET_LIST) {
-            TAG_UL
-        } else {
-            throw ScpParseException("Wrong textType while parse list tag: $textType", IllegalArgumentException())
+        val tagToParse = when (textType) {
+            TextType.NUMBERED_LIST -> TAG_OL
+            TextType.BULLET_LIST -> TAG_UL
+            else -> throw ScpParseException("Wrong textType while parse list tag: $textType", IllegalArgumentException())
         }
         val listTag = document.getElementsByTag(tagToParse).first()
                 ?: throw ScpParseException("Error in list parsing. No list tag found", NullPointerException())
@@ -227,22 +238,32 @@ class ParseArticleTextService {
                 ourElement.tagName() == TAG_OL -> listOfTextTypes.add(TextType.NUMBERED_LIST)
                 ourElement.tagName() == TAG_UL -> listOfTextTypes.add(TextType.BULLET_LIST)
                 ourElement.tagName() == TAG_BLOCKQUOTE -> listOfTextTypes.add(TextType.BLOCKQUOTE)
-                ourElement.tagName() == TAG_TABLE -> listOfTextTypes.add(TextType.TABLE)
                 ourElement.className() == CLASS_SPOILER -> listOfTextTypes.add(TextType.SPOILER)
                 ourElement.classNames().contains(CLASS_TABS) -> listOfTextTypes.add(TextType.TABS)
-                ourElement.className() == "rimg"
-                        || ourElement.className() == "limg"
-                        || ourElement.className() == "cimg"
-                        || ourElement.className() == "image"
-                        //see /operation-overmeta
-                        || (ourElement.tagName() == TAG_A && ourElement.children().size == 1 && ourElement.children().first().tagName() == TAG_IMG)
-                        || ourElement.classNames().contains("image-container")
-                        || ourElement.classNames().contains("scp-image-block") -> listOfTextTypes.add(TextType.IMAGE)
+                isImageTextType(ourElement) -> listOfTextTypes.add(TextType.IMAGE)
+                ourElement.tagName() == TAG_TABLE -> listOfTextTypes.add(TextType.TABLE)
                 else -> listOfTextTypes.add(TextType.TEXT)
             }
         }
 
         return listOfTextTypes
+    }
+
+    private fun isImageTextType(element: Element): Boolean {
+        //see `scp-1267`
+        val isImageInTable = element.tagName() == TAG_TABLE
+                && element.getElementsByTag("tr").size == 2
+                && element.getElementsByTag("tr")[0].getElementsByTag(TAG_IMG).isNotEmpty()
+        val isImageTextType = element.className() == "rimg"
+                || element.className() == "limg"
+                || element.className() == "cimg"
+                || element.className() == "image"
+                //see /operation-overmeta
+                || (element.tagName() == TAG_A && element.children().size == 1 && element.children().first().tagName() == TAG_IMG)
+                || element.classNames().contains("image-container")
+                || element.classNames().contains("scp-image-block")
+
+        return isImageTextType || isImageInTable
     }
 
     companion object {
