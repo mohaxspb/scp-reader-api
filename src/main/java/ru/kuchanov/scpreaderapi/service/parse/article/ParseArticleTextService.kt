@@ -277,7 +277,8 @@ class ParseArticleTextService {
              |          <meta charset="utf-8">
              |          <meta name="viewport" content="width=device-width, user-scalable=yes" />
              |          <style>
-             |              table.wiki-content-table{border-collapse:collapse;border-spacing:0;margin:.5em auto}
+             |              body{background-color: $TABLE_BACKGROUND_COLOR_VAR_NAME}
+             |              table.wiki-content-table{border-collapse:collapse;border-spacing:0}
              |              table.wiki-content-table td{border:1px solid $TABLE_TEXT_COLOR_VAR_NAME;color: $TABLE_TEXT_COLOR_VAR_NAME;padding:.3em .7em;background-color: $TABLE_BACKGROUND_COLOR_VAR_NAME}
              |              table.wiki-content-table th{border:1px solid $TABLE_TEXT_COLOR_VAR_NAME;color: $TABLE_TEXT_COLOR_VAR_NAME;padding:.3em .7em;background-color: $TABLE_BACKGROUND_COLOR_VAR_NAME}
              |          </style>
