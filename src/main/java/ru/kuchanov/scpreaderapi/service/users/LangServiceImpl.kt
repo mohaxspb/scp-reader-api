@@ -8,10 +8,9 @@ import ru.kuchanov.scpreaderapi.repository.users.LangsRepository
 
 
 @Service
-class LangServiceImpl : LangService {
-
-    @Autowired
-    private lateinit var repository: LangsRepository
+class LangServiceImpl @Autowired constructor(
+        val repository: LangsRepository
+) : LangService {
 
     override fun findAll() = repository.findAll().toList()
 

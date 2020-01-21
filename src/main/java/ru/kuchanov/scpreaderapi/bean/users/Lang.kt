@@ -15,9 +15,7 @@ data class Lang(
         @Id
         var id: String,
         @Column(name = "lang_code")
-        var langCode: String,
-        @Column(name = "site_base_url", columnDefinition = "TEXT")
-        var siteBaseUrl: String
+        var langCode: String
 )
 
 
