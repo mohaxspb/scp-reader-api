@@ -73,8 +73,8 @@ create table if not exists oauth_refresh_token
 create table if not exists users
 (
     id                    bigserial not null,
-    username              text not null,
-    password              text not null,
+    username              text      not null,
+    password              text      not null,
     full_name             text,
     avatar                text,
 
@@ -91,7 +91,7 @@ create table if not exists users
     google_id             text,
     vk_id                 text,
 
-    main_lang_id          text not null default 'en',
+    main_lang_id          text      not null default 'en',
 
     created               timestamp,
     updated               timestamp,
@@ -158,11 +158,35 @@ alter table authorities__to__users
 
 create table if not exists langs
 (
-    id            varchar(255) not null,
-    lang_code     varchar(255),
-    site_base_url text,
+    id        varchar(255) not null,
+    lang_code varchar(255),
     primary key (id)
 );
+
+alter table langs
+    drop constraint if exists lang_code_unique;
+alter table langs
+    add constraint lang_code_unique unique (lang_code);
+
+create table if not exists site_base_urls__to__langs
+(
+    id            bigserial    not null,
+    lang_id       varchar(255) not null,
+    site_base_url varchar(255) not null,
+    primary key (id)
+);
+
+ALTER TABLE site_base_urls__to__langs
+    drop constraint IF EXISTS fk_lang_id__to__langs CASCADE;
+alter table site_base_urls__to__langs
+    add constraint fk_lang_id__to__langs
+        foreign key (lang_id)
+            REFERENCES langs (id);
+
+alter table site_base_urls__to__langs
+    drop constraint if exists site_base_url_unique;
+alter table site_base_urls__to__langs
+    add constraint site_base_url_unique unique (site_base_url);
 
 
 create table if not exists users_langs
