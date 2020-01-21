@@ -55,54 +55,33 @@ enum class LinkType {
 
     companion object {
 
-        fun getLinkType(link: String, lang: Lang): LinkType {
-            if (link.contains("javascript")) {
-                return JAVASCRIPT
-            }
-            if (link.isDigitsOnly() || link.startsWith("scp://")) {
-                return SNOSKA
-            }
-            if (link.startsWith("bibitem-")) {
-                return BIBLIOGRAPHY
-            }
-            if (link.startsWith("#")) {
-                return TOC
-            }
-            if (link.endsWith(".mp3")) {
-                return MUSIC
-            }
-            if (link.startsWith(ParseConstants.NOT_TRANSLATED_ARTICLE_UTIL_URL)) {
-                return NOT_TRANSLATED
-            }
-            return if (!link.startsWith(lang.siteBaseUrl) || link.startsWith(lang.siteBaseUrl + "/forum")) {
-                EXTERNAL
-            } else INNER
-        }
+        fun getLinkType(link: String, lang: Lang): LinkType =
+                when {
+                    link.contains("javascript") -> JAVASCRIPT
+                    link.isDigitsOnly() || link.startsWith("scp://") -> SNOSKA
+                    link.startsWith("bibitem-") -> BIBLIOGRAPHY
+                    link.startsWith("#") -> TOC
+                    link.endsWith(".mp3") -> MUSIC
+                    link.startsWith(ParseConstants.NOT_TRANSLATED_ARTICLE_UTIL_URL) -> NOT_TRANSLATED
+                    isExternalLink(link, lang) -> EXTERNAL
+                    else -> INNER
+                }
 
-        fun getFormattedUrl(url: String, lang: Lang) =
-                when (getLinkType(url, lang)) {
-                    JAVASCRIPT, INNER, TOC, MUSIC, EXTERNAL, BIBLIOGRAPHY -> {
-                        if (!url.startsWith("http") && !url.startsWith(ParseConstants.NOT_TRANSLATED_ARTICLE_UTIL_URL)) {
-                            lang.siteBaseUrl + url
-                        } else {
-                            url
-                        }
-                    }
-                    SNOSKA -> {
-                        if (url.startsWith("scp://")) {
-                            url.replace("scp://", "")
-                        } else {
-                            url
-                        }
-                    }
-                    NOT_TRANSLATED -> {
-                        if (url.startsWith(ParseConstants.NOT_TRANSLATED_ARTICLE_UTIL_URL)) {
-                            url.split(ParseConstants.NOT_TRANSLATED_ARTICLE_URL_DELIMITER)[1]
-                        } else {
-                            url
-                        }
+        private fun isExternalLink(link: String, lang: Lang): Boolean {
+            if (link.startsWith("/forum")) {
+                return true
+            } else {
+                lang.siteBaseUrlsToLangs?.forEach {
+                    if (link.startsWith(it.siteBaseUrl)) {
+                        return false
                     }
                 }
+                if (link.startsWith("http")) {
+                    return true
+                }
+                return false
+            }
+        }
     }
 }
 

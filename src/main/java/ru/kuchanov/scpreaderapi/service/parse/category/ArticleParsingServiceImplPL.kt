@@ -4,6 +4,10 @@ import org.jsoup.nodes.Document
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ATTR_HREF
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ID_PAGE_CONTENT
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_A
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_P
 import java.sql.Timestamp
 
 
@@ -29,17 +33,17 @@ class ArticleParsingServiceImplPL : ArticleParsingServiceBase() {
 
     override fun parseForRatedArticles(lang: Lang, doc: Document): List<ArticleForLang> {
         println("start parsing rated articles for lang: $lang")
-        val pageContent = doc.getElementById("page-content")
+        val pageContent = doc.getElementById(ID_PAGE_CONTENT)
                 ?: throw ScpParseException("parse error!")
         val listPagesBox = pageContent.getElementsByClass("list-pages-box").first()
                 ?: throw ScpParseException("parse error!")
         val articlesDivs = listPagesBox.getElementsByClass("list-pages-item")
         val articles = mutableListOf<ArticleForLang>()
         for (element in articlesDivs) {
-            val aTag = element.getElementsByTag("a").first()
-            val url: String = lang.siteBaseUrl + aTag.attr("href")
+            val aTag = element.getElementsByTag(TAG_A).first()
+            val url = aTag.attr(ATTR_HREF)
             val title = aTag.text()
-            val pTag = element.getElementsByTag("p").first()
+            val pTag = element.getElementsByTag(TAG_P).first()
             var ratingString = pTag.text().substring(
                     pTag.text().indexOf(getArticleRatingStringDelimiter()) + getArticleRatingStringDelimiter().length
             )
@@ -53,7 +57,7 @@ class ArticleParsingServiceImplPL : ArticleParsingServiceBase() {
             val updateDateValue = Timestamp(getDateFormatForLang().parse(updatedDateString).time)
             val article = ArticleForLang(
                     langId = lang.id,
-                    urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
+                    urlRelative = lang.removeDomainFromUrl(url),
                     title = title,
                     rating = rating,
                     updatedOnSite = updateDateValue

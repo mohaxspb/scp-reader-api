@@ -4,6 +4,9 @@ import org.jsoup.nodes.Document
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ATTR_HREF
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ID_PAGE_CONTENT
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_A
 
 @Service
 class ArticleParsingServiceImplCH : ArticleParsingServiceBase() {
@@ -28,7 +31,7 @@ class ArticleParsingServiceImplCH : ArticleParsingServiceBase() {
     @Suppress("DuplicatedCode")
     override fun parseForRatedArticles(lang: Lang, doc: Document): List<ArticleForLang> {
         println("start parsing rated articles for lang: $lang")
-        val pageContent = doc.getElementById("page-content")
+        val pageContent = doc.getElementById(ID_PAGE_CONTENT)
                 ?: throw ScpParseException("parse error!")
         val listPagesBox = pageContent.getElementsByClass("list-pages-box").first()
                 ?: throw ScpParseException("parse error!")
@@ -40,14 +43,14 @@ class ArticleParsingServiceImplCH : ArticleParsingServiceBase() {
             val listOfTd = tableRow.getElementsByTag("td")
             //title and url
             val firstTd = listOfTd.first()
-            val tagA = firstTd.getElementsByTag("a").first()
+            val tagA = firstTd.getElementsByTag(TAG_A).first()
             val title = tagA.text()
-            val url = lang.siteBaseUrl + tagA.attr("href")
+            val url = tagA.attr(ATTR_HREF)
             val rating = Integer.parseInt(listOfTd[1].text())
 
             val article = ArticleForLang(
                     langId = lang.id,
-                    urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
+                    urlRelative = lang.removeDomainFromUrl(url),
                     title = title,
                     rating = rating
             )

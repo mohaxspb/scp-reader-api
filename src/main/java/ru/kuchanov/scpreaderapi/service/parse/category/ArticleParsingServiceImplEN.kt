@@ -11,6 +11,8 @@ import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ATTR_HREF
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ID_PAGE_CONTENT
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_A
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_P
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_TABLE
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_UL
 import java.sql.Timestamp
 
 
@@ -64,7 +66,7 @@ fun parseForRatedArticlesENStyle(
     for (arrayItem in arrayOfArticles) {
         val currentDocument = Jsoup.parse(arrayItem)
         val aTag = currentDocument.getElementsByTag(TAG_A).first()
-        val url: String = lang.siteBaseUrl + aTag.attr(ATTR_HREF)
+        val url = aTag.attr(ATTR_HREF)
         val title = aTag.text()
         val rating = arrayItem.substring(arrayItem.indexOf(articleRatingStringDelimiter) + articleRatingStringDelimiter.length)
         //println("rating: $rating")
@@ -73,7 +75,7 @@ fun parseForRatedArticlesENStyle(
         val ratingCuted = rating.substring(0, rating.indexOf(articleRatingStringDelimiterEnd))
         val article = ArticleForLang(
                 langId = lang.id,
-                urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
+                urlRelative = lang.removeDomainFromUrl(url),
                 title = title,
                 rating = try {
                     ratingCuted.toInt()
@@ -95,7 +97,7 @@ fun parseForRatedArticlesENStyle(
 
 fun parseForRecentArticlesENStyle(lang: Lang, doc: Document): List<ArticleForLang> {
     val contentTypeDescription = doc.getElementsByClass("content-type-description").first()
-    val pageContent = contentTypeDescription.getElementsByTag("table").first()
+    val pageContent = contentTypeDescription.getElementsByTag(TAG_TABLE).first()
             ?: throw ScpParseException("parse error!")
 
     val dateFormat = ArticleParsingServiceBase.getDateFormatForLang()
@@ -104,16 +106,16 @@ fun parseForRecentArticlesENStyle(lang: Lang, doc: Document): List<ArticleForLan
     for (i in 1 /*start from 1 as first row is tables header*/ until listOfElements.size) {
         val listOfTd: Elements = listOfElements[i].getElementsByTag("td")
         val firstTd: Element = listOfTd.first()
-        val tagA = firstTd.getElementsByTag("a").first()
+        val tagA = firstTd.getElementsByTag(TAG_A).first()
         val title = tagA.text()
-        val url: String = lang.siteBaseUrl + tagA.attr("href")
+        val url = tagA.attr(ATTR_HREF)
         //4 Jun 2017, 22:25
         //createdDate
         val createdDateNode: Element = listOfTd[1]
         val createdDate = createdDateNode.text().trim()
         val article = ArticleForLang(
                 langId = lang.id,
-                urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
+                urlRelative = lang.removeDomainFromUrl(url),
                 title = title,
                 createdOnSite = Timestamp(dateFormat.parse(createdDate).time)
         )
@@ -124,28 +126,28 @@ fun parseForRecentArticlesENStyle(lang: Lang, doc: Document): List<ArticleForLan
 }
 
 fun parseForObjectArticlesENStyle(lang: Lang, doc: Document): List<ArticleForLang> {
-    val pageContent = doc.getElementById("page-content")
+    val pageContent = doc.getElementById(ID_PAGE_CONTENT)
             ?: throw ScpParseException("Parse error! \"page-content\" tag is null!")
     val listPagesBox = pageContent.getElementsByTag("h1")
     listPagesBox.remove()
-    val collapsibleBlock = pageContent.getElementsByTag("ul").first()
+    val collapsibleBlock = pageContent.getElementsByTag(TAG_UL).first()
     collapsibleBlock?.remove()
     val table = pageContent.getElementsByClass("content-toc").first()
     table.remove()
-    val allUls = pageContent.getElementsByClass("content-panel").first().getElementsByTag("ul")
+    val allUls = pageContent.getElementsByClass("content-panel").first().getElementsByTag(TAG_UL)
 
     val articles = mutableListOf<ArticleForLang>()
 
     for (ul in allUls) {
         for (li in ul.children()) { //do not add empty articles
-            if (li.getElementsByTag("a").first().hasClass("newpage")) {
+            if (li.getElementsByTag(TAG_A).first().hasClass("newpage")) {
                 continue
             }
             val title = li.text()
-            val url = li.getElementsByTag("a").first().attr("href")
+            val url = li.getElementsByTag(TAG_A).first().attr(ATTR_HREF)
             val article = ArticleForLang(
                     langId = lang.id,
-                    urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
+                    urlRelative = lang.removeDomainFromUrl(url),
                     title = title
             )
             articles.add(article)

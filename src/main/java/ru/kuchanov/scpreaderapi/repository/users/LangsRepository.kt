@@ -4,5 +4,5 @@ import org.springframework.data.jpa.repository.JpaRepository
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 
 interface LangsRepository : JpaRepository<Lang, String> {
-    fun findOneById(id: String): Lang
+    fun findOneById(id: String): Lang?
 }

@@ -10,10 +10,13 @@ import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ATTR_HREF
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ATTR_SRC
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.CLASS_SPOILER
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ID_PAGE_CONTENT
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_A
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_BODY
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_IMG
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_P
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_TABLE
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
@@ -49,7 +52,7 @@ class ArticleParsingServiceImplPT : ArticleParsingServiceBase() {
         val articles = mutableListOf<ArticleForLang>()
         for (element in articlesDivs) {
             val aTag = element.getElementsByTag(TAG_A).first()
-            val url: String = lang.siteBaseUrl + aTag.attr(ATTR_HREF)
+            val url = aTag.attr(ATTR_HREF)
             val title = aTag.text()
             val pTag = element.getElementsByTag(TAG_P).first()
             var ratingString = pTag.text().substring(pTag.text().indexOf(getArticleRatingStringDelimiter()) + getArticleRatingStringDelimiter().length)
@@ -57,7 +60,7 @@ class ArticleParsingServiceImplPT : ArticleParsingServiceBase() {
             val rating = ratingString.toInt()
             val article = ArticleForLang(
                     langId = lang.id,
-                    urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
+                    urlRelative = lang.removeDomainFromUrl(url),
                     title = title,
                     rating = rating
             )
@@ -77,10 +80,10 @@ class ArticleParsingServiceImplPT : ArticleParsingServiceBase() {
                 .first()
 
         innerPageContent.getElementsByClass("list-pages-box").first()?.remove()
-        innerPageContent.getElementsByClass("collapsible-block").first()?.remove()
-        innerPageContent.getElementsByTag("table").first()?.remove()
+        innerPageContent.getElementsByClass(CLASS_SPOILER).first()?.remove()
+        innerPageContent.getElementsByTag(TAG_TABLE).first()?.remove()
         innerPageContent.getElementById("toc0")?.remove()
-        val aWithNameAttr2 = innerPageContent.getElementsByTag("a")
+        val aWithNameAttr2 = innerPageContent.getElementsByTag(TAG_A)
         if (aWithNameAttr2 != null) {
             for (element in aWithNameAttr2) {
                 if (element.hasAttr("name")) {
@@ -110,7 +113,7 @@ class ArticleParsingServiceImplPT : ArticleParsingServiceBase() {
         val document = Jsoup.parse(allHtml)
 
         document.getElementsByTag("h1")?.remove()
-        document.getElementsByTag("p")?.remove()
+        document.getElementsByTag(TAG_P)?.remove()
 
         val allH2Tags = document.getElementsByTag("h2")
         for (h2Tag in allH2Tags) {
@@ -118,17 +121,13 @@ class ArticleParsingServiceImplPT : ArticleParsingServiceBase() {
             h2Tag.replaceWith(brTag)
         }
 
-        val allArticles = document.getElementsByTag("body").first().html()
+        val allArticles = document.getElementsByTag(TAG_BODY).first().html()
         val arrayOfArticles = allArticles.split("<br>").toTypedArray()
         val articles = mutableListOf<ArticleForLang>()
         for (arrayItem in arrayOfArticles) {
             val arrayItemAsDocument = Jsoup.parse(arrayItem)
 
-            val url = arrayItemAsDocument
-                    .getElementsByTag(TAG_A)
-                    .first()
-                    .attr(ATTR_HREF)
-                    .replace(lang.siteBaseUrl, "")
+            val url = arrayItemAsDocument.getElementsByTag(TAG_A).first().attr(ATTR_HREF)
             val title = arrayItemAsDocument.text()
 
             //type of object
@@ -143,7 +142,7 @@ class ArticleParsingServiceImplPT : ArticleParsingServiceBase() {
 
             val article = ArticleForLang(
                     langId = lang.id,
-                    urlRelative = url,
+                    urlRelative = lang.removeDomainFromUrl(url),
                     title = title,
                     articleTypeEnumEnumValue = type
             )
