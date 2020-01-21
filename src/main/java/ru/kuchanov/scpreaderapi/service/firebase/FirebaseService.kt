@@ -222,7 +222,7 @@ class FirebaseService @Autowired constructor(
 //                println("articleInFirebase: $index/$articleInFirebase")
                 return@forEachIndexed
             }
-            val urlRelative = articleInFirebase.url!!.replace(lang.siteBaseUrl, "")
+            val urlRelative = lang.removeDomainFromUrl(articleInFirebase.url!!)
             //for other langs we should not pass urlRelative
             val articleInDb = articleService.getArticleByUrlRelative(urlRelative)
 //            println("articleInDb: $articleInDb $urlRelative")

@@ -12,5 +12,5 @@ class SiteBaseUrlsToLangsServiceImpl @Autowired constructor(
 ) : SiteBaseUrlsToLangsService {
 
     override fun findAllByLangId(langId: String): List<SiteBaseUrlsToLangs> =
-            siteBaseUrlsToLangsRepository.findAllByLangId(langId)
+            siteBaseUrlsToLangsRepository.findAllByLangIdOrderById(langId)
 }

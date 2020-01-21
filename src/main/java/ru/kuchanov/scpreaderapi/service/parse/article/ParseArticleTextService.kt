@@ -116,7 +116,7 @@ class ParseArticleTextService {
         //println("document: $document")
         //parse collapsed part
         val elementFolded = document.getElementsByClass("collapsible-block-folded").first()
-        val elementA = elementFolded.getElementsByTag("a").first()
+        val elementA = elementFolded.getElementsByTag(TAG_A).first()
         //replacing non-breaking-spaces
         val collapsedTitle = elementA.text().replace("\\p{Z}".toRegex(), " ")
         val collapsedSpoilerTextPart = TextPart(data = collapsedTitle, type = TextType.SPOILER_COLLAPSED, orderInText = 0)

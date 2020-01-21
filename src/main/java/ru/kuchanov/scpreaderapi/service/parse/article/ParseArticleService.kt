@@ -197,16 +197,13 @@ class ParseArticleService @Autowired constructor(
         }
         //println("PageContent after underline: ${pageContent.toString().length}")
 
-        //search for relative urls to add domain
+        //replace all links to not translated articles
         for (a in pageContent.getElementsByTag(TAG_A)) {
-            //replace all links to not translated articles
             if (a.className() == "newpage") {
                 a.attr(ATTR_HREF, NOT_TRANSLATED_ARTICLE_UTIL_URL
                         + NOT_TRANSLATED_ARTICLE_URL_DELIMITER
                         + a.attr(ATTR_HREF)
                 )
-            } else if (a.attr(ATTR_HREF).startsWith("/")) {
-                a.attr(ATTR_HREF, lang.siteBaseUrl + a.attr(ATTR_HREF))
             }
         }
 
@@ -234,8 +231,8 @@ class ParseArticleService @Autowired constructor(
         if (!innerATags.isEmpty()) {
             for (a in innerATags) {
                 val innerUrl = a.attr(ATTR_HREF)
-                if (LinkType.getLinkType(innerUrl, lang) === LinkType.INNER) {
-                    innerArticlesUrls.add(LinkType.getFormattedUrl(innerUrl, lang))
+                if (LinkType.getLinkType(innerUrl, lang) == LinkType.INNER) {
+                    innerArticlesUrls.add(lang.removeDomainFromUrl(innerUrl))
                 }
             }
         }
@@ -263,11 +260,12 @@ class ParseArticleService @Autowired constructor(
         }
 
         //comments url
-        val commentsUrl = doc.getElementById("discuss-button")?.attr("href")?.let {
-            if (it.contains("javascript")) {
-                println("COMMENTS URL ERROR: $urlRelative, ${lang.siteBaseUrl + urlRelative}")
-            }
-            "${lang.siteBaseUrl}$it"
+        val commentsUrl = doc
+                .getElementById("discuss-button")
+                ?.attr(ATTR_HREF)
+
+        if (commentsUrl?.contains("javascript") == true) {
+            println("COMMENTS URL ERROR: $urlRelative")
         }
 
 //        println("parseArticle: $urlRelative, ${lang.id}, $printTextParts END")
@@ -287,7 +285,7 @@ class ParseArticleService @Autowired constructor(
                 innerArticlesForLang = innerArticlesUrls.map {
                     ArticleForLang(
                             langId = lang.id,
-                            urlRelative = it.replace(lang.siteBaseUrl, "").trim(),
+                            urlRelative = lang.removeDomainFromUrl(it),
                             title = ""
                     )
                 }.toSet()

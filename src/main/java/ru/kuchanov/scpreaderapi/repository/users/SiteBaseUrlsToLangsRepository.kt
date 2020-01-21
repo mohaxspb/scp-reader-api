@@ -4,5 +4,5 @@ import org.springframework.data.jpa.repository.JpaRepository
 import ru.kuchanov.scpreaderapi.bean.users.SiteBaseUrlsToLangs
 
 interface SiteBaseUrlsToLangsRepository : JpaRepository<SiteBaseUrlsToLangs, Long> {
-    fun findAllByLangId(langId: String): List<SiteBaseUrlsToLangs>
+    fun findAllByLangIdOrderById(langId: String): List<SiteBaseUrlsToLangs>
 }

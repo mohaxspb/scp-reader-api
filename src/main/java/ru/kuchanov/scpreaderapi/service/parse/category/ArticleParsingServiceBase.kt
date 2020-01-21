@@ -49,9 +49,14 @@ import ru.kuchanov.scpreaderapi.service.article.type.ArticleAndArticleTypeServic
 import ru.kuchanov.scpreaderapi.service.article.type.ArticleTypeService
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseArticleService
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ATTR_HREF
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ATTR_SRC
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.CLASS_SPOILER
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ID_PAGE_CONTENT
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_A
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_BODY
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_IMG
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_P
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_TABLE
 import java.io.IOException
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -356,7 +361,7 @@ class ArticleParsingServiceBase {
     fun getMostRecentArticlesPageCountForLang(lang: Lang): Single<Int> {
         return Single.create<Int> { subscriber ->
             val request = Request.Builder()
-                    .url(lang.siteBaseUrl + getRecentArticlesUrl())
+                    .url(lang.siteBaseUrlsToLangs?.first()?.siteBaseUrl + getRecentArticlesUrl())
                     .build()
 
             val responseBody = getResponseBody(request)
@@ -373,33 +378,33 @@ class ArticleParsingServiceBase {
     }
 
     fun getRecentArticlesForPage(lang: Lang, page: Int): Single<List<ArticleForLang>> {
-        println("start request to: ${lang.siteBaseUrl + getRecentArticlesUrl() + page}")
+        println("start request to: ${lang.siteBaseUrlsToLangs?.first()?.siteBaseUrl + getRecentArticlesUrl() + page}")
         return Single
                 .create<List<ArticleForLang>> { subscriber ->
                     val request = Request.Builder()
-                            .url(lang.siteBaseUrl + getRecentArticlesUrl() + page)
+                            .url(lang.siteBaseUrlsToLangs?.first()?.siteBaseUrl + getRecentArticlesUrl() + page)
                             .build()
                     val responseBody = getResponseBody(request)
                     val doc: Document = Jsoup.parse(responseBody)
                     val articles = parseForRecentArticles(lang, doc)
                     subscriber.onSuccess(articles)
                 }
-                .doOnError { saveArticleParseError(lang.id, lang.siteBaseUrl + getRecentArticlesUrl() + page, it) }
+                .doOnError { saveArticleParseError(lang.id, lang.siteBaseUrlsToLangs?.first()?.siteBaseUrl + getRecentArticlesUrl() + page, it) }
     }
 
     fun getRatedArticlesForLang(lang: Lang, page: Int): Single<List<ArticleForLang>> {
-        println("getRatedArticlesForLang: ${lang.langCode}, url: ${lang.siteBaseUrl}${getRatedArticlesUrl()}$page")
+        println("getRatedArticlesForLang: ${lang.langCode}, url: ${lang.siteBaseUrlsToLangs?.first()?.siteBaseUrl}${getRatedArticlesUrl()}$page")
         return Single
                 .create<List<ArticleForLang>> { subscriber ->
                     val request = Request.Builder()
-                            .url(lang.siteBaseUrl + getRatedArticlesUrl() + page)
+                            .url(lang.siteBaseUrlsToLangs?.first()?.siteBaseUrl + getRatedArticlesUrl() + page)
                             .build()
                     val responseBody = getResponseBody(request)
                     val doc = Jsoup.parse(responseBody)
                     val articles = parseForRatedArticles(lang, doc)
                     subscriber.onSuccess(articles)
                 }
-                .doOnError { saveArticleParseError(lang.id, lang.siteBaseUrl + getRatedArticlesUrl() + page, it) }
+                .doOnError { saveArticleParseError(lang.id, lang.siteBaseUrlsToLangs?.first()?.siteBaseUrl + getRatedArticlesUrl() + page, it) }
     }
 
     @Suppress("DuplicatedCode")
@@ -412,10 +417,10 @@ class ArticleParsingServiceBase {
         val articles = mutableListOf<ArticleForLang>()
         val listOfElements = listPagesBox.getElementsByClass("list-pages-item")
         for (element in listOfElements) {
-            val tagP = element.getElementsByTag("p").first()
+            val tagP = element.getElementsByTag(TAG_P).first()
             val tagA = tagP.getElementsByTag(TAG_A).first()
             val title = tagP.text().substring(0, tagP.text().indexOf(getArticleRatingStringDelimiter()))
-            val url: String = lang.siteBaseUrl + tagA.attr(ATTR_HREF)
+            val url = tagA.attr(ATTR_HREF)
             //remove a tag to leave only text with rating
             tagA.remove()
             tagP.text(tagP.text().replace(", рейтинг ", ""))
@@ -423,7 +428,7 @@ class ArticleParsingServiceBase {
             val rating = tagP.text().toInt()
             val article = ArticleForLang(
                     langId = lang.id,
-                    urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
+                    urlRelative = lang.removeDomainFromUrl(url),
                     title = title,
                     rating = rating
             )
@@ -433,10 +438,10 @@ class ArticleParsingServiceBase {
     }
 
     fun getObjectsArticlesForLang(lang: Lang, objectsLink: String): Single<List<ArticleForLang>> {
-        println("getObjectsArticlesForLang: ${lang.langCode}, url: ${lang.siteBaseUrl}$objectsLink")
+        println("getObjectsArticlesForLang: ${lang.langCode}, url: ${lang.siteBaseUrlsToLangs?.first()?.siteBaseUrl}$objectsLink")
         return Single.create { subscriber ->
             val request = Request.Builder()
-                    .url(lang.siteBaseUrl + objectsLink)
+                    .url(lang.siteBaseUrlsToLangs?.first()?.siteBaseUrl + objectsLink)
                     .build()
             val responseBody = try {
                 val response: Response = okHttpClient.newCall(request).execute()
@@ -469,9 +474,9 @@ class ArticleParsingServiceBase {
         //parse
         val listPagesBox = pageContent.getElementsByClass("list-pages-box").first()
         listPagesBox?.remove()
-        val collapsibleBlock = pageContent.getElementsByClass("collapsible-block").first()
+        val collapsibleBlock = pageContent.getElementsByClass(CLASS_SPOILER).first()
         collapsibleBlock?.remove()
-        val table = pageContent.getElementsByTag("table").first()
+        val table = pageContent.getElementsByTag(TAG_TABLE).first()
         table?.remove()
         val h2 = doc.getElementById("toc0")
         h2?.remove()
@@ -495,7 +500,7 @@ class ArticleParsingServiceBase {
             val brTag = Element(Tag.valueOf("br"), "")
             h2Tag.replaceWith(brTag)
         }
-        val allArticles = document.getElementsByTag("body").first().html()
+        val allArticles = document.getElementsByTag(TAG_BODY).first().html()
         val arrayOfArticles = allArticles.split("<br>").toTypedArray()
         val articles: MutableList<ArticleForLang> = ArrayList()
         for (arrayItem in arrayOfArticles) {
@@ -504,13 +509,13 @@ class ArticleParsingServiceBase {
             }
             val arrayItemParsed = Jsoup.parse(arrayItem)
             //type of object
-            val imageURL = arrayItemParsed.getElementsByTag(TAG_IMG).first().attr("src")
+            val imageURL = arrayItemParsed.getElementsByTag(TAG_IMG).first().attr(ATTR_SRC)
             val type = getObjectTypeByImageUrl(imageURL)
-            val url = lang.siteBaseUrl + arrayItemParsed.getElementsByTag("a").first().attr("href")
+            val url = arrayItemParsed.getElementsByTag(TAG_A).first().attr(ATTR_HREF)
             val title = arrayItemParsed.text()
             val article = ArticleForLang(
                     langId = lang.id,
-                    urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
+                    urlRelative = lang.removeDomainFromUrl(url),
                     title = title,
                     articleTypeEnumEnumValue = type
             )
@@ -680,7 +685,7 @@ class ArticleParsingServiceBase {
             val firstTd = listOfTd.first()
             val tagA = firstTd.getElementsByTag(TAG_A).first()
             val title = tagA.text()
-            val url = lang.siteBaseUrl + tagA.attr(ATTR_HREF)
+            val url = tagA.attr(ATTR_HREF)
             //rating
             val rating = Integer.parseInt(listOfTd[1].text())
 
@@ -689,7 +694,7 @@ class ArticleParsingServiceBase {
 
             val article = ArticleForLang(
                     langId = lang.id,
-                    urlRelative = url.replace(lang.siteBaseUrl, "").trim(),
+                    urlRelative = lang.removeDomainFromUrl(url),
                     title = title,
                     rating = rating,
                     createdOnSite = Timestamp(getDateFormatForLang().parse(createdDate).time),
@@ -733,7 +738,7 @@ class ArticleParsingServiceBase {
      */
     private fun getArticleFromApi(url: String, lang: Lang, printTextParts: Boolean = false): ArticleForLang {
         val request = Request.Builder()
-                .url(lang.siteBaseUrl + url)
+                .url(lang.siteBaseUrlsToLangs?.first()?.siteBaseUrl + url)
                 .build()
 
         var responseBody = okHttpClient.newCall(request).execute().body()?.string()
