@@ -281,7 +281,7 @@ class ArticleParsingServiceBase {
                     } else {
                         var result = articlesToDownload
                         if (offset != null) {
-                            result = articlesToDownload.subList(offset + 1, articlesToDownload.size - 1)
+                            result = articlesToDownload.subList(offset, articlesToDownload.size - 1)
                         }
                         if (processOnlyCount != null) {
                             result = result.take(processOnlyCount)
