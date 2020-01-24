@@ -81,12 +81,16 @@ class ParseArticleService @Autowired constructor(
         val footnoterefs = pageContent.getElementsByClass("footnoteref")
         for (snoska in footnoterefs) {
             val aTag = snoska.getElementsByTag(TAG_A).first()
+            val idAsString = aTag.id().replace("footnoteref-", "")
+//            println("idAsString: $idAsString")
             val digits = StringBuilder()
-            for (c in aTag.id().toCharArray()) {
-                if (c.isDigit()) {
-                    digits.append(c.toString())
+            idAsString.toCharArray().forEach { char ->
+//                println("footnoterefs: $char")
+                if (char.isDigit() || char == '-') {
+                    digits.append(char.toString())
                 }
             }
+//            println("digits: $digits")
             aTag.attr(ATTR_HREF, "scp://$digits")
         }
         val footnoterefsFooter = pageContent.getElementsByClass("footnote-footer")
