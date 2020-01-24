@@ -4,6 +4,7 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.articles.text.TextPart
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ATTR_HREF
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ATTR_SRC
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.CLASS_SPOILER
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.CLASS_TABS
@@ -270,7 +271,20 @@ class ParseArticleTextService {
         private const val TABLE_TEXT_COLOR_VAR_NAME = "TABLE_TEXT_COLOR_VAR_NAME"
         private const val TABLE_BACKGROUND_COLOR_VAR_NAME = "TABLE_BACKGROUND_COLOR_VAR_NAME"
 
-        private fun createTableHtml(tableData: String) = """
+        private fun createTableHtml(tableData: String): String {
+            //update all links, as in new chrome we get `Not allowed to navigate top frame to data URL` error
+            val doc = Jsoup.parse(tableData)
+            doc.getElementsByTag(TAG_A).forEach {
+                it.attr("onclick", """
+                    (function() { 
+                        JAVA_CODE.onLinkClicked('${it.attr(ATTR_HREF)}');
+                        return false;
+                    })();
+                    return false; 
+                """.trimIndent())
+            }
+            val updatedTableData = doc.body().html()
+            return """
              |<!DOCTYPE html>
              |  <html>
              |      <head>
@@ -283,8 +297,11 @@ class ParseArticleTextService {
              |              table.wiki-content-table th{border:1px solid $TABLE_TEXT_COLOR_VAR_NAME;color: $TABLE_TEXT_COLOR_VAR_NAME;padding:.3em .7em;background-color: $TABLE_BACKGROUND_COLOR_VAR_NAME}
              |          </style>
              |      </head>
-             |      <body>$tableData</body>
+             |      <body>
+             |          $updatedTableData
+             |      </body>
              |  </html>
            """.trimMargin()
+        }
     }
 }
