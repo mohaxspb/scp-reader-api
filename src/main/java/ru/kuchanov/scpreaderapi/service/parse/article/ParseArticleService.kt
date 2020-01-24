@@ -228,12 +228,14 @@ class ParseArticleService @Autowired constructor(
         //search for inner articles
         val innerArticlesUrls = mutableListOf<String>()
         val innerATags = pageContent.getElementsByTag(TAG_A)
-        if (!innerATags.isEmpty()) {
-            for (a in innerATags) {
-                val innerUrl = a.attr(ATTR_HREF)
-                if (LinkType.getLinkType(innerUrl, lang) == LinkType.INNER) {
-                    innerArticlesUrls.add(lang.removeDomainFromUrl(innerUrl))
-                }
+        innerATags.forEach {
+            val innerUrl = it.attr(ATTR_HREF)
+//            println("innerUrl: $innerUrl")
+//            println("LinkType.getLinkType(innerUrl, lang): ${LinkType.getLinkType(innerUrl, lang)}")
+            if (LinkType.getLinkType(innerUrl, lang) == LinkType.INNER) {
+                val relativeUrl = lang.removeDomainFromUrl(innerUrl)
+                it.attr(ATTR_HREF, relativeUrl)
+                innerArticlesUrls.add(relativeUrl)
             }
         }
 

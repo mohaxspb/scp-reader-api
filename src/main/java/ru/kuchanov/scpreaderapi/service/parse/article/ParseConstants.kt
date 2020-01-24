@@ -44,7 +44,7 @@ object ParseConstants {
     //misc
     const val SITE_TAGS_PATH = "system:page-tags/tag/"
 
-    const val NOT_TRANSLATED_ARTICLE_UTIL_URL = "not_translated_yet_article_which_we_cant_show"
+    const val NOT_TRANSLATED_ARTICLE_UTIL_URL = "NOT_TRANSLATED_ARTICLE_UTIL_URL"
 
     const val NOT_TRANSLATED_ARTICLE_URL_DELIMITER = "___"
 }
