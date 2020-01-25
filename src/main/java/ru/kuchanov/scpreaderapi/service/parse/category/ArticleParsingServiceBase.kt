@@ -741,7 +741,8 @@ class ArticleParsingServiceBase {
                 .url(lang.siteBaseUrlsToLangs?.first()?.siteBaseUrl + url)
                 .build()
 
-        var responseBody = okHttpClient.newCall(request).execute().body()?.string()
+        val response = okHttpClient.newCall(request).execute()
+        var responseBody = response.body()?.string()
                 ?: throw ScpParseException("Response body is NULL for url: $url", NullPointerException())
 
         //remove all fucking RTL(&lrm) used for text-alignment. What a fucking idiots!..
@@ -751,7 +752,7 @@ class ArticleParsingServiceBase {
         val pageContent = getArticlePageContentTag(doc)
                 ?: throw ScpParseException("pageContent is NULL for url: $url", NullPointerException())
         val p404 = pageContent.getElementById("404-message")
-        if (p404 != null) {
+        if (p404 != null || response.code() == HttpStatus.NOT_FOUND.value()) {
             throw ScpParseException("404 page for url: $url")
         } else {
             return parseArticleService.parseArticle(url, doc, pageContent, lang, printTextParts)
