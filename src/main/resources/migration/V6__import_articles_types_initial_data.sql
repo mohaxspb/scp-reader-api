@@ -1,10 +1,10 @@
 insert into article_types (enum_value, image_url)
-VALUES ('NEUTRAL_OR_NOT_ADDED', '/image/ic_not_add_big.png'),
-       ('SAFE', '/image/safe_big.png'),
-       ('EUCLID', '/image/euclid_big.png'),
-       ('KETER', '/image/keter_big.png'),
-       ('THAUMIEL', '/image/thaumiel_big.png'),
-       ('NONE', '/image/none_big.png')
+VALUES ('NEUTRAL_OR_NOT_ADDED', '/image/not_add_big.png'),
+       ('SAFE', '/image/article_type/safe_big.png'),
+       ('EUCLID', '/image/article_type/euclid_big.png'),
+       ('KETER', '/image/article_type/keter_big.png'),
+       ('THAUMIEL', '/image/article_type/thaumiel_big.png'),
+       ('NONE', '/image/article_type/none_big.png')
 ON CONFLICT DO NOTHING;
 
 -- insert all types translations for all langs.
