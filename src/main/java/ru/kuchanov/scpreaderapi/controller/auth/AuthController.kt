@@ -104,8 +104,8 @@ class AuthController @Autowired constructor(
                 val curLevel = levelsJson.getLevelForScore(score)!!
 
                 val userToSave = User(
-                        myUsername = email,
-                        myPassword = email,
+                        username = email,
+                        password = email,
                         avatar = commonUserData.avatarUrl,
                         userAuthorities = setOf(),
                         //firebase

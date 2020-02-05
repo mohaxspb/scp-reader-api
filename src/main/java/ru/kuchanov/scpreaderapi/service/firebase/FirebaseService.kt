@@ -148,8 +148,8 @@ class FirebaseService @Autowired constructor(
                     val curLevel = levelsJson.getLevelForScore(it.score)!!
                     UserUidArticles(
                             User(
-                                    myUsername = it.email!!,
-                                    myPassword = it.email!!,
+                                    username = it.email!!,
+                                    password = it.email!!,
                                     avatar = it.avatar,
                                     userAuthorities = setOf(),
                                     //firebase
@@ -167,7 +167,7 @@ class FirebaseService @Autowired constructor(
                 }
                 .forEach { userUidArticles ->
                     //check if user already exists and update just some values
-                    var userInDb = userService.getByUsername(userUidArticles.user.myUsername)
+                    var userInDb = userService.getByUsername(userUidArticles.user.username)
                     if (userInDb == null) {
                         if (userUidArticles.user.avatar?.startsWith("data:image") == true) {
                             userUidArticles.user.avatar = ScpReaderConstants.DEFAULT_AVATAR_URL

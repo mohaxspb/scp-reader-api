@@ -15,23 +15,15 @@ class UserServiceImpl @Autowired constructor(
         val repository: UsersRepository
 ) : UserService {
 
-    override fun getById(id: Long) = repository.getOne(id) ?: throw UserNotFoundException()
+    override fun getByIdAsDto(id: Long) = repository.getByIdAsProjection(id)
 
-    override fun getByUsername(username: String) = repository.findOneByMyUsername(username)
+    override fun getByUsername(username: String) = repository.findOneByUsername(username)
 
-    override fun loadUserByUsername(username: String): User? = repository.findOneByMyUsername(username)
+    override fun loadUserByUsername(username: String): User? = repository.findOneByUsername(username)
 
     override fun save(user: User): User = repository.save(user)
 
-    override fun getAllUsersByLangId(langId: String): List<User> = repository.getUsersByLang(langId)
-
     override fun getUsersByLangIdCount(langId: String): Long = repository.getUsersByLangCount(langId)
-
-    override fun getUsersByLangWithOffsetAndLimitSortedByScore(
-            langId: String,
-            offset: Int,
-            limit: Int
-    ) = repository.getUsersByLangWithOffsetAndLimitSortedByScore(langId, offset, limit)
 
     override fun getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(langId: String, offset: Int, limit: Int): List<LeaderboardUserDto> =
             repository

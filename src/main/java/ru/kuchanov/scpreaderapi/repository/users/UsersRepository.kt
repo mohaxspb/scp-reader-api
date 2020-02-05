@@ -4,17 +4,15 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.model.dto.user.LeaderboardUserProjection
+import ru.kuchanov.scpreaderapi.model.dto.user.UserProjection
 
 interface UsersRepository : JpaRepository<User, Long> {
 
-    fun findOneByMyUsername(username: String): User?
+    fun findOneByUsername(username: String): User?
 
     fun findOneByGoogleId(id: String): User?
     fun findOneByFacebookId(id: String): User?
     fun findOneByVkId(id: String): User?
-
-    @Query("SELECT u from User u JOIN UsersLangs ul ON u.id = ul.userId WHERE ul.langId = :langId")
-    fun getUsersByLang(langId: String): List<User>
 
     @Query(
             "SELECT COUNT(*) from users u JOIN users_langs ul ON u.id = ul.user_id WHERE ul.lang_id = :langId",
@@ -23,12 +21,29 @@ interface UsersRepository : JpaRepository<User, Long> {
     fun getUsersByLangCount(langId: String): Long
 
     @Query(
-            "SELECT * FROM users u" +
-                    " JOIN users_langs ul ON u.id = ul.user_id" +
-                    " WHERE ul.lang_id = :langId" +
-                    " ORDER BY u.score DESC OFFSET :offset LIMIT :limit",
-            nativeQuery = true)
-    fun getUsersByLangWithOffsetAndLimitSortedByScore(langId: String, offset: Int, limit: Int): List<User>
+            """
+                SELECT
+                u.id,
+                u.full_name as fullName,
+                u.avatar,
+                u.score,
+                u.level_num as levelNum, 
+                u.score_to_next_level as scoreToNextLevel, 
+                u.cur_level_score as curLevelScore, 
+                COALESCE(read_count.count, 0) as numOfReadArticles 
+                FROM users u 
+                LEFT OUTER JOIN (
+                    select ra.user_id as user_id, count(distinct al.article_id) as count
+                    from read__articles_to_lang__to__users ra
+                    join articles_langs al on ra.article_to_lang_id = al.id
+                    group by ra.user_id
+                ) read_count on read_count.user_id = u.id
+                WHERE u.id = :id 
+                GROUP BY u.id, u.score, read_count.count
+            """,
+            nativeQuery = true
+    )
+    fun getByIdAsProjection(id: Long): UserProjection?
 
     @Query(
             """
