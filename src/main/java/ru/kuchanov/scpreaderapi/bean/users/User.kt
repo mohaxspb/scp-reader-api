@@ -23,12 +23,11 @@ data class User(
         val id: Long? = null,
 
         //spring security user details
-        @Column(name = "username", columnDefinition = "TEXT", unique = true)
-        var myUsername: String,
 
+        @Column(columnDefinition = "TEXT", unique = true)
+        private val username: String,
         @Convert(converter = EncryptionConverter::class)
-        @Column(name = "password", columnDefinition = "TEXT")
-        var myPassword: String,
+        private val password: String,
 
         val enabled: Boolean = true,
 
@@ -82,16 +81,16 @@ data class User(
         val updated: Timestamp? = null
 ) : UserDetails {
 
+    override fun getUsername() = username
+
+    override fun getPassword() = password
+
     override fun getAuthorities(): MutableCollection<out GrantedAuthority> =
             userAuthorities.map { SimpleGrantedAuthority(it.authority.name) }.toMutableList()
 
     override fun isEnabled() = enabled
 
-    override fun getUsername() = myUsername
-
     override fun isCredentialsNonExpired() = true
-
-    override fun getPassword() = myPassword
 
     override fun isAccountNonExpired() = true
 

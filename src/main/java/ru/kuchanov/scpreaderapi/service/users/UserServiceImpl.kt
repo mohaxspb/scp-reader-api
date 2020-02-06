@@ -1,11 +1,13 @@
 package ru.kuchanov.scpreaderapi.service.users
 
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.bind.annotation.ResponseStatus
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.users.User
-import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
 import ru.kuchanov.scpreaderapi.model.dto.user.LeaderboardUserProjection
+import ru.kuchanov.scpreaderapi.model.dto.user.UserProjection
 import ru.kuchanov.scpreaderapi.model.user.LeaderboardUserDto
 import ru.kuchanov.scpreaderapi.repository.users.UsersRepository
 
@@ -15,23 +17,15 @@ class UserServiceImpl @Autowired constructor(
         val repository: UsersRepository
 ) : UserService {
 
-    override fun getById(id: Long) = repository.getOne(id) ?: throw UserNotFoundException()
+    override fun getByIdAsDto(id: Long) = repository.getByIdAsProjection(id)
 
-    override fun getByUsername(username: String) = repository.findOneByMyUsername(username)
+    override fun getByUsername(username: String) = repository.findOneByUsername(username)
 
-    override fun loadUserByUsername(username: String): User? = repository.findOneByMyUsername(username)
+    override fun loadUserByUsername(username: String): User? = repository.findOneByUsername(username)
 
     override fun save(user: User): User = repository.save(user)
 
-    override fun getAllUsersByLangId(langId: String): List<User> = repository.getUsersByLang(langId)
-
     override fun getUsersByLangIdCount(langId: String): Long = repository.getUsersByLangCount(langId)
-
-    override fun getUsersByLangWithOffsetAndLimitSortedByScore(
-            langId: String,
-            offset: Int,
-            limit: Int
-    ) = repository.getUsersByLangWithOffsetAndLimitSortedByScore(langId, offset, limit)
 
     override fun getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(langId: String, offset: Int, limit: Int): List<LeaderboardUserDto> =
             repository
@@ -49,4 +43,16 @@ class UserServiceImpl @Autowired constructor(
 
     fun LeaderboardUserProjection.toDto() =
             LeaderboardUserDto(id, avatar, fullName, score, levelNum, scoreToNextLevel, curLevelScore, numOfReadArticles)
+
+    override fun editAccount(userId: Long, name: String, avatarUrl: String): UserProjection {
+        if (avatarUrl.startsWith("http") || avatarUrl.startsWith("https")) {
+            repository.editAccount(userId, name, avatarUrl)
+            return repository.getByIdAsProjection(userId)!!
+        } else {
+            throw InvalidUrlException("$avatarUrl is not a valid url!")
+        }
+    }
+
+    @ResponseStatus(value = HttpStatus.CONFLICT)
+    class InvalidUrlException(override val message: String?) : RuntimeException(message)
 }

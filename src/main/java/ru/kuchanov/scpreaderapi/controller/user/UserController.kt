@@ -5,6 +5,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.users.User
+import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
+import ru.kuchanov.scpreaderapi.model.dto.user.UserProjection
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.UserAndroidPurchaseService
 import ru.kuchanov.scpreaderapi.service.users.UserService
 
@@ -17,10 +19,16 @@ class UserController @Autowired constructor(
 ) {
 
     @GetMapping("/me")
-    fun showMe(
+    fun showMe(@AuthenticationPrincipal user: User) =
+            userService.getByIdAsDto(user.id!!) ?: throw UserNotFoundException()
+
+    @PostMapping("/edit")
+    fun editAccount(
             @AuthenticationPrincipal user: User,
-            @RequestParam(value = "showFull") showFull: Boolean = false
-    ) = if (showFull) userService.getById(user.id!!) else user
+            @RequestParam(value = "name") name: String,
+            @RequestParam(value = "avatarUrl") avatarUrl: String
+    ): UserProjection =
+            userService.editAccount(user.id!!, name, avatarUrl)
 
     @GetMapping("/{lang}/leaderboard")
     fun getUsersForLangWithLimitAndOffsetSortedByScore(
