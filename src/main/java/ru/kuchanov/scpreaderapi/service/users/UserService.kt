@@ -25,4 +25,7 @@ interface UserService : UserDetailsService {
 
     @Transactional
     fun save(user: User): User
+
+    @Transactional
+    fun editAccount(userId: Long, name: String, avatarUrl: String): UserProjection
 }

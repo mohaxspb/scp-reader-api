@@ -1,10 +1,12 @@
 package ru.kuchanov.scpreaderapi.repository.users
 
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.model.dto.user.LeaderboardUserProjection
 import ru.kuchanov.scpreaderapi.model.dto.user.UserProjection
+import javax.transaction.Transactional
 
 interface UsersRepository : JpaRepository<User, Long> {
 
@@ -90,4 +92,16 @@ interface UsersRepository : JpaRepository<User, Long> {
             nativeQuery = true
     )
     fun getUserPositionInLeaderboard(userId: Long, langId: String): Int
+
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query(
+            """
+                update users 
+                set full_name = :name, avatar = :avatarUrl
+                where id = :userId
+                """,
+            nativeQuery = true
+    )
+    fun editAccount(userId: Long, name: String, avatarUrl: String)
 }
