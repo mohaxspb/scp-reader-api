@@ -65,6 +65,11 @@ class ArticleController @Autowired constructor(
             articleForLangService.getOneByLangIdAndArticleId(articleId, langEnum.lang)
                     ?: throw ArticleForLangNotFoundException()
 
+    @GetMapping("{id}")
+    fun showArticleForLangById(@PathVariable(value = "id") articleToLangId: Long) =
+            articleForLangService.getOneByIdAsDto(articleToLangId)
+                    ?: throw ArticleForLangNotFoundException()
+
     @GetMapping("{langEnum}/{id}/full")
     fun showArticleForIdAndLangIdFull(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
@@ -105,5 +110,4 @@ class ArticleController @Autowired constructor(
         val lang = langEnum.lang.let { langService.getById(it) ?: throw LangNotFoundException() }
         return articleForLangService.getRandomArticle(lang.id)
     }
-
 }

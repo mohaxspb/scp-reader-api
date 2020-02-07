@@ -36,6 +36,15 @@ class ArticleToLangServiceImpl @Autowired constructor(
                     ?.withTags()
                     ?.withTextParts()
 
+    override fun getOneByIdAsDto(id: Long): ArticleToLangDto? =
+            articlesForLangRepository
+                    .getOneByIdAsProjection(id)
+                    ?.toDto()
+                    ?.withType()
+                    ?.withImages()
+                    ?.withTags()
+                    ?.withTextParts()
+
     override fun getArticleForLangByUrlRelativeAndLang(urlRelative: String, langId: String) =
             articlesForLangRepository.findByUrlRelativeAndLangId(urlRelative, langId)
 

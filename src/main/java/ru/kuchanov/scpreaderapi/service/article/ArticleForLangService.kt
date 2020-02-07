@@ -10,6 +10,8 @@ interface ArticleForLangService {
 
     fun getOneByLangIdAndArticleIdAsDto(articleId: Long, langId: String): ArticleToLangDto?
 
+    fun getOneByIdAsDto(id: Long): ArticleToLangDto?
+
     fun getArticleForLangByUrlRelativeAndLang(urlRelative: String, langId: String): ArticleForLang?
 
     fun getArticleForLangByUrlRelativeAndLangAsDto(urlRelative: String, langId: String): ArticleToLangDto?
