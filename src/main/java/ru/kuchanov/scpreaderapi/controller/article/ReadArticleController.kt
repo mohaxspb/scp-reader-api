@@ -20,18 +20,18 @@ class ReadArticleController @Autowired constructor(
         val langService: LangService
 ) {
 
-    @GetMapping("all")
+    @GetMapping("{langEnum}/all")
     fun all(
-            @RequestParam(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance?,
+            @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
             @RequestParam(value = "offset") offset: Int,
             @RequestParam(value = "limit") limit: Int,
             @AuthenticationPrincipal user: User
     ): List<ReadOrFavoriteArticleToLangDto> {
-        val lang = langEnum?.lang?.let { langService.getById(it) ?: throw LangNotFoundException() }
+        val lang =  langService.getById(langEnum.lang) ?: throw LangNotFoundException()
 
         return readArticleForLangService.findAllByUserIdAndLangId(
                 userId = user.id!!,
-                langId = lang?.id,
+                langId = lang.id,
                 offset = offset,
                 limit = limit
         )
