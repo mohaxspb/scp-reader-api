@@ -5,7 +5,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticleByLang
-import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticleByLangAlreadyExistsException
 import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticleByLangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.LangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.User
@@ -48,11 +47,11 @@ class ReadArticleController @Autowired constructor(
                         articleToLangId = articleToLangId,
                         userId = user.id!!
                 )
-        if (alreadySavedReadArticle == null) {
-            return readArticleForLangService
+        return if (alreadySavedReadArticle == null) {
+            readArticleForLangService
                     .save(ReadArticleByLang(articleToLangId = articleToLangId, userId = user.id))
         } else {
-            throw ReadArticleByLangAlreadyExistsException()
+            readArticleForLangService.save(alreadySavedReadArticle)
         }
     }
 

@@ -29,12 +29,7 @@ data class ReadArticleByLang(
 )
 
 
-@ResponseStatus(value = HttpStatus.NOT_FOUND)
+@ResponseStatus(value = HttpStatus.CONFLICT)
 class ReadArticleByLangNotFoundException(
         override val message: String? = "No such read article!"
-) : RuntimeException(message)
-
-@ResponseStatus(value = HttpStatus.CONFLICT)
-class ReadArticleByLangAlreadyExistsException(
-        override val message: String? = "Read article already exists!"
 ) : RuntimeException(message)
