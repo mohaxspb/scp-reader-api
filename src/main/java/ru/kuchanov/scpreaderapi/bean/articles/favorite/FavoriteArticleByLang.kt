@@ -28,13 +28,7 @@ data class FavoriteArticleByLang(
 )
 
 
-@ResponseStatus(value = HttpStatus.NOT_FOUND)
+@ResponseStatus(value = HttpStatus.CONFLICT)
 class FavoriteArticleByLangNotFoundException(
         override val message: String? = "No such favorite article!"
 ) : RuntimeException(message)
-
-@ResponseStatus(value = HttpStatus.CONFLICT)
-class FavoriteArticleByLangAlreadyExistsException(
-        override val message: String? = "Favorite article already exists!"
-) : RuntimeException(message)
-
