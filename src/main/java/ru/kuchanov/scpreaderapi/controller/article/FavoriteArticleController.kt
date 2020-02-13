@@ -5,7 +5,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.articles.favorite.FavoriteArticleByLang
-import ru.kuchanov.scpreaderapi.bean.articles.favorite.FavoriteArticleByLangAlreadyExistsException
 import ru.kuchanov.scpreaderapi.bean.articles.favorite.FavoriteArticleByLangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.LangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.User
@@ -21,18 +20,18 @@ class FavoriteArticleController @Autowired constructor(
         val langService: LangService
 ) {
 
-    @GetMapping("all")
+    @GetMapping("{langEnum}/all")
     fun all(
-            @RequestParam(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance?,
+            @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
             @RequestParam(value = "offset") offset: Int,
             @RequestParam(value = "limit") limit: Int,
             @AuthenticationPrincipal user: User
     ): List<ReadOrFavoriteArticleToLangDto> {
-        val lang = langEnum?.lang?.let { langService.getById(it) ?: throw LangNotFoundException() }
+        val lang = langEnum.lang.let { langService.getById(it) ?: throw LangNotFoundException() }
 
         return favoriteArticleForLangService.findAllByUserIdAndLangId(
                 userId = user.id!!,
-                langId = lang?.id,
+                langId = lang.id,
                 offset = offset,
                 limit = limit
         )
@@ -48,11 +47,11 @@ class FavoriteArticleController @Autowired constructor(
                         articleToLangId = articleToLangId,
                         userId = user.id!!
                 )
-        if (alreadySavedFavoriteArticle == null) {
-            return favoriteArticleForLangService
+        return if (alreadySavedFavoriteArticle == null) {
+            favoriteArticleForLangService
                     .save(FavoriteArticleByLang(articleToLangId = articleToLangId, userId = user.id))
         } else {
-            throw FavoriteArticleByLangAlreadyExistsException()
+            favoriteArticleForLangService.save(alreadySavedFavoriteArticle)
         }
     }
 
