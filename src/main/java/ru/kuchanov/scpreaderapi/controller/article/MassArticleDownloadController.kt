@@ -23,8 +23,7 @@ class MassArticleDownloadController @Autowired constructor(
 
     @GetMapping("{langEnum}/categories/all")
     fun all(
-            @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
-            @AuthenticationPrincipal user: User
+            @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance
     ): List<ArticleCategoryToLangProjection> {
         val lang = langEnum.lang.let { langService.getById(it) ?: throw LangNotFoundException() }
 
