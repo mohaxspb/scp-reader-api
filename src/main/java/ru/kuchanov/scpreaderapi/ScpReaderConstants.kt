@@ -18,6 +18,7 @@ object ScpReaderConstants {
         const val ARTICLE = "article"
         const val READ = "read"
         const val FAVORITE = "favorite"
+        const val DOWNLOAD = "download"
         const val PARSE = "parse"
     }
 
