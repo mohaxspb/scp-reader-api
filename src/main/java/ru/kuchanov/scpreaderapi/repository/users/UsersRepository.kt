@@ -22,6 +22,7 @@ interface UsersRepository : JpaRepository<User, Long> {
     )
     fun getUsersByLangCount(langId: String): Long
 
+    @Suppress("SpringDataRepositoryMethodReturnTypeInspection")
     @Query(
             """
                 SELECT
@@ -47,6 +48,7 @@ interface UsersRepository : JpaRepository<User, Long> {
     )
     fun getByIdAsProjection(id: Long): UserProjection?
 
+    @Suppress("SpringDataRepositoryMethodReturnTypeInspection")
     @Query(
             """
                 SELECT
