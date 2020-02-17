@@ -19,7 +19,7 @@ interface UserService : UserDetailsService {
 
     fun getUsersByLangIdCount(langId: String): Long
 
-    fun getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(langId: String, offset: Int, limit: Int): List<LeaderboardUserDto>
+    fun getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(offset: Int, limit: Int): List<LeaderboardUserDto>
 
     fun getUserPositionInLeaderboard(userId: Long, langId: String): Int
 

@@ -30,12 +30,11 @@ class UserController @Autowired constructor(
     ): UserProjection =
             userService.editAccount(user.id!!, name, avatarUrl)
 
-    @GetMapping("/{lang}/leaderboard")
+    @GetMapping("/leaderboard")
     fun getUsersForLangWithLimitAndOffsetSortedByScore(
-            @PathVariable(value = "lang") lang: ScpReaderConstants.Firebase.FirebaseInstance,
             @RequestParam(value = "offset") offset: Int,
             @RequestParam(value = "limit") limit: Int
-    ) = userService.getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(lang.lang, offset, limit)
+    ) = userService.getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(offset, limit)
 
     @GetMapping("/{lang}/count")
     fun getUsersCountForLang(@PathVariable(value = "lang") lang: ScpReaderConstants.Firebase.FirebaseInstance) =

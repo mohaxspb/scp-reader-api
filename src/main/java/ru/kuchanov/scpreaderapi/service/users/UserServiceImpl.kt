@@ -27,7 +27,7 @@ class UserServiceImpl @Autowired constructor(
 
     override fun getUsersByLangIdCount(langId: String): Long = repository.getUsersByLangCount(langId)
 
-    override fun getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(langId: String, offset: Int, limit: Int) =
+    override fun getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(offset: Int, limit: Int) =
             repository
                     .getLeaderboardUsersWithOffsetAndLimitSortedByScore(offset, limit)
                     .map { it.toDto() }
