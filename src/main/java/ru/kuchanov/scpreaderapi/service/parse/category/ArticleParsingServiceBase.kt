@@ -172,7 +172,9 @@ class ArticleParsingServiceBase {
                         articlesToDownload.take(processOnlyCount)
                     } ?: articlesToDownload
                 }
-                .flatMap { downloadAndSaveArticles(it, lang, innerArticlesDepth ?: DEFAULT_INNER_ARTICLES_DEPTH) }
+                .flatMap { articles ->
+                    downloadAndSaveArticles(articles, lang, innerArticlesDepth ?: DEFAULT_INNER_ARTICLES_DEPTH)
+                }
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
                 .subscribeBy(
@@ -560,6 +562,10 @@ class ArticleParsingServiceBase {
     ): ArticleForLang {
         println("parse article: ${articleToSave.urlRelative}")
         try {
+            if (categoryToLangService.findByLangIdAndSiteUrl(lang.id, articleToSave.urlRelative) != null) {
+                throw IllegalStateException("Attempt to parse category as article")
+            }
+
             val articleDownloaded = getArticleFromApi(articleToSave.urlRelative, lang, printTextParts)
 
             var articleInDb = articleService.getArticleByUrlRelative(articleDownloaded.urlRelative)
