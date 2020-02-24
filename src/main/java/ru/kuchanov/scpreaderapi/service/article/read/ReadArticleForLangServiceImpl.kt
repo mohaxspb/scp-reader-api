@@ -45,23 +45,22 @@ class ReadArticleForLangServiceImpl @Autowired constructor(
                 userId = userId
         )
 
-        val scoreAdded: Int
+        val userScore: Int
 
         if (transaction == null) {
-            scoreAdded = DEFAULT_SCORE_FOR_READ_ARTICLE
             val transactionToSave = UserDataTransaction(
                     articleToLangId = articleToLangId,
                     userId = userId,
                     transactionType = ScpReaderConstants.UserDataTransactionType.READ_ARTICLE,
                     transactionData = true.toString(),
-                    scoreAmount = scoreAdded
+                    scoreAmount = DEFAULT_SCORE_FOR_READ_ARTICLE
             )
             transactionService.save(transactionToSave)
 
             val userInDb = userService.getById(userId) ?: throw UserNotFoundException()
-            userService.save(userInDb.apply { score += transactionToSave.scoreAmount })
+            userScore = userService.save(userInDb.apply { score += transactionToSave.scoreAmount }).score
         } else {
-            scoreAdded = 0
+            userScore = userService.getUserScoreById(userId)
             transactionService.save(transaction)
         }
 
@@ -72,7 +71,7 @@ class ReadArticleForLangServiceImpl @Autowired constructor(
 
         return AddToReadResultDto(
                 readArticleByLang = repository.save(readArticle),
-                scoreAdded = scoreAdded
+                score = userScore
         )
     }
 

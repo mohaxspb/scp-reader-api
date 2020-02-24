@@ -30,4 +30,6 @@ interface UserService : UserDetailsService {
 
     @Transactional
     fun editAccount(userId: Long, name: String, avatarUrl: String): UserProjection
+
+    fun getUserScoreById(userId: Long): Int
 }
