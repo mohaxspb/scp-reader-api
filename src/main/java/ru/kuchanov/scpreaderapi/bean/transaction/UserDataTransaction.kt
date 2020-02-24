@@ -17,6 +17,9 @@ data class UserDataTransaction(
         //content
         @Column(name = "user_id")
         var userId: Long,
+        @Column(name = "article_to_lang_id")
+        var articleToLangId: Long? = null,
+        @Enumerated(EnumType.STRING)
         @Column(name = "transaction_type")
         val transactionType: ScpReaderConstants.UserDataTransactionType,
         @Column(name = "transaction_data", columnDefinition = "TEXT")

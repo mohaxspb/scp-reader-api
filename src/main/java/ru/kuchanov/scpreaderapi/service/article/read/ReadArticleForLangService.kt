@@ -1,6 +1,7 @@
 package ru.kuchanov.scpreaderapi.service.article.read
 
 import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticleByLang
+import ru.kuchanov.scpreaderapi.model.dto.article.AddToReadResultDto
 import ru.kuchanov.scpreaderapi.model.dto.article.ReadOrFavoriteArticleToLangDto
 import javax.transaction.Transactional
 
@@ -10,7 +11,7 @@ interface ReadArticleForLangService {
     fun deleteById(id: Long)
 
     @Transactional
-    fun save(article: ReadArticleByLang): ReadArticleByLang
+    fun addArticleToRead(articleToLangId: Long, userId: Long): AddToReadResultDto
 
     fun findByArticleToLangIdAndUserId(articleToLangId: Long, userId: Long): ReadArticleByLang?
 
@@ -20,4 +21,6 @@ interface ReadArticleForLangService {
             offset: Int,
             limit: Int
     ): List<ReadOrFavoriteArticleToLangDto>
+
+    fun removeArticleFromRead(articleToLangId: Long, userId: Long): ReadArticleByLang
 }

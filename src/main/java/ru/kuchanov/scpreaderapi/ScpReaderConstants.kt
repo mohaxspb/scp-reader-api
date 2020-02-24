@@ -8,6 +8,8 @@ object ScpReaderConstants {
 
     const val NUM_OF_ARTICLES_RATED_PAGE = 20
 
+    const val DEFAULT_SCORE_FOR_READ_ARTICLE = 1
+
     object Path {
         const val FIREBASE = "firebase"
         const val AUTH = "auth"

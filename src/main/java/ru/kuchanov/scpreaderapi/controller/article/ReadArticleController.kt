@@ -5,9 +5,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticleByLang
-import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticleByLangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.LangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.User
+import ru.kuchanov.scpreaderapi.model.dto.article.AddToReadResultDto
 import ru.kuchanov.scpreaderapi.model.dto.article.ReadOrFavoriteArticleToLangDto
 import ru.kuchanov.scpreaderapi.service.article.read.ReadArticleForLangService
 import ru.kuchanov.scpreaderapi.service.users.LangService
@@ -27,7 +27,7 @@ class ReadArticleController @Autowired constructor(
             @RequestParam(value = "limit") limit: Int,
             @AuthenticationPrincipal user: User
     ): List<ReadOrFavoriteArticleToLangDto> {
-        val lang =  langService.getById(langEnum.lang) ?: throw LangNotFoundException()
+        val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
 
         return readArticleForLangService.findAllByUserIdAndLangId(
                 userId = user.id!!,
@@ -41,35 +41,13 @@ class ReadArticleController @Autowired constructor(
     fun add(
             @RequestParam(value = "articleToLangId") articleToLangId: Long,
             @AuthenticationPrincipal user: User
-    ): ReadArticleByLang {
-        val alreadySavedReadArticle = readArticleForLangService
-                .findByArticleToLangIdAndUserId(
-                        articleToLangId = articleToLangId,
-                        userId = user.id!!
-                )
-        return if (alreadySavedReadArticle == null) {
-            readArticleForLangService
-                    .save(ReadArticleByLang(articleToLangId = articleToLangId, userId = user.id))
-        } else {
-            readArticleForLangService.save(alreadySavedReadArticle)
-        }
-    }
+    ): AddToReadResultDto =
+            readArticleForLangService.addArticleToRead(articleToLangId, user.id!!)
 
     @DeleteMapping("/delete")
     fun delete(
             @RequestParam(value = "articleToLangId") articleToLangId: Long,
             @AuthenticationPrincipal user: User
-    ): ReadArticleByLang {
-        val alreadySavedReadArticle = readArticleForLangService
-                .findByArticleToLangIdAndUserId(
-                        articleToLangId = articleToLangId,
-                        userId = user.id!!
-                )
-        if (alreadySavedReadArticle != null) {
-            readArticleForLangService.deleteById(alreadySavedReadArticle.id!!)
-            return alreadySavedReadArticle
-        } else {
-            throw ReadArticleByLangNotFoundException()
-        }
-    }
+    ): ReadArticleByLang =
+            readArticleForLangService.removeArticleFromRead(articleToLangId, user.id!!)
 }

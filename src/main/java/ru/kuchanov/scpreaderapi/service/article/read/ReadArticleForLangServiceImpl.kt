@@ -2,13 +2,21 @@ package ru.kuchanov.scpreaderapi.service.article.read
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import ru.kuchanov.scpreaderapi.ScpReaderConstants
+import ru.kuchanov.scpreaderapi.ScpReaderConstants.DEFAULT_SCORE_FOR_READ_ARTICLE
 import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticleByLang
+import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticleByLangNotFoundException
+import ru.kuchanov.scpreaderapi.bean.transaction.UserDataTransaction
+import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
+import ru.kuchanov.scpreaderapi.model.dto.article.AddToReadResultDto
 import ru.kuchanov.scpreaderapi.model.dto.article.ReadOrFavoriteArticleProjection
 import ru.kuchanov.scpreaderapi.model.dto.article.ReadOrFavoriteArticleToLangDto
 import ru.kuchanov.scpreaderapi.repository.article.read.ReadArticlesForLangRepository
 import ru.kuchanov.scpreaderapi.repository.article.tags.TagForLangRepository
+import ru.kuchanov.scpreaderapi.repository.transaction.UserDataTransactionService
 import ru.kuchanov.scpreaderapi.service.article.image.ArticlesImagesService
 import ru.kuchanov.scpreaderapi.service.article.type.ArticleAndArticleTypeService
+import ru.kuchanov.scpreaderapi.service.users.UserService
 import javax.transaction.Transactional
 
 
@@ -17,7 +25,9 @@ class ReadArticleForLangServiceImpl @Autowired constructor(
         val repository: ReadArticlesForLangRepository,
         val imagesService: ArticlesImagesService,
         val tagsForLangRepository: TagForLangRepository,
-        val articleAndArticleTypeService: ArticleAndArticleTypeService
+        val articleAndArticleTypeService: ArticleAndArticleTypeService,
+        val transactionService: UserDataTransactionService,
+        val userService: UserService
 ) : ReadArticleForLangService {
 
     @Transactional
@@ -25,8 +35,69 @@ class ReadArticleForLangServiceImpl @Autowired constructor(
             repository.deleteById(id)
 
     @Transactional
-    override fun save(article: ReadArticleByLang): ReadArticleByLang =
-            repository.save(article)
+    override fun addArticleToRead(articleToLangId: Long, userId: Long): AddToReadResultDto {
+        //check DB
+        //if null - add transaction and score
+        //else - update transaction
+        val transaction = transactionService.findByTransactionTypeAndArticleToLangIdAndUserId(
+                transactionType = ScpReaderConstants.UserDataTransactionType.READ_ARTICLE,
+                articleToLangId = articleToLangId,
+                userId = userId
+        )
+
+        val scoreAdded: Int
+
+        if (transaction == null) {
+            scoreAdded = DEFAULT_SCORE_FOR_READ_ARTICLE
+            val transactionToSave = UserDataTransaction(
+                    articleToLangId = articleToLangId,
+                    userId = userId,
+                    transactionType = ScpReaderConstants.UserDataTransactionType.READ_ARTICLE,
+                    transactionData = true.toString(),
+                    scoreAmount = scoreAdded
+            )
+            transactionService.save(transactionToSave)
+
+            val userInDb = userService.getById(userId) ?: throw UserNotFoundException()
+            userService.save(userInDb.apply { score += transactionToSave.scoreAmount })
+        } else {
+            scoreAdded = 0
+            transactionService.save(transaction)
+        }
+
+        val readArticle = findByArticleToLangIdAndUserId(
+                articleToLangId = articleToLangId,
+                userId = userId
+        ) ?: ReadArticleByLang(articleToLangId = articleToLangId, userId = userId)
+
+        return AddToReadResultDto(
+                readArticleByLang = repository.save(readArticle),
+                scoreAdded = scoreAdded
+        )
+    }
+
+    override fun removeArticleFromRead(articleToLangId: Long, userId: Long): ReadArticleByLang {
+        //update transaction if find one
+        val transaction = transactionService.findByTransactionTypeAndArticleToLangIdAndUserId(
+                transactionType = ScpReaderConstants.UserDataTransactionType.READ_ARTICLE,
+                articleToLangId = articleToLangId,
+                userId = userId
+        )
+        if (transaction != null) {
+            transactionService.save(transaction.copy(transactionData = false.toString()))
+        }
+
+        val alreadySavedReadArticle = findByArticleToLangIdAndUserId(
+                articleToLangId = articleToLangId,
+                userId = userId
+        )
+        if (alreadySavedReadArticle != null) {
+            deleteById(alreadySavedReadArticle.id!!)
+            return alreadySavedReadArticle
+        } else {
+            throw ReadArticleByLangNotFoundException()
+        }
+    }
 
     override fun findByArticleToLangIdAndUserId(articleToLangId: Long, userId: Long): ReadArticleByLang? =
             repository.findByArticleToLangIdAndUserId(articleToLangId, userId)
