@@ -52,4 +52,8 @@ object ScpReaderConstants {
         THAUMIEL,
         NONE
     }
+
+    enum class UserDataTransactionType {
+        READ_ARTICLE
+    }
 }
