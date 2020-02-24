@@ -18,7 +18,6 @@ import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.FirebaseDataUpdateDate
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.favorite.FavoriteArticleByLang
-import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticleByLang
 import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
 import ru.kuchanov.scpreaderapi.bean.auth.UserToAuthority
 import ru.kuchanov.scpreaderapi.bean.users.Lang
@@ -29,6 +28,7 @@ import ru.kuchanov.scpreaderapi.model.firebase.FirebaseArticle
 import ru.kuchanov.scpreaderapi.model.firebase.FirebaseUser
 import ru.kuchanov.scpreaderapi.model.user.LevelsJson
 import ru.kuchanov.scpreaderapi.repository.firebase.FirebaseDataUpdateDateRepository
+import ru.kuchanov.scpreaderapi.repository.transaction.UserDataTransactionService
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.ArticleService
 import ru.kuchanov.scpreaderapi.service.article.favorite.FavoriteArticleForLangService
@@ -52,6 +52,7 @@ class FirebaseService @Autowired constructor(
         val articleForLangService: ArticleForLangService,
         val favoriteArticleForLangService: FavoriteArticleForLangService,
         val readArticleForLangService: ReadArticleForLangService,
+        val transactionService: UserDataTransactionService,
         val firebaseDataUpdateDateRepository: FirebaseDataUpdateDateRepository
 ) {
 
@@ -255,38 +256,35 @@ class FirebaseService @Autowired constructor(
     }
 
     private fun manageFavoriteArticlesForUserForLang(userId: Long, isFavorite: Boolean, articleToLangId: Long) {
-        val favoriteArticleForLang = favoriteArticleForLangService
-                .getFavoriteArticleForArticleIdLangIdAndUserId(
-                        userId = userId,
-                        articleToLangId = articleToLangId
+        if (isFavorite) {
+            val favoriteArticleForLang = favoriteArticleForLangService
+                    .getFavoriteArticleForArticleIdLangIdAndUserId(userId = userId, articleToLangId = articleToLangId)
+            if (favoriteArticleForLang == null) {
+                favoriteArticleForLangService.save(
+                        FavoriteArticleByLang(
+                                userId = userId,
+                                articleToLangId = articleToLangId
+                        )
                 )
-
-        if (isFavorite && favoriteArticleForLang == null) {
-            favoriteArticleForLangService.save(
-                    FavoriteArticleByLang(
-                            userId = userId,
-                            articleToLangId = articleToLangId
-                    )
-            )
+            }
         }
     }
 
-    /**
-     * we'll write to DB only if article in firebase is read and there is no row for this article in DB
-     */
     private fun manageReadArticlesForUserForLang(userId: Long, isRead: Boolean, articleToLangId: Long) {
-        val readArticleForLang = readArticleForLangService.findByArticleToLangIdAndUserId(
-                userId = userId,
-                articleToLangId = articleToLangId
-        )
-
-        if (isRead && readArticleForLang == null) {
-            readArticleForLangService.save(
-                    ReadArticleByLang(
-                            userId = userId,
-                            articleToLangId = articleToLangId
+        if (isRead) {
+            val readTransaction = transactionService
+                    .findByTransactionTypeAndArticleToLangIdAndUserId(
+                            transactionType = ScpReaderConstants.UserDataTransactionType.READ_ARTICLE,
+                            articleToLangId = articleToLangId,
+                            userId = userId
                     )
-            )
+            if (readTransaction == null) {
+                readArticleForLangService.addArticleToRead(
+                        articleToLangId = articleToLangId,
+                        userId = userId,
+                        increaseScore = false
+                )
+            }
         }
     }
 

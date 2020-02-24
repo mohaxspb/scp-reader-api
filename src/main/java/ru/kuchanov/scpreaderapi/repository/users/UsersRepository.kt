@@ -22,6 +22,9 @@ interface UsersRepository : JpaRepository<User, Long> {
     )
     fun getUsersByLangCount(langId: String): Long
 
+    @Query("select score from User where id = :id")
+    fun getScoreById(id: Long): Int
+
     @Suppress("SpringDataRepositoryMethodReturnTypeInspection")
     @Query(
             """

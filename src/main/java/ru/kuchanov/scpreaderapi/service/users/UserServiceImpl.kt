@@ -1,6 +1,7 @@
 package ru.kuchanov.scpreaderapi.service.users
 
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.ResponseStatus
@@ -16,6 +17,8 @@ import ru.kuchanov.scpreaderapi.repository.users.UsersRepository
 class UserServiceImpl @Autowired constructor(
         val repository: UsersRepository
 ) : UserService {
+
+    override fun getById(id: Long): User? = repository.findByIdOrNull(id)
 
     override fun getByIdAsDto(id: Long) = repository.getByIdAsProjection(id)
 
@@ -41,9 +44,6 @@ class UserServiceImpl @Autowired constructor(
     override fun getUserPositionInLeaderboard(userId: Long, langId: String): Int =
             repository.getUserPositionInLeaderboard(userId, langId)
 
-    fun LeaderboardUserProjection.toDto() =
-            LeaderboardUserDto(id, avatar, fullName, score, levelNum, scoreToNextLevel, curLevelScore, numOfReadArticles)
-
     override fun editAccount(userId: Long, name: String, avatarUrl: String): UserProjection {
         if (avatarUrl.startsWith("http") || avatarUrl.startsWith("https")) {
             repository.editAccount(userId, name, avatarUrl)
@@ -53,6 +53,12 @@ class UserServiceImpl @Autowired constructor(
         }
     }
 
-    @ResponseStatus(value = HttpStatus.CONFLICT)
-    class InvalidUrlException(override val message: String?) : RuntimeException(message)
+    override fun getUserScoreById(userId: Long): Int =
+            repository.getScoreById(userId)
+
+    fun LeaderboardUserProjection.toDto() =
+            LeaderboardUserDto(id, avatar, fullName, score, levelNum, scoreToNextLevel, curLevelScore, numOfReadArticles)
 }
+
+@ResponseStatus(value = HttpStatus.CONFLICT)
+class InvalidUrlException(override val message: String?) : RuntimeException(message)

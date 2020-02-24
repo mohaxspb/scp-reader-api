@@ -13,6 +13,8 @@ interface UserService : UserDetailsService {
 
     fun getByIdAsDto(id: Long): UserProjection?
 
+    fun getById(id: Long): User?
+
     fun getByUsername(username: String): User?
 
     fun getByProviderId(id: String, provider: ScpReaderConstants.SocialProvider): User?
@@ -28,4 +30,6 @@ interface UserService : UserDetailsService {
 
     @Transactional
     fun editAccount(userId: Long, name: String, avatarUrl: String): UserProjection
+
+    fun getUserScoreById(userId: Long): Int
 }
