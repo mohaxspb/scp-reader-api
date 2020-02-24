@@ -35,7 +35,7 @@ class ReadArticleForLangServiceImpl @Autowired constructor(
             repository.deleteById(id)
 
     @Transactional
-    override fun addArticleToRead(articleToLangId: Long, userId: Long): AddToReadResultDto {
+    override fun addArticleToRead(articleToLangId: Long, userId: Long, increaseScore: Boolean): AddToReadResultDto {
         //check DB
         //if null - add transaction and score
         //else - update transaction
@@ -53,7 +53,7 @@ class ReadArticleForLangServiceImpl @Autowired constructor(
                     userId = userId,
                     transactionType = ScpReaderConstants.UserDataTransactionType.READ_ARTICLE,
                     transactionData = true.toString(),
-                    scoreAmount = DEFAULT_SCORE_FOR_READ_ARTICLE
+                    scoreAmount = if (increaseScore) DEFAULT_SCORE_FOR_READ_ARTICLE else 0
             )
             transactionService.save(transactionToSave)
 
@@ -61,7 +61,7 @@ class ReadArticleForLangServiceImpl @Autowired constructor(
             userScore = userService.save(userInDb.apply { score += transactionToSave.scoreAmount }).score
         } else {
             userScore = userService.getUserScoreById(userId)
-            transactionService.save(transaction)
+            transactionService.save(transaction.copy(transactionData = true.toString()))
         }
 
         val readArticle = findByArticleToLangIdAndUserId(

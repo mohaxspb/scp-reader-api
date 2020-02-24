@@ -11,7 +11,7 @@ interface ReadArticleForLangService {
     fun deleteById(id: Long)
 
     @Transactional
-    fun addArticleToRead(articleToLangId: Long, userId: Long): AddToReadResultDto
+    fun addArticleToRead(articleToLangId: Long, userId: Long, increaseScore: Boolean = true): AddToReadResultDto
 
     fun findByArticleToLangIdAndUserId(articleToLangId: Long, userId: Long): ReadArticleByLang?
 
