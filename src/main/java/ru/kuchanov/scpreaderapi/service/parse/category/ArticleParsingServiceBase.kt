@@ -5,11 +5,13 @@ import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.processors.BehaviorProcessor
 import io.reactivex.rxkotlin.subscribeBy
+import io.reactivex.rxkotlin.toFlowable
 import io.reactivex.schedulers.Schedulers
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import org.apache.http.util.TextUtils
+import org.joda.time.Period
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
@@ -33,6 +35,7 @@ import ru.kuchanov.scpreaderapi.bean.articles.tags.TagForLang
 import ru.kuchanov.scpreaderapi.bean.articles.text.TextPart
 import ru.kuchanov.scpreaderapi.bean.articles.types.ArticlesAndArticleTypes
 import ru.kuchanov.scpreaderapi.bean.users.Lang
+import ru.kuchanov.scpreaderapi.bean.users.LangNotFoundException
 import ru.kuchanov.scpreaderapi.configuration.NetworkConfiguration
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangToArticleForLangService
@@ -57,6 +60,7 @@ import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_BODY
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_IMG
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_P
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_TABLE
+import ru.kuchanov.scpreaderapi.service.users.LangService
 import java.io.IOException
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -77,6 +81,9 @@ class ArticleParsingServiceBase {
     @Autowired
     @Qualifier(NetworkConfiguration.QUALIFIER_OK_HTTP_CLIENT_NOT_LOGGING)
     protected lateinit var okHttpClient: OkHttpClient
+
+    @Autowired
+    private lateinit var langService: LangService
 
     @Autowired
     private lateinit var parseArticleService: ParseArticleService
@@ -149,6 +156,68 @@ class ArticleParsingServiceBase {
     fun getArticleRatingStringDelimiter() = ", рейтинг"
 
     fun getArticleRatingStringDelimiterEnd() = ""
+
+    @Async
+    fun parseEverything() {
+        val startTime = System.currentTimeMillis()
+        ScpReaderConstants.Firebase.FirebaseInstance.values().toFlowable()
+                .map { langService.getById(it.lang) ?: throw LangNotFoundException() }
+                .map { it to getParsingRealizationForLang(it) }
+                .switchMapCompletable { (lang, service) ->
+                    Flowable
+                            .fromIterable(service.getObjectArticlesUrls())
+                            .switchMapSingle { objectsUrl ->
+                                service.downloadAndSaveObjectArticles(lang = lang, objectsUrl = objectsUrl)
+                            }
+                            .ignoreElements()
+                }
+                .andThen(TODO("download recent"))
+                .andThen(TODO("download rated"))
+                .subscribeBy(
+                        onComplete = {
+                            val timeSpent = System.currentTimeMillis() - startTime
+                            println("Total download time: ${Period.millis(timeSpent)}")
+                        },
+                        onError = {
+                            println("Error while parse everything")
+                            it.printStackTrace()
+                        }
+                )
+        //todo
+    }
+
+    @Async
+    fun parseObjectsArticlesForLang(
+            lang: Lang,
+            totalPageCount: Int? = null,
+            processOnlyCount: Int? = null,
+            innerArticlesDepth: Int? = null
+    ) {
+        Flowable.fromIterable(getObjectArticlesUrls())
+                .flatMapSingle { objectsUrl ->
+                    downloadAndSaveObjectArticles(
+                            lang = lang,
+                            objectsUrl = objectsUrl,
+                            processOnlyCount = processOnlyCount,
+                            innerArticlesDepth = innerArticlesDepth
+                    )
+                }
+                .toList()
+                .map { it.flatten() }
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .subscribeBy(
+                        onSuccess = { articlesDownloadedAndSavedSuccessfully ->
+                            println("download complete")
+                            println(
+                                    articlesDownloadedAndSavedSuccessfully
+                                            .joinToString(separator = "\n========###========\n") { it.urlRelative }
+                            )
+                            println("download complete")
+                        },
+                        onError = { it.printStackTrace() }
+                )
+    }
 
     @Async
     fun parseMostRecentArticlesForLang(
@@ -325,39 +394,6 @@ class ArticleParsingServiceBase {
                     )
                 }
                 .doOnError { saveArticleParseError(lang.id, objectsUrl, it) }
-    }
-
-    @Async
-    fun parseObjectsArticlesForLang(
-            lang: Lang,
-            totalPageCount: Int? = null,
-            processOnlyCount: Int? = null,
-            innerArticlesDepth: Int? = null
-    ) {
-        Flowable.fromIterable(getObjectArticlesUrls())
-                .flatMapSingle { objectsUrl ->
-                    downloadAndSaveObjectArticles(
-                            lang = lang,
-                            objectsUrl = objectsUrl,
-                            processOnlyCount = processOnlyCount,
-                            innerArticlesDepth = innerArticlesDepth
-                    )
-                }
-                .toList()
-                .map { it.flatten() }
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .subscribeBy(
-                        onSuccess = { articlesDownloadedAndSavedSuccessfully ->
-                            println("download complete")
-                            println(
-                                    articlesDownloadedAndSavedSuccessfully
-                                            .joinToString(separator = "\n========###========\n") { it.urlRelative }
-                            )
-                            println("download complete")
-                        },
-                        onError = { it.printStackTrace() }
-                )
     }
 
     fun getMostRecentArticlesPageCountForLang(lang: Lang): Single<Int> {

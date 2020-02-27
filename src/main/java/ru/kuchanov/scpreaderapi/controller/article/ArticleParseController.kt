@@ -20,6 +20,20 @@ class ArticleParseController @Autowired constructor(
         val articleForLangService: ArticleForLangService,
         val langService: LangService
 ) {
+    data class State(val state: String)
+
+    class ParsingStartedResponse(
+            state: String = "parsing started",
+            status: HttpStatus = HttpStatus.ACCEPTED
+
+    ) : ResponseEntity<State>(State(state), status)
+
+    @GetMapping("/everything")
+    fun updateEverything(@AuthenticationPrincipal user: User): ResponseEntity<*> {
+        articleParsingService.parseEverything()
+
+        return ParsingStartedResponse()
+    }
 
     @GetMapping("/{langEnum}/recent/all")
     fun updateRecentArticles(
@@ -27,20 +41,14 @@ class ArticleParseController @Autowired constructor(
             @RequestParam(value = "maxPageCount") maxPageCount: Int?,
             @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
             @RequestParam(value = "innerArticlesDepth") innerArticlesDepth: Int?,
-            @AuthenticationPrincipal user: User?
+            @AuthenticationPrincipal user: User
     ): ResponseEntity<*> {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
         articleParsingService
                 .getParsingRealizationForLang(lang)
                 .parseMostRecentArticlesForLang(lang, maxPageCount, processOnlyCount, innerArticlesDepth)
 
-        return ResponseEntity(
-                object {
-                    @Suppress("unused")
-                    val state = "parsing started"
-                },
-                HttpStatus.ACCEPTED
-        )
+        return ParsingStartedResponse()
     }
 
     @GetMapping("/{langEnum}/rated/all")
@@ -49,20 +57,14 @@ class ArticleParseController @Autowired constructor(
             @RequestParam(value = "totalPageCount") totalPageCount: Int?,
             @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
             @RequestParam(value = "innerArticlesDepth") innerArticlesDepth: Int?,
-            @AuthenticationPrincipal user: User?
+            @AuthenticationPrincipal user: User
     ): ResponseEntity<*> {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
         articleParsingService
                 .getParsingRealizationForLang(lang)
                 .parseMostRatedArticlesForLang(lang, totalPageCount, processOnlyCount, innerArticlesDepth)
 
-        return ResponseEntity(
-                object {
-                    @Suppress("unused")
-                    val state = "parsing started"
-                },
-                HttpStatus.ACCEPTED
-        )
+        return ParsingStartedResponse()
     }
 
     @GetMapping("/{langEnum}/object/all")
@@ -71,20 +73,14 @@ class ArticleParseController @Autowired constructor(
             @RequestParam(value = "maxPageCount") maxPageCount: Int?,
             @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
             @RequestParam(value = "innerArticlesDepth") innerArticlesDepth: Int?,
-            @AuthenticationPrincipal user: User?
+            @AuthenticationPrincipal user: User
     ): ResponseEntity<*> {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
         articleParsingService
                 .getParsingRealizationForLang(lang)
                 .parseObjectsArticlesForLang(lang, maxPageCount, processOnlyCount, innerArticlesDepth)
 
-        return ResponseEntity(
-                object {
-                    @Suppress("unused")
-                    val state = "parsing started"
-                },
-                HttpStatus.ACCEPTED
-        )
+        return ParsingStartedResponse()
     }
 
     @GetMapping("/{langEnum}/object/{concreteObject}")
@@ -94,7 +90,7 @@ class ArticleParseController @Autowired constructor(
             @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
             @RequestParam(value = "offset") offset: Int?,
             @RequestParam(value = "innerArticlesDepth") innerArticlesDepth: Int?,
-            @AuthenticationPrincipal user: User?
+            @AuthenticationPrincipal user: User
     ): ResponseEntity<*> {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
         val parsingService = articleParsingService.getParsingRealizationForLang(lang)
@@ -107,13 +103,7 @@ class ArticleParseController @Autowired constructor(
                 innerArticlesDepth
         )
 
-        return ResponseEntity(
-                object {
-                    @Suppress("unused")
-                    val state = "parsing started"
-                },
-                HttpStatus.ACCEPTED
-        )
+        return ParsingStartedResponse()
     }
 
     @GetMapping("{langEnum}/parseArticleByUrlRelative")
@@ -122,25 +112,19 @@ class ArticleParseController @Autowired constructor(
             @RequestParam(value = "urlRelative") urlRelative: String,
             @RequestParam(value = "printTextParts", defaultValue = "false") printTextParts: Boolean = false,
             @RequestParam(value = "async", defaultValue = "false") async: Boolean = false,
-            @AuthenticationPrincipal user: User?
+            @AuthenticationPrincipal user: User
     ): ResponseEntity<*> {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
         val articleForLang = articleForLangService.getArticleForLangByUrlRelativeAndLang(urlRelative, lang.id)
 
         println("parseArticleByUrlRelativeAndLang. lang: ${lang.id}, articleForLang.id: ${articleForLang?.id}, article.id: ${articleForLang?.articleId}, printTextParts: $printTextParts")
 
-        if (async) {
+        return if (async) {
             articleParsingService.parseArticleForLang(urlRelative, lang, printTextParts)
-            return ResponseEntity(
-                    object {
-                        @Suppress("unused")
-                        val state = "Parsing started for ArticleForLang id/title ${articleForLang?.id}/${articleForLang?.title}"
-                    },
-                    HttpStatus.ACCEPTED
-            )
+            ParsingStartedResponse("Parsing started for ArticleForLang id/title ${articleForLang?.id}/${articleForLang?.title}")
         } else {
             val savedArticle = articleParsingService.parseArticleForLangSync(urlRelative, lang, printTextParts)
-            return ResponseEntity(
+            ResponseEntity(
                     savedArticle?.articleId?.let { articleForLangService.getOneByLangIdAndArticleIdAsDto(it, lang.id) },
                     HttpStatus.OK
             )
