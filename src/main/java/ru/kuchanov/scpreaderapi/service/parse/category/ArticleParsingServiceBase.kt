@@ -170,10 +170,35 @@ class ArticleParsingServiceBase {
                 .switchMapCompletable { (lang, service) ->
                     Flowable
                             .fromIterable(service.getObjectArticlesUrls())
-                            .switchMapSingle { objectsUrl -> service.downloadAndSaveObjectArticles(lang, objectsUrl) }
+                            //fixme hardcoded values
+                            .switchMapSingle { objectsUrl ->
+                                service
+                                        .downloadAndSaveObjectArticles(lang, objectsUrl, processOnlyCount = 3)
+                                        .doOnSuccess { println("Objects ($objectsUrl) saved: ${it.size}") }
+                            }
                             .ignoreElements()
-                            .andThen(service.downloadAndSaveAllRecentArticles(lang).ignoreElement())
-                            .andThen(service.downloadAndSaveAllRatedArticles(lang).ignoreElement())
+                            .andThen(
+                                    service
+                                            .downloadAndSaveAllRecentArticles(
+                                                    lang,
+                                                    processOnlyCount = 3,
+                                                    maxPageCount = 2
+                                            )
+                                            .doOnSuccess { println("Recent saved: ${it.size}") }
+                                            .ignoreElement()
+                            )
+                            .andThen(
+                                    service
+                                            .downloadAndSaveAllRatedArticles(
+                                                    lang,
+                                                    processOnlyCount = 3,
+                                                    maxPageCount = 2
+                                            )
+                                            .doOnSuccess { println("Rated saved: ${it.size}") }
+                                            .ignoreElement()
+                            )
+                            .doOnSubscribe { println("Articles save started for lang: ${lang.id}") }
+                            .doOnComplete { println("Articles for lang saved: ${lang.id}") }
                 }
                 .doOnEvent { isDownloadAllRunning = false }
                 .subscribeBy(
@@ -287,7 +312,7 @@ class ArticleParsingServiceBase {
 
     protected fun downloadAndSaveAllRatedArticles(
             lang: Lang,
-            totalPageCount: Int? = null,
+            maxPageCount: Int? = null,
             processOnlyCount: Int? = null,
             innerArticlesDepth: Int? = null
     ): Single<List<ArticleForLang>> =
@@ -297,7 +322,7 @@ class ArticleParsingServiceBase {
                             if (articles.size != ScpReaderConstants.NUM_OF_ARTICLES_RATED_PAGE) {
                                 onComplete()
                             } else {
-                                if (totalPageCount == null || value!! < totalPageCount) {
+                                if (maxPageCount == null || value!! < maxPageCount) {
                                     onNext(value!! + 1)
                                 } else {
                                     onComplete()
