@@ -1,7 +1,6 @@
 package ru.kuchanov.scpreaderapi.service.parse.category
 
 import io.reactivex.Flowable
-import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.processors.BehaviorProcessor
 import io.reactivex.rxkotlin.subscribeBy
@@ -11,7 +10,6 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import org.apache.http.util.TextUtils
-import org.joda.time.Period
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
@@ -67,6 +65,7 @@ import java.io.StringWriter
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.TimeUnit
 import javax.transaction.Transactional
 import ru.kuchanov.scpreaderapi.bean.articles.tags.Tag as ArticleTag
 
@@ -127,6 +126,8 @@ class ArticleParsingServiceBase {
     @Autowired
     lateinit var articleParseErrorService: ArticleParseErrorService
 
+    protected var isDownloadAllRunning = false
+
     fun getParsingRealizationForLang(lang: Lang): ArticleParsingServiceBase =
             when (lang.langCode) {
                 ScpReaderConstants.Firebase.FirebaseInstance.RU.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplRU::class.java)
@@ -158,7 +159,10 @@ class ArticleParsingServiceBase {
     fun getArticleRatingStringDelimiterEnd() = ""
 
     @Async
-    fun parseEverything() {
+    fun parseEverything(): Boolean {
+        if (isDownloadAllRunning) {
+            return false
+        }
         val startTime = System.currentTimeMillis()
         ScpReaderConstants.Firebase.FirebaseInstance.values().toFlowable()
                 .map { langService.getById(it.lang) ?: throw LangNotFoundException() }
@@ -166,24 +170,24 @@ class ArticleParsingServiceBase {
                 .switchMapCompletable { (lang, service) ->
                     Flowable
                             .fromIterable(service.getObjectArticlesUrls())
-                            .switchMapSingle { objectsUrl ->
-                                service.downloadAndSaveObjectArticles(lang = lang, objectsUrl = objectsUrl)
-                            }
+                            .switchMapSingle { objectsUrl -> service.downloadAndSaveObjectArticles(lang, objectsUrl) }
                             .ignoreElements()
+                            .andThen(service.downloadAndSaveAllRecentArticles(lang).ignoreElement())
+                            .andThen(service.downloadAndSaveAllRatedArticles(lang).ignoreElement())
                 }
-                .andThen(TODO("download recent"))
-                .andThen(TODO("download rated"))
+                .doOnEvent { isDownloadAllRunning = false }
                 .subscribeBy(
                         onComplete = {
                             val timeSpent = System.currentTimeMillis() - startTime
-                            println("Total download time: ${Period.millis(timeSpent)}")
+                            println("Total download time in minutes: ${TimeUnit.MILLISECONDS.toMinutes(timeSpent)}")
                         },
                         onError = {
                             println("Error while parse everything")
                             it.printStackTrace()
                         }
                 )
-        //todo
+        isDownloadAllRunning = true
+        return isDownloadAllRunning
     }
 
     @Async
@@ -204,8 +208,6 @@ class ArticleParsingServiceBase {
                 }
                 .toList()
                 .map { it.flatten() }
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
                 .subscribeBy(
                         onSuccess = { articlesDownloadedAndSavedSuccessfully ->
                             println("download complete")
@@ -226,26 +228,7 @@ class ArticleParsingServiceBase {
             processOnlyCount: Int? = null,
             innerArticlesDepth: Int? = null
     ) {
-        getMostRecentArticlesPageCountForLang(lang)
-                .flatMapObservable { recentArticlesPagesCount ->
-                    Observable.range(1, maxPageCount ?: recentArticlesPagesCount)
-                }
-                .flatMap { page ->
-                    getRecentArticlesForPage(lang, page)
-                            .flatMapObservable { Observable.fromIterable(it) }
-                }
-                .toList()
-                //test loading and save with less count of articles
-                .map { articlesToDownload ->
-                    processOnlyCount?.let {
-                        articlesToDownload.take(processOnlyCount)
-                    } ?: articlesToDownload
-                }
-                .flatMap { articles ->
-                    downloadAndSaveArticles(articles, lang, innerArticlesDepth ?: DEFAULT_INNER_ARTICLES_DEPTH)
-                }
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
+        downloadAndSaveAllRecentArticles(lang, maxPageCount, processOnlyCount, innerArticlesDepth)
                 .subscribeBy(
                         onSuccess = { articlesDownloadedAndSavedSuccessfully ->
                             println("download complete")
@@ -266,40 +249,7 @@ class ArticleParsingServiceBase {
             processOnlyCount: Int? = null,
             innerArticlesDepth: Int? = null
     ) {
-        val subject = BehaviorProcessor.createDefault(1)
-
-        subject
-                .concatMap { page -> getRatedArticlesForLang(lang, page).toFlowable() }
-                .doOnNext { articles ->
-                    if (articles.size != ScpReaderConstants.NUM_OF_ARTICLES_RATED_PAGE) {
-                        subject.onComplete()
-                    } else {
-                        if (totalPageCount == null || subject.value!! < totalPageCount) {
-                            subject.onNext(subject.value!! + 1)
-                        } else {
-                            subject.onComplete()
-                        }
-
-                    }
-                }
-                .doOnNext { println("articles size: ${it.size}") }
-                .toList()
-                .map { it.flatten() }
-                //test loading and save with less count of articles
-                .map { articlesToDownload ->
-                    processOnlyCount?.let {
-                        articlesToDownload.take(processOnlyCount)
-                    } ?: articlesToDownload
-                }
-                .flatMap {
-                    downloadAndSaveArticles(
-                            it,
-                            lang,
-                            innerArticlesDepth ?: DEFAULT_INNER_ARTICLES_DEPTH
-                    )
-                }
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
+        downloadAndSaveAllRatedArticles(lang, totalPageCount, processOnlyCount, innerArticlesDepth)
                 .subscribeBy(
                         onSuccess = { articlesDownloadedAndSavedSuccessfully ->
                             println("download complete")
@@ -322,8 +272,6 @@ class ArticleParsingServiceBase {
             innerArticlesDepth: Int? = null
     ) {
         downloadAndSaveObjectArticles(lang, objectsUrl, offset, processOnlyCount, innerArticlesDepth)
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
                 .subscribeBy(
                         onSuccess = { articlesDownloadedAndSavedSuccessfully ->
                             println("download complete")
@@ -337,64 +285,130 @@ class ArticleParsingServiceBase {
                 )
     }
 
+    protected fun downloadAndSaveAllRatedArticles(
+            lang: Lang,
+            totalPageCount: Int? = null,
+            processOnlyCount: Int? = null,
+            innerArticlesDepth: Int? = null
+    ): Single<List<ArticleForLang>> =
+            with(BehaviorProcessor.createDefault(1)) {
+                concatMap { page -> getRatedArticlesForLang(lang, page).toFlowable() }
+                        .doOnNext { articles ->
+                            if (articles.size != ScpReaderConstants.NUM_OF_ARTICLES_RATED_PAGE) {
+                                onComplete()
+                            } else {
+                                if (totalPageCount == null || value!! < totalPageCount) {
+                                    onNext(value!! + 1)
+                                } else {
+                                    onComplete()
+                                }
+                            }
+                        }
+//                        .doOnNext { println("articles size: ${it.size}") }
+                        .toList()
+                        .map { it.flatten() }
+                        //test loading and save with less count of articles
+                        .map { articlesToDownload ->
+                            processOnlyCount?.let {
+                                articlesToDownload.take(processOnlyCount)
+                            } ?: articlesToDownload
+                        }
+                        .flatMap {
+                            downloadAndSaveArticles(
+                                    it,
+                                    lang,
+                                    innerArticlesDepth ?: DEFAULT_INNER_ARTICLES_DEPTH
+                            )
+                        }
+            }
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(Schedulers.io())
+
+    protected fun downloadAndSaveAllRecentArticles(
+            lang: Lang,
+            maxPageCount: Int? = null,
+            processOnlyCount: Int? = null,
+            innerArticlesDepth: Int? = null
+    ): Single<List<ArticleForLang>> =
+            getMostRecentArticlesPageCountForLang(lang)
+                    .flatMapPublisher { recentArticlesPagesCount ->
+                        Flowable.range(1, maxPageCount ?: recentArticlesPagesCount)
+                    }
+                    .switchMap { page ->
+                        getRecentArticlesForPage(lang, page).flatMapPublisher { Flowable.fromIterable(it) }
+                    }
+                    .toList()
+                    //test loading and save with less count of articles
+                    .map { articlesToDownload ->
+                        processOnlyCount?.let {
+                            articlesToDownload.take(processOnlyCount)
+                        } ?: articlesToDownload
+                    }
+                    .flatMap { articles ->
+                        downloadAndSaveArticles(articles, lang, innerArticlesDepth ?: DEFAULT_INNER_ARTICLES_DEPTH)
+                    }
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(Schedulers.io())
+
     private fun downloadAndSaveObjectArticles(
             lang: Lang,
             objectsUrl: String,
             offset: Int? = null,
             processOnlyCount: Int? = null,
             innerArticlesDepth: Int? = null
-    ): Single<List<ArticleForLang>> {
-        return getObjectsArticlesForLang(lang, objectsUrl)
-                //test loading and save with less count of articles
-                .map { articlesToDownload ->
-                    if (processOnlyCount == null && offset == null) {
-                        articlesToDownload
-                    } else {
-                        var result = articlesToDownload
-                        if (offset != null) {
-                            result = articlesToDownload.subList(offset, articlesToDownload.size - 1)
-                        }
-                        if (processOnlyCount != null) {
-                            result = result.take(processOnlyCount)
-                        }
-                        result
-                    }
-                }
-                .flatMap { articlesToSave ->
-                    downloadAndSaveArticles(
-                            articlesToSave,
-                            lang,
-                            innerArticlesDepth ?: DEFAULT_INNER_ARTICLES_DEPTH
-                    )
-                }
-                .doOnSuccess { articlesForLangInDb ->
-                    // 1. get articleCategory by lang and objectUrl
-                    // 2. delete articleToCategory relation for lang
-                    // 3. save articleToCategory relation with order
-
-                    val categoryToLang =
-                            categoryToLangService.findByLangIdAndSiteUrl(lang.id, objectsUrl)
-                    println("categoryToLang: $categoryToLang")
-                    if (categoryToLang == null) {
-                        return@doOnSuccess
-                    }
-                    var order = 0
-                    val articlesForCategory = articlesForLangInDb
-                            .map {
-                                ArticleCategoryForLangToArticleForLang(
-                                        articleCategoryToLangId = categoryToLang.id!!,
-                                        articleForLangId = it.id!!,
-                                        orderInCategory = order++
-                                )
+    ): Single<List<ArticleForLang>> =
+            getObjectsArticlesForLang(lang, objectsUrl)
+                    //test loading and save with less count of articles
+                    .map { articlesToDownload ->
+                        if (processOnlyCount == null && offset == null) {
+                            articlesToDownload
+                        } else {
+                            var result = articlesToDownload
+                            if (offset != null) {
+                                result = articlesToDownload.subList(offset, articlesToDownload.size - 1)
                             }
+                            if (processOnlyCount != null) {
+                                result = result.take(processOnlyCount)
+                            }
+                            result
+                        }
+                    }
+                    .flatMap { articlesToSave ->
+                        downloadAndSaveArticles(
+                                articlesToSave,
+                                lang,
+                                innerArticlesDepth ?: DEFAULT_INNER_ARTICLES_DEPTH
+                        )
+                    }
+                    .doOnSuccess { articlesForLangInDb ->
+                        // 1. get articleCategory by lang and objectUrl
+                        // 2. delete articleToCategory relation for lang
+                        // 3. save articleToCategory relation with order
 
-                    categoryToArticleService.updateCategoryForLangToArticleForLang(
-                            categoryToLang.id!!,
-                            articlesForCategory
-                    )
-                }
-                .doOnError { saveArticleParseError(lang.id, objectsUrl, it) }
-    }
+                        val categoryToLang =
+                                categoryToLangService.findByLangIdAndSiteUrl(lang.id, objectsUrl)
+                        println("categoryToLang: $categoryToLang")
+                        if (categoryToLang == null) {
+                            return@doOnSuccess
+                        }
+                        var order = 0
+                        val articlesForCategory = articlesForLangInDb
+                                .map {
+                                    ArticleCategoryForLangToArticleForLang(
+                                            articleCategoryToLangId = categoryToLang.id!!,
+                                            articleForLangId = it.id!!,
+                                            orderInCategory = order++
+                                    )
+                                }
+
+                        categoryToArticleService.updateCategoryForLangToArticleForLang(
+                                categoryToLang.id!!,
+                                articlesForCategory
+                        )
+                    }
+                    .doOnError { saveArticleParseError(lang.id, objectsUrl, it) }
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(Schedulers.io())
 
     fun getMostRecentArticlesPageCountForLang(lang: Lang): Single<Int> {
         return Single.create<Int> { subscriber ->
@@ -423,11 +437,17 @@ class ArticleParsingServiceBase {
                             .url(lang.siteBaseUrlsToLangs?.first()?.siteBaseUrl + getRecentArticlesUrl() + page)
                             .build()
                     val responseBody = getResponseBody(request)
-                    val doc: Document = Jsoup.parse(responseBody)
+                    val doc = Jsoup.parse(responseBody)
                     val articles = parseForRecentArticles(lang, doc)
                     subscriber.onSuccess(articles)
                 }
-                .doOnError { saveArticleParseError(lang.id, lang.siteBaseUrlsToLangs?.first()?.siteBaseUrl + getRecentArticlesUrl() + page, it) }
+                .doOnError {
+                    saveArticleParseError(
+                            lang.id,
+                            lang.siteBaseUrlsToLangs?.first()?.siteBaseUrl + getRecentArticlesUrl() + page,
+                            it
+                    )
+                }
     }
 
     fun getRatedArticlesForLang(lang: Lang, page: Int): Single<List<ArticleForLang>> {
