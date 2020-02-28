@@ -29,10 +29,12 @@ class ArticleParseController @Autowired constructor(
     ) : ResponseEntity<State>(State(state), status)
 
     @GetMapping("/everything")
-    fun updateEverything(@AuthenticationPrincipal user: User): ResponseEntity<*> {
-        articleParsingService.parseEverything()
-
-        return ParsingStartedResponse()
+    fun updateEverything(@AuthenticationPrincipal user: User): ParsingStartedResponse {
+        return if (articleParsingService.parseEverything()) {
+            ParsingStartedResponse()
+        } else {
+            ParsingStartedResponse(state = "Already running", status = HttpStatus.CONFLICT)
+        }
     }
 
     @GetMapping("/{langEnum}/recent/all")
@@ -42,7 +44,7 @@ class ArticleParseController @Autowired constructor(
             @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
             @RequestParam(value = "innerArticlesDepth") innerArticlesDepth: Int?,
             @AuthenticationPrincipal user: User
-    ): ResponseEntity<*> {
+    ): ParsingStartedResponse {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
         articleParsingService
                 .getParsingRealizationForLang(lang)
@@ -58,7 +60,7 @@ class ArticleParseController @Autowired constructor(
             @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
             @RequestParam(value = "innerArticlesDepth") innerArticlesDepth: Int?,
             @AuthenticationPrincipal user: User
-    ): ResponseEntity<*> {
+    ): ParsingStartedResponse {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
         articleParsingService
                 .getParsingRealizationForLang(lang)
@@ -74,7 +76,7 @@ class ArticleParseController @Autowired constructor(
             @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
             @RequestParam(value = "innerArticlesDepth") innerArticlesDepth: Int?,
             @AuthenticationPrincipal user: User
-    ): ResponseEntity<*> {
+    ): ParsingStartedResponse {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
         articleParsingService
                 .getParsingRealizationForLang(lang)
@@ -91,7 +93,7 @@ class ArticleParseController @Autowired constructor(
             @RequestParam(value = "offset") offset: Int?,
             @RequestParam(value = "innerArticlesDepth") innerArticlesDepth: Int?,
             @AuthenticationPrincipal user: User
-    ): ResponseEntity<*> {
+    ): ParsingStartedResponse {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
         val parsingService = articleParsingService.getParsingRealizationForLang(lang)
         val objectUrl = parsingService.getObjectArticlesUrls()[concreteObject]
