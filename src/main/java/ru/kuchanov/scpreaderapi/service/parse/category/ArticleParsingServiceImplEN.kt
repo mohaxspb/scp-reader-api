@@ -16,7 +16,6 @@ import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_UL
 import java.sql.Timestamp
 
 
-@Suppress("unused")
 @Service
 class ArticleParsingServiceImplEN : ArticleParsingServiceBase() {
 
