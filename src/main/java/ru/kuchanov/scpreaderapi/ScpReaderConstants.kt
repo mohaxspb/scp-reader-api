@@ -34,8 +34,8 @@ object ScpReaderConstants {
 
     object Firebase {
         enum class FirebaseInstance(val lang: String) {
-            EN("en"),
             RU("ru"),
+            EN("en"),
             PL("pl"),
             DE("de"),
             FR("fr"),

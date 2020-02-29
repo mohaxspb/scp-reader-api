@@ -5,7 +5,6 @@ import io.reactivex.Single
 import io.reactivex.processors.BehaviorProcessor
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.rxkotlin.toFlowable
-import io.reactivex.schedulers.Schedulers
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -67,6 +66,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.transaction.Transactional
+import kotlin.reflect.KClass
+import kotlin.reflect.full.createInstance
 import ru.kuchanov.scpreaderapi.bean.articles.tags.Tag as ArticleTag
 
 
@@ -75,7 +76,7 @@ import ru.kuchanov.scpreaderapi.bean.articles.tags.Tag as ArticleTag
 class ArticleParsingServiceBase {
 
     @Autowired
-    private lateinit var autowireCapableBeanFactory: AutowireCapableBeanFactory
+    protected lateinit var autowireCapableBeanFactory: AutowireCapableBeanFactory
 
     @Autowired
     @Qualifier(NetworkConfiguration.QUALIFIER_OK_HTTP_CLIENT_NOT_LOGGING)
@@ -126,21 +127,28 @@ class ArticleParsingServiceBase {
     @Autowired
     lateinit var articleParseErrorService: ArticleParseErrorService
 
-    protected var isDownloadAllRunning = false
+    var isDownloadAllRunning = false
 
     fun getParsingRealizationForLang(lang: Lang): ArticleParsingServiceBase =
             when (lang.langCode) {
-                ScpReaderConstants.Firebase.FirebaseInstance.RU.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplRU::class.java)
-                ScpReaderConstants.Firebase.FirebaseInstance.EN.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplEN::class.java)
-                ScpReaderConstants.Firebase.FirebaseInstance.DE.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplDE::class.java)
-                ScpReaderConstants.Firebase.FirebaseInstance.FR.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplFR::class.java)
-                ScpReaderConstants.Firebase.FirebaseInstance.ES.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplES::class.java)
-                ScpReaderConstants.Firebase.FirebaseInstance.IT.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplIT::class.java)
-                ScpReaderConstants.Firebase.FirebaseInstance.PL.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplPL::class.java)
-                ScpReaderConstants.Firebase.FirebaseInstance.PT.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplPT::class.java)
-                ScpReaderConstants.Firebase.FirebaseInstance.ZH.lang -> autowireCapableBeanFactory.getBean(ArticleParsingServiceImplCH::class.java)
+                ScpReaderConstants.Firebase.FirebaseInstance.RU.lang -> getBean(ArticleParsingServiceImplRU::class)
+                ScpReaderConstants.Firebase.FirebaseInstance.EN.lang -> getBean(ArticleParsingServiceImplEN::class)
+                ScpReaderConstants.Firebase.FirebaseInstance.DE.lang -> getBean(ArticleParsingServiceImplDE::class)
+                ScpReaderConstants.Firebase.FirebaseInstance.FR.lang -> getBean(ArticleParsingServiceImplFR::class)
+                ScpReaderConstants.Firebase.FirebaseInstance.ES.lang -> getBean(ArticleParsingServiceImplES::class)
+                ScpReaderConstants.Firebase.FirebaseInstance.IT.lang -> getBean(ArticleParsingServiceImplIT::class)
+                ScpReaderConstants.Firebase.FirebaseInstance.PL.lang -> getBean(ArticleParsingServiceImplPL::class)
+                ScpReaderConstants.Firebase.FirebaseInstance.PT.lang -> getBean(ArticleParsingServiceImplPT::class)
+                ScpReaderConstants.Firebase.FirebaseInstance.ZH.lang -> getBean(ArticleParsingServiceImplCH::class)
                 else -> throw NotImplementedError("No parsing realization, need lang(current lang: $lang)")
             }
+
+    private fun <BEAN : ArticleParsingServiceBase> getBean(clazz: KClass<out BEAN>): BEAN {
+        val bean = clazz.createInstance()
+        autowireCapableBeanFactory.autowireBean(bean)
+        autowireCapableBeanFactory.initializeBean(bean, clazz.simpleName!!)
+        return bean
+    }
 
     fun getRatedArticlesUrl() = "/top-rated-pages/p/"
 
@@ -159,60 +167,50 @@ class ArticleParsingServiceBase {
     fun getArticleRatingStringDelimiterEnd() = ""
 
     @Async
-    fun parseEverything(): Boolean {
-        if (isDownloadAllRunning) {
-            return false
-        }
+    fun parseEverything() {
+        isDownloadAllRunning = true
+
         val startTime = System.currentTimeMillis()
+
         ScpReaderConstants.Firebase.FirebaseInstance.values().toFlowable()
                 .map { langService.getById(it.lang) ?: throw LangNotFoundException() }
                 .map { it to getParsingRealizationForLang(it) }
                 .switchMapCompletable { (lang, service) ->
                     Flowable
                             .fromIterable(service.getObjectArticlesUrls())
-                            //fixme hardcoded values
                             .switchMapSingle { objectsUrl ->
                                 service
-                                        .downloadAndSaveObjectArticles(lang, objectsUrl, processOnlyCount = 3)
+                                        .downloadAndSaveObjectArticles(lang, objectsUrl)
                                         .doOnSuccess { println("Objects ($objectsUrl) saved: ${it.size}") }
                             }
                             .ignoreElements()
                             .andThen(
                                     service
-                                            .downloadAndSaveAllRecentArticles(
-                                                    lang,
-                                                    processOnlyCount = 3,
-                                                    maxPageCount = 2
-                                            )
+                                            .downloadAndSaveAllRecentArticles(lang)
                                             .doOnSuccess { println("Recent saved: ${it.size}") }
                                             .ignoreElement()
                             )
                             .andThen(
                                     service
-                                            .downloadAndSaveAllRatedArticles(
-                                                    lang,
-                                                    processOnlyCount = 3,
-                                                    maxPageCount = 2
-                                            )
+                                            .downloadAndSaveAllRatedArticles(lang)
                                             .doOnSuccess { println("Rated saved: ${it.size}") }
                                             .ignoreElement()
                             )
                             .doOnSubscribe { println("Articles save started for lang: ${lang.id}") }
-                            .doOnComplete { println("Articles for lang saved: ${lang.id}") }
+                            .doOnComplete { println("Articles save ended for lang: ${lang.id}") }
                 }
-                .doOnEvent { isDownloadAllRunning = false }
+                .doOnEvent {
+                    isDownloadAllRunning = false
+                    val timeSpent = System.currentTimeMillis() - startTime
+                    println("Total download time in minutes: ${TimeUnit.MILLISECONDS.toMinutes(timeSpent)}")
+                }
                 .subscribeBy(
-                        onComplete = {
-                            val timeSpent = System.currentTimeMillis() - startTime
-                            println("Total download time in minutes: ${TimeUnit.MILLISECONDS.toMinutes(timeSpent)}")
-                        },
+                        onComplete = { println("Download everything completed!") },
                         onError = {
                             println("Error while parse everything")
                             it.printStackTrace()
                         }
                 )
-        isDownloadAllRunning = true
-        return isDownloadAllRunning
     }
 
     @Async
@@ -346,8 +344,6 @@ class ArticleParsingServiceBase {
                             )
                         }
             }
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(Schedulers.io())
 
     protected fun downloadAndSaveAllRecentArticles(
             lang: Lang,
@@ -372,8 +368,6 @@ class ArticleParsingServiceBase {
                     .flatMap { articles ->
                         downloadAndSaveArticles(articles, lang, innerArticlesDepth ?: DEFAULT_INNER_ARTICLES_DEPTH)
                     }
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(Schedulers.io())
 
     private fun downloadAndSaveObjectArticles(
             lang: Lang,
@@ -409,7 +403,6 @@ class ArticleParsingServiceBase {
                         // 1. get articleCategory by lang and objectUrl
                         // 2. delete articleToCategory relation for lang
                         // 3. save articleToCategory relation with order
-
                         val categoryToLang =
                                 categoryToLangService.findByLangIdAndSiteUrl(lang.id, objectsUrl)
                         println("categoryToLang: $categoryToLang")
@@ -432,8 +425,6 @@ class ArticleParsingServiceBase {
                         )
                     }
                     .doOnError { saveArticleParseError(lang.id, objectsUrl, it) }
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(Schedulers.io())
 
     fun getMostRecentArticlesPageCountForLang(lang: Lang): Single<Int> {
         return Single.create<Int> { subscriber ->
@@ -627,8 +618,6 @@ class ArticleParsingServiceBase {
                         }
                     }
                 }
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
     }
 
     /**

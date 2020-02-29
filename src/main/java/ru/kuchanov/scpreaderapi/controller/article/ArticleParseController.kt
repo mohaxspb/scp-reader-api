@@ -30,7 +30,8 @@ class ArticleParseController @Autowired constructor(
 
     @GetMapping("/everything")
     fun updateEverything(@AuthenticationPrincipal user: User): ParsingStartedResponse {
-        return if (articleParsingService.parseEverything()) {
+        return if (!articleParsingService.isDownloadAllRunning) {
+            articleParsingService.parseEverything()
             ParsingStartedResponse()
         } else {
             ParsingStartedResponse(state = "Already running", status = HttpStatus.CONFLICT)
