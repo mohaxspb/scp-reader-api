@@ -183,7 +183,7 @@ class ArticleParsingServiceBase {
              * second, minute, hour, day, month, day of week
              */
 //        cron = "*/30 * * * * *" //fi xme test
-            cron = "0 5 0 * * *"
+            cron = "0 5 6 * * *"
     )
     @Async
     fun parseEverything() {
