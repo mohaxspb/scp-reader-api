@@ -200,12 +200,13 @@ class ArticleParsingServiceBase {
                                             .doOnSuccess { println("Recent saved: ${it.size}") }
                                             .ignoreElement()
                             )
-                            .andThen(
-                                    service
-                                            .downloadAndSaveAllRatedArticles(lang)
-                                            .doOnSuccess { println("Rated saved: ${it.size}") }
-                                            .ignoreElement()
-                            )
+                            //maybe run it separatelly
+//                            .andThen(
+//                                    service
+//                                            .downloadAndSaveAllRatedArticles(lang)
+//                                            .doOnSuccess { println("Rated saved: ${it.size}") }
+//                                            .ignoreElement()
+//                            )
                             .doOnSubscribe { println("Articles save started for lang: ${lang.id}") }
                             .doOnComplete { println("Articles save ended for lang: ${lang.id}") }
                 }
