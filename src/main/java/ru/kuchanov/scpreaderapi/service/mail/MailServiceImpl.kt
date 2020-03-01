@@ -18,6 +18,9 @@ class MailServiceImpl @Autowired constructor(
         @Value("\${my.site.domain}") val domain: String
 ) : MailService {
 
+    override fun getAdminAddress(): String =
+            adminEmailAddress
+
     override fun sendMail(vararg to: String, subj: String, text: String, sendAsHtml: Boolean) {
         javaMailSender.send { mimeMessage: MimeMessage ->
             mimeMessage.setFrom()

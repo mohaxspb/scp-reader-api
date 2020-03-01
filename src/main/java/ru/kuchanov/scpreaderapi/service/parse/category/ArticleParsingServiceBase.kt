@@ -14,6 +14,7 @@ import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.parser.Tag
 import org.jsoup.select.Elements
+import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory
@@ -48,6 +49,7 @@ import ru.kuchanov.scpreaderapi.service.article.tags.TagService
 import ru.kuchanov.scpreaderapi.service.article.text.TextPartService
 import ru.kuchanov.scpreaderapi.service.article.type.ArticleAndArticleTypeService
 import ru.kuchanov.scpreaderapi.service.article.type.ArticleTypeService
+import ru.kuchanov.scpreaderapi.service.mail.MailService
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseArticleService
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ATTR_HREF
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ATTR_SRC
@@ -78,6 +80,12 @@ class ArticleParsingServiceBase {
 
     @Autowired
     protected lateinit var autowireCapableBeanFactory: AutowireCapableBeanFactory
+
+    @Autowired
+    private lateinit var mailService: MailService
+
+    @Autowired
+    private lateinit var log: Logger
 
     @Autowired
     @Qualifier(NetworkConfiguration.QUALIFIER_OK_HTTP_CLIENT_NOT_LOGGING)
@@ -191,34 +199,53 @@ class ArticleParsingServiceBase {
                             .switchMapSingle { objectsUrl ->
                                 service
                                         .downloadAndSaveObjectArticles(lang, objectsUrl)
-                                        .doOnSuccess { println("Objects ($objectsUrl) saved: ${it.size}") }
+                                        .doOnSuccess { log.error("Objects ($objectsUrl) saved: ${it.size}") }
                             }
                             .ignoreElements()
                             .andThen(
                                     service
                                             .downloadAndSaveAllRecentArticles(lang)
-                                            .doOnSuccess { println("Recent saved: ${it.size}") }
+                                            .doOnSuccess { log.error("Recent saved: ${it.size}") }
                                             .ignoreElement()
                             )
-                            //maybe run it separatelly
+                            //maybe run it separately
 //                            .andThen(
 //                                    service
 //                                            .downloadAndSaveAllRatedArticles(lang)
-//                                            .doOnSuccess { println("Rated saved: ${it.size}") }
+//                                            .doOnSuccess { log.error("Rated saved: ${it.size}") }
 //                                            .ignoreElement()
 //                            )
-                            .doOnSubscribe { println("Articles save started for lang: ${lang.id}") }
-                            .doOnComplete { println("Articles save ended for lang: ${lang.id}") }
+                            .doOnSubscribe { log.error("Articles save started for lang: ${lang.id}") }
+                            .doOnComplete { log.error("Articles save ended for lang: ${lang.id}") }
                 }
                 .doOnEvent {
                     isDownloadAllRunning = false
+
                     val timeSpent = System.currentTimeMillis() - startTime
-                    println("Total download time in minutes: ${TimeUnit.MILLISECONDS.toMinutes(timeSpent)}")
+                    val minutesSpent = TimeUnit.MILLISECONDS.toMinutes(timeSpent)
+
+                    log.error("Total download time in minutes: $minutesSpent")
+
+                    val errorNotOccurred = it == null
+                    val subj = if (errorNotOccurred) {
+                        "Sync all data finished successfully"
+                    } else {
+                        "Sync all data finished with error: $it"
+                    }
+                    val message = if (errorNotOccurred) {
+                        "Sync all data done in $minutesSpent minutes."
+                    } else {
+                        val stringWriter = StringWriter()
+                        it.printStackTrace(PrintWriter(stringWriter))
+                        val stacktraceAsString = stringWriter.toString()
+                        "Sync all data failed after $minutesSpent minutes.\n\n Error:\n$stacktraceAsString"
+                    }
+                    mailService.sendMail(mailService.getAdminAddress(), subj = subj, text = message)
                 }
                 .subscribeBy(
-                        onComplete = { println("Download everything completed!") },
+                        onComplete = { log.error("Download everything completed!") },
                         onError = {
-                            println("Error while parse everything")
+                            log.error("Error while parse everything")
                             it.printStackTrace()
                         }
                 )
