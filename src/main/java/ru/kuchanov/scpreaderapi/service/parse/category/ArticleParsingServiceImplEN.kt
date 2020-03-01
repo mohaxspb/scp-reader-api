@@ -29,7 +29,8 @@ class ArticleParsingServiceImplEN : ArticleParsingServiceBase() {
                     "/scp-series-2",
                     "/scp-series-3",
                     "/scp-series-4",
-                    "/scp-series-5"
+                    "/scp-series-5",
+                    "/scp-series-6"
             )
 
     override fun parseForRecentArticles(lang: Lang, doc: Document) =

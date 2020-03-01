@@ -160,7 +160,8 @@ class ArticleParsingServiceBase {
             "/scp-list-2",
             "/scp-list-3",
             "/scp-list-4",
-            "/scp-list-5"
+            "/scp-list-5",
+            "/scp-list-6"
     )
 
     fun getArticleRatingStringDelimiter() = ", рейтинг"

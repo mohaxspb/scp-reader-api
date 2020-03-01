@@ -17,7 +17,8 @@ values ('SCP Series I'),
        ('SCP Series II'),
        ('SCP Series III'),
        ('SCP Series IV'),
-       ('SCP Series V')
+       ('SCP Series V'),
+       ('SCP Series VI')
 ON CONFLICT DO NOTHING;
 
 create table if not exists article_categories__to__langs
@@ -58,6 +59,7 @@ with
     SERIES_3 as (select * from article_categories where default_title = 'SCP Series III'),
     SERIES_4 as (select * from article_categories where default_title = 'SCP Series IV'),
     SERIES_5 as (select * from article_categories where default_title = 'SCP Series V'),
+    SERIES_6 as (select * from article_categories where default_title = 'SCP Series VI'),
     -- langs
     ruLang as (select * from langs where lang_code = 'ru'),
     enLang as (select * from langs where lang_code = 'en'),
@@ -77,12 +79,14 @@ VALUES
 ((select id from SERIES_3), (select id from ruLang), 'Объекты III', '/scp-list-3'),
 ((select id from SERIES_4), (select id from ruLang), 'Объекты IV', '/scp-list-4'),
 ((select id from SERIES_5), (select id from ruLang), 'Объекты V', '/scp-list-5'),
+((select id from SERIES_6), (select id from ruLang), 'Объекты VI', '/scp-list-6'),
 -- en
 ((select id from SERIES_1), (select id from enLang), (select default_title from SERIES_1), '/scp-series'),
 ((select id from SERIES_2), (select id from enLang), (select default_title from SERIES_2), '/scp-series-2'),
 ((select id from SERIES_3), (select id from enLang), (select default_title from SERIES_3), '/scp-series-3'),
 ((select id from SERIES_4), (select id from enLang), (select default_title from SERIES_4), '/scp-series-4'),
 ((select id from SERIES_5), (select id from enLang), (select default_title from SERIES_5), '/scp-series-5'),
+((select id from SERIES_6), (select id from enLang), (select default_title from SERIES_6), '/scp-series-6'),
 -- pl
 ((select id from SERIES_1), (select id from plLang), 'Lista angielska 1', '/lista-eng'),
 ((select id from SERIES_2), (select id from plLang), 'Lista angielska 2', '/lista-eng-2'),
