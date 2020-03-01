@@ -34,16 +34,21 @@ import ru.kuchanov.scpreaderapi.service.article.ArticleService
 import ru.kuchanov.scpreaderapi.service.article.favorite.FavoriteArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.read.ReadArticleForLangService
 import ru.kuchanov.scpreaderapi.service.auth.UserToAuthorityService
+import ru.kuchanov.scpreaderapi.service.mail.MailService
 import ru.kuchanov.scpreaderapi.service.users.LangService
 import ru.kuchanov.scpreaderapi.service.users.UserService
 import ru.kuchanov.scpreaderapi.service.users.UsersLangsService
+import java.io.PrintWriter
+import java.io.StringWriter
 import java.sql.Timestamp
 import java.time.Instant
+import java.util.concurrent.TimeUnit
 import javax.transaction.Transactional
 
 @Service
 class FirebaseService @Autowired constructor(
         val log: Logger,
+        val mailService: MailService,
         val userService: UserService,
         val userToAuthorityService: UserToAuthorityService,
         val langService: LangService,
@@ -62,6 +67,7 @@ class FirebaseService @Autowired constructor(
             langToParse: ScpReaderConstants.Firebase.FirebaseInstance? = null,
             maxUsersCount: Int? = null
     ) {
+        val startTime = System.currentTimeMillis()
         println("updateDataFromFirebase")
         log.error("updateDataFromFirebase start")
 
@@ -106,6 +112,28 @@ class FirebaseService @Autowired constructor(
                             .map { Pair(lang, it.flatten()) }
                             .doOnSuccess { updateFirebaseUpdateDate(lang.lang) }
                 }
+                .doOnEach {
+                    val timeSpent = System.currentTimeMillis() - startTime
+                    val minutesSpent = TimeUnit.MILLISECONDS.toMinutes(timeSpent)
+
+                    log.error("Total download time in minutes: $minutesSpent")
+
+                    val errorNotOccurred = it.error == null
+                    val subj = if (errorNotOccurred) {
+                        "Sync firebase data finished successfully"
+                    } else {
+                        "Sync firebase data finished with error: $it"
+                    }
+                    val message = if (errorNotOccurred) {
+                        "Sync firebase data done in $minutesSpent minutes."
+                    } else {
+                        val stringWriter = StringWriter()
+                        it.error!!.printStackTrace(PrintWriter(stringWriter))
+                        val stacktraceAsString = stringWriter.toString()
+                        "Sync firebase data failed after $minutesSpent minutes.\n\n Error:\n$stacktraceAsString"
+                    }
+                    mailService.sendMail(mailService.getAdminAddress(), subj = subj, text = message)
+                }
                 .subscribeBy(
                         onNext = {
                             log.error("done updating users for lang: ${it.first.lang}, totalCount: ${it.second.size}")
@@ -116,8 +144,8 @@ class FirebaseService @Autowired constructor(
                             println("done updating users from firebase")
                         },
                         onError = {
-                            println("error in update users observable: $it")
                             log.error("error in update users observable: ", it)
+                            println("error in update users observable: $it")
                         }
                 )
     }
