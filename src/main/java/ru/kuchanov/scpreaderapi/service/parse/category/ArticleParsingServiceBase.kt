@@ -5,6 +5,7 @@ import io.reactivex.Single
 import io.reactivex.processors.BehaviorProcessor
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.rxkotlin.toFlowable
+import io.reactivex.schedulers.Schedulers
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -382,6 +383,8 @@ class ArticleParsingServiceBase {
                             )
                         }
             }
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(Schedulers.io())
 
     protected fun downloadAndSaveAllRecentArticles(
             lang: Lang,
@@ -406,6 +409,8 @@ class ArticleParsingServiceBase {
                     .flatMap { articles ->
                         downloadAndSaveArticles(articles, lang, innerArticlesDepth ?: DEFAULT_INNER_ARTICLES_DEPTH)
                     }
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(Schedulers.io())
 
     private fun downloadAndSaveObjectArticles(
             lang: Lang,
@@ -463,6 +468,8 @@ class ArticleParsingServiceBase {
                         )
                     }
                     .doOnError { saveArticleParseError(lang.id, objectsUrl, it) }
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(Schedulers.io())
 
     fun getMostRecentArticlesPageCountForLang(lang: Lang): Single<Int> {
         return Single.create<Int> { subscriber ->
@@ -656,6 +663,8 @@ class ArticleParsingServiceBase {
                         }
                     }
                 }
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
     }
 
     /**
