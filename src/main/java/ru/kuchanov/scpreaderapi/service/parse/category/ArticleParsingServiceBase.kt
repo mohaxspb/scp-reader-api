@@ -195,9 +195,11 @@ class ArticleParsingServiceBase {
         val startTime = System.currentTimeMillis()
 
         ScpReaderConstants.Firebase.FirebaseInstance.values().toFlowable()
+                .parallel()
+                .runOn(Schedulers.newThread())
                 .map { langService.getById(it.lang) ?: throw LangNotFoundException() }
                 .map { it to getParsingRealizationForLang(it) }
-                .concatMapCompletable { (lang, service) ->
+                .concatMap { (lang, service) ->
                     Flowable
                             .fromIterable(service.getObjectArticlesUrls())
                             .doOnNext { objectsUrl -> log.error("Start loading objects ($objectsUrl) for lang ${lang.id}") }
@@ -210,18 +212,16 @@ class ArticleParsingServiceBase {
                                         )
                                         .doOnSuccess { log.error("Done loading objects ${lang.id}/$objectsUrl saved: ${it.size}") }
                             }
-                            .ignoreElements()
                             .doOnComplete { log.error("Start loading recent for lang ${lang.id}") }
-                            .andThen(
-                                    service
-                                            .downloadAndSaveAllRecentArticles(
-                                                    lang,
-                                                    maxPageCount = maxPageCount,
-                                                    processOnlyCount = processOnlyCount
-                                            )
-                                            .doOnSuccess { log.error("Recent saved for lang ${lang.id}: ${it.size}") }
-                                            .ignoreElement()
-                            )
+                            .concatMapSingle {
+                                service
+                                        .downloadAndSaveAllRecentArticles(
+                                                lang,
+                                                maxPageCount = maxPageCount,
+                                                processOnlyCount = processOnlyCount
+                                        )
+                                        .doOnSuccess { log.error("Recent saved for lang ${lang.id}: ${it.size}") }
+                            }
                             //maybe run it separately
 //                            .andThen(
 //                                    service
@@ -232,30 +232,9 @@ class ArticleParsingServiceBase {
                             .doOnSubscribe { log.error("Articles save started for lang: ${lang.id}") }
                             .doOnComplete { log.error("Articles save ended for lang: ${lang.id}") }
                 }
-                .doOnEvent {
-                    isDownloadAllRunning = false
-
-                    val timeSpent = System.currentTimeMillis() - startTime
-                    val minutesSpent = TimeUnit.MILLISECONDS.toMinutes(timeSpent)
-
-                    log.error("Total download time in minutes: $minutesSpent")
-
-                    val errorNotOccurred = it == null
-                    val subj = if (errorNotOccurred) {
-                        "Sync all data finished successfully"
-                    } else {
-                        "Sync all data finished with error: $it"
-                    }
-                    val message = if (errorNotOccurred) {
-                        "Sync all data done in $minutesSpent minutes."
-                    } else {
-                        val stringWriter = StringWriter()
-                        it.printStackTrace(PrintWriter(stringWriter))
-                        val stacktraceAsString = stringWriter.toString()
-                        "Sync all data failed after $minutesSpent minutes.\n\n Error:\n$stacktraceAsString"
-                    }
-                    mailService.sendMail(mailService.getAdminAddress(), subj = subj, text = message)
-                }
+                .sequential()
+                .ignoreElements()
+                .doOnEvent { doOnDownloadEverythingComplete(startTime, it) }
                 .subscribeBy(
                         onComplete = { log.error("Download everything completed!") },
                         onError = {
@@ -263,6 +242,31 @@ class ArticleParsingServiceBase {
                             it.printStackTrace()
                         }
                 )
+    }
+
+    private fun doOnDownloadEverythingComplete(startTime: Long, error: Throwable? = null) {
+        isDownloadAllRunning = false
+
+        val timeSpent = System.currentTimeMillis() - startTime
+        val minutesSpent = TimeUnit.MILLISECONDS.toMinutes(timeSpent)
+
+        log.error("Total download time in minutes: $minutesSpent")
+
+        val errorNotOccurred = error == null
+        val subj = if (errorNotOccurred) {
+            "Sync all data finished successfully"
+        } else {
+            "Sync all data finished with error: $error"
+        }
+        val message = if (errorNotOccurred) {
+            "Sync all data done in $minutesSpent minutes."
+        } else {
+            val stringWriter = StringWriter()
+            error?.printStackTrace(PrintWriter(stringWriter))
+            val stacktraceAsString = stringWriter.toString()
+            "Sync all data failed after $minutesSpent minutes.\n\n Error:\n$stacktraceAsString"
+        }
+        mailService.sendMail(mailService.getAdminAddress(), subj = subj, text = message)
     }
 
     @Async
@@ -459,12 +463,9 @@ class ArticleParsingServiceBase {
                         // 1. get articleCategory by lang and objectUrl
                         // 2. delete articleToCategory relation for lang
                         // 3. save articleToCategory relation with order
-                        val categoryToLang =
-                                categoryToLangService.findByLangIdAndSiteUrl(lang.id, objectsUrl)
+                        val categoryToLang = categoryToLangService
+                                .findByLangIdAndSiteUrl(lang.id, objectsUrl) ?: return@doOnSuccess
 //                        println("categoryToLang: $categoryToLang")
-                        if (categoryToLang == null) {
-                            return@doOnSuccess
-                        }
                         var order = 0
                         val articlesForCategory = articlesForLangInDb
                                 .map {
