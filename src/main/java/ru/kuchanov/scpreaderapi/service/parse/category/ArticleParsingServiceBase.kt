@@ -177,7 +177,6 @@ class ArticleParsingServiceBase {
 
     fun getArticleRatingStringDelimiterEnd() = ""
 
-
     @Scheduled(
             /**
              * second, minute, hour, day, month, day of week
@@ -185,8 +184,12 @@ class ArticleParsingServiceBase {
 //        cron = "*/30 * * * * *" //fi xme test
             cron = "0 5 6 * * *"
     )
+    fun parseEveryThingTask() {
+        parseEverything()
+    }
+
     @Async
-    fun parseEverything() {
+    fun parseEverything(maxPageCount: Int? = null, processOnlyCount: Int? = null) {
         isDownloadAllRunning = true
 
         val startTime = System.currentTimeMillis()
@@ -194,19 +197,29 @@ class ArticleParsingServiceBase {
         ScpReaderConstants.Firebase.FirebaseInstance.values().toFlowable()
                 .map { langService.getById(it.lang) ?: throw LangNotFoundException() }
                 .map { it to getParsingRealizationForLang(it) }
-                .switchMapCompletable { (lang, service) ->
+                .concatMapCompletable { (lang, service) ->
                     Flowable
                             .fromIterable(service.getObjectArticlesUrls())
-                            .switchMapSingle { objectsUrl ->
+                            .doOnNext { objectsUrl -> log.error("Start loading objects ($objectsUrl) for lang ${lang.id}") }
+                            .concatMapSingle { objectsUrl ->
                                 service
-                                        .downloadAndSaveObjectArticles(lang, objectsUrl)
-                                        .doOnSuccess { log.error("Objects ($objectsUrl) saved: ${it.size}") }
+                                        .downloadAndSaveObjectArticles(
+                                                lang,
+                                                objectsUrl,
+                                                processOnlyCount = processOnlyCount
+                                        )
+                                        .doOnSuccess { log.error("Done loading objects ${lang.id}/$objectsUrl saved: ${it.size}") }
                             }
                             .ignoreElements()
+                            .doOnComplete { log.error("Start loading recent for lang ${lang.id}") }
                             .andThen(
                                     service
-                                            .downloadAndSaveAllRecentArticles(lang)
-                                            .doOnSuccess { log.error("Recent saved: ${it.size}") }
+                                            .downloadAndSaveAllRecentArticles(
+                                                    lang,
+                                                    maxPageCount = maxPageCount,
+                                                    processOnlyCount = processOnlyCount
+                                            )
+                                            .doOnSuccess { log.error("Recent saved for lang ${lang.id}: ${it.size}") }
                                             .ignoreElement()
                             )
                             //maybe run it separately
@@ -448,7 +461,7 @@ class ArticleParsingServiceBase {
                         // 3. save articleToCategory relation with order
                         val categoryToLang =
                                 categoryToLangService.findByLangIdAndSiteUrl(lang.id, objectsUrl)
-                        println("categoryToLang: $categoryToLang")
+//                        println("categoryToLang: $categoryToLang")
                         if (categoryToLang == null) {
                             return@doOnSuccess
                         }
@@ -557,7 +570,7 @@ class ArticleParsingServiceBase {
     }
 
     fun getObjectsArticlesForLang(lang: Lang, objectsLink: String): Single<List<ArticleForLang>> {
-        println("getObjectsArticlesForLang: ${lang.langCode}, url: ${lang.siteBaseUrlsToLangs?.first()?.siteBaseUrl}$objectsLink")
+//        println("getObjectsArticlesForLang: ${lang.langCode}, url: ${lang.siteBaseUrlsToLangs?.first()?.siteBaseUrl}$objectsLink")
         return Single.create { subscriber ->
             val request = Request.Builder()
                     .url(lang.siteBaseUrlsToLangs?.first()?.siteBaseUrl + objectsLink)
@@ -572,7 +585,7 @@ class ArticleParsingServiceBase {
                     return@create
                 }
             } catch (e: IOException) {
-                subscriber.onError(IOException("Connection error!"))
+                subscriber.onError(IOException("Connection error in getObjectsArticlesForLang: ${lang.id}, $objectsLink!"))
                 return@create
             }
             try {

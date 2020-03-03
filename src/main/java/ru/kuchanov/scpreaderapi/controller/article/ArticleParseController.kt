@@ -29,9 +29,13 @@ class ArticleParseController @Autowired constructor(
     ) : ResponseEntity<State>(State(state), status)
 
     @GetMapping("/everything")
-    fun updateEverything(@AuthenticationPrincipal user: User): ParsingStartedResponse {
+    fun updateEverything(
+            @RequestParam(value = "maxPageCount") maxPageCount: Int?,
+            @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
+            @AuthenticationPrincipal user: User
+    ): ParsingStartedResponse {
         return if (!articleParsingService.isDownloadAllRunning) {
-            articleParsingService.parseEverything()
+            articleParsingService.parseEverything(maxPageCount = maxPageCount, processOnlyCount = processOnlyCount)
             ParsingStartedResponse()
         } else {
             ParsingStartedResponse(state = "Already running", status = HttpStatus.CONFLICT)
