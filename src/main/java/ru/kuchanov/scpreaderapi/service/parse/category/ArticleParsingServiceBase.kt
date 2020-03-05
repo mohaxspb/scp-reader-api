@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory
 import org.springframework.context.annotation.Primary
+import org.springframework.dao.IncorrectResultSizeDataAccessException
 import org.springframework.http.HttpStatus
 import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.Scheduled
@@ -177,16 +178,16 @@ class ArticleParsingServiceBase {
 
     fun getArticleRatingStringDelimiterEnd() = ""
 
-    @Scheduled(
-            /**
-             * second, minute, hour, day, month, day of week
-             */
-//        cron = "*/30 * * * * *" //fi xme test
-            cron = "0 5 6 * * *"
-    )
-    fun parseEveryThingTask() {
-        parseEverything()
-    }
+//    @Scheduled(
+//            /**
+//             * second, minute, hour, day, month, day of week
+//             */
+////        cron = "*/30 * * * * *" //fi xme test
+//            cron = "0 5 6 * * *"
+//    )
+//    fun parseEveryThingTask() {
+//        parseEverything()
+//    }
 
     @Async
     fun parseEverything(maxPageCount: Int? = null, processOnlyCount: Int? = null) {
@@ -486,7 +487,7 @@ class ArticleParsingServiceBase {
                     .observeOn(Schedulers.io())
 
     fun getMostRecentArticlesPageCountForLang(lang: Lang): Single<Int> {
-        return Single.create<Int> { subscriber ->
+        return Single.create { subscriber ->
             val request = Request.Builder()
                     .url(lang.siteBaseUrlsToLangs?.first()?.siteBaseUrl + getRecentArticlesUrl())
                     .build()
@@ -699,10 +700,17 @@ class ArticleParsingServiceBase {
 
             val articleDownloaded = getArticleFromApi(articleToSave.urlRelative, lang, printTextParts)
 
-            var articleInDb = articleService.getArticleByUrlRelative(articleDownloaded.urlRelative)
-            if (articleInDb == null) {
-                articleInDb = articleService.save(Article())
+            val articleInDb = try {
+                articleService.getArticleByUrlRelative(articleDownloaded.urlRelative)
+                        ?: articleService.save(Article())
+            } catch (e: IncorrectResultSizeDataAccessException) {
+                val articles = articleService.getArticlesByUrlRelative(articleDownloaded.urlRelative)
+                val articleIdsToDelete = articles.subList(0, articles.size - 1).map { it.id!! }
+                val articlesForLangsIdsToDelete = articleForLangService.findIdsByArticleIds(articleIdsToDelete)
+                articleForLangService.deleteByIds(articlesForLangsIdsToDelete)
+                articles.last()
             }
+
             var articleForLangInDb = articleForLangService
                     .getArticleForLangByUrlRelativeAndLang(
                             articleDownloaded.urlRelative,

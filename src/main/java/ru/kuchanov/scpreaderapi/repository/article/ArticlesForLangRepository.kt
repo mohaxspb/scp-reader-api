@@ -74,6 +74,14 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
     fun getIdByUrlRelativeAndLangId(urlRelative: String, langId: String): Long?
 
     @Query(
+            """
+                SELECT al.id FROM ArticleForLang al
+                WHERE al.articleId in :articleIds
+                """
+    )
+    fun getIdsByArticleIds(articleIds: List<Long>): List<Long>
+
+    @Query(
             value =
             """
                 SELECT

@@ -21,6 +21,9 @@ class ArticleServiceImpl @Autowired constructor(
     override fun getArticleByUrlRelative(urlRelative: String) =
             repository.getArticleByUrlRelative(urlRelative)
 
+    override fun getArticlesByUrlRelative(urlRelative: String): List<Article> =
+            repository.getArticlesByUrlRelative(urlRelative)
+
     override fun getArticleByUrlRelativeAndLang(urlRelative: String, langId: String) =
             repository.getOneByUrlRelativeUrlAndLang(urlRelative, langId)
 }

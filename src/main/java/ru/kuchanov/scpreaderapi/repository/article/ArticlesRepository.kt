@@ -19,4 +19,12 @@ interface ArticlesRepository : JpaRepository<Article, Long> {
         WHERE al.urlRelative = :urlRelative
         """)
     fun getArticleByUrlRelative(urlRelative: String): Article?
+
+    @Query("""
+        SELECT a FROM Article a 
+        JOIN ArticleForLang al ON a.id = al.articleId 
+        WHERE al.urlRelative = :urlRelative
+        order by al.created desc
+        """)
+    fun getArticlesByUrlRelative(urlRelative: String): List<Article>
 }

@@ -75,6 +75,12 @@ class ArticleToLangServiceImpl @Autowired constructor(
                     .findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId)
                     .map { it.toDto().withImages().withTags().withType() }
 
+    override fun deleteByIds(ids: List<Long>) =
+            ids.forEach { articlesForLangRepository.deleteById(it) }
+
+    override fun findIdsByArticleIds(articleIds: List<Long>): List<Long> =
+            articlesForLangRepository.getIdsByArticleIds(articleIds)
+
     override fun getRandomArticle(langId: String?): ArticleToLangDto =
             if (langId == null) {
                 articlesForLangRepository.getRandomArticle()

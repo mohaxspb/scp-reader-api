@@ -12,5 +12,7 @@ interface ArticleService {
 
     fun getArticleByUrlRelative(urlRelative: String): Article?
 
+    fun getArticlesByUrlRelative(urlRelative: String): List<Article>
+
     fun getArticleByUrlRelativeAndLang(urlRelative: String, langId: String): Article?
 }
