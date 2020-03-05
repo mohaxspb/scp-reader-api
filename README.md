@@ -33,3 +33,33 @@ To ignore changes in file execute:
 To unignore it execute:
 
 >git update-index --no-assume-unchanged src/test/resources/application.yml
+
+
+### Troubleshooting
+
+1. If you have duplicates in articles_langs table - exucute smt like this: 
+
+    ```postgresql
+    with toDelete as (
+        with duplicates as (
+            with res as (
+                select al.url_relative, count(*)
+                from articles_langs al
+                group by al.url_relative
+                having count(*) > 1
+            )
+            select al.article_id, res.url_relative, count(*)
+            from articles_langs al
+                     join res on al.url_relative = res.url_relative
+            group by al.article_id, res.url_relative
+            having count(*) = 1
+            order by url_relative
+        )
+        select distinct on (al.url_relative) al.id
+        from articles_langs al
+                 join duplicates on duplicates.url_relative = al.url_relative
+    )
+    delete
+    from articles_langs
+    where id in (select toDelete.id from toDelete);
+    ```
