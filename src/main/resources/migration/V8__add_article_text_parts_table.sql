@@ -22,7 +22,7 @@ ALTER TABLE article_to_lang_text_parts
 alter table article_to_lang_text_parts
     add constraint fk_article_to_lang_id__to__articles_langs
         foreign key (article_to_lang_id)
-            REFERENCES articles_langs (id);
+            REFERENCES articles_langs (id) on DELETE CASCADE;
 
 ALTER TABLE article_to_lang_text_parts
     drop constraint IF EXISTS fk_id__to__article_to_lang_text_parts CASCADE;

@@ -142,7 +142,7 @@ create table if not exists articles_images
     created             timestamp,
     updated             timestamp,
     primary key (id),
-    constraint fk_article_image_article_langs foreign key (article_for_lang_id) REFERENCES articles_langs (id)
+    constraint fk_article_image_article_langs foreign key (article_for_lang_id) REFERENCES articles_langs (id) on DELETE CASCADE
 );
 
 
@@ -238,7 +238,7 @@ ALTER TABLE tags_articles_langs
 alter table tags_articles_langs
     add constraint fk_article_for_lang_id__to__articles_langs
         foreign key (article_for_lang_id)
-            REFERENCES articles_langs (id);
+            REFERENCES articles_langs (id) on DELETE CASCADE;
 
 ALTER TABLE tags_articles_langs
     drop constraint IF EXISTS fk_tag_for_lang_id__to__tags_langs CASCADE;
