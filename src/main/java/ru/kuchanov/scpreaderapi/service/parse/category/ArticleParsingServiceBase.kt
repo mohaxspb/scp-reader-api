@@ -23,7 +23,6 @@ import org.springframework.context.annotation.Primary
 import org.springframework.dao.IncorrectResultSizeDataAccessException
 import org.springframework.http.HttpStatus
 import org.springframework.scheduling.annotation.Async
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.ResponseStatus
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
@@ -694,7 +693,9 @@ class ArticleParsingServiceBase {
     ): ArticleForLang {
 //        println("parse article: ${articleToSave.urlRelative}")
         try {
-            if (categoryToLangService.findByLangIdAndSiteUrl(lang.id, articleToSave.urlRelative) != null) {
+            val category = categoryToLangService.findByLangIdAndSiteUrl(lang.id, articleToSave.urlRelative)
+            val relativeUrlToCheck = lang.removeDomainFromUrl(articleToSave.urlRelative)
+            if (category != null || getRecentArticlesUrl() == relativeUrlToCheck || getRatedArticlesUrl() == relativeUrlToCheck) {
                 throw IllegalStateException("Attempt to parse category as article")
             }
 
