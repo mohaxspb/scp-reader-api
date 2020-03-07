@@ -202,7 +202,6 @@ class ArticleParsingServiceBase {
                 .concatMap { (lang, service) ->
                     Flowable
                             .fromIterable(service.getObjectArticlesUrls())
-                            .doOnNext { objectsUrl -> log.error("Start loading objects ($objectsUrl) for lang ${lang.id}") }
                             .concatMapSingle { objectsUrl ->
                                 service
                                         .downloadAndSaveObjectArticles(
@@ -210,18 +209,21 @@ class ArticleParsingServiceBase {
                                                 objectsUrl,
                                                 processOnlyCount = processOnlyCount
                                         )
-                                        .doOnSuccess { log.error("Done loading objects ${lang.id}/$objectsUrl saved: ${it.size}") }
+                                        .doOnSubscribe { log.error("Start loading objects ($objectsUrl) for lang ${lang.id}") }
+                                        .doOnSuccess { log.error("Done loading objects ($objectsUrl) for lang ${lang.id}. Saved: ${it.size}") }
                             }
-                            .doOnComplete { log.error("Start loading recent for lang ${lang.id}") }
-                            .concatMapSingle {
-                                service
-                                        .downloadAndSaveAllRecentArticles(
-                                                lang,
-                                                maxPageCount = maxPageCount,
-                                                processOnlyCount = processOnlyCount
-                                        )
-                                        .doOnSuccess { log.error("Recent saved for lang ${lang.id}: ${it.size}") }
-                            }
+                            .ignoreElements()
+                            .andThen(
+                                    service
+                                            .downloadAndSaveAllRecentArticles(
+                                                    lang,
+                                                    maxPageCount = maxPageCount,
+                                                    processOnlyCount = processOnlyCount
+                                            )
+                                            .doOnSubscribe { log.error("Start downloadAndSaveAllRecentArticles for lang: ${lang.id}") }
+                                            .doOnSuccess { log.error("Finish downloadAndSaveAllRecentArticles for lang ${lang.id}: ${it.size}") }
+                            )
+                            .toFlowable()
                             //maybe run it separately
 //                            .andThen(
 //                                    service
@@ -408,26 +410,27 @@ class ArticleParsingServiceBase {
             maxPageCount: Int? = null,
             processOnlyCount: Int? = null,
             innerArticlesDepth: Int? = null
-    ): Single<List<ArticleForLang>> =
-            getMostRecentArticlesPageCountForLang(lang)
-                    .flatMapPublisher { recentArticlesPagesCount ->
-                        Flowable.range(1, maxPageCount ?: recentArticlesPagesCount)
-                    }
-                    .switchMap { page ->
-                        getRecentArticlesForPage(lang, page).flatMapPublisher { Flowable.fromIterable(it) }
-                    }
-                    .toList()
-                    //test loading and save with less count of articles
-                    .map { articlesToDownload ->
-                        processOnlyCount?.let {
-                            articlesToDownload.take(processOnlyCount)
-                        } ?: articlesToDownload
-                    }
-                    .flatMap { articles ->
-                        downloadAndSaveArticles(articles, lang, innerArticlesDepth ?: DEFAULT_INNER_ARTICLES_DEPTH)
-                    }
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(Schedulers.io())
+    ): Single<List<ArticleForLang>> {
+        return getMostRecentArticlesPageCountForLang(lang)
+                .flatMapPublisher { recentArticlesPagesCount ->
+                    Flowable.range(1, maxPageCount ?: recentArticlesPagesCount)
+                }
+                .switchMap { page ->
+                    getRecentArticlesForPage(lang, page).flatMapPublisher { Flowable.fromIterable(it) }
+                }
+                .toList()
+                //test loading and save with less count of articles
+                .map { articlesToDownload ->
+                    processOnlyCount?.let {
+                        articlesToDownload.take(processOnlyCount)
+                    } ?: articlesToDownload
+                }
+                .flatMap { articles ->
+                    downloadAndSaveArticles(articles, lang, innerArticlesDepth ?: DEFAULT_INNER_ARTICLES_DEPTH)
+                }
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+    }
 
     private fun downloadAndSaveObjectArticles(
             lang: Lang,
