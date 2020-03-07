@@ -506,7 +506,7 @@ class ArticleParsingServiceBase {
     }
 
     fun getRecentArticlesForPage(lang: Lang, page: Int): Single<List<ArticleForLang>> {
-        println("start request to: ${lang.siteBaseUrlsToLangs?.first()?.siteBaseUrl + getRecentArticlesUrl() + page}")
+//        println("start request to: ${lang.siteBaseUrlsToLangs?.first()?.siteBaseUrl + getRecentArticlesUrl() + page}")
         return Single
                 .create<List<ArticleForLang>> { subscriber ->
                     val request = Request.Builder()
@@ -663,7 +663,7 @@ class ArticleParsingServiceBase {
             lang: Lang,
             innerArticlesDepth: Int = 0
     ): Single<List<ArticleForLang>> {
-        println("downloadAndSaveArticles articles size: ${articlesToDownload.size}")
+//        println("downloadAndSaveArticles articles size: ${articlesToDownload.size}")
         return Single.just(articlesToDownload)
                 .map { articles ->
                     articles.mapNotNull { articleToDownload ->
@@ -692,7 +692,7 @@ class ArticleParsingServiceBase {
             innerArticlesDepth: Int = 0,
             printTextParts: Boolean = false
     ): ArticleForLang {
-        println("parse article: ${articleToSave.urlRelative}")
+//        println("parse article: ${articleToSave.urlRelative}")
         try {
             if (categoryToLangService.findByLangIdAndSiteUrl(lang.id, articleToSave.urlRelative) != null) {
                 throw IllegalStateException("Attempt to parse category as article")
