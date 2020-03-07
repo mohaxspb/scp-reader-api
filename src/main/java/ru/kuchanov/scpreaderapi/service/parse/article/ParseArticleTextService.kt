@@ -139,7 +139,18 @@ class ParseArticleTextService {
             if (elementUnfoldedContent.hasText() || elementUnfoldedContent.children().isNotEmpty()) {
                 spoilerData = elementUnfoldedContent.html()
             } else {
-                throw ScpParseException("ERROR 0 WHILE PARSING SPOILER CONTENT. Please, let developers know about it, if you see this message)")
+                //in some articles there is really no data in spoiler...
+                //so return empty string...
+                //see `http://www.scp-wiki.net/sexycontainmentprocedures`
+                if (elementUnfoldedContent.children().isEmpty()) {
+                    println("NO DATA IN SPOILER!")
+                    spoilerData = ""
+                } else {
+//                println("elementUnfoldedContent: $elementUnfoldedContent")
+//                println("elementUnfoldedContent: ${elementUnfoldedContent.parent()}")
+//                println("elementUnfoldedContent: ${elementUnfoldedContent.parent().parent()}")
+                    throw ScpParseException("ERROR 0 WHILE PARSING SPOILER CONTENT. Please, let developers know about it, if you see this message)")
+                }
             }
         } else {
             //see spoilers in articles `/scp-3003`, `/scp-323` and others
