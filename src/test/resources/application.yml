@@ -7,6 +7,25 @@ hibernate:
   show_sql: true
 
 spring:
+  mail:
+    default-encoding: UTF-8
+    host: mail.${my.site.domain}
+    port: 587
+    username: no-reply@${my.site.domain}
+    password: "PASSWORD_HERE"
+    properties.mail:
+      user: no-reply@${my.site.domain}
+      from: no-reply@${my.site.domain}
+      smtp:
+        #need this for EHLO check
+        localhost: ${my.site.domain}
+        auth: true
+        starttls.enable: true
+        connectiontimeout: 5000
+        timeout: 5000
+        writetimeout: 5000
+  mvc:
+    static-path-pattern: /resources/static/**
   datasource:
     hikari:
       auto-commit: true
