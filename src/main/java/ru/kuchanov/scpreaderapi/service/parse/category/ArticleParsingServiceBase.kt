@@ -763,7 +763,7 @@ class ArticleParsingServiceBase {
 
             return articleForLangInDb
         } catch (e: Exception) {
-            println("Error in article parsing: ${articleToSave.urlRelative}")
+            log.error("Error in article parsing: ${articleToSave.urlRelative}")
             e.printStackTrace()
 
             saveArticleParseError(articleToSave.langId, articleToSave.urlRelative, e)

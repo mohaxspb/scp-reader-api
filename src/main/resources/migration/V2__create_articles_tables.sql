@@ -126,8 +126,8 @@ CREATE TABLE IF NOT EXISTS articles_langs__to__articles_langs
     created                    timestamp,
     updated                    timestamp,
     primary key (id),
-    constraint fk_parent_article_for_lang foreign key (parent_article_for_lang_id) REFERENCES articles_langs (id),
-    constraint fk_article_for_lang foreign key (article_for_lang_id) REFERENCES articles_langs (id),
+    constraint fk_parent_article_for_lang foreign key (parent_article_for_lang_id) REFERENCES articles_langs (id) on delete cascade,
+    constraint fk_article_for_lang foreign key (article_for_lang_id) REFERENCES articles_langs (id) on delete cascade,
     unique (parent_article_for_lang_id, article_for_lang_id)
 );
 -- article to lang END
@@ -162,14 +162,14 @@ ALTER TABLE read__articles_to_lang__to__users
 alter table read__articles_to_lang__to__users
     add constraint fk_article_to_lang_id__to__articles_langs
         foreign key (article_to_lang_id)
-            REFERENCES articles_langs (id);
+            REFERENCES articles_langs (id) on delete cascade;
 
 ALTER TABLE read__articles_to_lang__to__users
     drop constraint IF EXISTS fk_user_id__to__users CASCADE;
 alter table read__articles_to_lang__to__users
     add constraint fk_user_id__to__users
         foreign key (user_id)
-            REFERENCES users (id);
+            REFERENCES users (id) on delete cascade;
 
 
 create table if not exists favorite__articles_to_lang__to__users
@@ -187,14 +187,14 @@ ALTER TABLE favorite__articles_to_lang__to__users
 alter table favorite__articles_to_lang__to__users
     add constraint fk_article_to_lang_id__to__articles_langs
         foreign key (article_to_lang_id)
-            REFERENCES articles_langs (id);
+            REFERENCES articles_langs (id) on delete cascade;
 
 ALTER TABLE favorite__articles_to_lang__to__users
     drop constraint IF EXISTS fk_user_id__to__users CASCADE;
 alter table favorite__articles_to_lang__to__users
     add constraint fk_user_id__to__users
         foreign key (user_id)
-            REFERENCES users (id);
+            REFERENCES users (id) on delete cascade;
 -- read/favorite articles to users END
 
 
@@ -211,7 +211,7 @@ create table if not exists tags_langs
 (
     id      bigserial    not null,
     tag_id  bigint       not null
-        constraint fk_tags references tags,
+        constraint fk_tags references tags on delete cascade,
     lang_id varchar(255) not null
         constraint fk_langs references langs,
     title   text         not null,
@@ -245,5 +245,5 @@ ALTER TABLE tags_articles_langs
 alter table tags_articles_langs
     add constraint fk_tag_for_lang_id__to__tags_langs
         foreign key (tag_for_lang_id)
-            REFERENCES tags_langs (id);
+            REFERENCES tags_langs (id) on delete cascade;
 -- tags END
