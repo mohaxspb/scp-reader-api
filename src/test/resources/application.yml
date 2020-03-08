@@ -4,22 +4,7 @@ server:
     context-path: /scp-reader/api
 
 hibernate:
-  show_sql: false
-
-logging:
-  file: logs/myLog.log
-  file.max-history: 15
-  level:
-    org:
-      flywaydb: INFO
-      hibernate: ERROR
-      hibernate.SQL: WARN
-      hibernate.type: WARN
-      springframework: ERROR
-      springframework.web: DEBUG
-    root: INFO
-  pattern:
-    console: '%d{HH:mm:ss.SSS} %msg%n'
+  show_sql: true
 
 spring:
   datasource:
@@ -61,6 +46,24 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
+  http:
+    log-request-details: true
+
+logging:
+  file: logs/myLog.log
+  file.max-history: 15
+  level:
+    org:
+      flywaydb: debug
+      hibernate: ERROR
+      hibernate.SQL: WARN
+      hibernate.type: WARN
+      springframework: ERROR
+      springframework.web: DEBUG
+      springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+    root: INFO
+  pattern:
+    console: '%d{HH:mm:ss.SSS} %msg%n'
 
 my:
   api:
@@ -71,4 +74,11 @@ my:
       client_id: CLIENT_ID_HERE
       client_secret: CLIENT_SECRET_HERE
   db:
-    name: scp_reader_test
+    name: scp_reader
+  #site
+  site:
+    domain: scp-reader.com
+  #mail:
+  mail:
+    admin:
+      address: admin@${my.site.domain}
