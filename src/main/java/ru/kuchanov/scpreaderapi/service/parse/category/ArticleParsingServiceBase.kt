@@ -252,21 +252,21 @@ class ArticleParsingServiceBase {
         val timeSpent = System.currentTimeMillis() - startTime
         val minutesSpent = TimeUnit.MILLISECONDS.toMinutes(timeSpent)
 
-        log.error("Total download time in minutes: $minutesSpent")
+        log.error("Total download sites time in minutes: $minutesSpent")
 
         val errorNotOccurred = error == null
         val subj = if (errorNotOccurred) {
-            "Sync all data finished successfully"
+            "Sync all sites data finished successfully"
         } else {
-            "Sync all data finished with error: $error"
+            "Sync all sites data finished with error: $error"
         }
         val message = if (errorNotOccurred) {
-            "Sync all data done in $minutesSpent minutes."
+            "Sync all sites data done in $minutesSpent minutes."
         } else {
             val stringWriter = StringWriter()
             error?.printStackTrace(PrintWriter(stringWriter))
             val stacktraceAsString = stringWriter.toString()
-            "Sync all data failed after $minutesSpent minutes.\n\n Error:\n$stacktraceAsString"
+            "Sync all sites data failed after $minutesSpent minutes.\n\n Error:\n$stacktraceAsString"
         }
         mailService.sendMail(mailService.getAdminAddress(), subj = subj, text = message)
     }
@@ -763,7 +763,7 @@ class ArticleParsingServiceBase {
 
             return articleForLangInDb
         } catch (e: Exception) {
-            log.error("Error in article parsing: ${articleToSave.urlRelative}")
+            log.error("Error in article parsing: ${articleToSave.urlRelative}, lang: ${lang.id}")
             e.printStackTrace()
 
             saveArticleParseError(articleToSave.langId, articleToSave.urlRelative, e)

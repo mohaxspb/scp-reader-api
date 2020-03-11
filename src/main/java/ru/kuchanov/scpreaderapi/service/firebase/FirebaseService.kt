@@ -9,6 +9,7 @@ import io.reactivex.Flowable
 import io.reactivex.Single
 import io.reactivex.processors.BehaviorProcessor
 import io.reactivex.rxkotlin.subscribeBy
+import io.reactivex.schedulers.Schedulers
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.IncorrectResultSizeDataAccessException
@@ -61,93 +62,90 @@ class FirebaseService @Autowired constructor(
         val firebaseDataUpdateDateRepository: FirebaseDataUpdateDateRepository
 ) {
 
+    var isDownloadAllRunning = false
+
     @Async
     fun updateDataFromFirebase(
             startKey: String = "",
             langToParse: ScpReaderConstants.Firebase.FirebaseInstance? = null,
-            maxUsersCount: Int? = null
+            maxUserCount: Int? = null
     ) {
         val startTime = System.currentTimeMillis()
-        println("updateDataFromFirebase")
         log.error("updateDataFromFirebase start")
+
+        isDownloadAllRunning = true
 
         Flowable
                 .fromIterable(ScpReaderConstants.Firebase.FirebaseInstance.values().toList())
                 .filter { if (langToParse == null) true else it == langToParse }
-                .flatMapSingle { lang ->
-                    println("Start parsing firebase for lang: ${lang.lang}")
-                    val langInDb = lang.let { langService.getById(it.lang) }
-                            ?: throw IllegalArgumentException("Unknown lang: $lang")
-
-                    val firebaseDatabase = FirebaseDatabase.getInstance(FirebaseApp.getInstance(lang.lang))
-
-                    val subject = BehaviorProcessor.createDefault(startKey)
+                .parallel()
+                .runOn(Schedulers.newThread())
+                .map { langService.getById(it.lang) ?: throw IllegalArgumentException("Unknown lang: $it") }
+                .map { it to FirebaseDatabase.getInstance(FirebaseApp.getInstance(it.id)) }
+                .concatMap { (lang, firebase) ->
+                    val subject = BehaviorProcessor.createDefault(startKey to 0)
 
                     subject
-                            .concatMap { startKey -> usersObservable(firebaseDatabase, startKey).toFlowable() }
+                            .concatMap { startKeyAndDownloadedCount ->
+                                usersObservable(firebase, startKeyAndDownloadedCount.first).toFlowable()
+                            }
                             .map {
-                                if (maxUsersCount != null && maxUsersCount < it.size) {
-                                    it.take(maxUsersCount)
+                                if (maxUserCount != null && maxUserCount < it.size) {
+                                    it.take(maxUserCount)
                                 } else {
                                     it
                                 }
                             }
-                            .map {
-                                insertUsers(it, langInDb)
-                                it
-                            }
+                            .doOnNext { insertUsers(it, lang) }
                             .doOnNext { users ->
                                 if (users.size != QUERY_LIMIT) {
                                     subject.onComplete()
                                 } else {
-                                    if (maxUsersCount != null && maxUsersCount < users.size) {
+                                    if (maxUserCount != null && (maxUserCount < users.size || maxUserCount < subject.value!!.second + users.size)) {
                                         subject.onComplete()
                                     } else {
-                                        subject.onNext(users.last().uid)
+                                        subject.onNext(users.last().uid!! to subject.value!!.second + users.size)
                                     }
                                 }
                             }
-                            //.doOnNext { println("users size: ${it.size}") }
                             .toList()
-                            .map { Pair(lang, it.flatten()) }
-                            .doOnSuccess { updateFirebaseUpdateDate(lang.lang) }
+                            .doOnSuccess { updateFirebaseUpdateDate(lang.id) }
+                            .toFlowable()
+                            .doOnSubscribe { log.error("Start parsing firebase for lang: ${lang.id}") }
+                            .doOnComplete { log.error("Finish parsing firebase for lang: ${lang.id}") }
                 }
-                .doOnEach {
-                    val timeSpent = System.currentTimeMillis() - startTime
-                    val minutesSpent = TimeUnit.MILLISECONDS.toMinutes(timeSpent)
-
-                    log.error("Total download time in minutes: $minutesSpent")
-
-                    val errorNotOccurred = it.error == null
-                    val subj = if (errorNotOccurred) {
-                        "Sync firebase data finished successfully"
-                    } else {
-                        "Sync firebase data finished with error: $it"
-                    }
-                    val message = if (errorNotOccurred) {
-                        "Sync firebase data done in $minutesSpent minutes."
-                    } else {
-                        val stringWriter = StringWriter()
-                        it.error!!.printStackTrace(PrintWriter(stringWriter))
-                        val stacktraceAsString = stringWriter.toString()
-                        "Sync firebase data failed after $minutesSpent minutes.\n\n Error:\n$stacktraceAsString"
-                    }
-                    mailService.sendMail(mailService.getAdminAddress(), subj = subj, text = message)
-                }
+                .sequential()
+                .ignoreElements()
+                .doOnEvent { doOnDownloadEverythingComplete(startTime, it) }
                 .subscribeBy(
-                        onNext = {
-                            log.error("done updating users for lang: ${it.first.lang}, totalCount: ${it.second.size}")
-                            println("done updating users for lang: ${it.first.lang}, totalCount: ${it.second.size}")
-                        },
-                        onComplete = {
-                            log.error("done updating users from firebase")
-                            println("done updating users from firebase")
-                        },
-                        onError = {
-                            log.error("error in update users observable: ", it)
-                            println("error in update users observable: $it")
-                        }
+                        onComplete = { log.error("Done updating users from firebase") },
+                        onError = { log.error("Error in update users observable: ", it) }
                 )
+    }
+
+    private fun doOnDownloadEverythingComplete(startTime: Long, error: Throwable? = null) {
+        isDownloadAllRunning = false
+
+        val timeSpent = System.currentTimeMillis() - startTime
+        val minutesSpent = TimeUnit.MILLISECONDS.toMinutes(timeSpent)
+
+        log.error("Total firebase download time in minutes: $minutesSpent")
+
+        val errorNotOccurred = error == null
+        val subj = if (errorNotOccurred) {
+            "Sync all firebase data finished successfully"
+        } else {
+            "Sync all firebase data finished with error: $error"
+        }
+        val message = if (errorNotOccurred) {
+            "Sync all firebase data done in $minutesSpent minutes."
+        } else {
+            val stringWriter = StringWriter()
+            error?.printStackTrace(PrintWriter(stringWriter))
+            val stacktraceAsString = stringWriter.toString()
+            "Sync all firebase data failed after $minutesSpent minutes.\n\n Error:\n$stacktraceAsString"
+        }
+        mailService.sendMail(mailService.getAdminAddress(), subj = subj, text = message)
     }
 
     fun getAllFirebaseUpdatedDataDates(): List<FirebaseDataUpdateDate> =
