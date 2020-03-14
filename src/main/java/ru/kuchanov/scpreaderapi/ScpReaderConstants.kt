@@ -12,6 +12,7 @@ object ScpReaderConstants {
 
     object Path {
         const val FIREBASE = "firebase"
+        const val MESSAGING = "messaging"
         const val AUTH = "auth"
         const val PURCHASE = "purchase"
         const val ADS = "ads"
@@ -43,6 +44,20 @@ object ScpReaderConstants {
             IT("it"),
             PT("pt"),
             ZH("zh")
+        }
+
+        object Fcm {
+            enum class Topic(val topicName: String) {
+                MAIN("/topics/main")
+            }
+
+            enum class MessageType {
+                MESSAGE, EXTERNAL_URL, NEW_VERSION
+            }
+
+            enum class DataParamName {
+                TYPE, TITLE, MESSAGE, URL
+            }
         }
     }
 
