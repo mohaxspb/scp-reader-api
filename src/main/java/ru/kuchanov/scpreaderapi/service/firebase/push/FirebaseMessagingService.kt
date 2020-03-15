@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.service.firebase
+package ru.kuchanov.scpreaderapi.service.firebase.push
 
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.Message

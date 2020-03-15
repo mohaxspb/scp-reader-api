@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
-import ru.kuchanov.scpreaderapi.service.firebase.FirebaseMessagingService
+import ru.kuchanov.scpreaderapi.service.firebase.push.FirebaseMessagingService
 
 
 @RestController
