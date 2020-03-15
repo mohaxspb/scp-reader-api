@@ -26,6 +26,13 @@ class FirebaseMessagingController @Autowired constructor(
             @AuthenticationPrincipal user: User
     ) = fcmService.sendMessageToTopic(topicName, type, title, message, url, user)
 
+    @GetMapping("/send/topic/{id}")
+    fun sendToTopic(
+            @PathVariable(value = "id") id: Long,
+            @RequestParam(value = "topicName") topicName: String,
+            @AuthenticationPrincipal user: User
+    ) = fcmService.sendMessageToTopicById(topicName, id, user)
+
     @GetMapping("/all/byTypes")
     fun getAllByTypes(
             @RequestParam(value = "types") types: List<ScpReaderConstants.Firebase.Fcm.MessageType>

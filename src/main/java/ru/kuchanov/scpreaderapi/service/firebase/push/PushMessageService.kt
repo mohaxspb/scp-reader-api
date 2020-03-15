@@ -9,6 +9,8 @@ interface PushMessageService {
 
     fun findAllByUserId(userId: Long): List<PushMessage>
 
+    fun findOneById(id: Long): PushMessage?
+
     fun deleteById(id: Long): Boolean
 
     fun save(pushMessage: PushMessage): PushMessage

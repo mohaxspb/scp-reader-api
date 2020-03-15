@@ -2,6 +2,8 @@ package ru.kuchanov.scpreaderapi.bean.firebase.push
 
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
+import org.springframework.http.HttpStatus
+import org.springframework.web.bind.annotation.ResponseStatus
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.utils.NoArgConstructor
 import java.sql.Timestamp
@@ -26,8 +28,9 @@ data class PushMessage(
         val title: String,
         @Column(name = "message", columnDefinition = "TEXT")
         val message: String,
-        @Column(name = "score_amount")
         val url: String? = null,
+        //state
+        var sent: Boolean = true,
         //author
         @Column(name = "author_id")
         val authorId: Long,
@@ -37,3 +40,6 @@ data class PushMessage(
         @field:UpdateTimestamp
         val updated: Timestamp? = null
 )
+
+@ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "No such PushMessage")
+class PushMessageNotFoundException : RuntimeException()

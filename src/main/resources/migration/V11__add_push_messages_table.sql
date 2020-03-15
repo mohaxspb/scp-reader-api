@@ -9,6 +9,8 @@ create table if not exists push_messages
     message    text      not null,
     url        text,
 
+    sent       boolean   not null default true,
+
     author_id  bigint    not null,
 
     created    timestamp,

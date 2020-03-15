@@ -1,6 +1,7 @@
 package ru.kuchanov.scpreaderapi.service.firebase.push
 
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.firebase.push.PushMessage
@@ -16,6 +17,9 @@ class PushMessageServiceImpl @Autowired constructor(
 
     override fun findAllByUserId(userId: Long): List<PushMessage> =
             pushMessageRepository.findAllByUserId(userId)
+
+    override fun findOneById(id: Long): PushMessage? =
+            pushMessageRepository.findByIdOrNull(id)
 
     override fun deleteById(id: Long): Boolean =
             pushMessageRepository.deleteById(id).let { true }
