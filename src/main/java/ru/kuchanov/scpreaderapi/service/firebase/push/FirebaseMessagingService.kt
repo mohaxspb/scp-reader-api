@@ -12,6 +12,7 @@ import ru.kuchanov.scpreaderapi.bean.firebase.push.PushMessageNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.model.exception.ScpAccessDeniedException
 import ru.kuchanov.scpreaderapi.model.exception.ScpServerException
+import java.time.format.DateTimeFormatter
 
 @Service
 class FirebaseMessagingService @Autowired constructor(
@@ -92,6 +93,7 @@ class FirebaseMessagingService @Autowired constructor(
         data[Fcm.DataParamName.TYPE.name] = pushMessage.type.name
         data[Fcm.DataParamName.MESSAGE.name] = pushMessage.message
         data[Fcm.DataParamName.TITLE.name] = pushMessage.title
+        data[Fcm.DataParamName.UPDATED.name] = DateTimeFormatter.ISO_INSTANT.format(pushMessage.updated!!.toInstant())
 
         return Message.builder()
                 .putAllData(data)
