@@ -1,18 +1,19 @@
 package ru.kuchanov.scpreaderapi.controller.firebase
 
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
+import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.service.firebase.push.FirebaseMessagingService
+import ru.kuchanov.scpreaderapi.service.firebase.push.PushMessageService
 
 
 @RestController
 @RequestMapping("/" + ScpReaderConstants.Path.FIREBASE + "/" + ScpReaderConstants.Path.MESSAGING)
 class FirebaseMessagingController @Autowired constructor(
-        val fcmService: FirebaseMessagingService
+        val fcmService: FirebaseMessagingService,
+        val pushMessageService: PushMessageService
 ) {
 
     @GetMapping("/send/topic")
@@ -21,6 +22,17 @@ class FirebaseMessagingController @Autowired constructor(
             @RequestParam(value = "type") type: ScpReaderConstants.Firebase.Fcm.MessageType,
             @RequestParam(value = "title") title: String,
             @RequestParam(value = "message") message: String,
-            @RequestParam(value = "url") url: String?
-    ) = fcmService.sendMessageToTopic(topicName, type, title, message, url)
+            @RequestParam(value = "url") url: String?,
+            @AuthenticationPrincipal user: User
+    ) = fcmService.sendMessageToTopic(topicName, type, title, message, url, user)
+
+    @GetMapping("/all/byTypes")
+    fun getAllByTypes(
+            @RequestParam(value = "types") types: List<ScpReaderConstants.Firebase.Fcm.MessageType>
+    ) = pushMessageService.findAllByTypeIn(types)
+
+    @GetMapping("/delete/{id}")
+    fun getAllByTypes(
+            @PathVariable(value = "id") id: Long
+    ) = pushMessageService.deleteById(id)
 }
