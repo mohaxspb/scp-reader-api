@@ -16,7 +16,7 @@ import org.springframework.dao.IncorrectResultSizeDataAccessException
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
-import ru.kuchanov.scpreaderapi.bean.FirebaseDataUpdateDate
+import ru.kuchanov.scpreaderapi.bean.firebase.FirebaseDataUpdateDate
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.favorite.FavoriteArticleByLang
 import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
@@ -251,6 +251,7 @@ class FirebaseService @Autowired constructor(
             }
             val urlRelative = lang.removeDomainFromUrl(articleInFirebase.url!!)
             //for other langs we should not pass urlRelative
+            //todo check and update redundant (set articleId min from all)
             val articleInDb = articleService.getArticleByUrlRelative(urlRelative)
 //            println("articleInDb: $articleInDb $urlRelative")
             //insert new article and article-lang connection if need

@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.bean
+package ru.kuchanov.scpreaderapi.bean.firebase
 
 import java.sql.Timestamp
 import javax.persistence.*

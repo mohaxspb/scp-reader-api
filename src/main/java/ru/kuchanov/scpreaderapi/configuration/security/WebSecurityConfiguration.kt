@@ -92,7 +92,12 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
                 .disable()
         http
                 .authorizeRequests()
-                .antMatchers("/", "/login**", "/error**")
+                .antMatchers(
+                        "/",
+                        "/login**",
+                        "/error**",
+                        "/${ScpReaderConstants.Path.FIREBASE}/${ScpReaderConstants.Path.MESSAGING}/all/byTypes"
+                )
                 .permitAll()
         http
                 .authorizeRequests()
