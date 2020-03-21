@@ -83,6 +83,7 @@ class FirebaseMessagingService @Autowired constructor(
         }
 
         val data = mutableMapOf<String, String>()
+        data[Fcm.DataParamName.ID.name] = pushMessage.id!!.toString()
         when (pushMessage.type) {
             Fcm.MessageType.MESSAGE -> {
             }

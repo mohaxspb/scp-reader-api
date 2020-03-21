@@ -56,7 +56,7 @@ object ScpReaderConstants {
             }
 
             enum class DataParamName {
-                TYPE, TITLE, MESSAGE, URL, UPDATED
+                ID, TYPE, TITLE, MESSAGE, URL, UPDATED
             }
         }
     }
