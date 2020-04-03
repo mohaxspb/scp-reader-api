@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.repository.transaction
+package ru.kuchanov.scpreaderapi.service.transaction
 
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.transaction.UserDataTransaction
