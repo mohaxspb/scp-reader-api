@@ -10,6 +10,8 @@ import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.ScpReaderConstants.Score.DEFAULT_SCORE_FOR_REWARDED_VIDEO
 import ru.kuchanov.scpreaderapi.bean.transaction.UserDataTransaction
 import ru.kuchanov.scpreaderapi.bean.users.User
+import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
+import ru.kuchanov.scpreaderapi.model.dto.monetization.AddUserDataTransactionResultDto
 import ru.kuchanov.scpreaderapi.service.transaction.UserDataTransactionService
 import ru.kuchanov.scpreaderapi.service.users.UserService
 
@@ -25,7 +27,7 @@ class UserTransactionController @Autowired constructor(
     fun getCurrentUserPositionInLeaderboardForLang(
             @RequestParam("adsProvider") adsProvider: String,
             @AuthenticationPrincipal user: User
-    ): UserDataTransaction {
+    ): AddUserDataTransactionResultDto {
         val transaction = userDataTransactionService.save(
                 UserDataTransaction(
                         userId = user.id!!,
@@ -35,6 +37,12 @@ class UserTransactionController @Autowired constructor(
                 )
         )
 
+        val userInDb = userService.getById(user.id) ?: throw UserNotFoundException()
+        val updatedUser = userService.save(userInDb.apply { score += transaction.scoreAmount })
 
+        return AddUserDataTransactionResultDto(
+                userDataTransaction = transaction,
+                totalUserScore = updatedUser.score
+        )
     }
 }
