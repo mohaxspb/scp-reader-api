@@ -8,8 +8,10 @@ object ScpReaderConstants {
 
     const val NUM_OF_ARTICLES_RATED_PAGE = 20
 
-    const val DEFAULT_SCORE_FOR_READ_ARTICLE = 1
-
+    object Score {
+        const val DEFAULT_SCORE_FOR_READ_ARTICLE = 1
+        const val DEFAULT_SCORE_FOR_REWARDED_VIDEO = 50
+    }
     object Path {
         const val FIREBASE = "firebase"
         const val MESSAGING = "messaging"
@@ -18,6 +20,7 @@ object ScpReaderConstants {
         const val ADS = "ads"
         const val ADS_FILES = "files"
         const val USER = "user"
+        const val TRANSACTION = "transaction"
         const val ARTICLE = "article"
         const val READ = "read"
         const val FAVORITE = "favorite"
@@ -71,6 +74,6 @@ object ScpReaderConstants {
     }
 
     enum class UserDataTransactionType {
-        READ_ARTICLE
+        READ_ARTICLE, REWARDED_VIDEO
     }
 }

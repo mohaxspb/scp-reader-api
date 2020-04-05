@@ -13,6 +13,7 @@ import ru.kuchanov.scpreaderapi.bean.purchase.UsersAndroidProduct
 import ru.kuchanov.scpreaderapi.bean.purchase.UsersAndroidSubscription
 import ru.kuchanov.scpreaderapi.utils.EncryptionConverter
 import java.sql.Timestamp
+import java.util.*
 import javax.persistence.*
 
 @Entity
@@ -73,6 +74,13 @@ data class User(
         @OneToMany(cascade = [CascadeType.ALL], mappedBy = "userId", fetch = FetchType.EAGER)
         var userAndroidProduct: Set<UsersAndroidProduct> = setOf(),
 
+        //monetization
+        @Column(name = "ads_disabled_end_date")
+        var adsDisabledEndDate: Timestamp? = null,
+
+        @Column(name = "offline_limit_disabled_end_date")
+        var offlineLimitDisabledEndDate: Timestamp? = null,
+
         //dates
         @field:CreationTimestamp
         val created: Timestamp? = null,
@@ -95,6 +103,12 @@ data class User(
     override fun isAccountNonExpired() = true
 
     override fun isAccountNonLocked() = true
+
+    fun isAdsDisabled() =
+            adsDisabledEndDate?.after(Date()) ?: false
+
+    fun isOfflineLimitDisabled() =
+            offlineLimitDisabledEndDate?.after(Date()) ?: false
 }
 
 @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "No such user")

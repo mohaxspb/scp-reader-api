@@ -3,7 +3,7 @@ package ru.kuchanov.scpreaderapi.service.article.read
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
-import ru.kuchanov.scpreaderapi.ScpReaderConstants.DEFAULT_SCORE_FOR_READ_ARTICLE
+import ru.kuchanov.scpreaderapi.ScpReaderConstants.Score.DEFAULT_SCORE_FOR_READ_ARTICLE
 import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticleByLang
 import ru.kuchanov.scpreaderapi.bean.articles.read.ReadArticleByLangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.transaction.UserDataTransaction
@@ -13,7 +13,7 @@ import ru.kuchanov.scpreaderapi.model.dto.article.ReadOrFavoriteArticleProjectio
 import ru.kuchanov.scpreaderapi.model.dto.article.ReadOrFavoriteArticleToLangDto
 import ru.kuchanov.scpreaderapi.repository.article.read.ReadArticlesForLangRepository
 import ru.kuchanov.scpreaderapi.repository.article.tags.TagForLangRepository
-import ru.kuchanov.scpreaderapi.repository.transaction.UserDataTransactionService
+import ru.kuchanov.scpreaderapi.service.transaction.UserDataTransactionService
 import ru.kuchanov.scpreaderapi.service.article.image.ArticlesImagesService
 import ru.kuchanov.scpreaderapi.service.article.type.ArticleAndArticleTypeService
 import ru.kuchanov.scpreaderapi.service.users.UserService

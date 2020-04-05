@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.transaction.UserDataTransaction
 import ru.kuchanov.scpreaderapi.repository.transaction.UserDataTransactionRepository
-import ru.kuchanov.scpreaderapi.repository.transaction.UserDataTransactionService
 
 @Service
 class UserDataTransactionServiceImpl @Autowired constructor(

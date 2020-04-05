@@ -22,7 +22,7 @@ class AndroidPurchaseConfiguration {
     fun httpTransport(): HttpTransport = GoogleNetHttpTransport.newTrustedTransport()
 
     @Bean
-    fun jsonFactory(): JacksonFactory? = JacksonFactory.getDefaultInstance()
+    fun jsonFactory(): JacksonFactory = JacksonFactory.getDefaultInstance()
 
     @Bean
     fun googleCredential(): GoogleCredential = GoogleCredential

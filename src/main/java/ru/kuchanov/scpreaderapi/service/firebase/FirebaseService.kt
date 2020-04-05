@@ -29,7 +29,7 @@ import ru.kuchanov.scpreaderapi.model.firebase.FirebaseArticle
 import ru.kuchanov.scpreaderapi.model.firebase.FirebaseUser
 import ru.kuchanov.scpreaderapi.model.user.LevelsJson
 import ru.kuchanov.scpreaderapi.repository.firebase.FirebaseDataUpdateDateRepository
-import ru.kuchanov.scpreaderapi.repository.transaction.UserDataTransactionService
+import ru.kuchanov.scpreaderapi.service.transaction.UserDataTransactionService
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.ArticleService
 import ru.kuchanov.scpreaderapi.service.article.favorite.FavoriteArticleForLangService
