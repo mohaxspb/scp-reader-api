@@ -33,6 +33,16 @@ interface UsersRepository : JpaRepository<User, Long> {
                 u.full_name as fullName,
                 u.avatar,
                 u.score,
+                u.ads_disabled_end_date as adsDisabledEndDate,
+                u.offline_limit_disabled_end_date as offlineLimitDisabledEndDate,
+                case 
+                    when u.ads_disabled_end_date > cast(now() as timestamp) then true
+                    else false
+                end as adsDisabled,
+                case 
+                    when u.offline_limit_disabled_end_date > cast(now() as timestamp) then true
+                    else false
+                end as offlineLimitDisabled, 
                 u.level_num as levelNum, 
                 u.score_to_next_level as scoreToNextLevel, 
                 u.cur_level_score as curLevelScore, 

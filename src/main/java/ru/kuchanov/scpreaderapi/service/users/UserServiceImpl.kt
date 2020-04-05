@@ -18,28 +18,35 @@ class UserServiceImpl @Autowired constructor(
         val repository: UsersRepository
 ) : UserService {
 
-    override fun getById(id: Long): User? = repository.findByIdOrNull(id)
+    override fun getById(id: Long): User? =
+            repository.findByIdOrNull(id)
 
-    override fun getByIdAsDto(id: Long) = repository.getByIdAsProjection(id)
+    override fun getByIdAsDto(id: Long) =
+            repository.getByIdAsProjection(id)
 
-    override fun getByUsername(username: String) = repository.findOneByUsername(username)
+    override fun getByUsername(username: String) =
+            repository.findOneByUsername(username)
 
-    override fun loadUserByUsername(username: String): User? = repository.findOneByUsername(username)
+    override fun loadUserByUsername(username: String): User? =
+            repository.findOneByUsername(username)
 
-    override fun save(user: User): User = repository.save(user)
+    override fun save(user: User): User =
+            repository.save(user)
 
-    override fun getUsersByLangIdCount(langId: String): Long = repository.getUsersByLangCount(langId)
+    override fun getUsersByLangIdCount(langId: String): Long =
+            repository.getUsersByLangCount(langId)
 
     override fun getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(offset: Int, limit: Int) =
             repository
                     .getLeaderboardUsersWithOffsetAndLimitSortedByScore(offset, limit)
                     .map { it.toDto() }
 
-    override fun getByProviderId(id: String, provider: ScpReaderConstants.SocialProvider) = when (provider) {
-        ScpReaderConstants.SocialProvider.GOOGLE -> repository.findOneByGoogleId(id)
-        ScpReaderConstants.SocialProvider.FACEBOOK -> repository.findOneByFacebookId(id)
-        ScpReaderConstants.SocialProvider.VK -> repository.findOneByVkId(id)
-    }
+    override fun getByProviderId(id: String, provider: ScpReaderConstants.SocialProvider) =
+            when (provider) {
+                ScpReaderConstants.SocialProvider.GOOGLE -> repository.findOneByGoogleId(id)
+                ScpReaderConstants.SocialProvider.FACEBOOK -> repository.findOneByFacebookId(id)
+                ScpReaderConstants.SocialProvider.VK -> repository.findOneByVkId(id)
+            }
 
     override fun getUserPositionInLeaderboard(userId: Long, langId: String): Int =
             repository.getUserPositionInLeaderboard(userId, langId)
