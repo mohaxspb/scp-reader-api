@@ -7,10 +7,14 @@ import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.ResponseStatus
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.users.User
+import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
 import ru.kuchanov.scpreaderapi.model.dto.user.LeaderboardUserProjection
 import ru.kuchanov.scpreaderapi.model.dto.user.UserProjection
 import ru.kuchanov.scpreaderapi.model.user.LeaderboardUserDto
 import ru.kuchanov.scpreaderapi.repository.users.UsersRepository
+import java.sql.Timestamp
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 
 @Service
@@ -63,9 +67,40 @@ class UserServiceImpl @Autowired constructor(
     override fun getUserScoreById(userId: Long): Int =
             repository.getScoreById(userId)
 
+    override fun disableAdsAndOfflineLimit(
+            targetUserId: Long,
+            disableAds: Boolean,
+            disableOfflineLimit: Boolean,
+            period: Int,
+            timeUnit: ChronoUnit
+    ): UserProjection {
+        if (!disableAds && !disableOfflineLimit) {
+            throw InvalidConditionException("One of disableAds or disableOfflineLimit must be true!")
+        }
+
+        val targetUser = getById(targetUserId) ?: throw UserNotFoundException()
+
+        val endDate = Timestamp.from(Instant.now().plus(period.toLong(), timeUnit))
+        save(
+                targetUser.apply {
+                    if (disableAds) {
+                        adsDisabledEndDate = endDate
+                    }
+                    if (disableOfflineLimit) {
+                        offlineLimitDisabledEndDate = endDate
+                    }
+                }
+        )
+
+        return getByIdAsDto(targetUserId)!!
+    }
+
     fun LeaderboardUserProjection.toDto() =
             LeaderboardUserDto(id, avatar, fullName, score, levelNum, scoreToNextLevel, curLevelScore, numOfReadArticles)
 }
 
 @ResponseStatus(value = HttpStatus.CONFLICT)
 class InvalidUrlException(override val message: String?) : RuntimeException(message)
+
+@ResponseStatus(value = HttpStatus.BAD_REQUEST)
+class InvalidConditionException(override val message: String?) : RuntimeException(message)

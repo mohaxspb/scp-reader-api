@@ -5,6 +5,7 @@ import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.model.dto.user.UserProjection
 import ru.kuchanov.scpreaderapi.model.user.LeaderboardUserDto
+import java.time.temporal.ChronoUnit
 import javax.transaction.Transactional
 
 interface UserService : UserDetailsService {
@@ -32,4 +33,12 @@ interface UserService : UserDetailsService {
     fun editAccount(userId: Long, name: String, avatarUrl: String): UserProjection
 
     fun getUserScoreById(userId: Long): Int
+
+    fun disableAdsAndOfflineLimit(
+            targetUserId: Long,
+            disableAds: Boolean,
+            disableOfflineLimit: Boolean,
+            period: Int,
+            timeUnit: ChronoUnit
+    ): UserProjection
 }

@@ -12,6 +12,7 @@ import ru.kuchanov.scpreaderapi.model.dto.user.UserProjection
 import ru.kuchanov.scpreaderapi.model.user.LeaderboardUserDto
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.UserAndroidPurchaseService
 import ru.kuchanov.scpreaderapi.service.users.UserService
+import java.time.temporal.ChronoUnit
 
 
 @RestController
@@ -32,6 +33,23 @@ class UserController @Autowired constructor(
             @RequestParam(value = "avatarUrl") avatarUrl: String
     ): UserProjection =
             userService.editAccount(user.id!!, name, avatarUrl)
+
+    @PostMapping("/disableAdsAndOfflineLimit")
+    fun disableAdsAndOfflineLimit(
+            @AuthenticationPrincipal user: User,
+            @RequestParam targetUserId: Long,
+            @RequestParam disableAds: Boolean,
+            @RequestParam disableOfflineLimit: Boolean,
+            @RequestParam period: Int,
+            @RequestParam timeUnit: ChronoUnit
+    ): UserProjection =
+            userService.disableAdsAndOfflineLimit(
+                    targetUserId,
+                    disableAds,
+                    disableOfflineLimit,
+                    period,
+                    timeUnit
+            )
 
     @GetMapping("/leaderboard")
     fun getUsersForLangWithLimitAndOffsetSortedByScore(
