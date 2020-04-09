@@ -187,8 +187,10 @@ class ArticleParsingServiceBase {
             cron = "0 0 * * * *"
     )
     fun parseRecentTask() {
-        log.error("Start hourly parseRecentTask")
-        parseEverything(maxPageCount = 2, downloadRecent = true, downloadObjects = false)
+        if (!isDownloadAllRunning) {
+            log.error("Start hourly parseRecentTask")
+            parseEverything(maxPageCount = 2, downloadRecent = true, downloadObjects = false)
+        }
     }
 
     @Async
