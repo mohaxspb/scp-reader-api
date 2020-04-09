@@ -1,5 +1,6 @@
 package ru.kuchanov.scpreaderapi.service.parse.category
 
+import io.reactivex.Completable
 import io.reactivex.Flowable
 import io.reactivex.Single
 import io.reactivex.processors.BehaviorProcessor
@@ -23,6 +24,7 @@ import org.springframework.context.annotation.Primary
 import org.springframework.dao.IncorrectResultSizeDataAccessException
 import org.springframework.http.HttpStatus
 import org.springframework.scheduling.annotation.Async
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.ResponseStatus
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
@@ -177,19 +179,25 @@ class ArticleParsingServiceBase {
 
     fun getArticleRatingStringDelimiterEnd() = ""
 
-//    @Scheduled(
-//            /**
-//             * second, minute, hour, day, month, day of week
-//             */
-////        cron = "*/30 * * * * *" //fi xme test
-//            cron = "0 5 6 * * *"
-//    )
-//    fun parseEveryThingTask() {
-//        parseEverything()
-//    }
+    @Scheduled(
+            /**
+             * second, minute, hour, day, month, day of week
+             */
+//        cron = "*/30 * * * * *" //fi xme test
+            cron = "0 0 * * * *"
+    )
+    fun parseRecentTask() {
+        log.error("Start hourly parseRecentTask")
+        parseEverything(maxPageCount = 2, downloadRecent = true, downloadObjects = false)
+    }
 
     @Async
-    fun parseEverything(maxPageCount: Int? = null, processOnlyCount: Int? = null) {
+    fun parseEverything(
+            maxPageCount: Int? = null,
+            processOnlyCount: Int? = null,
+            downloadRecent: Boolean = true,
+            downloadObjects: Boolean = true
+    ) {
         isDownloadAllRunning = true
 
         val startTime = System.currentTimeMillis()
@@ -202,28 +210,44 @@ class ArticleParsingServiceBase {
                 .concatMap { (lang, service) ->
                     Flowable
                             .fromIterable(service.getObjectArticlesUrls())
-                            .concatMapSingle { objectsUrl ->
-                                service
-                                        .downloadAndSaveObjectArticles(
-                                                lang,
-                                                objectsUrl,
-                                                processOnlyCount = processOnlyCount
-                                        )
-                                        .doOnSubscribe { log.error("Start loading objects ($objectsUrl) for lang ${lang.id}") }
-                                        .doOnSuccess { log.error("Done loading objects ($objectsUrl) for lang ${lang.id}. Saved: ${it.size}") }
-                            }
-                            .ignoreElements()
-                            .andThen(
+                            .concatMapCompletable { objectsUrl ->
+                                if (downloadObjects) {
                                     service
-                                            .downloadAndSaveAllRecentArticles(
+                                            .downloadAndSaveObjectArticles(
                                                     lang,
-                                                    maxPageCount = maxPageCount,
+                                                    objectsUrl,
                                                     processOnlyCount = processOnlyCount
                                             )
-                                            .doOnSubscribe { log.error("Start downloadAndSaveAllRecentArticles for lang: ${lang.id}") }
-                                            .doOnSuccess { log.error("Finish downloadAndSaveAllRecentArticles for lang ${lang.id}: ${it.size}") }
+                                            .doOnSubscribe {
+                                                log.error("Start loading objects ($objectsUrl) for lang ${lang.id}")
+                                            }
+                                            .doOnSuccess {
+                                                log.error("Done loading objects ($objectsUrl) for lang ${lang.id}. Saved: ${it.size}")
+                                            }
+                                            .ignoreElement()
+                                } else {
+                                    Completable.complete()
+                                }
+                            }
+                            .andThen(
+                                    if (downloadRecent) {
+                                        service
+                                                .downloadAndSaveAllRecentArticles(
+                                                        lang,
+                                                        maxPageCount = maxPageCount,
+                                                        processOnlyCount = processOnlyCount
+                                                )
+                                                .doOnSubscribe {
+                                                    log.error("Start downloadAndSaveAllRecentArticles for lang: ${lang.id}")
+                                                }
+                                                .doOnSuccess {
+                                                    log.error("Finish downloadAndSaveAllRecentArticles for lang ${lang.id}: ${it.size}")
+                                                }
+                                                .ignoreElement()
+                                    } else {
+                                        Completable.complete()
+                                    }
                             )
-                            .toFlowable()
                             //maybe run it separately
 //                            .andThen(
 //                                    service
@@ -231,6 +255,7 @@ class ArticleParsingServiceBase {
 //                                            .doOnSuccess { log.error("Rated saved: ${it.size}") }
 //                                            .ignoreElement()
 //                            )
+                            .toFlowable<Nothing>()
                             .doOnSubscribe { log.error("Articles save started for lang: ${lang.id}") }
                             .doOnComplete { log.error("Articles save ended for lang: ${lang.id}") }
                 }
@@ -529,7 +554,8 @@ class ArticleParsingServiceBase {
     }
 
     fun getRatedArticlesForLang(lang: Lang, page: Int): Single<List<ArticleForLang>> {
-        println("getRatedArticlesForLang: ${lang.langCode}, url: ${lang.siteBaseUrlsToLangs?.first()?.siteBaseUrl}${getRatedArticlesUrl()}$page")
+        println("getRatedArticlesForLang: ${lang.langCode}, " +
+                "url: ${lang.siteBaseUrlsToLangs?.first()?.siteBaseUrl}${getRatedArticlesUrl()}$page")
         return Single
                 .create<List<ArticleForLang>> { subscriber ->
                     val request = Request.Builder()
@@ -540,7 +566,13 @@ class ArticleParsingServiceBase {
                     val articles = parseForRatedArticles(lang, doc)
                     subscriber.onSuccess(articles)
                 }
-                .doOnError { saveArticleParseError(lang.id, lang.siteBaseUrlsToLangs?.first()?.siteBaseUrl + getRatedArticlesUrl() + page, it) }
+                .doOnError {
+                    saveArticleParseError(
+                            lang.id,
+                            lang.siteBaseUrlsToLangs?.first()?.siteBaseUrl + getRatedArticlesUrl() + page,
+                            it
+                    )
+                }
     }
 
     @Suppress("DuplicatedCode")
