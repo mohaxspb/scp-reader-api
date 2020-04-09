@@ -1,8 +1,10 @@
 package ru.kuchanov.scpreaderapi.controller.article
 
+import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
@@ -16,6 +18,7 @@ import ru.kuchanov.scpreaderapi.service.users.LangService
 @RestController
 @RequestMapping("/" + ScpReaderConstants.Path.ARTICLE + "/" + ScpReaderConstants.Path.PARSE)
 class ArticleParseController @Autowired constructor(
+        val log: Logger,
         val articleParsingService: ArticleParsingServiceBase,
         val articleForLangService: ArticleForLangService,
         val langService: LangService
@@ -27,6 +30,20 @@ class ArticleParseController @Autowired constructor(
             status: HttpStatus = HttpStatus.ACCEPTED
 
     ) : ResponseEntity<State>(State(state), status)
+
+    @Scheduled(
+            /**
+             * second, minute, hour, day, month, day of week
+             */
+//        cron = "*/30 * * * * *" //fi xme test
+            cron = "0 0 * * * *"
+    )
+    fun parseRecentTask() {
+        if (!articleParsingService.isDownloadAllRunning) {
+            log.error("Start hourly parseRecentTask")
+            articleParsingService.parseEverything(maxPageCount = 2, downloadRecent = true, downloadObjects = false)
+        }
+    }
 
     @GetMapping("/everything")
     fun updateEverything(

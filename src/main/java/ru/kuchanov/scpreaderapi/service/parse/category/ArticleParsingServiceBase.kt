@@ -24,7 +24,6 @@ import org.springframework.context.annotation.Primary
 import org.springframework.dao.IncorrectResultSizeDataAccessException
 import org.springframework.http.HttpStatus
 import org.springframework.scheduling.annotation.Async
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.ResponseStatus
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
@@ -178,20 +177,6 @@ class ArticleParsingServiceBase {
     fun getArticleRatingStringDelimiter() = ", рейтинг"
 
     fun getArticleRatingStringDelimiterEnd() = ""
-
-    @Scheduled(
-            /**
-             * second, minute, hour, day, month, day of week
-             */
-//        cron = "*/30 * * * * *" //fi xme test
-            cron = "0 0 * * * *"
-    )
-    fun parseRecentTask() {
-        if (!isDownloadAllRunning) {
-            log.error("Start hourly parseRecentTask")
-            parseEverything(maxPageCount = 2, downloadRecent = true, downloadObjects = false)
-        }
-    }
 
     @Async
     fun parseEverything(
