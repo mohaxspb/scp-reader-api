@@ -183,7 +183,8 @@ class ArticleParsingServiceBase {
             maxPageCount: Int? = null,
             processOnlyCount: Int? = null,
             downloadRecent: Boolean = true,
-            downloadObjects: Boolean = true
+            downloadObjects: Boolean = true,
+            sendMail: Boolean
     ) {
         isDownloadAllRunning = true
 
@@ -248,7 +249,7 @@ class ArticleParsingServiceBase {
                 }
                 .sequential()
                 .ignoreElements()
-                .doOnEvent { doOnDownloadEverythingComplete(startTime, it) }
+                .doOnEvent { doOnDownloadEverythingComplete(startTime, it, sendMail) }
                 .subscribeBy(
                         onComplete = { log.error("Download everything completed!") },
                         onError = {
@@ -258,13 +259,15 @@ class ArticleParsingServiceBase {
                 )
     }
 
-    private fun doOnDownloadEverythingComplete(startTime: Long, error: Throwable? = null) {
+    private fun doOnDownloadEverythingComplete(
+            startTime: Long,
+            error: Throwable? = null,
+            sendMail: Boolean
+    ) {
         isDownloadAllRunning = false
 
         val timeSpent = System.currentTimeMillis() - startTime
         val minutesSpent = TimeUnit.MILLISECONDS.toMinutes(timeSpent)
-
-        log.error("Total download sites time in minutes: $minutesSpent")
 
         val errorNotOccurred = error == null
         val subj = if (errorNotOccurred) {
@@ -280,7 +283,10 @@ class ArticleParsingServiceBase {
             val stacktraceAsString = stringWriter.toString()
             "Sync all sites data failed after $minutesSpent minutes.\n\n Error:\n$stacktraceAsString"
         }
-        mailService.sendMail(mailService.getAdminAddress(), subj = subj, text = message)
+        log.error(message)
+        if (sendMail) {
+            mailService.sendMail(mailService.getAdminAddress(), subj = subj, text = message)
+        }
     }
 
     @Async

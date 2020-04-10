@@ -41,7 +41,12 @@ class ArticleParseController @Autowired constructor(
     fun parseRecentTask() {
         if (!articleParsingService.isDownloadAllRunning) {
             log.error("Start hourly parseRecentTask")
-            articleParsingService.parseEverything(maxPageCount = 2, downloadRecent = true, downloadObjects = false)
+            articleParsingService.parseEverything(
+                    maxPageCount = 1,
+                    downloadRecent = true,
+                    downloadObjects = false,
+                    sendMail = false
+            )
         }
     }
 
@@ -52,7 +57,11 @@ class ArticleParseController @Autowired constructor(
             @AuthenticationPrincipal user: User
     ): ParsingStartedResponse {
         return if (!articleParsingService.isDownloadAllRunning) {
-            articleParsingService.parseEverything(maxPageCount = maxPageCount, processOnlyCount = processOnlyCount)
+            articleParsingService.parseEverything(
+                    maxPageCount = maxPageCount,
+                    processOnlyCount = processOnlyCount,
+                    sendMail = true
+            )
             ParsingStartedResponse()
         } else {
             ParsingStartedResponse(state = "Already running", status = HttpStatus.CONFLICT)
