@@ -140,20 +140,18 @@ alter table authorities__to__users
     add constraint authority_id_and_user_id_unique unique (authority, user_id);
 
 ALTER TABLE authorities__to__users
-    drop constraint IF EXISTS fkk91upmbueyim93v469wj7b2qh CASCADE;
-ALTER TABLE authorities__to__users
     drop constraint IF EXISTS fk_user_id__to__users CASCADE;
 alter table authorities__to__users
     add constraint fk_user_id__to__users
         foreign key (user_id)
-            REFERENCES users (id);
+            REFERENCES users (id) on DELETE CASCADE;
 
 ALTER TABLE authorities__to__users
     drop constraint IF EXISTS fk_authority_id__to__authorities CASCADE;
 alter table authorities__to__users
     add constraint fk_authority_id__to__authorities
         foreign key (authority)
-            REFERENCES authorities (authority);
+            REFERENCES authorities (authority) on DELETE CASCADE;
 
 
 create table if not exists langs
@@ -181,7 +179,7 @@ ALTER TABLE site_base_urls__to__langs
 alter table site_base_urls__to__langs
     add constraint fk_lang_id__to__langs
         foreign key (lang_id)
-            REFERENCES langs (id);
+            REFERENCES langs (id) on DELETE CASCADE;
 
 alter table site_base_urls__to__langs
     drop constraint if exists site_base_url_unique;
@@ -210,11 +208,11 @@ ALTER TABLE users_langs
 alter table users_langs
     add constraint fk_user_id__to__users
         foreign key (user_id)
-            REFERENCES users (id);
+            REFERENCES users (id) on DELETE CASCADE;
 
 ALTER TABLE users_langs
     drop constraint IF EXISTS fk_lang_id__to__langs CASCADE;
 alter table users_langs
     add constraint fk_lang_id__to__langs
         foreign key (lang_id)
-            REFERENCES langs (id);
+            REFERENCES langs (id) on DELETE CASCADE;
