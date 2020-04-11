@@ -16,7 +16,7 @@ ALTER TABLE user_data_transactions
 alter table user_data_transactions
     add constraint fk_user_id__to__users
         foreign key (user_id)
-            REFERENCES users (id);
+            REFERENCES users (id) on DELETE CASCADE;
 
 
 ALTER TABLE user_data_transactions
