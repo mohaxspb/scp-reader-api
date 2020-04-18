@@ -52,9 +52,6 @@ chmod -R u=r,go=r $backupArhiveFileName
 # use bash to run `*.sh` scripts.
 SHELL=/bin/bash
 
-
-#test
-#0 * * * * /data/dbBackups/db_backup.sh $>/data/dbBackups/logs/db_backup.log
 #prod
 0 0 * * * /data/dbBackups/db_backup.sh $>/data/dbBackups/logs/db_backup.log
 ```
@@ -139,9 +136,48 @@ done
 # use bash to run `*.sh` scripts.
 SHELL=/bin/bash
 
-
 #backups rotate task
 0 0 * * * /data/dbBackups/dbBackupRotate.sh 60*60*24*7 scpReader_ /data/dbBackups/scpReader >> /data/dbBackups/logs/dbBackupRotate.log 2>&1
-#test
-#* * * * * /data/dbBackups/dbBackupRotate.sh 60*3 scpReader_ /data/dbBackups/scpReader >> /data/dbBackups/logs/dbBackupRotate.log 2>&1
 ```
+
+### backups storing on other server
+
+1. Create user for fetching backups on some other server with `adduser USER_NAME`
+2. Generate and upload ssh key (see https://www.digitalocean.com/community/tutorials/how-to-configure-ssh-key-based-authentication-on-a-linux-server)
+    1. `ssh-keygen`  
+    2. add `KEY_FILE_NAME.pub` content to prod server `home/DB_BACKUP_USER_NAME/.ssh/authorized_keys`
+3. Create cron task with `crontab -e` to copy backup files from prod server to another one:
+
+    **receiveBackup.sh**
+    ```shell script
+    echo Get list of files in other server dir modified not later than 2 days ago
+    files=`ssh -i /home/db-backup-fetcher/id_rsa_db-backup-fetcher db-backup@scp-reader.com 'find /data/dbBackups/scpReader/ -type f -mtime -2'`
+    
+    echo Found files: $files
+    
+    for file in $files
+    do
+        echo Start downloading file: $file
+        scp -v -r -i /home/db-backup-fetcher/id_rsa_db-backup-fetcher db-backup@scp-reader.com:$file \
+        /data/dbBackups/scp-reader.com/files/ \
+        >> /data/dbBackups/scp-reader.com/log.log
+    done
+    
+    echo Downloading files complete!
+    ``` 
+   
+   ```shell script
+   # use bash to run `*.sh` scripts.
+   SHELL=/bin/bash
+   
+   30 0 * * * /data/dbBackups/scp-reader.com/receiveBackup.sh
+    ```
+
+4. And do not forget to rotate this files too!
+
+    ```shell script
+   # use bash to run `*.sh` scripts.
+   SHELL=/bin/bash
+   
+   50 0 * * * /data/dbBackups/scp-reader.com/dbBackupRotate.sh 60*60*24*7 scpReader_ /data/dbBackups/scp-reader.com/files/ >> /data/dbBackups/scp-reader.com/log.log
+    ```
