@@ -35,6 +35,7 @@ class ArticleParseController @Autowired constructor(
 
     ) : ResponseEntity<State>(State(state), status)
 
+    @GetMapping("/allLangsRecent")
     @Scheduled(
             /**
              * second, minute, hour, day, month, day of week

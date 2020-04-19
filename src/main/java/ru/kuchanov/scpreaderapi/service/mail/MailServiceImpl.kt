@@ -3,6 +3,7 @@ package ru.kuchanov.scpreaderapi.service.mail
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.mail.javamail.JavaMailSender
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.ArticleService
@@ -58,13 +59,23 @@ class MailServiceImpl @Autowired constructor(
         )
     }
 
+    @Scheduled(
+            /**
+             * second, minute, hour, day, month, day of week
+             */
+//        cron = "*/30 * * * * *" //fi xme test
+            cron = "0 5 0 * * *"
+    )
     override fun sendStatisticsEmail() {
         val currentDate = LocalDate.now()
         val startDate = currentDate.minusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC)
         val endDate = currentDate.atStartOfDay().toInstant(ZoneOffset.UTC)
 
-        //        val startDate = currentDate.atStartOfDay().toInstant(ZoneOffset.UTC) //FI XME to test today
-        //        val endDate = currentDate.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC) //FI XME to test today
+        //FI XME
+        //to test today
+//                val startDate = currentDate.atStartOfDay().toInstant(ZoneOffset.UTC)
+//                val endDate = currentDate.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC)
+        //to test today END
 
         val dateString = SimpleDateFormat("EEE, dd MMMMM yyyy").format(Date.from(startDate))
 
