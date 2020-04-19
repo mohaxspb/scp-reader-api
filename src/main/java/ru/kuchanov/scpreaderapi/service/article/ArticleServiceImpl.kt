@@ -12,18 +12,21 @@ class ArticleServiceImpl @Autowired constructor(
         val repository: ArticlesRepository
 ) : ArticleService {
 
-    override fun getById(id: Long) =
+    override fun getById(id: Long): Article =
             repository.getOne(id) ?: throw ArticleNotFoundException()
 
     override fun save(article: Article): Article =
             repository.save(article)
 
-    override fun getArticleByUrlRelative(urlRelative: String) =
+    override fun getArticleByUrlRelative(urlRelative: String): Article? =
             repository.getArticleByUrlRelative(urlRelative)
 
     override fun getArticlesByUrlRelative(urlRelative: String): List<Article> =
             repository.getArticlesByUrlRelative(urlRelative)
 
-    override fun getArticleByUrlRelativeAndLang(urlRelative: String, langId: String) =
+    override fun getArticleByUrlRelativeAndLang(urlRelative: String, langId: String): Article? =
             repository.getOneByUrlRelativeUrlAndLang(urlRelative, langId)
+
+    override fun getCreatedArticlesBetweenDates(startDate: String, endDate: String): List<Article> =
+            repository.getCreatedArticlesBetweenDates(startDate, endDate)
 }

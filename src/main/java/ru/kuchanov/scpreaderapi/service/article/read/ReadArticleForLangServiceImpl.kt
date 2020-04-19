@@ -13,10 +13,10 @@ import ru.kuchanov.scpreaderapi.model.dto.article.ReadOrFavoriteArticleProjectio
 import ru.kuchanov.scpreaderapi.model.dto.article.ReadOrFavoriteArticleToLangDto
 import ru.kuchanov.scpreaderapi.repository.article.read.ReadArticlesForLangRepository
 import ru.kuchanov.scpreaderapi.repository.article.tags.TagForLangRepository
-import ru.kuchanov.scpreaderapi.service.transaction.UserDataTransactionService
 import ru.kuchanov.scpreaderapi.service.article.image.ArticlesImagesService
 import ru.kuchanov.scpreaderapi.service.article.type.ArticleAndArticleTypeService
-import ru.kuchanov.scpreaderapi.service.users.UserService
+import ru.kuchanov.scpreaderapi.service.transaction.UserDataTransactionService
+import ru.kuchanov.scpreaderapi.service.users.ScpReaderUserService
 import javax.transaction.Transactional
 
 
@@ -27,7 +27,7 @@ class ReadArticleForLangServiceImpl @Autowired constructor(
         val tagsForLangRepository: TagForLangRepository,
         val articleAndArticleTypeService: ArticleAndArticleTypeService,
         val transactionService: UserDataTransactionService,
-        val userService: UserService
+        val scpReaderUserService: ScpReaderUserService
 ) : ReadArticleForLangService {
 
     @Transactional
@@ -57,10 +57,10 @@ class ReadArticleForLangServiceImpl @Autowired constructor(
             )
             transactionService.save(transactionToSave)
 
-            val userInDb = userService.getById(userId) ?: throw UserNotFoundException()
-            userScore = userService.save(userInDb.apply { score += transactionToSave.scoreAmount }).score
+            val userInDb = scpReaderUserService.getById(userId) ?: throw UserNotFoundException()
+            userScore = scpReaderUserService.save(userInDb.apply { score += transactionToSave.scoreAmount }).score
         } else {
-            userScore = userService.getUserScoreById(userId)
+            userScore = scpReaderUserService.getUserScoreById(userId)
             transactionService.save(transaction.copy(transactionData = true.toString()))
         }
 
@@ -114,6 +114,8 @@ class ReadArticleForLangServiceImpl @Autowired constructor(
             }
                     .map { it.toDto().withImages().withTags().withType() }
 
+    override fun readArticlesCreatedBetweenDates(startDate: String, endDate: String): List<ReadOrFavoriteArticleProjection> =
+            repository.readArticlesCreatedBetweenDates(startDate, endDate)
 
     fun ReadOrFavoriteArticleProjection.toDto() =
             ReadOrFavoriteArticleToLangDto(

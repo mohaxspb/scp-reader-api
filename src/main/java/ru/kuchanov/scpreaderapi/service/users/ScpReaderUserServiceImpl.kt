@@ -18,9 +18,9 @@ import java.time.temporal.ChronoUnit
 
 
 @Service
-class UserServiceImpl @Autowired constructor(
+class ScpReaderUserServiceImpl @Autowired constructor(
         val repository: UsersRepository
-) : UserService {
+) : ScpReaderUserService {
 
     override fun getById(id: Long): User? =
             repository.findByIdOrNull(id)
@@ -94,6 +94,9 @@ class UserServiceImpl @Autowired constructor(
 
         return getByIdAsDto(targetUserId)!!
     }
+
+    override fun countUsersCreatedBetweenDates(startDate: String, endDate: String): Int =
+            repository.countUsersCreatedBetweenDates(startDate, endDate)
 
     fun LeaderboardUserProjection.toDto() =
             LeaderboardUserDto(id, avatar, fullName, score, levelNum, scoreToNextLevel, curLevelScore, numOfReadArticles)

@@ -21,6 +21,8 @@ interface ArticleForLangService {
     @Transactional
     fun save(articleForLang: ArticleForLang): ArticleForLang
 
+    fun getCreatedArticleToLangsBetweenDates(startDate: String, endDate: String): List<ArticleToLangDto>
+
     fun getMostRecentArticlesForLang(langId: String, offset: Int, limit: Int): List<ArticleToLangDto>
 
     fun getMostRatedArticlesForLang(langId: String, offset: Int, limit: Int): List<ArticleToLangDto>

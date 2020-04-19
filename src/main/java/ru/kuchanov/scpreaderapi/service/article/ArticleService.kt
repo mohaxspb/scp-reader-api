@@ -15,4 +15,6 @@ interface ArticleService {
     fun getArticlesByUrlRelative(urlRelative: String): List<Article>
 
     fun getArticleByUrlRelativeAndLang(urlRelative: String, langId: String): Article?
+
+    fun getCreatedArticlesBetweenDates(startDate: String, endDate: String): List<Article>
 }

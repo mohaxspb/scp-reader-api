@@ -8,6 +8,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.bind.annotation.ResponseStatus
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
+import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
 import ru.kuchanov.scpreaderapi.bean.auth.UserToAuthority
 import ru.kuchanov.scpreaderapi.bean.purchase.UsersAndroidProduct
 import ru.kuchanov.scpreaderapi.bean.purchase.UsersAndroidSubscription
@@ -109,6 +110,10 @@ data class User(
 
     fun isOfflineLimitDisabled() =
             offlineLimitDisabledEndDate?.after(Date()) ?: false
+}
+
+fun User.isAdmin(): Boolean {
+    return authorities.find { AuthorityType.ADMIN.name.equals(it.authority, ignoreCase = true) } != null
 }
 
 @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "No such user")

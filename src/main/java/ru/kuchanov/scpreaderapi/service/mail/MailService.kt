@@ -9,5 +9,7 @@ interface MailService {
 
     fun sendStatisticsEmail()
 
+    fun sendStatisticsEmail(today: Boolean)
+
     fun sendRegistrationEmail(email: String, password: String)
 }

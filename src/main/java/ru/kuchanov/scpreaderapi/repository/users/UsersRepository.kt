@@ -119,4 +119,15 @@ interface UsersRepository : JpaRepository<User, Long> {
             nativeQuery = true
     )
     fun editAccount(userId: Long, name: String, avatarUrl: String)
+
+    @Query(
+            """
+            SELECT count(created) 
+            FROM users 
+            WHERE created >= CAST( :startDate AS timestamp) 
+            AND created <= CAST( :endDate AS timestamp)
+        """,
+            nativeQuery = true
+    )
+    fun countUsersCreatedBetweenDates(startDate: String, endDate: String): Int
 }

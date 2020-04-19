@@ -2,6 +2,7 @@ package ru.kuchanov.scpreaderapi.repository.article
 
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
+import ru.kuchanov.scpreaderapi.bean.articles.Article
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInListProjection
 
@@ -80,6 +81,26 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
                 """
     )
     fun getIdsByArticleIds(articleIds: List<Long>): List<Long>
+
+    @Query(
+            """
+                SELECT
+                    art.id,
+                    art.article_id as articleId,
+                    art.lang_id as langId,
+                    art.url_relative as urlRelative,
+                    art.title,
+                    art.rating,
+                    art.created_on_site as createdOnSite,
+                    art.has_iframe_tag as hasIframeTag 
+                FROM articles_langs art
+                WHERE art.created >= CAST( :startDate AS timestamp) 
+                AND art.created <= CAST( :endDate AS timestamp) 
+                ORDER BY art.created
+        """,
+            nativeQuery = true
+    )
+    fun getCreatedArticlesBetweenDates(startDate: String, endDate: String): List<ArticleInListProjection>
 
     @Query(
             value =
