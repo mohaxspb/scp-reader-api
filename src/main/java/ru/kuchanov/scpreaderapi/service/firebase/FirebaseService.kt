@@ -37,7 +37,7 @@ import ru.kuchanov.scpreaderapi.service.article.read.ReadArticleForLangService
 import ru.kuchanov.scpreaderapi.service.auth.UserToAuthorityService
 import ru.kuchanov.scpreaderapi.service.mail.MailService
 import ru.kuchanov.scpreaderapi.service.users.LangService
-import ru.kuchanov.scpreaderapi.service.users.UserService
+import ru.kuchanov.scpreaderapi.service.users.ScpReaderUserService
 import ru.kuchanov.scpreaderapi.service.users.UsersLangsService
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -50,7 +50,7 @@ import javax.transaction.Transactional
 class FirebaseService @Autowired constructor(
         val log: Logger,
         val mailService: MailService,
-        val userService: UserService,
+        val scpReaderUserService: ScpReaderUserService,
         val userToAuthorityService: UserToAuthorityService,
         val langService: LangService,
         val usersLangsService: UsersLangsService,
@@ -194,13 +194,13 @@ class FirebaseService @Autowired constructor(
                 }
                 .forEach { userUidArticles ->
                     //check if user already exists and update just some values
-                    var userInDb = userService.getByUsername(userUidArticles.user.username)
+                    var userInDb = scpReaderUserService.getByUsername(userUidArticles.user.username)
                     if (userInDb == null) {
                         if (userUidArticles.user.avatar?.startsWith("data:image") == true) {
                             userUidArticles.user.avatar = ScpReaderConstants.DEFAULT_AVATAR_URL
 //                            println("insert user with base64 avatar: ${userUidArticles.user}")
                         }
-                        userInDb = userService.save(userUidArticles.user)
+                        userInDb = scpReaderUserService.save(userUidArticles.user)
 
                         userToAuthorityService.save(UserToAuthority(userId = userInDb.id!!, authority = AuthorityType.USER))
                         newUsersInserted++
@@ -224,7 +224,7 @@ class FirebaseService @Autowired constructor(
                         userInDb.curLevelScore = curLevel.score
                         userInDb.scoreToNextLevel = levelsJson.scoreToNextLevel(userInDb.score, curLevel)
                         //update user in DB
-                        userService.save(userInDb)
+                        scpReaderUserService.save(userInDb)
                     }
 
                     //insert read/favorite articles if need

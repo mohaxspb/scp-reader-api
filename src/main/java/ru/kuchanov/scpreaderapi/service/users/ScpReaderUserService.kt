@@ -8,7 +8,7 @@ import ru.kuchanov.scpreaderapi.model.user.LeaderboardUserDto
 import java.time.temporal.ChronoUnit
 import javax.transaction.Transactional
 
-interface UserService : UserDetailsService {
+interface ScpReaderUserService : UserDetailsService {
 
     override fun loadUserByUsername(username: String): User?
 
@@ -41,4 +41,6 @@ interface UserService : UserDetailsService {
             period: Int,
             timeUnit: ChronoUnit
     ): UserProjection
+
+    fun countUsersCreatedBetweenDates(startDate: String, endDate: String): Int
 }

@@ -23,7 +23,7 @@ import ru.kuchanov.scpreaderapi.model.user.LevelsJson
 import ru.kuchanov.scpreaderapi.network.ApiClient
 import ru.kuchanov.scpreaderapi.service.auth.UserToAuthorityService
 import ru.kuchanov.scpreaderapi.service.users.LangService
-import ru.kuchanov.scpreaderapi.service.users.UserService
+import ru.kuchanov.scpreaderapi.service.users.ScpReaderUserService
 import ru.kuchanov.scpreaderapi.service.users.UsersLangsService
 import java.io.Serializable
 import java.util.*
@@ -36,7 +36,7 @@ class AuthController @Autowired constructor(
         val log: Logger,
         val clientDetailsService: ClientDetailsService,
         val userToAuthorityService: UserToAuthorityService,
-        val usersService: UserService,
+        val usersServiceScpReader: ScpReaderUserService,
         val langService: LangService,
         val usersLangsService: UsersLangsService,
         val tokenStore: TokenStore,
@@ -62,14 +62,14 @@ class AuthController @Autowired constructor(
 
         val email = commonUserData.email ?: throw AuthException("no email found!")
 
-        var userInDb = usersService.getByUsername(email)
+        var userInDb = usersServiceScpReader.getByUsername(email)
         if (userInDb != null) {
             //add provider id to user object if need
             when (provider) {
                 ScpReaderConstants.SocialProvider.GOOGLE -> {
                     if (userInDb.googleId.isNullOrEmpty()) {
                         userInDb.googleId = commonUserData.id
-                        usersService.save(userInDb)
+                        usersServiceScpReader.save(userInDb)
                     } else if (userInDb.googleId != commonUserData.id) {
                         log.error("login with ${commonUserData.id}/$email for user with mismatched googleId: ${userInDb.googleId}")
                     }
@@ -77,7 +77,7 @@ class AuthController @Autowired constructor(
                 ScpReaderConstants.SocialProvider.FACEBOOK -> {
                     if (userInDb.facebookId.isNullOrEmpty()) {
                         userInDb.facebookId = commonUserData.id
-                        usersService.save(userInDb)
+                        usersServiceScpReader.save(userInDb)
                     } else if (userInDb.facebookId != commonUserData.id) {
                         log.error("login with ${commonUserData.id}/$email for user with mismatched facebookId: ${userInDb.facebookId}")
                     }
@@ -85,7 +85,7 @@ class AuthController @Autowired constructor(
                 ScpReaderConstants.SocialProvider.VK -> {
                     if (userInDb.vkId.isNullOrEmpty()) {
                         userInDb.vkId = commonUserData.id
-                        usersService.save(userInDb)
+                        usersServiceScpReader.save(userInDb)
                     } else if (userInDb.vkId != commonUserData.id) {
                         log.error("login with ${commonUserData.id}/$email for user with mismatched vkId: ${userInDb.vkId}")
                     }
@@ -95,7 +95,7 @@ class AuthController @Autowired constructor(
             return getAccessToken(email, clientId)
         } else {
             //try to find by providers id as email may be changed
-            userInDb = usersService.getByProviderId(commonUserData.id!!, provider)
+            userInDb = usersServiceScpReader.getByProviderId(commonUserData.id!!, provider)
             if (userInDb != null) {
                 return getAccessToken(userInDb.username, clientId)
             } else {
@@ -127,7 +127,7 @@ class AuthController @Autowired constructor(
                     }
                 }
 
-                val newUserInDb = usersService.save(userToSave)
+                val newUserInDb = usersServiceScpReader.save(userToSave)
 
                 userToAuthorityService.save(UserToAuthority(userId = newUserInDb.id!!, authority = AuthorityType.USER))
                 usersLangsService.insert(UsersLangs(userId = newUserInDb.id, langId = lang.id))
@@ -166,7 +166,7 @@ class AuthController @Autowired constructor(
                 extensionProperties
         )
 
-        val user: User = usersService.loadUserByUsername(email) ?: throw UserNotFoundException()
+        val user: User = usersServiceScpReader.loadUserByUsername(email) ?: throw UserNotFoundException()
         val authenticationToken = UsernamePasswordAuthenticationToken(
                 user,
                 user.password,

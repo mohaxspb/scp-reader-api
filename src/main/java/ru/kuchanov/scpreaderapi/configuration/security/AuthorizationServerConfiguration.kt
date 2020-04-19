@@ -11,7 +11,7 @@ import org.springframework.security.oauth2.config.annotation.web.configurers.Aut
 import org.springframework.security.oauth2.provider.token.TokenStore
 import org.springframework.security.oauth2.provider.token.store.JdbcTokenStore
 import ru.kuchanov.scpreaderapi.service.auth.ClientServiceImpl
-import ru.kuchanov.scpreaderapi.service.users.UserServiceImpl
+import ru.kuchanov.scpreaderapi.service.users.ScpReaderUserServiceImpl
 import javax.sql.DataSource
 
 
@@ -29,7 +29,7 @@ class AuthorizationServerConfiguration : AuthorizationServerConfigurerAdapter() 
     private lateinit var clientDetailsService: ClientServiceImpl
 
     @Autowired
-    private lateinit var userDetailsService: UserServiceImpl
+    private lateinit var userDetailsService: ScpReaderUserServiceImpl
 
     @Autowired
     lateinit var authenticationManager: AuthenticationManager

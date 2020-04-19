@@ -27,4 +27,15 @@ interface ArticlesRepository : JpaRepository<Article, Long> {
         order by al.created desc
         """)
     fun getArticlesByUrlRelative(urlRelative: String): List<Article>
+
+    @Query(
+            """
+            SELECT * FROM articles 
+            WHERE created >= CAST( :startDate AS timestamp) 
+            AND created <= CAST( :endDate AS timestamp) 
+            ORDER BY created
+        """,
+            nativeQuery = true
+    )
+    fun getCreatedArticlesBetweenDates(startDate: String, endDate: String): List<Article>
 }

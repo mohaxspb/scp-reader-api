@@ -21,7 +21,7 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
 import ru.kuchanov.scpreaderapi.service.auth.ClientServiceImpl
-import ru.kuchanov.scpreaderapi.service.users.UserServiceImpl
+import ru.kuchanov.scpreaderapi.service.users.ScpReaderUserServiceImpl
 import javax.servlet.Filter
 
 
@@ -59,7 +59,7 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
             super.authenticationManagerBean()
 
     @Autowired
-    lateinit var userDetailsService: UserServiceImpl
+    lateinit var userDetailsService: ScpReaderUserServiceImpl
 
     @Autowired
     fun configureGlobal(auth: AuthenticationManagerBuilder) {

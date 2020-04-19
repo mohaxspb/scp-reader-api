@@ -13,13 +13,13 @@ import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
 import ru.kuchanov.scpreaderapi.model.dto.monetization.AddUserDataTransactionResultDto
 import ru.kuchanov.scpreaderapi.service.transaction.UserDataTransactionService
-import ru.kuchanov.scpreaderapi.service.users.UserService
+import ru.kuchanov.scpreaderapi.service.users.ScpReaderUserService
 
 
 @RestController
 @RequestMapping("/" + ScpReaderConstants.Path.USER + "/" + ScpReaderConstants.Path.TRANSACTION)
 class UserTransactionController @Autowired constructor(
-        val userService: UserService,
+        val scpReaderUserService: ScpReaderUserService,
         val userDataTransactionService: UserDataTransactionService
 ) {
 
@@ -37,8 +37,8 @@ class UserTransactionController @Autowired constructor(
                 )
         )
 
-        val userInDb = userService.getById(user.id) ?: throw UserNotFoundException()
-        val updatedUser = userService.save(userInDb.apply { score += transaction.scoreAmount })
+        val userInDb = scpReaderUserService.getById(user.id) ?: throw UserNotFoundException()
+        val updatedUser = scpReaderUserService.save(userInDb.apply { score += transaction.scoreAmount })
 
         return AddUserDataTransactionResultDto(
                 userDataTransaction = transaction,

@@ -11,20 +11,20 @@ import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
 import ru.kuchanov.scpreaderapi.model.dto.user.UserProjection
 import ru.kuchanov.scpreaderapi.model.user.LeaderboardUserDto
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.UserAndroidPurchaseService
-import ru.kuchanov.scpreaderapi.service.users.UserService
+import ru.kuchanov.scpreaderapi.service.users.ScpReaderUserService
 import java.time.temporal.ChronoUnit
 
 
 @RestController
 @RequestMapping("/" + ScpReaderConstants.Path.USER)
 class UserController @Autowired constructor(
-        val userService: UserService,
+        val scpReaderUserService: ScpReaderUserService,
         val userAndroidPurchaseService: UserAndroidPurchaseService
 ) {
 
     @GetMapping("/me")
     fun showMe(@AuthenticationPrincipal user: User): UserProjection =
-            userService.getByIdAsDto(user.id!!) ?: throw UserNotFoundException()
+            scpReaderUserService.getByIdAsDto(user.id!!) ?: throw UserNotFoundException()
 
     @PostMapping("/edit")
     fun editAccount(
@@ -32,7 +32,7 @@ class UserController @Autowired constructor(
             @RequestParam(value = "name") name: String,
             @RequestParam(value = "avatarUrl") avatarUrl: String
     ): UserProjection =
-            userService.editAccount(user.id!!, name, avatarUrl)
+            scpReaderUserService.editAccount(user.id!!, name, avatarUrl)
 
     @PostMapping("/disableAdsAndOfflineLimit")
     fun disableAdsAndOfflineLimit(
@@ -43,7 +43,7 @@ class UserController @Autowired constructor(
             @RequestParam period: Int,
             @RequestParam timeUnit: ChronoUnit
     ): UserProjection =
-            userService.disableAdsAndOfflineLimit(
+            scpReaderUserService.disableAdsAndOfflineLimit(
                     targetUserId,
                     disableAds,
                     disableOfflineLimit,
@@ -56,27 +56,27 @@ class UserController @Autowired constructor(
             @RequestParam(value = "offset") offset: Int,
             @RequestParam(value = "limit") limit: Int
     ): List<LeaderboardUserDto> =
-            userService.getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(offset, limit)
+            scpReaderUserService.getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(offset, limit)
 
     @GetMapping("/{lang}/count")
     fun getUsersCountForLang(
             @PathVariable(value = "lang") lang: ScpReaderConstants.Firebase.FirebaseInstance
     ): Long =
-            userService.getUsersByLangIdCount(lang.lang)
+            scpReaderUserService.getUsersByLangIdCount(lang.lang)
 
     @GetMapping("/{lang}/leaderboard/{userId}")
     fun getUserPositionInLeaderboardForLang(
             @PathVariable(value = "lang") lang: ScpReaderConstants.Firebase.FirebaseInstance,
             @PathVariable(value = "userId") userId: Long
     ): Int =
-            userService.getUserPositionInLeaderboard(userId, lang.lang)
+            scpReaderUserService.getUserPositionInLeaderboard(userId, lang.lang)
 
     @GetMapping("/{lang}/leaderboard/position")
     fun getCurrentUserPositionInLeaderboardForLang(
             @PathVariable(value = "lang") lang: ScpReaderConstants.Firebase.FirebaseInstance,
             @AuthenticationPrincipal user: User
     ): Int =
-            userService.getUserPositionInLeaderboard(user.id!!, lang.lang)
+            scpReaderUserService.getUserPositionInLeaderboard(user.id!!, lang.lang)
 
     @GetMapping("/android/product/all")
     fun showAndroidProducts(@AuthenticationPrincipal user: User): List<AndroidProduct> =

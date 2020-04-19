@@ -60,6 +60,10 @@ class ArticleToLangServiceImpl @Autowired constructor(
     override fun getIdByUrlRelativeAndLangId(urlRelative: String, langId: String) =
             articlesForLangRepository.getIdByUrlRelativeAndLangId(urlRelative, langId)
 
+    override fun getCreatedArticleToLangsBetweenDates(startDate: String, endDate: String): List<ArticleToLangDto> =
+            articlesForLangRepository.getCreatedArticlesBetweenDates(startDate, endDate)
+                    .map { it.toDto() }
+
     override fun getMostRecentArticlesForLang(langId: String, offset: Int, limit: Int) =
             articlesForLangRepository
                     .getMostRecentArticlesForLang(langId, offset, limit)
