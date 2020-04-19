@@ -13,7 +13,6 @@ create table if not exists article_to_lang_text_parts
 
 alter table article_to_lang_text_parts
     drop constraint if exists article_id_and_order_in_text_unique;
-
 alter table article_to_lang_text_parts
     add constraint article_id_and_order_in_text_unique unique (article_to_lang_id, order_in_text, parent_id);
 
