@@ -28,10 +28,17 @@ class IndexController @Autowired constructor(
             passwordEncoder.encode(target)
 
     @GetMapping("/sendStatisticsEmail")
-    fun sendStatisticsEmail(@AuthenticationPrincipal user: User): String {
+    fun sendStatisticsEmail(
+            @AuthenticationPrincipal user: User,
+            @RequestParam today: Boolean
+    ): String {
         log.error("sendStatisticsEmail: $user")
         return if (user.isAdmin()) {
-            mailService.sendStatisticsEmail()
+            if (today) {
+                mailService.sendStatisticsEmail(true)
+            } else {
+                mailService.sendStatisticsEmail(false)
+            }
             "Statistics email sent successfully!"
         } else {
             throw ScpAccessDeniedException()

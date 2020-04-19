@@ -10,6 +10,7 @@ import ru.kuchanov.scpreaderapi.service.article.ArticleService
 import ru.kuchanov.scpreaderapi.service.article.read.ReadArticleForLangService
 import ru.kuchanov.scpreaderapi.service.users.ScpReaderUserService
 import java.text.SimpleDateFormat
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 import java.util.*
@@ -67,15 +68,21 @@ class MailServiceImpl @Autowired constructor(
             cron = "0 5 0 * * *"
     )
     override fun sendStatisticsEmail() {
-        val currentDate = LocalDate.now()
-        val startDate = currentDate.minusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC)
-        val endDate = currentDate.atStartOfDay().toInstant(ZoneOffset.UTC)
+        sendStatisticsEmail(today = false)
+    }
 
-        //FI XME
-        //to test today
-//                val startDate = currentDate.atStartOfDay().toInstant(ZoneOffset.UTC)
-//                val endDate = currentDate.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC)
-        //to test today END
+    override fun sendStatisticsEmail(today: Boolean) {
+        val currentDate = LocalDate.now()
+
+        val startDate: Instant
+        val endDate: Instant
+        if (today) {
+            startDate = currentDate.atStartOfDay().toInstant(ZoneOffset.UTC)
+            endDate = currentDate.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC)
+        } else {
+            startDate = currentDate.minusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC)
+            endDate = currentDate.atStartOfDay().toInstant(ZoneOffset.UTC)
+        }
 
         val dateString = SimpleDateFormat("EEE, dd MMMMM yyyy").format(Date.from(startDate))
 
