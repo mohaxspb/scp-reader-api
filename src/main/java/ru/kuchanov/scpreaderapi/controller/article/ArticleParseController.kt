@@ -8,17 +8,21 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
+import ru.kuchanov.scpreaderapi.bean.settings.ServerSettings
 import ru.kuchanov.scpreaderapi.bean.users.LangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
 import ru.kuchanov.scpreaderapi.service.parse.category.ArticleParsingServiceBase
+import ru.kuchanov.scpreaderapi.service.settings.ServerSettingsService
 import ru.kuchanov.scpreaderapi.service.users.LangService
+import ru.kuchanov.scpreaderapi.utils.toBooleanOrNull
 
 
 @RestController
 @RequestMapping("/" + ScpReaderConstants.Path.ARTICLE + "/" + ScpReaderConstants.Path.PARSE)
 class ArticleParseController @Autowired constructor(
         val log: Logger,
+        val serverSettingsService: ServerSettingsService,
         val articleParsingService: ArticleParsingServiceBase,
         val articleForLangService: ArticleForLangService,
         val langService: LangService
@@ -39,7 +43,9 @@ class ArticleParseController @Autowired constructor(
             cron = "0 0 * * * *"
     )
     fun parseRecentTask() {
-        if (!articleParsingService.isDownloadAllRunning) {
+        val hourlySyncTaskEnabledSettings = serverSettingsService.findByKey(ServerSettings.Key.HOURLY_SYNC_TASK_ENABLED.name)
+        val hourlySyncTaskEnabled = hourlySyncTaskEnabledSettings?.value?.toBooleanOrNull()
+        if (hourlySyncTaskEnabled == true && !articleParsingService.isDownloadAllRunning) {
             log.error("Start hourly parseRecentTask")
             articleParsingService.parseEverything(
                     maxPageCount = 1,
@@ -47,6 +53,10 @@ class ArticleParseController @Autowired constructor(
                     downloadObjects = false,
                     sendMail = false
             )
+        } else {
+            log.error("Start hourly parseRecentTask failed!")
+            log.error("articleParsingService.isDownloadAllRunning: ${articleParsingService.isDownloadAllRunning}")
+            log.error("hourlySyncTaskEnabled: $hourlySyncTaskEnabled")
         }
     }
 
