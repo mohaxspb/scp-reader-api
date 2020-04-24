@@ -1,6 +1,7 @@
 package ru.kuchanov.scpreaderapi.controller.article
 
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLangNotFoundException
@@ -41,6 +42,7 @@ class ArticleController @Autowired constructor(
     ) =
             articleForLangService.getMostRatedArticlesForLang(langEnum.lang, offset, limit)
 
+    @Cacheable(value = ["getArticlesByCategoryAndLang"])
     @GetMapping("/{langEnum}/category/{categoryId}")
     fun getArticlesByCategoryAndLang(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,

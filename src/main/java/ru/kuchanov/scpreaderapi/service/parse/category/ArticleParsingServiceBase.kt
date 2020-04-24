@@ -20,6 +20,8 @@ import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory
+import org.springframework.cache.CacheManager
+import org.springframework.cache.interceptor.SimpleKey
 import org.springframework.context.annotation.Primary
 import org.springframework.dao.IncorrectResultSizeDataAccessException
 import org.springframework.http.HttpStatus
@@ -137,6 +139,9 @@ class ArticleParsingServiceBase {
 
     @Autowired
     lateinit var articleParseErrorService: ArticleParseErrorService
+
+    @Autowired
+    lateinit var cacheManager: CacheManager
 
     var isDownloadAllRunning = false
 
@@ -309,12 +314,12 @@ class ArticleParsingServiceBase {
                 .map { it.flatten() }
                 .subscribeBy(
                         onSuccess = { articlesDownloadedAndSavedSuccessfully ->
-                            println("download complete")
-                            println(
-                                    articlesDownloadedAndSavedSuccessfully
-                                            .joinToString(separator = "\n========###========\n") { it.urlRelative }
-                            )
-                            println("download complete")
+                            println("Download complete! Count: ${articlesDownloadedAndSavedSuccessfully.size}")
+//                            println(
+//                                    articlesDownloadedAndSavedSuccessfully
+//                                            .joinToString(separator = "\n========###========\n") { it.urlRelative }
+//                            )
+//                            println("download complete")
                         },
                         onError = { it.printStackTrace() }
                 )
@@ -501,6 +506,11 @@ class ArticleParsingServiceBase {
                                 categoryToLang.id!!,
                                 articlesForCategory
                         )
+
+                        val langEnum = ScpReaderConstants.Firebase.FirebaseInstance.valueOf(lang.id.toUpperCase())
+                        cacheManager
+                                .getCache("getArticlesByCategoryAndLang")
+                                ?.evict(SimpleKey(langEnum, categoryToLang.articleCategoryId))
                     }
                     .doOnError { saveArticleParseError(lang.id, objectsUrl, it) }
                     .subscribeOn(Schedulers.io())
