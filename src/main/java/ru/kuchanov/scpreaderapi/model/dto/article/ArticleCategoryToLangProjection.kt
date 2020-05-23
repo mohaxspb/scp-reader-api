@@ -7,4 +7,5 @@ interface ArticleCategoryToLangProjection {
     val defaultTitle: String
     val title: String
     val articlesCount: Int
+    val siteUrl: String?
 }

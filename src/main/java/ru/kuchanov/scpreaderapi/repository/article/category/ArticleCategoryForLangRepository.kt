@@ -15,6 +15,7 @@ interface ArticleCategoryForLangRepository : JpaRepository<ArticleCategoryForLan
                 ac.id as articleCategoryId, 
                 ac.default_title as defaultTitle, 
                 acl.title, 
+                acl.site_url as siteUrl, 
                 COALESCE(aclal.articlesCount, 0) as articlesCount 
             from article_categories__to__langs acl 
                      join article_categories ac on acl.article_category_id = ac.id 
