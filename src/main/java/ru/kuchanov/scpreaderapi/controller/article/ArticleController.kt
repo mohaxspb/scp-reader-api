@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
+import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.articles.category.ArticleCategoryForLangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.articles.category.ArticleCategoryNotFoundException
@@ -31,7 +32,7 @@ class ArticleController @Autowired constructor(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
             @RequestParam(value = "offset") offset: Int,
             @RequestParam(value = "limit") limit: Int
-    ) =
+    ): List<ArticleToLangDto> =
             articleForLangService.getMostRecentArticlesForLang(langEnum.lang, offset, limit)
 
     @GetMapping("/{langEnum}/rated")
@@ -39,7 +40,7 @@ class ArticleController @Autowired constructor(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
             @RequestParam(value = "offset") offset: Int,
             @RequestParam(value = "limit") limit: Int
-    ) =
+    ): List<ArticleToLangDto> =
             articleForLangService.getMostRatedArticlesForLang(langEnum.lang, offset, limit)
 
     @Cacheable(value = ["getArticlesByCategoryAndLang"])
@@ -63,12 +64,12 @@ class ArticleController @Autowired constructor(
     fun showArticleForLangAndId(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
             @PathVariable(value = "id") articleId: Long
-    ) =
+    ): ArticleForLang =
             articleForLangService.getOneByLangIdAndArticleId(articleId, langEnum.lang)
                     ?: throw ArticleForLangNotFoundException()
 
     @GetMapping("{id}")
-    fun showArticleForLangById(@PathVariable(value = "id") articleToLangId: Long) =
+    fun showArticleForLangById(@PathVariable(value = "id") articleToLangId: Long): ArticleToLangDto =
             articleForLangService.getOneByIdAsDto(articleToLangId)
                     ?: throw ArticleForLangNotFoundException()
 
