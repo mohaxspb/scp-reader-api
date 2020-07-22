@@ -94,6 +94,7 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
                 .authorizeRequests()
                 .antMatchers(
                         "/",
+                        "/encrypt",
                         "/login**",
                         "/error**",
                         "/${ScpReaderConstants.Path.FIREBASE}/${ScpReaderConstants.Path.MESSAGING}/all/byTypes"
