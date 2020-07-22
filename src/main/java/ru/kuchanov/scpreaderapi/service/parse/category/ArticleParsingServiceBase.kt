@@ -891,25 +891,37 @@ class ArticleParsingServiceBase {
     }
 
     @Async
-    fun parseArticleForLang(urlRelative: String, lang: Lang, printTextParts: Boolean = false) {
+    fun parseArticleForLang(
+            urlRelative: String,
+            lang: Lang,
+            innerArticlesDepth: Int = 0,
+            printTextParts: Boolean = false
+    ) {
         val savedArticle = saveArticle(
                 ArticleForLang(
                         urlRelative = urlRelative,
                         langId = lang.id
                 ),
                 lang,
+                innerArticlesDepth = innerArticlesDepth,
                 printTextParts = printTextParts
         )
         println("Article saved. id: ${savedArticle.id}, articleId: ${savedArticle.articleId}")
     }
 
-    fun parseArticleForLangSync(urlRelative: String, lang: Lang, printTextParts: Boolean = false): ArticleForLang? {
+    fun parseArticleForLangSync(
+            urlRelative: String,
+            lang: Lang,
+            innerArticlesDepth: Int = 0,
+            printTextParts: Boolean = false
+    ): ArticleForLang? {
         val savedArticle = saveArticle(
                 ArticleForLang(
                         urlRelative = urlRelative,
                         langId = lang.id
                 ),
                 lang,
+                innerArticlesDepth = innerArticlesDepth,
                 printTextParts = printTextParts
         )
         println("Article saved. id: ${savedArticle.id}, articleId: ${savedArticle.articleId}")

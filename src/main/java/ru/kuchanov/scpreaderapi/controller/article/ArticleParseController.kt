@@ -154,20 +154,39 @@ class ArticleParseController @Autowired constructor(
     fun parseArticleByUrlRelativeAndLang(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
             @RequestParam(value = "urlRelative") urlRelative: String,
+            @RequestParam(value = "innerArticlesDepth", defaultValue = "0") innerArticlesDepth: Int = 0,
             @RequestParam(value = "printTextParts", defaultValue = "false") printTextParts: Boolean = false,
             @RequestParam(value = "async", defaultValue = "false") async: Boolean = false,
             @AuthenticationPrincipal user: User
     ): ResponseEntity<*> {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
-        val articleForLang = articleForLangService.getArticleForLangByUrlRelativeAndLang(urlRelative, lang.id)
+        val articleForLang = articleForLangService
+                .getArticleForLangByUrlRelativeAndLang(urlRelative, lang.id)
 
-        println("parseArticleByUrlRelativeAndLang. lang: ${lang.id}, articleForLang.id: ${articleForLang?.id}, article.id: ${articleForLang?.articleId}, printTextParts: $printTextParts")
+        println("""
+            parseArticleByUrlRelativeAndLang
+            lang: ${lang.id}, 
+            articleForLang.id: ${articleForLang?.id},
+            article.id:${articleForLang?.articleId},
+            printTextParts:$printTextParts
+        """.trimIndent()
+        )
 
         return if (async) {
-            articleParsingService.parseArticleForLang(urlRelative, lang, printTextParts)
+            articleParsingService.parseArticleForLang(
+                    urlRelative,
+                    lang,
+                    innerArticlesDepth,
+                    printTextParts
+            )
             ParsingStartedResponse("Parsing started for ArticleForLang id/title ${articleForLang?.id}/${articleForLang?.title}")
         } else {
-            val savedArticle = articleParsingService.parseArticleForLangSync(urlRelative, lang, printTextParts)
+            val savedArticle = articleParsingService.parseArticleForLangSync(
+                    urlRelative,
+                    lang,
+                    innerArticlesDepth,
+                    printTextParts
+            )
             ResponseEntity(
                     savedArticle?.articleId?.let { articleForLangService.getOneByLangIdAndArticleIdAsDto(it, lang.id) },
                     HttpStatus.OK
