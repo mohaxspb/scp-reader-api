@@ -44,5 +44,4 @@ class IndexController @Autowired constructor(
             throw ScpAccessDeniedException()
         }
     }
-
 }
