@@ -796,6 +796,16 @@ class ArticleParsingServiceBase {
 
             createArticleToArticleRelation(articleDownloaded, articleForLangInDb.id!!, lang)
 
+            //evict cache
+            val langEnum =
+                    ScpReaderConstants.Firebase.FirebaseInstance.valueOf(lang.id.toUpperCase())
+            cacheManager
+                    .getCache("showArticleForUrlRelativeAndLangIdFull")
+                    ?.evict(SimpleKey(langEnum, articleForLangInDb.urlRelative))
+            cacheManager
+                    .getCache("showArticleForLangById")
+                    ?.evict(articleForLangInDb.id!!)
+
             return articleForLangInDb
         } catch (e: Exception) {
             log.error("Error in article parsing: ${articleToSave.urlRelative}, lang: ${lang.id}")

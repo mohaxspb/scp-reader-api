@@ -68,10 +68,15 @@ class ArticleController @Autowired constructor(
             articleForLangService.getOneByLangIdAndArticleId(articleId, langEnum.lang)
                     ?: throw ArticleForLangNotFoundException()
 
+    @Cacheable(value = ["showArticleForLangById"])
     @GetMapping("{id}")
-    fun showArticleForLangById(@PathVariable(value = "id") articleToLangId: Long): ArticleToLangDto =
-            articleForLangService.getOneByIdAsDto(articleToLangId)
-                    ?: throw ArticleForLangNotFoundException()
+    fun showArticleForLangById(
+            @PathVariable(value = "id") articleToLangId: Long
+    ): ArticleToLangDto {
+//        println("showArticleForLangById: $articleToLangId")
+        return articleForLangService.getOneByIdAsDto(articleToLangId)
+                ?: throw ArticleForLangNotFoundException()
+    }
 
     @GetMapping("{langEnum}/{id}/full")
     fun showArticleForIdAndLangIdFull(
@@ -83,11 +88,13 @@ class ArticleController @Autowired constructor(
                 ?: throw ArticleForLangNotFoundException()
     }
 
+    @Cacheable(value = ["showArticleForUrlRelativeAndLangIdFull"])
     @GetMapping("{langEnum}/full")
     fun showArticleForUrlRelativeAndLangIdFull(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
             @RequestParam(value = "urlRelative") urlRelative: String
     ): ArticleToLangDto {
+//        println("showArticleForUrlRelativeAndLangIdFull: $langEnum$urlRelative")
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
         return articleForLangService.getArticleForLangByUrlRelativeAndLangAsDto(urlRelative, lang.id)
                 ?: throw ArticleForLangNotFoundException()
