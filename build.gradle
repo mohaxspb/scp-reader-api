@@ -1,8 +1,8 @@
 buildscript {
     ext.app_version = "1.2.16"
 
-    ext.kotlin_version = '1.3.72'
-    ext.spring_boot_version = '2.2.5.RELEASE'
+    ext.kotlin_version = '1.4.0'
+    ext.spring_boot_version = '2.3.3.RELEASE'
 
     ext['netty.version'] = '4.1.36.Final'
 
@@ -26,7 +26,7 @@ buildscript {
 
 plugins {
     //db migrations
-    id "org.flywaydb.flyway" version "5.2.4"
+    id "org.flywaydb.flyway" version "6.5.4"
 
     //to fix CreateProcess error=206, Имя файла или его расширение имеет слишком большую длину
     id "ua.eshepelyuk.ManifestClasspath" version "1.0.0"
@@ -57,7 +57,7 @@ bootWar {
     version ""
     //we need to specify context path here if we use war file in external tomcat
     //we use `#` instead of `/` to deploy `scp-reader/api` on tomcat
-    baseName = "scp-reader#api"
+    archiveFileName.set("scp-reader#api.${archiveExtension.get()}")
 }
 
 //to be able to run with task args to define correct properties file
@@ -106,7 +106,7 @@ dependencies {
     implementation 'org.postgresql:postgresql:42.2.1'
 
     //db migrations
-    implementation "org.flywaydb:flyway-core:5.2.4"
+    implementation "org.flywaydb:flyway-core:6.5.4"
 
     //apache
     implementation 'commons-io:commons-io:2.6'
