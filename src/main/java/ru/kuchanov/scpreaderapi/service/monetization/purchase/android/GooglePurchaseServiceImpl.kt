@@ -12,7 +12,7 @@ import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationStatus
 import javax.servlet.http.HttpServletResponse
 
 @Service
-class AndroidPurchaseServiceImpl : AndroidPurchaseService {
+class GooglePurchaseServiceImpl : AndroidPurchaseService {
 
     @Autowired
     private lateinit var androidPublisher: AndroidPublisher
