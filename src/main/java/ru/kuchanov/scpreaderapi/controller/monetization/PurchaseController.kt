@@ -6,15 +6,16 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
+import ru.kuchanov.scpreaderapi.bean.monetization.InappType
+import ru.kuchanov.scpreaderapi.bean.monetization.Store
 import ru.kuchanov.scpreaderapi.bean.purchase.AndroidProduct
 import ru.kuchanov.scpreaderapi.bean.purchase.AndroidSubscription
 import ru.kuchanov.scpreaderapi.bean.purchase.UsersAndroidProduct
 import ru.kuchanov.scpreaderapi.bean.purchase.UsersAndroidSubscription
 import ru.kuchanov.scpreaderapi.bean.users.User
-import ru.kuchanov.scpreaderapi.model.dto.purchase.AndroidProductResponse
-import ru.kuchanov.scpreaderapi.model.dto.purchase.AndroidSubscriptionResponse
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationStatus
+import ru.kuchanov.scpreaderapi.network.monetization.HuaweiService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.AndroidProductService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.AndroidPurchaseService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.AndroidSubscriptionService
@@ -26,11 +27,29 @@ import java.sql.Timestamp
 @RestController
 @RequestMapping("/" + ScpReaderConstants.Path.MONETIZATION + "/" + ScpReaderConstants.Path.PURCHASE)
 class PurchaseController @Autowired constructor(
+        val huaweiService: HuaweiService,
         val androidPurchaseService: AndroidPurchaseService,
         val androidProductService: AndroidProductService,
         val androidSubscriptionService: AndroidSubscriptionService,
         val userAndroidPurchaseService: UserAndroidPurchaseService
 ) {
+
+    @GetMapping("/verify/{store}/{purchaseType}")
+    fun verifyAndroidProduct(
+            @PathVariable store: Store,
+            @PathVariable purchaseType: InappType,
+            @RequestParam purchaseToken: String,
+            @RequestParam productId: String,
+            @RequestParam accountFlag: Int,
+            @AuthenticationPrincipal user: User?
+    ): ValidationResponse {
+        return when (store) {
+            Store.HUAWEI -> huaweiService.verifyProduct(productId, purchaseType, purchaseToken, accountFlag)
+            Store.GOOGLE -> TODO()
+            Store.AMAZON -> TODO()
+            Store.APPLE -> TODO()
+        }
+    }
 
     @GetMapping("/validateAndroidProduct")
     fun validateAndroidProduct(
