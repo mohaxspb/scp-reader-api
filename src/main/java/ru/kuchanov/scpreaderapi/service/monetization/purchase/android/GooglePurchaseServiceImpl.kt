@@ -5,8 +5,6 @@ import com.google.api.services.androidpublisher.AndroidPublisher
 import com.google.api.services.androidpublisher.model.SubscriptionPurchase
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import ru.kuchanov.scpreaderapi.model.dto.purchase.AndroidProductResponse
-import ru.kuchanov.scpreaderapi.model.dto.purchase.AndroidSubscriptionResponse
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationStatus
 import javax.servlet.http.HttpServletResponse
@@ -29,14 +27,14 @@ class GooglePurchaseServiceImpl : AndroidPurchaseService {
 
         return try {
             val productPurchase = productRequest.execute()
-            AndroidProductResponse(ValidationStatus.VALID, productPurchase)
+            ValidationResponse.AndroidProductResponse(ValidationStatus.VALID, productPurchase)
         } catch (e: GoogleJsonResponseException) {
             println("Error while validate product: $e")
-            AndroidProductResponse(
+            ValidationResponse.AndroidProductResponse(
                     if (e.details.code == HttpServletResponse.SC_BAD_REQUEST) {
                         ValidationStatus.INVALID
                     } else {
-                        ValidationStatus.GOOGLE_SERVER_ERROR
+                        ValidationStatus.SERVER_ERROR
                     },
                     null
             )
@@ -55,14 +53,14 @@ class GooglePurchaseServiceImpl : AndroidPurchaseService {
 
         return try {
             val subscription: SubscriptionPurchase = subscriptionRequest.execute()
-            AndroidSubscriptionResponse(ValidationStatus.VALID, subscription)
+            ValidationResponse.AndroidSubscriptionResponse(ValidationStatus.VALID, subscription)
         } catch (e: GoogleJsonResponseException) {
             println("Error while validate subscription: $e")
-            AndroidSubscriptionResponse(
+            ValidationResponse.AndroidSubscriptionResponse(
                     if (e.details.code == HttpServletResponse.SC_BAD_REQUEST) {
                         ValidationStatus.INVALID
                     } else {
-                        ValidationStatus.GOOGLE_SERVER_ERROR
+                        ValidationStatus.SERVER_ERROR
                     },
                     null
             )

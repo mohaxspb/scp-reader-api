@@ -16,6 +16,7 @@ object ScpReaderConstants {
         const val FIREBASE = "firebase"
         const val MESSAGING = "messaging"
         const val AUTH = "auth"
+        const val MONETIZATION = "monetization"
         const val PURCHASE = "purchase"
         const val ADS = "ads"
         const val ADS_FILES = "files"

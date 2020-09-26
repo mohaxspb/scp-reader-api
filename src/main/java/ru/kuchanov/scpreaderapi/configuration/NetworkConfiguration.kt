@@ -18,6 +18,11 @@ import java.util.concurrent.TimeUnit
 @Configuration
 class NetworkConfiguration {
 
+    companion object {
+        const val QUALIFIER_OK_HTTP_CLIENT_COMMON = "okHttpCommon"
+        const val QUALIFIER_OK_HTTP_CLIENT_NOT_LOGGING = "okHttpNotLogging"
+    }
+
     //okHttp + retrofit
     @Bean
     fun loggingInterceptor(): HttpLoggingInterceptor = HttpLoggingInterceptor { println("OkHttp: $it") }
@@ -52,9 +57,4 @@ class NetworkConfiguration {
     @Bean
     fun converterFactory(): Converter.Factory = JacksonConverterFactory.create(objectMapper())
     //okHttp + retrofit END
-
-    companion object {
-        const val QUALIFIER_OK_HTTP_CLIENT_COMMON = "okHttpCommon"
-        const val QUALIFIER_OK_HTTP_CLIENT_NOT_LOGGING = "okHttpNotLogging"
-    }
 }

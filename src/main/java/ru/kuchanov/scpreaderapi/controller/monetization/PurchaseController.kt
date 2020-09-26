@@ -4,10 +4,7 @@ import com.google.api.services.androidpublisher.model.ProductPurchase
 import com.google.api.services.androidpublisher.model.SubscriptionPurchase
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.annotation.AuthenticationPrincipal
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.purchase.AndroidProduct
 import ru.kuchanov.scpreaderapi.bean.purchase.AndroidSubscription
@@ -27,7 +24,7 @@ import java.sql.Timestamp
 
 //todo refactor for amazon/apple/google/huawei
 @RestController
-@RequestMapping("/" + ScpReaderConstants.Path.PURCHASE)
+@RequestMapping("/" + ScpReaderConstants.Path.MONETIZATION + "/" + ScpReaderConstants.Path.PURCHASE)
 class PurchaseController @Autowired constructor(
         val androidPurchaseService: AndroidPurchaseService,
         val androidProductService: AndroidProductService,
@@ -46,7 +43,7 @@ class PurchaseController @Autowired constructor(
                 packageName = androidPackage,
                 sku = sku,
                 purchaseToken = token
-        ) as AndroidProductResponse
+        ) as ValidationResponse.AndroidProductResponse
 
         if (productResponse.status == ValidationStatus.VALID) {
             val product: ProductPurchase = productResponse.androidProduct!!
@@ -79,7 +76,7 @@ class PurchaseController @Autowired constructor(
             }
         }
 
-        return ValidationResponse(productResponse.status)
+        return productResponse
     }
 
     @GetMapping("/validateAndroidSubscription")
@@ -93,7 +90,7 @@ class PurchaseController @Autowired constructor(
                 packageName = androidPackage,
                 sku = sku,
                 purchaseToken = token
-        ) as AndroidSubscriptionResponse
+        ) as ValidationResponse.AndroidSubscriptionResponse
 
         if (subscriptionResponse.status == ValidationStatus.VALID) {
             val subscription: SubscriptionPurchase = subscriptionResponse.androidSubscription!!
@@ -132,6 +129,6 @@ class PurchaseController @Autowired constructor(
             }
         }
 
-        return ValidationResponse(subscriptionResponse.status)
+        return subscriptionResponse
     }
 }

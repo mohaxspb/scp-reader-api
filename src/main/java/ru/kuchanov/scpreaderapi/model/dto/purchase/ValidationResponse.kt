@@ -6,18 +6,17 @@ import com.google.api.services.androidpublisher.model.SubscriptionPurchase
 
 enum class ValidationStatus {
 
-    VALID, INVALID, GOOGLE_SERVER_ERROR;
+    VALID, INVALID, SERVER_ERROR;
 
     @JsonValue
     fun serializedValue() = ordinal
 }
 
-open class ValidationResponse(open val status: ValidationStatus)
-
-data class AndroidProductResponse(
-        override val status: ValidationStatus,
-        val androidProduct: ProductPurchase?
-) : ValidationResponse(status)
+sealed class ValidationResponse(open val status: ValidationStatus) {
+    data class AndroidProductResponse(
+            override val status: ValidationStatus,
+            val androidProduct: ProductPurchase?
+    ) : ValidationResponse(status)
 
 data class AndroidSubscriptionResponse(
         override val status: ValidationStatus,
