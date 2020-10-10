@@ -1,8 +1,7 @@
 package ru.kuchanov.scpreaderapi.network
 
 import retrofit2.Call
-import retrofit2.http.GET
-import retrofit2.http.Query
+import retrofit2.http.*
 import ru.kuchanov.scpreaderapi.model.monetization.huawei.HuaweiProductVerifyResponse
 
 /**
@@ -18,9 +17,11 @@ interface HuaweiApi {
         const val ORDER_GERNAMY_APP_TOUCH_API_URL = "https://orders-at-dre.iap.dbankcloud.com"
     }
 
-    @GET("sub/applications/{apiVersion}/purchases/get")
+    //todo auth https://developer.huawei.com/consumer/en/doc/development/HMS-References/iap-obtain-application-level-AT-v4
+    @FormUrlEncoded
+    @POST("sub/applications/v2/purchases/get")
     fun verifySubscription(
-            @Query("subscriptionId") subscriptionId: String,
-            @Query("purchaseToken") purchaseToken: String
+            @Field("subscriptionId") subscriptionId: String,
+            @Field("purchaseToken") purchaseToken: String
     ): Call<HuaweiProductVerifyResponse>
 }

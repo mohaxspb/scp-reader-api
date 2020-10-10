@@ -40,7 +40,7 @@ class PurchaseController @Autowired constructor(
             @PathVariable purchaseType: InappType,
             @RequestParam purchaseToken: String,
             @RequestParam productId: String,
-            @RequestParam accountFlag: Int,
+            @RequestParam(defaultValue = "-1") accountFlag: Int,
             @AuthenticationPrincipal user: User?
     ): ValidationResponse {
         return when (store) {
