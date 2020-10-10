@@ -1,5 +1,6 @@
 package ru.kuchanov.scpreaderapi.configuration.security
 
+import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -25,6 +26,9 @@ class AuthorizationServerConfiguration : AuthorizationServerConfigurerAdapter() 
     @Autowired
     private lateinit var dataSource: DataSource
 
+    @Autowired
+    private lateinit var log: Logger
+
     @Bean
     fun tokenStore(): TokenStore = JdbcTokenStore(dataSource)
 
@@ -48,10 +52,10 @@ class AuthorizationServerConfiguration : AuthorizationServerConfigurerAdapter() 
                 .userDetailsService(userDetailsService)
                 .exceptionTranslator(object : DefaultWebResponseExceptionTranslator() {
                     override fun translate(e: Exception): ResponseEntity<OAuth2Exception> {
+                        log.error("exceptionTranslator", e)
                         e.printStackTrace()
 
                         val responseEntity: ResponseEntity<OAuth2Exception> = super.translate(e)
-
                         return ResponseEntity(responseEntity.body, responseEntity.headers, responseEntity.statusCode)
                     }
                 })
