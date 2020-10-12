@@ -8,6 +8,15 @@ object ScpReaderConstants {
 
     const val NUM_OF_ARTICLES_RATED_PAGE = 20
 
+    object Api {
+        const val GRANT_TYPE_REFRESH_TOKEN = "refresh_token"
+        const val GRANT_TYPE_CLIENT_CREDENTIALS = "client_credentials"
+        const val PARAM_GRANT_TYPE = "grant_type"
+        const val PARAM_REFRESH_TOKEN = "refresh_token"
+        const val HEADER_AUTHORIZATION = "Authorization"
+        const val HEADER_PART_BEARER = "Bearer"
+    }
+
     object Score {
         const val DEFAULT_SCORE_FOR_READ_ARTICLE = 1
         const val DEFAULT_SCORE_FOR_REWARDED_VIDEO = 50
