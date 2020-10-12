@@ -8,11 +8,13 @@ import org.springframework.context.annotation.Configuration
 import retrofit2.CallAdapter
 import retrofit2.Converter
 import retrofit2.Retrofit
+import ru.kuchanov.scpreaderapi.configuration.HuaweiApiConfiguration
 import ru.kuchanov.scpreaderapi.network.HuaweiApi
 
 @Configuration
 class HuaweiPurchaseConfiguration @Autowired constructor(
-        val okHttpClient: OkHttpClient,
+        @Qualifier(HuaweiApiConfiguration.QUALIFIER_OK_HTTP_CLIENT_HUAWEI_AUTH)
+        val huaweiAuthOkHttpClient: OkHttpClient,
         val converterFactory: Converter.Factory,
         val callAdapterFactory: CallAdapter.Factory
 ) {
@@ -29,7 +31,7 @@ class HuaweiPurchaseConfiguration @Autowired constructor(
     fun huaweiApiSubsGermanyAppTouch(): HuaweiApi {
         val retrofit = Retrofit.Builder()
                 .baseUrl(HuaweiApi.SUBS_GERMANY_APP_TOUCH_API_URL)
-                .client(okHttpClient)
+                .client(huaweiAuthOkHttpClient)
                 .addConverterFactory(converterFactory)
                 .addCallAdapterFactory(callAdapterFactory)
                 .build()
@@ -40,8 +42,8 @@ class HuaweiPurchaseConfiguration @Autowired constructor(
     @Qualifier(QUALIFIER_ORDER_GERMANY_APP_TOUCH)
     fun huaweiApiOrderGermanyAppTouch(): HuaweiApi {
         val retrofit = Retrofit.Builder()
-                .baseUrl(HuaweiApi.ORDER_GERNAMY_APP_TOUCH_API_URL)
-                .client(okHttpClient)
+                .baseUrl(HuaweiApi.ORDER_GERMANY_APP_TOUCH_API_URL)
+                .client(huaweiAuthOkHttpClient)
                 .addConverterFactory(converterFactory)
                 .addCallAdapterFactory(callAdapterFactory)
                 .build()
@@ -53,7 +55,7 @@ class HuaweiPurchaseConfiguration @Autowired constructor(
     fun huaweiApiSubsRussia(): HuaweiApi {
         val retrofit = Retrofit.Builder()
                 .baseUrl(HuaweiApi.SUBS_RUSSIA_API_URL)
-                .client(okHttpClient)
+                .client(huaweiAuthOkHttpClient)
                 .addConverterFactory(converterFactory)
                 .addCallAdapterFactory(callAdapterFactory)
                 .build()
@@ -65,7 +67,7 @@ class HuaweiPurchaseConfiguration @Autowired constructor(
     fun huaweiApiOrderRussia(): HuaweiApi {
         val retrofit = Retrofit.Builder()
                 .baseUrl(HuaweiApi.ORDER_RUSSIA_API_URL)
-                .client(okHttpClient)
+                .client(huaweiAuthOkHttpClient)
                 .addConverterFactory(converterFactory)
                 .addCallAdapterFactory(callAdapterFactory)
                 .build()
