@@ -1,5 +1,6 @@
 package ru.kuchanov.scpreaderapi.network.monetization
 
+import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpStatus
@@ -10,6 +11,7 @@ import ru.kuchanov.scpreaderapi.configuration.monetization.HuaweiPurchaseConfigu
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationStatus
 import ru.kuchanov.scpreaderapi.model.monetization.huawei.HuaweiProductVerifyResponse
+import ru.kuchanov.scpreaderapi.model.monetization.huawei.HuaweiSubscriptionCancelResponse
 import ru.kuchanov.scpreaderapi.network.HuaweiApi
 
 @Service
@@ -21,7 +23,8 @@ class HuaweiService @Autowired constructor(
         @Qualifier(HuaweiPurchaseConfiguration.QUALIFIER_SUBS_RUSSIA)
         private val huaweiApiSubsRussia: HuaweiApi,
         @Qualifier(HuaweiPurchaseConfiguration.QUALIFIER_ORDER_RUSSIA)
-        private val huaweiApiOrderRussia: HuaweiApi
+        private val huaweiApiOrderRussia: HuaweiApi,
+        private val log: Logger
 ) {
 
     companion object {
@@ -34,8 +37,14 @@ class HuaweiService @Autowired constructor(
             purchaseToken: String,
             accountFlag: Int
     ): ValidationResponse {
+        log.info(
+                """verifyProduct:
+                    productId: $productId, 
+                    purchaseType: $purchaseType, 
+                    purchaseToken: $purchaseToken, 
+                    accountFlag: $accountFlag""".trimIndent()
+        )
         return when (purchaseType) {
-            InappType.INAPP, InappType.CONSUMABLE -> TODO()
             InappType.SUBS -> {
                 val result = verifySubscription(productId, purchaseToken, accountFlag)
                 if (result.responseCode == 0) {
@@ -44,6 +53,7 @@ class HuaweiService @Autowired constructor(
                     ValidationResponse.HuaweiSubscriptionResponse(ValidationStatus.INVALID, result)
                 }
             }
+            InappType.INAPP, InappType.CONSUMABLE -> TODO()
         }
     }
 
@@ -60,6 +70,23 @@ class HuaweiService @Autowired constructor(
 
         return try {
             api.verifySubscription(productId, purchaseToken).execute().body()!!
+        } catch (e: Throwable) {
+            throw VerifyProductException("Cannot verify subscription with error message: ${e.message}.", e)
+        }
+    }
+
+    fun cancelSubscription(
+            productId: String,
+            purchaseToken: String,
+            accountFlag: Int
+    ): HuaweiSubscriptionCancelResponse {
+        val api = if (accountFlag == ACCOUNT_FLAG_GERMANY_APP_TOUCH) {
+            huaweiApiSubsGermany
+        } else {
+            huaweiApiSubsRussia
+        }
+        return try {
+            api.cancelSubscription(productId, purchaseToken).execute().body()!!
         } catch (e: Throwable) {
             throw VerifyProductException("Cannot verify subscription with error message: ${e.message}.", e)
         }

@@ -5,6 +5,7 @@ import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.POST
 import ru.kuchanov.scpreaderapi.model.monetization.huawei.HuaweiProductVerifyResponse
+import ru.kuchanov.scpreaderapi.model.monetization.huawei.HuaweiSubscriptionCancelResponse
 
 /**
  * For url see this doc:
@@ -25,4 +26,11 @@ interface HuaweiApi {
             @Field("subscriptionId") subscriptionId: String,
             @Field("purchaseToken") purchaseToken: String
     ): Call<HuaweiProductVerifyResponse>
+
+    @FormUrlEncoded
+    @POST("sub/applications/v2/purchases/stop")
+    fun cancelSubscription(
+            @Field("subscriptionId") subscriptionId: String,
+            @Field("purchaseToken") purchaseToken: String
+    ): Call<HuaweiSubscriptionCancelResponse>
 }

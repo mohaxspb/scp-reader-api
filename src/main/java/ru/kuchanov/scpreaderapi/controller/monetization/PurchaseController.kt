@@ -34,6 +34,22 @@ class PurchaseController @Autowired constructor(
         val userAndroidPurchaseService: UserAndroidPurchaseService
 ) {
 
+    @GetMapping("/cancel/{store}/{purchaseType}")
+    fun cancelProduct(
+            @PathVariable store: Store,
+            @RequestParam productId: String,
+            @RequestParam purchaseToken: String,
+            @RequestParam(defaultValue = "-1") accountFlag: Int
+    ): String {
+        val test = when (store) {
+            Store.HUAWEI -> huaweiService.cancelSubscription(productId, purchaseToken, accountFlag)
+            Store.GOOGLE -> TODO()
+            Store.AMAZON -> TODO()
+            Store.APPLE -> TODO()
+        }
+        return test.toString()
+    }
+
     @GetMapping("/verify/{store}/{purchaseType}")
     fun verifyAndroidProduct(
             @PathVariable store: Store,
