@@ -54,13 +54,14 @@ class PurchaseController @Autowired constructor(
     fun verifyAndroidProduct(
             @PathVariable store: Store,
             @PathVariable purchaseType: InappType,
-            @RequestParam purchaseToken: String,
             @RequestParam productId: String,
+            @RequestParam subscriptionId: String,
+            @RequestParam purchaseToken: String,
             @RequestParam(defaultValue = "-1") accountFlag: Int,
             @AuthenticationPrincipal user: User?
     ): ValidationResponse {
         return when (store) {
-            Store.HUAWEI -> huaweiService.verifyProduct(productId, purchaseType, purchaseToken, accountFlag)
+            Store.HUAWEI -> huaweiService.verifyProduct(productId, subscriptionId, purchaseType, purchaseToken, accountFlag)
             Store.GOOGLE -> TODO()
             Store.AMAZON -> TODO()
             Store.APPLE -> TODO()

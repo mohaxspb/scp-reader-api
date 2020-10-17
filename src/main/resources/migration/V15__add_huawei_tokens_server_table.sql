@@ -5,7 +5,7 @@ create table if not exists huawei__oauth_access_token
     client_id    varchar(16) not null,
     access_token text        not null,
     expires_in   integer     not null,
-    tokenType    varchar(16) not null,
+    token_type    varchar(16) not null,
 
     created      timestamp,
     updated      timestamp,

@@ -2,12 +2,14 @@ package ru.kuchanov.scpreaderapi.configuration
 
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.util.Base64Utils
 import retrofit2.CallAdapter
 import retrofit2.Converter
 import retrofit2.Retrofit
@@ -16,20 +18,23 @@ import ru.kuchanov.scpreaderapi.bean.auth.huawei.HuaweiOAuthAccessToken
 import ru.kuchanov.scpreaderapi.network.HuaweiAuthApi
 import ru.kuchanov.scpreaderapi.repository.auth.huawei.HuaweiAccessTokenRepository
 import java.net.HttpURLConnection
+import java.nio.charset.StandardCharsets
 
 @Configuration
 class HuaweiApiConfiguration @Autowired constructor(
-        @Qualifier(NetworkConfiguration.QUALIFIER_OK_HTTP_CLIENT_COMMON) val okHttpClient: OkHttpClient,
-        val converterFactory: Converter.Factory,
-        val callAdapterFactory: CallAdapter.Factory,
-        val huaweiAccessTokenRepository: HuaweiAccessTokenRepository,
-        @Value("\${my.api.huawei.client_id}") val huaweiClientId: String,
-        @Value("\${my.api.huawei.client_secret}") val huaweiClientSecret: String,
-        val log: Logger
+        @Qualifier(NetworkConfiguration.QUALIFIER_OK_HTTP_CLIENT_COMMON)
+        private val okHttpClient: OkHttpClient,
+        private val loggingInterceptor: HttpLoggingInterceptor,
+        private val converterFactory: Converter.Factory,
+        private val callAdapterFactory: CallAdapter.Factory,
+        private val huaweiAccessTokenRepository: HuaweiAccessTokenRepository,
+        private @Value("\${my.api.huawei.client_id}") val huaweiClientId: String,
+        private @Value("\${my.api.huawei.client_secret}") val huaweiClientSecret: String,
+        private val log: Logger
 ) {
 
-    companion object{
-       const val QUALIFIER_OK_HTTP_CLIENT_HUAWEI_AUTH = "QUALIFIER_OK_HTTP_CLIENT_HUAWEI_AUTH"
+    companion object {
+        const val QUALIFIER_OK_HTTP_CLIENT_HUAWEI_AUTH = "QUALIFIER_OK_HTTP_CLIENT_HUAWEI_AUTH"
     }
 
     @Bean
@@ -82,7 +87,7 @@ class HuaweiApiConfiguration @Autowired constructor(
                         .newBuilder()
                         .header(
                                 ScpReaderConstants.Api.HEADER_AUTHORIZATION,
-                                ScpReaderConstants.Api.HEADER_PART_BEARER + token.accessToken
+                                createAuthValue(token)
                         )
                         .build()
                 chain.proceed(authorizedRequest)
@@ -92,22 +97,30 @@ class HuaweiApiConfiguration @Autowired constructor(
         }
 
         val accessTokenInterceptor = Interceptor { chain ->
-            val token = huaweiAccessTokenRepository.findFirstByClientId(huaweiClientId) ?: ""
+            val token = huaweiAccessTokenRepository.findFirstByClientId(huaweiClientId)?.let { createAuthValue(it) }
+                    ?: ""
+            log.error("accessTokenInterceptor: $token")
             val request =
                     chain
                             .request()
                             .newBuilder()
                             .header(
                                     ScpReaderConstants.Api.HEADER_AUTHORIZATION,
-                                    ScpReaderConstants.Api.HEADER_PART_BEARER + token
+                                    token
                             )
                             .build()
             chain.proceed(request)
         }
 
         return okHttpClient.newBuilder()
-                .addInterceptor(unAuthAccessTokenInterceptor)
                 .addInterceptor(accessTokenInterceptor)
+                .addInterceptor(unAuthAccessTokenInterceptor)
+                .addInterceptor(loggingInterceptor)
                 .build()
+    }
+
+    private fun createAuthValue(token: HuaweiOAuthAccessToken): String {
+        val tokenValue = "APPAT:${token.accessToken}"
+        return "${ScpReaderConstants.Api.HEADER_PART_BASIC} " + Base64Utils.encodeToString(tokenValue.toByteArray(StandardCharsets.UTF_8))
     }
 }

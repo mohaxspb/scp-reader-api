@@ -25,13 +25,13 @@ class NetworkConfiguration {
 
     //okHttp + retrofit
     @Bean
-    fun loggingInterceptor(): HttpLoggingInterceptor = HttpLoggingInterceptor { println("OkHttp: $it") }
-            .setLevel(HttpLoggingInterceptor.Level.BODY)
+    fun loggingInterceptor(): HttpLoggingInterceptor =
+            HttpLoggingInterceptor { println("OkHttp: $it") }
+                    .setLevel(HttpLoggingInterceptor.Level.BODY)
 
     @Bean
     @Qualifier(QUALIFIER_OK_HTTP_CLIENT_COMMON)
     fun okHttpClient(): OkHttpClient = OkHttpClient.Builder()
-            .addInterceptor(loggingInterceptor())
             .connectTimeout(ApiClient.OK_HTTP_CONNECT_TIMEOUT, TimeUnit.SECONDS)
             .readTimeout(ApiClient.OK_HTTP_READ_TIMEOUT, TimeUnit.SECONDS)
             .writeTimeout(ApiClient.OK_HTTP_WRITE_TIMEOUT, TimeUnit.SECONDS)

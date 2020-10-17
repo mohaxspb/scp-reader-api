@@ -12,5 +12,5 @@ data class TokenResponse(
     @JsonProperty("expires_in")
     val expiresIn: Int,
     @JsonProperty("scope")
-    val scope: String
+    val scope: String?
 )

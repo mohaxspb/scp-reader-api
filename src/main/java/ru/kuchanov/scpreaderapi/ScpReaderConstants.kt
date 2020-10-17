@@ -15,6 +15,7 @@ object ScpReaderConstants {
         const val PARAM_REFRESH_TOKEN = "refresh_token"
         const val HEADER_AUTHORIZATION = "Authorization"
         const val HEADER_PART_BEARER = "Bearer"
+        const val HEADER_PART_BASIC = "Basic"
     }
 
     object Score {

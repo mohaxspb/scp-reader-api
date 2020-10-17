@@ -1,5 +1,6 @@
 package ru.kuchanov.scpreaderapi.network.monetization
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
@@ -24,6 +25,7 @@ class HuaweiService @Autowired constructor(
         private val huaweiApiSubsRussia: HuaweiApi,
         @Qualifier(HuaweiPurchaseConfiguration.QUALIFIER_ORDER_RUSSIA)
         private val huaweiApiOrderRussia: HuaweiApi,
+        private val objectMapper: ObjectMapper,
         private val log: Logger
 ) {
 
@@ -33,6 +35,7 @@ class HuaweiService @Autowired constructor(
 
     fun verifyProduct(
             productId: String,
+            subscriptionId: String,
             purchaseType: InappType,
             purchaseToken: String,
             accountFlag: Int
@@ -46,7 +49,7 @@ class HuaweiService @Autowired constructor(
         )
         return when (purchaseType) {
             InappType.SUBS -> {
-                val result = verifySubscription(productId, purchaseToken, accountFlag)
+                val result = verifySubscription(productId, subscriptionId, purchaseToken, accountFlag)
                 if (result.responseCode == 0) {
                     ValidationResponse.HuaweiSubscriptionResponse(ValidationStatus.VALID, result)
                 } else {
@@ -59,6 +62,7 @@ class HuaweiService @Autowired constructor(
 
     fun verifySubscription(
             productId: String,
+            subscriptionId: String,
             purchaseToken: String,
             accountFlag: Int
     ): HuaweiProductVerifyResponse {
@@ -69,7 +73,31 @@ class HuaweiService @Autowired constructor(
         }
 
         return try {
-            api.verifySubscription(productId, purchaseToken).execute().body()!!
+            val result = api.verifySubscription(subscriptionId, purchaseToken).execute()
+            if (result.isSuccessful) {
+               val huaweiProductVerifyResponse = result.body()
+                        ?: throw VerifyProductException(
+                                "Cannot verify subscription with error message: ${result.errorBody()}",
+                                NullPointerException("Body is null!")
+                        )
+                if(huaweiProductVerifyResponse.responseCode == 0){
+                    huaweiProductVerifyResponse
+                } else {
+                    throw VerifyProductException(
+                            "Cannot verify subscription with responseCode: ${huaweiProductVerifyResponse.responseCode} message: ${huaweiProductVerifyResponse.responseMessage}",
+                            IllegalStateException()
+                    )
+                }
+            } else {
+                val errorResponse = objectMapper.readValue(
+                        result.errorBody()!!.string(),
+                        HuaweiProductVerifyResponse::class.java
+                )
+                throw VerifyProductException(
+                        "Cannot verify subscription with code: ${errorResponse.responseCode} and error message: ${errorResponse.responseMessage}",
+                        IllegalStateException()
+                )
+            }
         } catch (e: Throwable) {
             throw VerifyProductException("Cannot verify subscription with error message: ${e.message}.", e)
         }
@@ -88,6 +116,7 @@ class HuaweiService @Autowired constructor(
         return try {
             api.cancelSubscription(productId, purchaseToken).execute().body()!!
         } catch (e: Throwable) {
+            e.printStackTrace()
             throw VerifyProductException("Cannot verify subscription with error message: ${e.message}.", e)
         }
     }

@@ -9,10 +9,10 @@ data class HuaweiProductVerifyResponse(
          * please refer to API [Result Codes](https://developer.huawei.com/consumer/en/doc/development/HMS-References/iap-api-specification-related-v4#API-ErrorCode).
          */
         val responseCode: Int,
-        val responseMessage: String,
+        val responseMessage: String?,
         /**
          * JSON string that contains purchase details.
          * For details about the format, please refer to the description of [InappPurchaseDetail](https://developer.huawei.com/consumer/en/doc/development/HMS-References/iap-api-subscription-service-purchase-token-verification-v4#InappPurchaseDetail).
          */
-        val inappPurchaseData: String,
+        val inappPurchaseData: String?,
 )
