@@ -39,6 +39,7 @@ class PurchaseController @Autowired constructor(
             @PathVariable store: Store,
             @RequestParam productId: String,
             @RequestParam purchaseToken: String,
+            @RequestParam purchaseType: InappType,
             @RequestParam(defaultValue = "-1") accountFlag: Int
     ): String {
         val test = when (store) {

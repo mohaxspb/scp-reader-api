@@ -75,12 +75,12 @@ class HuaweiService @Autowired constructor(
         return try {
             val result = api.verifySubscription(subscriptionId, purchaseToken).execute()
             if (result.isSuccessful) {
-               val huaweiProductVerifyResponse = result.body()
+                val huaweiProductVerifyResponse = result.body()
                         ?: throw VerifyProductException(
                                 "Cannot verify subscription with error message: ${result.errorBody()}",
                                 NullPointerException("Body is null!")
                         )
-                if(huaweiProductVerifyResponse.responseCode == 0){
+                if (huaweiProductVerifyResponse.responseCode == 0) {
                     huaweiProductVerifyResponse
                 } else {
                     throw VerifyProductException(
