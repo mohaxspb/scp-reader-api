@@ -69,6 +69,35 @@ class PurchaseController @Autowired constructor(
         }
     }
 
+    @PostMapping("/apply/{store}/{purchaseType}")
+    fun applyAndroidProduct(
+            @PathVariable store: Store,
+            @PathVariable purchaseType: InappType,
+            @RequestParam productId: String,
+            @RequestParam subscriptionId: String,
+            @RequestParam purchaseToken: String,
+            @RequestParam(defaultValue = "-1") accountFlag: Int,
+            @AuthenticationPrincipal user: User?
+    ) {
+        // 1. Verify product
+        val verificationResult = when (store) {
+            Store.HUAWEI -> huaweiService.verifyProduct(productId, subscriptionId, purchaseType, purchaseToken, accountFlag)
+            Store.GOOGLE -> TODO()
+            Store.AMAZON -> TODO()
+            Store.APPLE -> TODO()
+        }
+        // 2. Write product info to DB.
+        // 2.1. Check if user already has subscriptions
+        // 3. Update user in DB.
+    }
+
+    @GetMapping("/subscription/all")
+    fun getUserSubscriptions(
+            @AuthenticationPrincipal user: User
+    ) {
+        TODO()
+    }
+
     @GetMapping("/validateAndroidProduct")
     fun validateAndroidProduct(
             @RequestParam(value = "package") androidPackage: String,
