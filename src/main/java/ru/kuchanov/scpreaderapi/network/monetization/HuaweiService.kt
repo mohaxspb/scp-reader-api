@@ -11,6 +11,7 @@ import ru.kuchanov.scpreaderapi.bean.monetization.InappType
 import ru.kuchanov.scpreaderapi.configuration.monetization.HuaweiPurchaseConfiguration
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationStatus
+import ru.kuchanov.scpreaderapi.model.huawei.purchase.InAppPurchaseData
 import ru.kuchanov.scpreaderapi.model.monetization.huawei.HuaweiProductVerifyResponse
 import ru.kuchanov.scpreaderapi.model.monetization.huawei.HuaweiSubscriptionCancelResponse
 import ru.kuchanov.scpreaderapi.network.HuaweiApi
@@ -49,12 +50,13 @@ class HuaweiService @Autowired constructor(
         )
         return when (purchaseType) {
             InappType.SUBS -> {
-                val result = verifySubscription(productId, subscriptionId, purchaseToken, accountFlag)
-                if (result.responseCode == 0) {
-                    ValidationResponse.HuaweiSubscriptionResponse(ValidationStatus.VALID, result)
-                } else {
-                    ValidationResponse.HuaweiSubscriptionResponse(ValidationStatus.INVALID, result)
-                }
+                val result = verifySubscription(
+                        productId,
+                        subscriptionId,
+                        purchaseToken,
+                        accountFlag
+                )
+                ValidationResponse.HuaweiSubscriptionResponse(ValidationStatus.VALID, result)
             }
             InappType.INAPP, InappType.CONSUMABLE -> TODO()
         }
@@ -65,7 +67,7 @@ class HuaweiService @Autowired constructor(
             subscriptionId: String,
             purchaseToken: String,
             accountFlag: Int
-    ): HuaweiProductVerifyResponse {
+    ): InAppPurchaseData {
         val api = if (accountFlag == ACCOUNT_FLAG_GERMANY_APP_TOUCH) {
             huaweiApiSubsGermany
         } else {
@@ -73,7 +75,9 @@ class HuaweiService @Autowired constructor(
         }
 
         return try {
-            val result = api.verifySubscription(subscriptionId, purchaseToken).execute()
+            val result = api
+                    .verifySubscription(subscriptionId, purchaseToken)
+                    .execute()
             if (result.isSuccessful) {
                 val huaweiProductVerifyResponse = result.body()
                         ?: throw VerifyProductException(
@@ -81,7 +85,7 @@ class HuaweiService @Autowired constructor(
                                 NullPointerException("Body is null!")
                         )
                 if (huaweiProductVerifyResponse.responseCode == 0) {
-                    huaweiProductVerifyResponse
+                    objectMapper.readValue(huaweiProductVerifyResponse.inappPurchaseData!!, InAppPurchaseData::class.java)
                 } else {
                     throw VerifyProductException(
                             "Cannot verify subscription with responseCode: ${huaweiProductVerifyResponse.responseCode} message: ${huaweiProductVerifyResponse.responseMessage}",

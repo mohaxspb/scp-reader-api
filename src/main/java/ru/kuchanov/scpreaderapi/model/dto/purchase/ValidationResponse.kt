@@ -3,7 +3,7 @@ package ru.kuchanov.scpreaderapi.model.dto.purchase
 import com.fasterxml.jackson.annotation.JsonValue
 import com.google.api.services.androidpublisher.model.ProductPurchase
 import com.google.api.services.androidpublisher.model.SubscriptionPurchase
-import ru.kuchanov.scpreaderapi.model.monetization.huawei.HuaweiProductVerifyResponse
+import ru.kuchanov.scpreaderapi.model.huawei.purchase.InAppPurchaseData
 
 enum class ValidationStatus {
 
@@ -26,6 +26,6 @@ sealed class ValidationResponse(open val status: ValidationStatus) {
 
     data class HuaweiSubscriptionResponse(
             override val status: ValidationStatus,
-            val androidSubscription: HuaweiProductVerifyResponse?
+            val androidSubscription: InAppPurchaseData?
     ) : ValidationResponse(status)
 }
