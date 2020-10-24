@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.network.monetization
+package ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.Logger
@@ -32,6 +32,10 @@ class HuaweiService @Autowired constructor(
 
     companion object {
         const val ACCOUNT_FLAG_GERMANY_APP_TOUCH = 1
+    }
+
+    fun savePurchasedProduct(inAppPurchaseData: InAppPurchaseData) {
+
     }
 
     fun verifyProduct(

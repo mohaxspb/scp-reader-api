@@ -15,9 +15,9 @@ import ru.kuchanov.scpreaderapi.bean.purchase.UsersAndroidSubscription
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationStatus
-import ru.kuchanov.scpreaderapi.network.monetization.HuaweiService
+import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.AndroidProductService
-import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.AndroidPurchaseService
+import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.google.AndroidPurchaseService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.AndroidSubscriptionService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.UserAndroidPurchaseService
 import java.sql.Timestamp
@@ -86,9 +86,14 @@ class PurchaseController @Autowired constructor(
             Store.AMAZON -> TODO()
             Store.APPLE -> TODO()
         }
-        // 2. Write product info to DB.
-        // 2.1. Check if user already has subscriptions
-        // 3. Update user in DB.
+        if (verificationResult.status == ValidationStatus.VALID) {
+            val huaweiSubscriptionResponse =
+                    (verificationResult as ValidationResponse.HuaweiSubscriptionResponse)
+            huaweiService.savePurchasedProduct(huaweiSubscriptionResponse.androidSubscription!!)
+        }
+        //TODO 2. Write product info to DB.
+        //TODO 2.1. Check if user already has subscriptions
+        //TODO 3. Update user in DB.
     }
 
     @GetMapping("/subscription/all")
