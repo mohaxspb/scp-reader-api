@@ -89,10 +89,10 @@ class PurchaseController @Autowired constructor(
         if (verificationResult.status == ValidationStatus.VALID) {
             val huaweiSubscriptionResponse =
                     (verificationResult as ValidationResponse.HuaweiSubscriptionResponse)
+            //TODO 2. Write product info to DB.
             huaweiService.savePurchasedProduct(huaweiSubscriptionResponse.androidSubscription!!)
         }
-        //TODO 2. Write product info to DB.
-        //TODO 2.1. Check if user already has subscriptions
+        //TODO 2.1. Check if user already has subscriptions ???????????????????????
         //TODO 3. Update user in DB.
     }
 
