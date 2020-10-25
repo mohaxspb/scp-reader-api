@@ -8,13 +8,17 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.ResponseStatus
 import ru.kuchanov.scpreaderapi.bean.monetization.InappType
+import ru.kuchanov.scpreaderapi.bean.purchase.huawei.HuaweiSubscription
+import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.configuration.monetization.HuaweiPurchaseConfiguration
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationStatus
+import ru.kuchanov.scpreaderapi.model.huawei.purchase.HuaweiProductKind
 import ru.kuchanov.scpreaderapi.model.huawei.purchase.InAppPurchaseData
 import ru.kuchanov.scpreaderapi.model.monetization.huawei.HuaweiProductVerifyResponse
 import ru.kuchanov.scpreaderapi.model.monetization.huawei.HuaweiSubscriptionCancelResponse
 import ru.kuchanov.scpreaderapi.network.HuaweiApi
+import ru.kuchanov.scpreaderapi.repository.monetization.purchase.android.huawei.HuaweiSubscriptionRepository
 
 @Service
 class HuaweiService @Autowired constructor(
@@ -26,6 +30,8 @@ class HuaweiService @Autowired constructor(
         private val huaweiApiSubsRussia: HuaweiApi,
         @Qualifier(HuaweiPurchaseConfiguration.QUALIFIER_ORDER_RUSSIA)
         private val huaweiApiOrderRussia: HuaweiApi,
+        private val huaweiSubscriptionRepository: HuaweiSubscriptionRepository,
+        private val converter: HuaweiConverter,
         private val objectMapper: ObjectMapper,
         private val log: Logger
 ) {
@@ -34,8 +40,18 @@ class HuaweiService @Autowired constructor(
         const val ACCOUNT_FLAG_GERMANY_APP_TOUCH = 1
     }
 
-    fun savePurchasedProduct(inAppPurchaseData: InAppPurchaseData) {
-        TODO()
+    fun savePurchasedProduct(inAppPurchaseData: InAppPurchaseData, user: User) {
+        when (HuaweiProductKind.findByType(inAppPurchaseData.kind)) {
+            HuaweiProductKind.CONSUMABLE, HuaweiProductKind.NON_CONSUMABLE -> TODO()
+            HuaweiProductKind.RENEWABLE_SUBSCRIPTION, HuaweiProductKind.NON_RENEWABLE_SUBSCRIPTION -> {
+                saveSubscription(converter.convertToSubscription(inAppPurchaseData), user)
+            }
+        }
+    }
+
+    private fun saveSubscription(huaweiSubscription: HuaweiSubscription, user: User) {
+        huaweiSubscriptionRepository.save(huaweiSubscription)
+        //todo save user connection
     }
 
     fun verifyProduct(

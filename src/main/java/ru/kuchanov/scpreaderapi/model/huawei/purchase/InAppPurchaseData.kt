@@ -4,6 +4,12 @@ data class InAppPurchaseData(
         val applicationId: Long,
         val autoRenewing: Boolean,
         val orderId: String,
+        /**
+         * 0: consumable
+         * 1: non-consumable
+         * 2: renewable subscription
+         * 3: non-renewable subscription
+         */
         val kind: Int,
         val packageName: String?,
         val productId: String,
@@ -56,3 +62,21 @@ data class InAppPurchaseData(
         val surveyReason: Int?,
         val surveyDetails: String?
 )
+
+enum class HuaweiProductKind constructor(type: Int) {
+    CONSUMABLE(0),
+    NON_CONSUMABLE(1),
+    RENEWABLE_SUBSCRIPTION(2),
+    NON_RENEWABLE_SUBSCRIPTION(3);
+
+    companion object {
+        fun findByType(type: Int): HuaweiProductKind =
+                when (type) {
+                    0 -> CONSUMABLE
+                    1 -> NON_CONSUMABLE
+                    2 -> RENEWABLE_SUBSCRIPTION
+                    3 -> NON_RENEWABLE_SUBSCRIPTION
+                    else -> throw IllegalArgumentException("Unexpected kind: $type")
+                }
+    }
+}

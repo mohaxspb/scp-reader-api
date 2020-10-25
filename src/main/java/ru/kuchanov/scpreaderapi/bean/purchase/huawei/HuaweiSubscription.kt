@@ -31,15 +31,13 @@ data class HuaweiSubscription(
 
         @Column(columnDefinition = "TEXT")
         val country: String? = null,
-        @Column(columnDefinition = "TEXT")
-        val currency: String? = null,
 
         /**
          * Value after the actual price of a product is multiplied by 100.
          * The actual price is accurate to two decimal places.
          * For example, if the value of this parameter is 501, the actual product price is 5.01.
          */
-        val price: Int? = null,
+        val price: Long? = null,
 
         /**
          * This parameter uniquely identifies the mapping between a product and a user.
@@ -63,7 +61,7 @@ data class HuaweiSubscription(
         val oriSubscriptionId: String? = null,
 
         @Column(name = "account_flag", columnDefinition = "TEXT")
-        val accountFlag: String? = null,
+        val accountFlag: Int? = null,
 
         @Column(name = "purchase_state")
         val purchaseState: Int? = null,

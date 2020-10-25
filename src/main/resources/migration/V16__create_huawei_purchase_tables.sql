@@ -26,7 +26,7 @@ create table if not exists huawei_products
     -- For example, if the value of this parameter is 501, the actual product price is 5.01.
     price                integer,
 
-    account_flag         text,
+    account_flag         integer,
 
     created              timestamp,
     updated              timestamp,
@@ -58,7 +58,6 @@ create table if not exists huawei_subscriptions
     product_name                  text,
 
     country                       text,
-    currency                      text,
     --Value after the actual price of a product is multiplied by 100.
     -- The actual price is accurate to two decimal places.
     -- For example, if the value of this parameter is 501, the actual product price is 5.01.
@@ -78,7 +77,7 @@ create table if not exists huawei_subscriptions
     expiry_time_millis            timestamp,
     linked_purchase_token         text,
 
-    account_flag                  text,
+    account_flag                  integer,
 
     created                       timestamp,
     updated                       timestamp,
