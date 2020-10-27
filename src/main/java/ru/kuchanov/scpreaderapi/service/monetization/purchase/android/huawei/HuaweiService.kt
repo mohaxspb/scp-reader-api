@@ -50,7 +50,8 @@ class HuaweiService @Autowired constructor(
     }
 
     private fun saveSubscription(huaweiSubscription: HuaweiSubscription, user: User) {
-        huaweiSubscriptionRepository.save(huaweiSubscription)
+        val subscription = huaweiSubscriptionRepository.save(huaweiSubscription)
+
         //todo save user connection
     }
 

@@ -87,11 +87,12 @@ create table if not exists huawei_subscriptions
 
 create table if not exists users_huawei_products
 (
-    huawei_product_id bigint not null,
-    user_id           bigint not null,
+    id                bigserial not null,
+    huawei_product_id bigint    not null,
+    user_id           bigint    not null,
     created           timestamp,
     updated           timestamp,
-    primary key (huawei_product_id, user_id)
+    primary key (id)
 );
 
 ALTER TABLE users_huawei_products
@@ -101,14 +102,27 @@ alter table users_huawei_products
         foreign key (user_id)
             REFERENCES users (id);
 
+ALTER TABLE users_huawei_products
+    drop constraint IF EXISTS fk_huawei_product_id__to__huawei_products CASCADE;
+alter table users_huawei_products
+    add constraint fk_huawei_product_id__to__huawei_products
+        foreign key (huawei_product_id)
+            REFERENCES huawei_products (id);
+
+alter table users_huawei_products
+    drop constraint if exists huawei_product_id_and_user_id_unique;
+alter table users_huawei_products
+    add constraint huawei_product_id_and_user_id_unique unique (huawei_product_id, user_id);
+
 
 create table if not exists users_huawei_subscriptions
 (
-    huawei_subscription_id bigint not null,
-    user_id                bigint not null,
+    id                     bigserial not null,
+    huawei_subscription_id bigint    not null,
+    user_id                bigint    not null,
     created                timestamp,
     updated                timestamp,
-    primary key (huawei_subscription_id, user_id)
+    primary key (id)
 );
 
 ALTER TABLE users_huawei_subscriptions
@@ -117,3 +131,15 @@ alter table users_huawei_subscriptions
     add constraint fk_user_id__to__users
         foreign key (user_id)
             REFERENCES users (id);
+
+ALTER TABLE users_huawei_subscriptions
+    drop constraint IF EXISTS fk_huawei_subscription_id__to__huawei_subscriptions CASCADE;
+alter table users_huawei_subscriptions
+    add constraint fk_huawei_subscription_id__to__huawei_subscriptions
+        foreign key (huawei_subscription_id)
+            REFERENCES huawei_subscriptions (id);
+
+alter table users_huawei_subscriptions
+    drop constraint if exists huawei_subscription_id_and_user_id_unique;
+alter table users_huawei_subscriptions
+    add constraint huawei_subscription_id_and_user_id_unique unique (huawei_subscription_id, user_id);
