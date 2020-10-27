@@ -7,7 +7,7 @@ import java.sql.Timestamp
 import javax.persistence.*
 
 @Entity
-@Table(name = "users_huawei_subscriptions")
+@Table(name = "user__to__huawei_subscriptions")
 data class UserToHuaweiSubscription(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -7,15 +7,15 @@ import java.sql.Timestamp
 import javax.persistence.*
 
 @Entity
-@Table(name = "users_huawei_products")
+@Table(name = "user__to__huawei_products")
 data class UserToHuaweiProduct(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long? = null,
         @Column(name = "user_id")
         var userId: Long,
-        @Column(name = "huawei_subscription_id")
-        var huaweiSubscriptionId: Long,
+        @Column(name = "huawei_product_id")
+        var huaweiProductId: Long,
         //dates
         @field:CreationTimestamp
         val created: Timestamp? = null,
