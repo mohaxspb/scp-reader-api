@@ -15,6 +15,7 @@ class HuaweiConverter {
                         accountFlag = accountFlag!!,
                         autoRenewing = inAppPurchaseData.autoRenewing,
                         country = country,
+                        //next renew date
                         expiryTimeMillis = Timestamp(expirationDate!!),
                         kind = kind,
                         orderId = orderId,
@@ -22,14 +23,19 @@ class HuaweiConverter {
                         price = price,
                         priceCurrencyCode = currency,
                         purchaseState = purchaseState,
+                        payOrderId = payOrderId!!,
+                        purchaseTime = purchaseTime?.let { Timestamp(it) },
                         productName = productName,
                         productId = productId,
                         productGroup = productGroup!!,
                         subscriptionId = subscriptionId!!,
-                        userCancellationTimeMillis = Timestamp(cancelTime!!),
+                        //subscription renewal stops
+                        userCancellationTimeMillis = cancellationTime?.let { Timestamp(it) },
+                        //refunded
+                        cancelTime = cancelTime?.let { Timestamp(it) },
                         purchaseToken = purchaseToken,
                         subIsValid = subIsvalid!!,
-                        startTimeMillis = Timestamp(purchaseTime!!)
+                        startTimeMillis = purchaseTime?.let { Timestamp(it) }
                 )
             }
 }

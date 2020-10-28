@@ -59,8 +59,8 @@ create table if not exists huawei_subscriptions
 
     country                       text,
     --Value after the actual price of a product is multiplied by 100.
-    -- The actual price is accurate to two decimal places.
-    -- For example, if the value of this parameter is 501, the actual product price is 5.01.
+    --The actual price is accurate to two decimal places.
+    --For example, if the value of this parameter is 501, the actual product price is 5.01.
     price                         integer,
 
     --subs fields

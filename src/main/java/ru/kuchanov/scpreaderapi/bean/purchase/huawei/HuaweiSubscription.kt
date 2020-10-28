@@ -63,6 +63,13 @@ data class HuaweiSubscription(
         @Column(name = "account_flag", columnDefinition = "TEXT")
         val accountFlag: Int? = null,
 
+        /**
+         * Purchase status. The options are as follows:
+         * -1: initialized
+         * 0: purchased
+         * 1: canceled
+         * 2: refunded
+         */
         @Column(name = "purchase_state")
         val purchaseState: Int? = null,
 
@@ -78,16 +85,44 @@ data class HuaweiSubscription(
 
         @Column(name = "expiry_time_millis")
         var expiryTimeMillis: Timestamp? = null,
+        /**
+         * Same as [purchaseTime]
+         */
         @Column(name = "start_time_millis")
         var startTimeMillis: Timestamp? = null,
+        /**
+         * Subscription cancellation time in UTC.
+         * Note:cancelWay and cancellationTime are displayed when a subscription renewal stops (the refund is not involved).
+         */
         @Column(name = "user_cancellation_time_millis")
         var userCancellationTimeMillis: Timestamp? = null,
+        /**
+         * Time when a subscription is revoked.
+         * A refund is made and the service is unavailable immediately.
+         * This parameter has a value when a user:
+         * (1) makes a complaint and revokes a subscription through the customer service personnel;
+         * (2) performs subscription upgrade or crossgrade that immediately takes effect and revokes the previous receipt of the original subscription.
+         * Note: If a receipt is revoked, the purchase is not complete.
+         */
+        @Column(name = "cancel_time")
+        val cancelTime: Timestamp? = null,
         @Column(name = "price_amount_micros")
         val priceAmountMicros: Long? = null,
         @Column(name = "price_currency_code")
         val priceCurrencyCode: String? = null,
+
+        /**
+         * Timestamp of the purchase time, which is
+         * the number of milliseconds from 00:00:00 on January 1, 1970 to the purchase time.
+         * If the purchase is not complete, this parameter is left empty.
+         */
+        @Column(name = "purchase_time")
+        val purchaseTime: Timestamp? = null,
+
+        @Column(name = "pay_order_id", columnDefinition = "TEXT")
+        val payOrderId: String,
         @Column(name = "order_id")
-        var orderId: String,
+        val orderId: String,
 
         //dates
         @field:CreationTimestamp
