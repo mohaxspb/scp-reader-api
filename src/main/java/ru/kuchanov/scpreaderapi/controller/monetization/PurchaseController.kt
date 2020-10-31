@@ -2,6 +2,7 @@ package ru.kuchanov.scpreaderapi.controller.monetization
 
 import com.google.api.services.androidpublisher.model.ProductPurchase
 import com.google.api.services.androidpublisher.model.SubscriptionPurchase
+import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
@@ -13,37 +14,43 @@ import ru.kuchanov.scpreaderapi.bean.purchase.AndroidSubscription
 import ru.kuchanov.scpreaderapi.bean.purchase.UsersAndroidProduct
 import ru.kuchanov.scpreaderapi.bean.purchase.UsersAndroidSubscription
 import ru.kuchanov.scpreaderapi.bean.users.User
+import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationStatus
-import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.AndroidProductService
-import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.google.AndroidPurchaseService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.AndroidSubscriptionService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.UserAndroidPurchaseService
+import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.google.AndroidPurchaseService
+import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiApiService
+import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiMonetizationService
+import ru.kuchanov.scpreaderapi.service.users.ScpReaderUserService
 import java.sql.Timestamp
+import java.time.Instant
 
 
-//todo refactor for amazon/apple/google/huawei
 @RestController
 @RequestMapping("/" + ScpReaderConstants.Path.MONETIZATION + "/" + ScpReaderConstants.Path.PURCHASE)
 class PurchaseController @Autowired constructor(
-        val huaweiService: HuaweiService,
-        val androidPurchaseService: AndroidPurchaseService,
-        val androidProductService: AndroidProductService,
-        val androidSubscriptionService: AndroidSubscriptionService,
-        val userAndroidPurchaseService: UserAndroidPurchaseService
+        private val huaweiApiService: HuaweiApiService,
+        private val huaweiMonetizationService: HuaweiMonetizationService,
+        private val androidPurchaseService: AndroidPurchaseService,
+        private val androidProductService: AndroidProductService,
+        private val androidSubscriptionService: AndroidSubscriptionService,
+        private val userAndroidPurchaseService: UserAndroidPurchaseService,
+        private val userService: ScpReaderUserService,
+        private val log: Logger
 ) {
 
     @GetMapping("/cancel/{store}/{purchaseType}")
     fun cancelProduct(
             @PathVariable store: Store,
+            @PathVariable purchaseType: InappType,
             @RequestParam productId: String,
             @RequestParam purchaseToken: String,
-            @RequestParam purchaseType: InappType,
             @RequestParam(defaultValue = "-1") accountFlag: Int
     ): String {
         val test = when (store) {
-            Store.HUAWEI -> huaweiService.cancelSubscription(productId, purchaseToken, accountFlag)
+            Store.HUAWEI -> huaweiApiService.cancelSubscription(productId, purchaseToken, accountFlag)
             Store.GOOGLE -> TODO()
             Store.AMAZON -> TODO()
             Store.APPLE -> TODO()
@@ -62,7 +69,7 @@ class PurchaseController @Autowired constructor(
             @AuthenticationPrincipal user: User?
     ): ValidationResponse {
         return when (store) {
-            Store.HUAWEI -> huaweiService.verifyProduct(productId, subscriptionId, purchaseType, purchaseToken, accountFlag)
+            Store.HUAWEI -> huaweiApiService.verifyProduct(productId, subscriptionId, purchaseType, purchaseToken, accountFlag)
             Store.GOOGLE -> TODO()
             Store.AMAZON -> TODO()
             Store.APPLE -> TODO()
@@ -79,9 +86,11 @@ class PurchaseController @Autowired constructor(
             @RequestParam(defaultValue = "-1") accountFlag: Int,
             @AuthenticationPrincipal user: User?
     ) {
+        check(user != null) { "User is null!" }
+        check(user.id != null) { "User ID is null!" }
         // 1. Verify product
         val verificationResult = when (store) {
-            Store.HUAWEI -> huaweiService.verifyProduct(productId, subscriptionId, purchaseType, purchaseToken, accountFlag)
+            Store.HUAWEI -> huaweiApiService.verifyProduct(productId, subscriptionId, purchaseType, purchaseToken, accountFlag)
             Store.GOOGLE -> TODO()
             Store.AMAZON -> TODO()
             Store.APPLE -> TODO()
@@ -89,17 +98,36 @@ class PurchaseController @Autowired constructor(
         if (verificationResult.status == ValidationStatus.VALID) {
             val huaweiSubscriptionResponse =
                     (verificationResult as ValidationResponse.HuaweiSubscriptionResponse)
-            //TODO 2. Write product info to DB.
-            huaweiService.savePurchasedProduct(huaweiSubscriptionResponse.androidSubscription!!, user!!)
+            //2. Write product info to DB.
+            huaweiMonetizationService.savePurchasedProduct(huaweiSubscriptionResponse.androidSubscription!!, user)
         }
-        //TODO 2.1. Check if user already has subscriptions ???????????????????????
-        //TODO 3. Update user in DB.
+        //3. Update user in DB.
+
+        when (purchaseType) {
+            InappType.INAPP, InappType.CONSUMABLE -> TODO()
+            InappType.SUBS -> {
+                val curTimeMillis = Instant.now().toEpochMilli()
+                val userNonExpiredAndValidSubscriptions = huaweiMonetizationService
+                        .getHuaweiSubscriptionsForUser(user.id)
+                        .filter { it.subIsValid }
+                        .filter { it.expiryTimeMillis!!.time > curTimeMillis }
+                        .sortedBy { it.expiryTimeMillis }
+                log.error("userNonExpiredAndValidSubscriptions: ${userNonExpiredAndValidSubscriptions.size}")
+                val maxExpireTimeSub = userNonExpiredAndValidSubscriptions.first()
+                log.error("userNonExpiredAndValidSubscriptions max expiryTimeMillis: ${maxExpireTimeSub.expiryTimeMillis}")
+
+                val userInDb = userService.getById(user.id) ?: throw UserNotFoundException()
+                userService.save(
+                        userInDb.apply {
+                            offlineLimitDisabledEndDate = maxExpireTimeSub.expiryTimeMillis
+                        }
+                )
+            }
+        }
     }
 
     @GetMapping("/subscription/all")
-    fun getUserSubscriptions(
-            @AuthenticationPrincipal user: User
-    ) {
+    fun getUserSubscriptions(@AuthenticationPrincipal user: User) {
         TODO()
     }
 

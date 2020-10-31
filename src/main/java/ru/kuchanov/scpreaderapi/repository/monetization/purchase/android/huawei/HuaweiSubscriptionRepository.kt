@@ -6,8 +6,6 @@ import ru.kuchanov.scpreaderapi.bean.purchase.huawei.HuaweiSubscription
 
 interface HuaweiSubscriptionRepository : JpaRepository<HuaweiSubscription, Long> {
     fun getOneById(id: Long): HuaweiSubscription?
-    fun getOneByPurchaseToken(purchaseToken: String): HuaweiSubscription?
-    fun getOneByOrderId(orderId: String): HuaweiSubscription?
     fun getOneBySubscriptionId(subscriptionId: String): HuaweiSubscription?
 
     @Query("""
@@ -15,5 +13,5 @@ interface HuaweiSubscriptionRepository : JpaRepository<HuaweiSubscription, Long>
             JOIN UserToHuaweiSubscription uap ON s.id = uap.huaweiSubscriptionId 
             WHERE uap.userId = :userId
     """)
-    fun getAndroidProductsByUserId(userId: Long): List<HuaweiSubscription>
+    fun getHuaweiSubscriptionsByUserId(userId: Long): List<HuaweiSubscription>
 }
