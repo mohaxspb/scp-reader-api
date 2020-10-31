@@ -1,35 +1,37 @@
 create table if not exists huawei_products
 (
-    id                   bigserial not null,
-    android_package      text,
+    id                bigserial not null,
+    android_package   text,
     --0: consumable
     --1: non-consumable
     --2: renewable subscription
     --3: non-renewable subscription
-    kind                 integer   not null,
+    kind              integer   not null,
 
-    order_id             text,
-    purchase_state       integer,
-    purchase_time_millis timestamp,
-    purchase_token       text,
-    purchase_type        integer,
+    order_id          text,
+    pay_order_id      text,
 
-    product_id           text,
-    product_name         text,
+    purchase_state    integer,
+    purchase_time     timestamp,
+    purchase_token    text,
+    purchase_type     integer,
 
-    consumption_state    integer,
+    product_id        text,
+    product_name      text,
 
-    country              text,
-    currency             text,
+    consumption_state integer,
+
+    country           text,
+    currency          text,
     --Value after the actual price of a product is multiplied by 100.
     -- The actual price is accurate to two decimal places.
     -- For example, if the value of this parameter is 501, the actual product price is 5.01.
-    price                integer,
+    price             integer,
 
-    account_flag         integer,
+    account_flag      integer,
 
-    created              timestamp,
-    updated              timestamp,
+    created           timestamp,
+    updated           timestamp,
     primary key (id)
 );
 
@@ -44,6 +46,7 @@ create table if not exists huawei_subscriptions
     kind                          integer   not null,
 
     order_id                      text,
+    pay_order_id                  text,
     purchase_state                integer,
 
     price_amount_micros           bigint,
@@ -51,8 +54,11 @@ create table if not exists huawei_subscriptions
 
     purchase_token                text,
 
+    purchase_time                 timestamp,
+
     start_time_millis             timestamp,
     user_cancellation_time_millis timestamp,
+    cancel_time                   timestamp,
 
     product_id                    text,
     product_name                  text,

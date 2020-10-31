@@ -31,13 +31,6 @@ data class HuaweiProduct(
         @Column(columnDefinition = "TEXT")
         val country: String? = null,
 
-        /**
-         * Value after the actual price of a product is multiplied by 100.
-         * The actual price is accurate to two decimal places.
-         * For example, if the value of this parameter is 501, the actual product price is 5.01.
-         */
-        val price: Long? = null,
-
         @Column(name = "account_flag", columnDefinition = "TEXT")
         val accountFlag: Int? = null,
 
@@ -70,6 +63,12 @@ data class HuaweiProduct(
         val priceAmountMicros: Long? = null,
         @Column(name = "price_currency_code")
         val priceCurrencyCode: String? = null,
+        /**
+         * Value after the actual price of a product is multiplied by 100.
+         * The actual price is accurate to two decimal places.
+         * For example, if the value of this parameter is 501, the actual product price is 5.01.
+         */
+        val price: Long? = null,
 
         @Column(name = "order_id")
         val orderId: String,

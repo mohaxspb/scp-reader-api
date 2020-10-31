@@ -33,13 +33,6 @@ data class HuaweiSubscription(
         val country: String? = null,
 
         /**
-         * Value after the actual price of a product is multiplied by 100.
-         * The actual price is accurate to two decimal places.
-         * For example, if the value of this parameter is 501, the actual product price is 5.01.
-         */
-        val price: Long? = null,
-
-        /**
          * This parameter uniquely identifies the mapping between a product and a user.
          * It does not change when the subscription is renewed
          */
@@ -106,10 +99,18 @@ data class HuaweiSubscription(
          */
         @Column(name = "cancel_time")
         val cancelTime: Timestamp? = null,
+
         @Column(name = "price_amount_micros")
         val priceAmountMicros: Long? = null,
         @Column(name = "price_currency_code")
         val priceCurrencyCode: String? = null,
+
+        /**
+         * Value after the actual price of a product is multiplied by 100.
+         * The actual price is accurate to two decimal places.
+         * For example, if the value of this parameter is 501, the actual product price is 5.01.
+         */
+        val price: Long? = null,
 
         /**
          * Timestamp of the purchase time, which is
