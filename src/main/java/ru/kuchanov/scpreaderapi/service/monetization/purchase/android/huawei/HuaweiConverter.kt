@@ -12,7 +12,7 @@ class HuaweiConverter {
             with(inAppPurchaseData) {
                 HuaweiSubscription(
                         androidPackage = packageName!!,
-                        accountFlag = accountFlag!!,
+                        accountFlag = accountFlag,
                         autoRenewing = inAppPurchaseData.autoRenewing,
                         country = country,
                         //next renew date

@@ -17,6 +17,7 @@ import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationStatus
+import ru.kuchanov.scpreaderapi.model.dto.user.UserProjection
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.AndroidProductService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.AndroidSubscriptionService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.UserAndroidPurchaseService
@@ -85,7 +86,7 @@ class PurchaseController @Autowired constructor(
             @RequestParam purchaseToken: String,
             @RequestParam(defaultValue = "-1") accountFlag: Int,
             @AuthenticationPrincipal user: User?
-    ) {
+    ): UserProjection {
         check(user != null) { "User is null!" }
         check(user.id != null) { "User ID is null!" }
         // 1. Verify product
@@ -122,6 +123,8 @@ class PurchaseController @Autowired constructor(
                             offlineLimitDisabledEndDate = maxExpireTimeSub.expiryTimeMillis
                         }
                 )
+
+                return userService.getByIdAsDto(user.id) ?: throw UserNotFoundException()
             }
         }
     }
