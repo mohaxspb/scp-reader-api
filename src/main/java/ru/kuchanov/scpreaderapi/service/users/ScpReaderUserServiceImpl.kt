@@ -12,8 +12,9 @@ import ru.kuchanov.scpreaderapi.model.dto.user.LeaderboardUserProjection
 import ru.kuchanov.scpreaderapi.model.dto.user.UserProjection
 import ru.kuchanov.scpreaderapi.model.user.LeaderboardUserDto
 import ru.kuchanov.scpreaderapi.repository.users.UsersRepository
-import java.sql.Timestamp
 import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 
 
@@ -80,7 +81,7 @@ class ScpReaderUserServiceImpl @Autowired constructor(
 
         val targetUser = getById(targetUserId) ?: throw UserNotFoundException()
 
-        val endDate = Timestamp.from(Instant.now().plus(period.toLong(), timeUnit))
+        val endDate = LocalDateTime.ofInstant(Instant.now().plus(period.toLong(), timeUnit), ZoneOffset.UTC)
         save(
                 targetUser.apply {
                     if (disableAds) {

@@ -2,7 +2,7 @@ package ru.kuchanov.scpreaderapi.bean.purchase.huawei
 
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
-import java.sql.Timestamp
+import java.time.LocalDateTime
 import javax.persistence.*
 
 
@@ -77,18 +77,18 @@ data class HuaweiSubscription(
         var linkedPurchaseToken: String? = null,
 
         @Column(name = "expiry_time_millis")
-        var expiryTimeMillis: Timestamp? = null,
+        var expiryTimeMillis: LocalDateTime? = null,
         /**
          * Same as [purchaseTime]
          */
         @Column(name = "start_time_millis")
-        var startTimeMillis: Timestamp? = null,
+        var startTimeMillis: LocalDateTime? = null,
         /**
          * Subscription cancellation time in UTC.
          * Note:cancelWay and cancellationTime are displayed when a subscription renewal stops (the refund is not involved).
          */
         @Column(name = "user_cancellation_time_millis")
-        var userCancellationTimeMillis: Timestamp? = null,
+        var userCancellationTimeMillis: LocalDateTime? = null,
         /**
          * Time when a subscription is revoked.
          * A refund is made and the service is unavailable immediately.
@@ -98,7 +98,7 @@ data class HuaweiSubscription(
          * Note: If a receipt is revoked, the purchase is not complete.
          */
         @Column(name = "cancel_time")
-        val cancelTime: Timestamp? = null,
+        val cancelTime: LocalDateTime? = null,
 
         @Column(name = "price_amount_micros")
         val priceAmountMicros: Long? = null,
@@ -118,7 +118,7 @@ data class HuaweiSubscription(
          * If the purchase is not complete, this parameter is left empty.
          */
         @Column(name = "purchase_time")
-        val purchaseTime: Timestamp? = null,
+        val purchaseTime: LocalDateTime? = null,
 
         @Column(name = "pay_order_id", columnDefinition = "TEXT")
         val payOrderId: String,
@@ -127,7 +127,7 @@ data class HuaweiSubscription(
 
         //dates
         @field:CreationTimestamp
-        val created: Timestamp? = null,
+        val created: LocalDateTime? = null,
         @field:UpdateTimestamp
-        val updated: Timestamp? = null
+        val updated: LocalDateTime? = null
 )

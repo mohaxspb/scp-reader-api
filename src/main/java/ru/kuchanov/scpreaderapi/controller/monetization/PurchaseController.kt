@@ -27,6 +27,7 @@ import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.Hua
 import ru.kuchanov.scpreaderapi.service.users.ScpReaderUserService
 import java.sql.Timestamp
 import java.time.Instant
+import java.time.ZoneOffset
 
 
 @RestController
@@ -111,7 +112,7 @@ class PurchaseController @Autowired constructor(
                 val userNonExpiredAndValidSubscriptions = huaweiMonetizationService
                         .getHuaweiSubscriptionsForUser(user.id)
                         .filter { it.subIsValid }
-                        .filter { it.expiryTimeMillis!!.time > curTimeMillis }
+                        .filter { it.expiryTimeMillis!!.toInstant(ZoneOffset.UTC).toEpochMilli() > curTimeMillis }
                         .sortedBy { it.expiryTimeMillis }
                 log.error("userNonExpiredAndValidSubscriptions: ${userNonExpiredAndValidSubscriptions.size}")
                 val maxExpireTimeSub = userNonExpiredAndValidSubscriptions.first()
