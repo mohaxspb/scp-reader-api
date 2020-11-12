@@ -9,6 +9,7 @@ import ru.kuchanov.scpreaderapi.bean.monetization.InappType
 import ru.kuchanov.scpreaderapi.bean.monetization.Store
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
+import ru.kuchanov.scpreaderapi.model.dto.monetization.UserSubscriptionsDto
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationStatus
 import ru.kuchanov.scpreaderapi.model.dto.user.UserProjection
@@ -81,8 +82,17 @@ class PurchaseController @Autowired constructor(
     }
 
     @GetMapping("/subscription/all")
-    fun getUserSubscriptions(@AuthenticationPrincipal user: User) {
-        TODO()
+    fun getUserSubscriptions(@AuthenticationPrincipal user: User): UserSubscriptionsDto {
+        check(user.id != null) { "User ID is null!" }
+
+        val curTimeMillis = Instant.now().toEpochMilli()
+        val usersNonExpiredAndValidSubscriptions = huaweiMonetizationService
+                .getHuaweiSubscriptionsForUser(user.id)
+                .filter { it.subIsValid }
+                .filter { it.expiryTimeMillis!!.toInstant(ZoneOffset.UTC).toEpochMilli() > curTimeMillis }
+                .sortedBy { it.expiryTimeMillis }
+
+        return UserSubscriptionsDto(usersNonExpiredAndValidSubscriptions)
     }
 
     @GetMapping("/cancel/{store}/{purchaseType}")
