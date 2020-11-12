@@ -5,6 +5,7 @@ import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpStatus
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.ResponseStatus
 import ru.kuchanov.scpreaderapi.bean.monetization.InappType
@@ -34,7 +35,22 @@ class HuaweiApiService @Autowired constructor(
         const val ACCOUNT_FLAG_GERMANY_APP_TOUCH = 1
     }
 
-    fun verifyProduct(
+    @Scheduled(
+            /**
+             * second, minute, hour, day, month, day of week
+             */
+            cron = "0 * * * * *" //fixme test
+//            cron = "0 0 * * * *"
+    )
+    fun periodicallyVerifyPurchase() {
+        //1. Get all recently expiring subscriptions
+        //2. Iterate them, verify and update DB records
+        //2.1. Send push messages to users with subscription update info.
+
+//        TODO()
+    }
+
+    fun verifyPurchase(
             productId: String,
             subscriptionId: String,
             purchaseType: InappType,
@@ -42,11 +58,13 @@ class HuaweiApiService @Autowired constructor(
             accountFlag: Int
     ): ValidationResponse {
         log.info(
-                """verifyProduct:
+                """
+                    verifyPurchase:
                     productId: $productId, 
                     purchaseType: $purchaseType, 
                     purchaseToken: $purchaseToken, 
-                    accountFlag: $accountFlag""".trimIndent()
+                    accountFlag: $accountFlag
+                """.trimIndent()
         )
         return when (purchaseType) {
             InappType.SUBS -> {
