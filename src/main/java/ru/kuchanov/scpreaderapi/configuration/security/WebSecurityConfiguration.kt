@@ -1,5 +1,6 @@
 package ru.kuchanov.scpreaderapi.configuration.security
 
+import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -28,7 +29,9 @@ import javax.servlet.Filter
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
-class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
+class WebSecurityConfiguration @Autowired constructor(
+        private val log: Logger
+) : WebSecurityConfigurerAdapter() {
 
     @Autowired
     lateinit var clientDetailsService: ClientServiceImpl
