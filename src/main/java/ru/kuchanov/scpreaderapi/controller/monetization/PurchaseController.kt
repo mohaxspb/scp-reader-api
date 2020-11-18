@@ -70,7 +70,7 @@ class PurchaseController @Autowired constructor(
                 log.error("userNonExpiredAndValidSubscriptions max expiryTimeMillis: ${maxExpireTimeSub.expiryTimeMillis}")
 
                 val userInDb = userService.getById(user.id) ?: throw UserNotFoundException()
-                userService.save(
+                userService.update(
                         userInDb.apply {
                             offlineLimitDisabledEndDate = maxExpireTimeSub.expiryTimeMillis
                         }

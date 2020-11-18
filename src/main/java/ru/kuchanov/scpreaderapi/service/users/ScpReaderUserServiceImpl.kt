@@ -3,6 +3,7 @@ package ru.kuchanov.scpreaderapi.service.users
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.ResponseStatus
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
@@ -20,7 +21,8 @@ import java.time.temporal.ChronoUnit
 
 @Service
 class ScpReaderUserServiceImpl @Autowired constructor(
-        val repository: UsersRepository
+        private val repository: UsersRepository,
+        private val passwordEncoder: PasswordEncoder
 ) : ScpReaderUserService {
 
     override fun getById(id: Long): User? =
@@ -35,8 +37,11 @@ class ScpReaderUserServiceImpl @Autowired constructor(
     override fun loadUserByUsername(username: String): User? =
             repository.findOneByUsername(username)
 
-    override fun save(user: User): User =
-            repository.save(user)
+    override fun update(user: User): User =
+            repository.saveAndFlush(user)
+
+    override fun create(user: User): User =
+            repository.saveAndFlush(user.copy(password = passwordEncoder.encode(user.password)))
 
     override fun getUsersByLangIdCount(langId: String): Long =
             repository.getUsersByLangCount(langId)
@@ -82,7 +87,7 @@ class ScpReaderUserServiceImpl @Autowired constructor(
         val targetUser = getById(targetUserId) ?: throw UserNotFoundException()
 
         val endDate = LocalDateTime.ofInstant(Instant.now().plus(period.toLong(), timeUnit), ZoneOffset.UTC)
-        save(
+        repository.save(
                 targetUser.apply {
                     if (disableAds) {
                         adsDisabledEndDate = endDate

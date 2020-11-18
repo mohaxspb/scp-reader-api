@@ -27,7 +27,10 @@ interface ScpReaderUserService : UserDetailsService {
     fun getUserPositionInLeaderboard(userId: Long, langId: String): Int
 
     @Transactional
-    fun save(user: User): User
+    fun update(user: User): User
+
+    @Transactional
+    fun create(user: User): User
 
     @Transactional
     fun editAccount(userId: Long, name: String, avatarUrl: String): UserProjection
