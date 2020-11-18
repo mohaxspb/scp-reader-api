@@ -12,7 +12,6 @@ import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
 import ru.kuchanov.scpreaderapi.bean.auth.UserToAuthority
 import ru.kuchanov.scpreaderapi.bean.purchase.UsersAndroidProduct
 import ru.kuchanov.scpreaderapi.bean.purchase.UsersAndroidSubscription
-import ru.kuchanov.scpreaderapi.utils.EncryptionConverter
 import java.sql.Timestamp
 import java.time.LocalDateTime
 import javax.persistence.*
@@ -28,7 +27,6 @@ data class User(
 
         @Column(columnDefinition = "TEXT", unique = true)
         private val username: String,
-        @Convert(converter = EncryptionConverter::class)
         private val password: String,
 
         val enabled: Boolean = true,
