@@ -18,7 +18,7 @@ class HuaweiMonetizationService @Autowired constructor(
         private val converter: HuaweiConverter
 ) {
 
-    fun getHuaweiSubscriptionsForUser(userId: Long) =
+    fun getHuaweiSubscriptionsForUser(userId: Long): List<HuaweiSubscription> =
             huaweiSubscriptionRepository.getHuaweiSubscriptionsByUserId(userId)
 
     fun savePurchasedProduct(inAppPurchaseData: InAppPurchaseData, user: User) {
