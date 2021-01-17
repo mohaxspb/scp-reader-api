@@ -82,17 +82,25 @@ class PurchaseController @Autowired constructor(
     }
 
     @GetMapping("/subscription/all")
-    fun getUserSubscriptions(@AuthenticationPrincipal user: User): UserSubscriptionsDto {
+    fun getUserSubscriptions(
+            @AuthenticationPrincipal user: User,
+            @RequestParam showAll: Boolean,
+    ): UserSubscriptionsDto {
         check(user.id != null) { "User ID is null!" }
 
-        val curTimeMillis = Instant.now().toEpochMilli()
-        val usersNonExpiredAndValidSubscriptions = huaweiMonetizationService
-                .getHuaweiSubscriptionsForUser(user.id)
-                .filter { it.subIsValid }
-                .filter { it.expiryTimeMillis!!.toInstant(ZoneOffset.UTC).toEpochMilli() > curTimeMillis }
+        val huaweiSubscriptions = if (showAll) {
+            huaweiMonetizationService
+                    .getHuaweiSubscriptionsForUser(user.id)
+        } else {
+            val curTimeMillis = Instant.now().toEpochMilli()
+            huaweiMonetizationService
+                    .getHuaweiSubscriptionsForUser(user.id)
+                    .filter { it.subIsValid }
+                    .filter { it.expiryTimeMillis!!.toInstant(ZoneOffset.UTC).toEpochMilli() > curTimeMillis }
+        }
                 .sortedBy { it.expiryTimeMillis }
 
-        return UserSubscriptionsDto(usersNonExpiredAndValidSubscriptions)
+        return UserSubscriptionsDto(huaweiSubscriptions = huaweiSubscriptions)
     }
 
     @GetMapping("/cancel/{store}/{purchaseType}")
