@@ -46,12 +46,15 @@ class ScpReaderUserServiceImpl @Autowired constructor(
     override fun getUsersByLangIdCount(langId: String): Long =
             repository.getUsersByLangCount(langId)
 
-    override fun getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(offset: Int, limit: Int) =
+    override fun getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(
+            offset: Int,
+            limit: Int
+    ): List<LeaderboardUserDto> =
             repository
                     .getLeaderboardUsersWithOffsetAndLimitSortedByScore(offset, limit)
                     .map { it.toDto() }
 
-    override fun getByProviderId(id: String, provider: ScpReaderConstants.SocialProvider) =
+    override fun getByProviderId(id: String, provider: ScpReaderConstants.SocialProvider): User? =
             when (provider) {
                 ScpReaderConstants.SocialProvider.GOOGLE -> repository.findOneByGoogleId(id)
                 ScpReaderConstants.SocialProvider.FACEBOOK -> repository.findOneByFacebookId(id)
