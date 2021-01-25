@@ -1,5 +1,8 @@
 package ru.kuchanov.scpreaderapi.model.huawei.purchase
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class InAppPurchaseData(
         val applicationId: Long,
         val autoRenewing: Boolean,
