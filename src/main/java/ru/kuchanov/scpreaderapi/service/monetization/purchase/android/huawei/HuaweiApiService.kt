@@ -5,7 +5,6 @@ import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpStatus
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.ResponseStatus
 import ru.kuchanov.scpreaderapi.bean.monetization.InappType
@@ -35,21 +34,7 @@ class HuaweiApiService @Autowired constructor(
         const val ACCOUNT_FLAG_GERMANY_APP_TOUCH = 1
     }
 
-    @Scheduled(
-            /**
-             * second, minute, hour, day, month, day of week
-             */
-            cron = "0 * * * * *" //fixme test
-//            cron = "0 0 * * * *"
-    )
-    fun periodicallyVerifyPurchase() {
-        //1. Get all recently expiring subscriptions
-        //2. Iterate them, verify and update DB records
-        //2.1. Send push messages to users with subscription update info.
-
-//        TODO()
-    }
-
+    @Throws(VerifyProductException::class)
     fun verifyPurchase(
             productId: String,
             subscriptionId: String,
@@ -80,6 +65,7 @@ class HuaweiApiService @Autowired constructor(
         }
     }
 
+    @Throws(VerifyProductException::class)
     fun verifySubscription(
             productId: String,
             subscriptionId: String,
@@ -120,6 +106,8 @@ class HuaweiApiService @Autowired constructor(
                         IllegalStateException()
                 )
             }
+        } catch (e: VerifyProductException) {
+            throw e
         } catch (e: Throwable) {
             throw VerifyProductException("Cannot verify subscription with error message: ${e.message}.", e)
         }
