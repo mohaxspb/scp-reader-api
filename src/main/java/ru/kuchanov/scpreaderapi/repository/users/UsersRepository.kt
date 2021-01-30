@@ -16,6 +16,13 @@ interface UsersRepository : JpaRepository<User, Long> {
     fun findOneByFacebookId(id: String): User?
     fun findOneByVkId(id: String): User?
 
+    @Query("""
+        select u from User u 
+        join UserToHuaweiSubscription uap on u.id = uap.userId 
+        where uap.huaweiSubscriptionId = :huaweiSubscriptionId
+    """)
+    fun getUserByHuaweiSubscriptionId(huaweiSubscriptionId: Long): User?
+
     @Query(
             "SELECT COUNT(*) from users u JOIN users_langs ul ON u.id = ul.user_id WHERE ul.lang_id = :langId",
             nativeQuery = true
