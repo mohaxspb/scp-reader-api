@@ -2,6 +2,7 @@ package ru.kuchanov.scpreaderapi.controller.monetization
 
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
@@ -30,6 +31,10 @@ class PurchaseController @Autowired constructor(
         private val userService: ScpReaderUserService,
         private val log: Logger
 ) {
+
+    private enum class Period {
+        MINUTES_5, HOUR, DAY
+    }
 
     @PostMapping("/apply/{store}/{purchaseType}")
     fun applyAndroidProduct(
@@ -124,5 +129,89 @@ class PurchaseController @Autowired constructor(
             Store.APPLE -> TODO()
         }
         return test.toString()
+    }
+
+    @Scheduled(
+            /**
+             * second, minute, hour, day, month, day of week
+             *
+             * Each 5 minutes in interval of 1-59 minutes
+             */
+            cron = "0 1-59/5 * * * *"
+    )
+    @GetMapping("/subscription/recentlyExpired/minutes5")
+    fun periodicallyVerifyPurchaseMinutes5(): List<HuaweiSubscription> =
+            validateRecentlyExpiredSubsForPeriod(Period.MINUTES_5)
+
+    @Scheduled(
+            /**
+             * second, minute, hour, day, month, day of week
+             *
+             * Each hour except of midnight
+             */
+            cron = "0 0 1-23 * * *"
+    )
+    @GetMapping("/subscription/recentlyExpired/hourly")
+    fun periodicallyVerifyPurchaseHourly(): List<HuaweiSubscription> =
+            validateRecentlyExpiredSubsForPeriod(Period.HOUR)
+
+    @Scheduled(
+            /**
+             * second, minute, hour, day, month, day of week
+             *
+             * Each day
+             */
+            cron = "0 0 0 * * *"
+    )
+    @GetMapping("/subscription/recentlyExpired/daily")
+    fun periodicallyVerifyPurchaseDaily(): List<HuaweiSubscription> =
+            validateRecentlyExpiredSubsForPeriod(Period.DAY)
+
+    private fun validateRecentlyExpiredSubsForPeriod(period: Period): List<HuaweiSubscription> {
+        val startDate = when (period) {
+            Period.MINUTES_5 -> LocalDateTime.now().minusMinutes(1)
+            Period.HOUR -> LocalDateTime.now().minusHours(1)
+            Period.DAY -> LocalDateTime.now().minusDays(1)
+        }
+        val endDate = LocalDateTime.now()
+        val recentlyExpiredSubscriptions = huaweiMonetizationService.getHuaweiSubscriptionsBetweenDates(
+                startDate, endDate
+        ).sortedByDescending { it.expiryTimeMillis }
+        if (recentlyExpiredSubscriptions.isEmpty()) {
+            log.error("THERE ARE NO RECENTLY EXPIRED SUBSCRIPTIONS TO VALIDATE: $period!")
+        } else {
+            log.error(
+                    recentlyExpiredSubscriptions.joinToString(
+                            separator = "\n",
+                            transform = { "${it.id}: ${it.startTimeMillis}/${it.expiryTimeMillis}" }
+                    )
+            )
+        }
+
+        //2. Iterate them, verify and update DB records
+        val updatedSubscriptions: List<HuaweiSubscription> = recentlyExpiredSubscriptions.map { currentSubscription ->
+            val verificationResult = huaweiApiService.verifyPurchase(
+                    currentSubscription.productId!!,
+                    currentSubscription.subscriptionId,
+                    InappType.SUBS,
+                    currentSubscription.purchaseToken,
+                    currentSubscription.accountFlag ?: 0
+            )
+            val huaweiSubscriptionResponse = (verificationResult as ValidationResponse.HuaweiSubscriptionResponse)
+
+            //2. Write product info to DB.
+            val owner = huaweiMonetizationService.getUserByHuaweiSubscriptionId(currentSubscription.id!!)
+                    ?: throw UserNotFoundException()
+            val updatedSubscription = huaweiMonetizationService.saveSubscription(huaweiSubscriptionResponse.androidSubscription!!, owner)
+
+            //3. Update user
+            updateUserSubscriptionExpiration(owner.id!!)
+
+            updatedSubscription
+
+            // TODO 4. Send push messages to users with subscription update info.
+        }
+
+        return updatedSubscriptions
     }
 }
