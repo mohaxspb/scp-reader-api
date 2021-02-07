@@ -33,7 +33,7 @@ class PurchaseController @Autowired constructor(
 ) {
 
     private enum class Period {
-        MINUTES_5, HOUR, DAY
+        MINUTES_5, HOUR, DAY, WEEK
     }
 
     @PostMapping("/apply/{store}/{purchaseType}")
@@ -167,13 +167,29 @@ class PurchaseController @Autowired constructor(
     fun periodicallyVerifyPurchaseDaily(): List<HuaweiSubscription> =
             validateRecentlyExpiredSubsForPeriod(Period.DAY)
 
+    @Scheduled(
+            /**
+             * second, minute, hour, day, month, day of week
+             *
+             * Each day
+             */
+            cron = "0 0 0 * * *"
+    )
+    @GetMapping("/subscription/recentlyExpired/dailyForWeek")
+    fun periodicallyVerifyPurchaseDailyForWeek(): List<HuaweiSubscription> =
+            validateRecentlyExpiredSubsForPeriod(Period.WEEK)
+
     private fun validateRecentlyExpiredSubsForPeriod(period: Period): List<HuaweiSubscription> {
         val startDate = when (period) {
             Period.MINUTES_5 -> LocalDateTime.now().minusMinutes(1)
             Period.HOUR -> LocalDateTime.now().minusHours(1)
             Period.DAY -> LocalDateTime.now().minusDays(1)
+            Period.WEEK -> LocalDateTime.now().minusDays(8)
         }
-        val endDate = LocalDateTime.now()
+        val endDate = when (period) {
+            Period.WEEK -> LocalDateTime.now().minusDays(1)
+            else -> LocalDateTime.now()
+        }
         val recentlyExpiredSubscriptions = huaweiMonetizationService.getHuaweiSubscriptionsBetweenDates(
                 startDate, endDate
         ).sortedByDescending { it.expiryTimeMillis }
