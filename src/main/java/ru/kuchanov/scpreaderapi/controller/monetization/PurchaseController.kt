@@ -8,16 +8,19 @@ import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.monetization.InappType
 import ru.kuchanov.scpreaderapi.bean.monetization.Store
+import ru.kuchanov.scpreaderapi.bean.purchase.SubscriptionValidationAttempts
 import ru.kuchanov.scpreaderapi.bean.purchase.huawei.HuaweiSubscription
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
 import ru.kuchanov.scpreaderapi.model.dto.monetization.UserSubscriptionsDto
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
 import ru.kuchanov.scpreaderapi.model.dto.user.UserProjection
+import ru.kuchanov.scpreaderapi.service.monetization.purchase.SubscriptionValidateAttemptsService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiApiService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiApiService.Companion.ACCOUNT_FLAG_GERMANY_APP_TOUCH
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiMonetizationService
 import ru.kuchanov.scpreaderapi.service.users.ScpReaderUserService
+import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -29,8 +32,16 @@ class PurchaseController @Autowired constructor(
         private val huaweiApiService: HuaweiApiService,
         private val huaweiMonetizationService: HuaweiMonetizationService,
         private val userService: ScpReaderUserService,
+        private val subscriptionValidateAttemptsService: SubscriptionValidateAttemptsService,
         private val log: Logger
 ) {
+
+    companion object {
+        /**
+         * each 5 minutes, every hour, 3 days
+         */
+        const val MAX_VALIDATION_ATTEMPTS = 12 * 24 * 3
+    }
 
     private enum class Period {
         MINUTES_5, HOUR, DAY, WEEK
@@ -205,18 +216,52 @@ class PurchaseController @Autowired constructor(
         }
 
         //2. Iterate them, verify and update DB records
-        val updatedSubscriptions: List<HuaweiSubscription> = recentlyExpiredSubscriptions.map { currentSubscription ->
-            val verificationResult = huaweiApiService.verifyPurchase(
-                    currentSubscription.productId!!,
-                    currentSubscription.subscriptionId,
-                    InappType.SUBS,
-                    currentSubscription.purchaseToken,
-                    currentSubscription.accountFlag ?: 0
+        val updatedSubscriptions: List<HuaweiSubscription> = recentlyExpiredSubscriptions.mapNotNull { currentSubscription ->
+            //Do not try to validate after 3 days of unsuccessful attempts if period is not Period.WEEK
+            val previousAttempts = subscriptionValidateAttemptsService
+                    .getByStoreAndSubscriptionId(Store.HUAWEI.name, currentSubscription.id!!)
+            if (period != Period.WEEK && previousAttempts != null && previousAttempts.attempts >= MAX_VALIDATION_ATTEMPTS) {
+                log.error("MAX VALIDATE ATTEMPTS LIMIT EXCEEDED: $currentSubscription!")
+                return@mapNotNull null
+            }
+            val verificationResult: ValidationResponse? = try {
+                huaweiApiService.verifyPurchase(
+                        currentSubscription.productId!!,
+                        currentSubscription.subscriptionId,
+                        InappType.SUBS,
+                        currentSubscription.purchaseToken,
+                        currentSubscription.accountFlag ?: 0
+                )
+            } catch (e: Exception) {
+                log.error("Error while validate subscription: $currentSubscription, error: $e", e)
+                null
+            }
+            //increment attempt
+            val attemptsRow = subscriptionValidateAttemptsService.getByStoreAndSubscriptionId(
+                    Store.HUAWEI.name,
+                    currentSubscription.id
+            ) ?: SubscriptionValidationAttempts(
+                    subscriptionId = currentSubscription.id,
+                    attempts = 0,
+                    store = Store.HUAWEI.name,
+                    lastAttemptTime = Timestamp.valueOf(LocalDateTime.now())
+
             )
+            subscriptionValidateAttemptsService.save(
+                    attemptsRow.apply {
+                        attempts = if (verificationResult != null) 0 else attempts++
+                        lastAttemptTime = Timestamp.valueOf(LocalDateTime.now())
+                    }
+            )
+
+            if (verificationResult == null) {
+                return@mapNotNull null
+            }
+
             val huaweiSubscriptionResponse = (verificationResult as ValidationResponse.HuaweiSubscriptionResponse)
 
             //2. Write product info to DB.
-            val owner = huaweiMonetizationService.getUserByHuaweiSubscriptionId(currentSubscription.id!!)
+            val owner = huaweiMonetizationService.getUserByHuaweiSubscriptionId(currentSubscription.id)
                     ?: throw UserNotFoundException()
             val updatedSubscription = huaweiMonetizationService.saveSubscription(huaweiSubscriptionResponse.androidSubscription!!, owner)
 
