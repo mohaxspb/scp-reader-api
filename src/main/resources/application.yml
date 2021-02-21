@@ -2,11 +2,33 @@
 server:
   servlet:
     context-path: /scp-reader/api
+  error:
+    include-message: always
+    include-binding-errors: always
 
 hibernate:
   show_sql: false
 
 spring:
+  mail:
+    default-encoding: UTF-8
+    host: mail.${my.site.domain}
+    port: 587
+    username: no-reply@${my.site.domain}
+    password: "PASSWORD_HERE"
+    properties.mail:
+      user: no-reply@${my.site.domain}
+      from: no-reply@${my.site.domain}
+      smtp:
+        #need this for EHLO check
+        localhost: ${my.site.domain}
+        auth: true
+        starttls.enable: true
+        connectiontimeout: 5000
+        timeout: 5000
+        writetimeout: 5000
+  mvc:
+    static-path-pattern: /resources/static/**
   datasource:
     hikari:
       auto-commit: true
@@ -48,8 +70,9 @@ spring:
       max-request-size: 10MB
 
 logging:
-  file: logs/myLog.log
-  file.max-history: 15
+  file:
+    name: logs/myLog.log
+    max-history: 15
   level:
     org:
       flywaydb: INFO
@@ -58,12 +81,23 @@ logging:
       hibernate.type: ERROR
       springframework: ERROR
       springframework.web: ERROR
+      apache.catalina.session.ManagerBase: ERROR
+    com:
+      zaxxer:
+        hikari: ERROR
+        hikari.HikariConfig: ERROR
+        hikari.pool:
+          HikariPool: ERROR
+          PoolBase: ERROR
     root: ERROR
   pattern:
     console: '%d{HH:mm:ss.SSS} %msg%n'
 
 my:
   api:
+    huawei:
+      client_id: CLIENT_ID_HERE
+      client_secret: CLIENT_SECRET_HERE
     facebook:
       client_id: CLIENT_ID_HERE
       client_secret: CLIENT_SECRET_HERE
@@ -72,3 +106,10 @@ my:
       client_secret: CLIENT_SECRET_HERE
   db:
     name: scp_reader
+  #site
+  site:
+    domain: scp-reader.com
+  #mail:
+  mail:
+    admin:
+      address: admin@${my.site.domain}
