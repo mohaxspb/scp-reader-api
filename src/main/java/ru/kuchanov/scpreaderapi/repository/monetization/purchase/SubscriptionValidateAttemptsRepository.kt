@@ -13,5 +13,5 @@ interface SubscriptionValidateAttemptsRepository : JpaRepository<SubscriptionVal
     """)
     fun getAllByAttemptsBeforeAndStoreEquals(maxAttempts: Int, store: String): List<SubscriptionValidationAttempts>
 
-    fun findFirstByStoreAndSubscriptionId(store: String, subscriptionId: Long): SubscriptionValidationAttempts
+    fun findFirstByStoreAndSubscriptionId(store: String, subscriptionId: Long): SubscriptionValidationAttempts?
 }

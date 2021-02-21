@@ -23,6 +23,7 @@ import ru.kuchanov.scpreaderapi.service.users.ScpReaderUserService
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 
 
@@ -191,15 +192,17 @@ class PurchaseController @Autowired constructor(
             validateRecentlyExpiredSubsForPeriod(Period.WEEK)
 
     private fun validateRecentlyExpiredSubsForPeriod(period: Period): List<HuaweiSubscription> {
+        val nowTimeWithoutZone = LocalDateTime.now(ZoneId.of("UTC"))
+        log.error("validateRecentlyExpiredSubsForPeriod: $nowTimeWithoutZone")
         val startDate = when (period) {
-            Period.MINUTES_5 -> LocalDateTime.now().minusMinutes(1)
-            Period.HOUR -> LocalDateTime.now().minusHours(1)
-            Period.DAY -> LocalDateTime.now().minusDays(1)
-            Period.WEEK -> LocalDateTime.now().minusDays(8)
+            Period.MINUTES_5 -> nowTimeWithoutZone.minusMinutes(5)
+            Period.HOUR -> nowTimeWithoutZone.minusHours(1)
+            Period.DAY -> nowTimeWithoutZone.minusDays(1)
+            Period.WEEK -> nowTimeWithoutZone.minusDays(8)
         }
         val endDate = when (period) {
-            Period.WEEK -> LocalDateTime.now().minusDays(1)
-            else -> LocalDateTime.now()
+            Period.WEEK -> nowTimeWithoutZone.minusDays(1)
+            else -> nowTimeWithoutZone
         }
         val recentlyExpiredSubscriptions = huaweiMonetizationService.getHuaweiSubscriptionsBetweenDates(
                 startDate, endDate
@@ -245,13 +248,13 @@ class PurchaseController @Autowired constructor(
                     subscriptionId = currentSubscription.id,
                     attempts = 0,
                     store = Store.HUAWEI.name,
-                    lastAttemptTime = Timestamp.valueOf(LocalDateTime.now())
+                    lastAttemptTime = Timestamp.valueOf(nowTimeWithoutZone)
 
             )
             subscriptionValidateAttemptsService.save(
                     attemptsRow.apply {
                         attempts = if (verificationResult != null) 0 else attempts++
-                        lastAttemptTime = Timestamp.valueOf(LocalDateTime.now())
+                        lastAttemptTime = Timestamp.valueOf(nowTimeWithoutZone)
                     }
             )
 
