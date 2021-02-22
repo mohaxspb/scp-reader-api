@@ -77,8 +77,8 @@ logging:
       hibernate: ERROR
       hibernate.SQL: WARN
       hibernate.type: WARN
-      springframework: debug
-      springframework.web: DEBUG
+      springframework: INFO
+      springframework.web: INFO
       springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
       apache.catalina.session.ManagerBase: ERROR
     com:
@@ -88,9 +88,9 @@ logging:
         hikari.pool:
           HikariPool: ERROR
           PoolBase: ERROR
-    root: debug
+    root: INFO
   pattern:
-    console: '%d{HH:mm:ss.SSS} %msg%n'
+    console: '%d{HH:mm:ss.SSS} %highlight(%-5level) %yellow(%C{36}.%M %L): %msg%n'
   file:
     name: logs/myLog.log
     max-history: 15
