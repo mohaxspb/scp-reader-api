@@ -17,7 +17,7 @@ interface UsersRepository : JpaRepository<User, Long> {
     fun findOneByVkId(id: String): User?
 
     @Query("""
-        select u from User u 
+        select distinct u from User u 
         join UserToHuaweiSubscription uap on u.id = uap.userId 
         where uap.huaweiSubscriptionId = :huaweiSubscriptionId
     """)
