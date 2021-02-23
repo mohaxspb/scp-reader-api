@@ -23,7 +23,6 @@ import ru.kuchanov.scpreaderapi.service.users.ScpReaderUserService
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDateTime
-import java.time.ZoneId
 import java.time.ZoneOffset
 
 
@@ -196,7 +195,7 @@ class PurchaseController @Autowired constructor(
             validateRecentlyExpiredSubsForPeriod(Period.WEEK)
 
     private fun validateRecentlyExpiredSubsForPeriod(period: Period): List<HuaweiSubscription> {
-        val nowTimeWithoutZone = LocalDateTime.now(ZoneId.of("UTC"))
+        val nowTimeWithoutZone = LocalDateTime.now(ZoneOffset.UTC)
         log.error("validateRecentlyExpiredSubsForPeriod: $nowTimeWithoutZone")
         val startDate = when (period) {
             Period.MINUTES_5 -> nowTimeWithoutZone.minusMinutes(5)
