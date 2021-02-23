@@ -3,7 +3,7 @@ package ru.kuchanov.scpreaderapi.bean.purchase.huawei
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
 import java.io.Serializable
-import java.sql.Timestamp
+import java.time.LocalDateTime
 import javax.persistence.*
 
 @Entity
@@ -18,7 +18,7 @@ data class UserToHuaweiSubscription(
         var huaweiSubscriptionId: Long,
         //dates
         @field:CreationTimestamp
-        val created: Timestamp? = null,
+        val created: LocalDateTime? = null,
         @field:UpdateTimestamp
-        val updated: Timestamp? = null
+        val updated: LocalDateTime? = null
 ) : Serializable

@@ -211,8 +211,8 @@ class PurchaseController @Autowired constructor(
             log.error("THERE ARE NO RECENTLY EXPIRED SUBSCRIPTIONS TO VALIDATE: $period!")
         } else {
             log.error(
-                    "Start validating subs:" +
                     recentlyExpiredSubscriptions.joinToString(
+                            prefix = "Start validating subs:",
                             separator = "\n",
                             transform = { "${it.id}: ${it.startTimeMillis}/${it.expiryTimeMillis}" }
                     )

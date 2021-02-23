@@ -1,5 +1,6 @@
 package ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei
 
+import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.purchase.huawei.HuaweiProduct
@@ -17,7 +18,8 @@ class HuaweiMonetizationService @Autowired constructor(
         private val huaweiSubscriptionRepository: HuaweiSubscriptionRepository,
         private val userToHuaweiSubscriptionRepository: UserToHuaweiSubscriptionRepository,
         private val userRepository: UsersRepository,
-        private val converter: HuaweiConverter
+        private val converter: HuaweiConverter,
+        private val log: Logger
 ) {
 
     fun getHuaweiSubscriptionsForUser(userId: Long): List<HuaweiSubscription> =
