@@ -97,11 +97,15 @@ class PurchaseController @Autowired constructor(
                 .filter { it.subIsValid }
                 .filter { it.expiryTimeMillis!!.toInstant(ZoneOffset.UTC).toEpochMilli() > curTimeMillis }
                 .sortedBy { it.expiryTimeMillis }
-        val maxExpireTimeSub = userNonExpiredAndValidSubscriptions.first()
-        log.error("userNonExpiredAndValidSubscriptions max expiryTimeMillis: ${maxExpireTimeSub.expiryTimeMillis}")
-        return userService.update(
-                userInDb.apply { offlineLimitDisabledEndDate = maxExpireTimeSub.expiryTimeMillis }
-        )
+        return if (userNonExpiredAndValidSubscriptions.isEmpty()) {
+            userInDb
+        } else {
+            val maxExpireTimeSub = userNonExpiredAndValidSubscriptions.first()
+            log.error("userNonExpiredAndValidSubscriptions max expiryTimeMillis: ${maxExpireTimeSub.expiryTimeMillis}")
+            userService.update(
+                    userInDb.apply { offlineLimitDisabledEndDate = maxExpireTimeSub.expiryTimeMillis }
+            )
+        }
     }
 
     @GetMapping("/subscription/all")
