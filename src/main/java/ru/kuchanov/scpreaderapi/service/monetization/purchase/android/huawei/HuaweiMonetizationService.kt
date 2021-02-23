@@ -44,14 +44,35 @@ class HuaweiMonetizationService @Autowired constructor(
 //    }
 
     fun saveSubscription(inAppPurchaseData: InAppPurchaseData, user: User): HuaweiSubscription {
-        val huaweiSubscription = converter.convertToSubscription(inAppPurchaseData)
-        val subscription = huaweiSubscriptionRepository.save(huaweiSubscription)
+        val huaweiSubscription: HuaweiSubscription = converter.convertToSubscription(inAppPurchaseData)
+        val huaweiSubscriptionInDb = huaweiSubscriptionRepository
+                .getHuaweiSubscriptionBySubscriptionId(huaweiSubscription.subscriptionId)
+        val oriSubscriptionInDb = huaweiSubscription.oriSubscriptionId?.let {
+            huaweiSubscriptionRepository.getHuaweiSubscriptionByOriSubscriptionId(it)
+        }
+        log.error("Subscription has ORI subscription: $oriSubscriptionInDb")
+        val subscription = if (huaweiSubscriptionInDb != null) {
+            huaweiSubscriptionRepository.save(huaweiSubscription.copy(id = huaweiSubscriptionInDb.id))
+        } else {
+            huaweiSubscriptionRepository.save(huaweiSubscription)
+        }
 
-        val userToSubscriptionConnection = UserToHuaweiSubscription(
-                huaweiSubscriptionId = subscription.id!!,
-                userId = user.id!!
-        )
-        userToHuaweiSubscriptionRepository.save(userToSubscriptionConnection)
+        checkNotNull(subscription.id)
+        checkNotNull(user.id)
+
+        val userToSubscriptionConnectionInDb = userToHuaweiSubscriptionRepository
+                .findByHuaweiSubscriptionIdAndUserId(subscriptionId = subscription.id, userId = user.id)
+        val userToSubscriptionConnectionToSaveOrUpdate = if (userToSubscriptionConnectionInDb == null) {
+            UserToHuaweiSubscription(huaweiSubscriptionId = subscription.id, userId = user.id)
+        } else {
+            UserToHuaweiSubscription(
+                    id = userToSubscriptionConnectionInDb.id,
+                    huaweiSubscriptionId = subscription.id,
+                    userId = user.id
+            )
+        }
+
+        userToHuaweiSubscriptionRepository.save(userToSubscriptionConnectionToSaveOrUpdate)
 
         return subscription
     }

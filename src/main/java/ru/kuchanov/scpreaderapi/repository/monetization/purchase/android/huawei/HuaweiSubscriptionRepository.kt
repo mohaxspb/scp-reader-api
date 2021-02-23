@@ -24,4 +24,8 @@ interface HuaweiSubscriptionRepository : JpaRepository<HuaweiSubscription, Long>
             startDate: LocalDateTime,
             endDate: LocalDateTime
     ): List<HuaweiSubscription>
+
+    fun getHuaweiSubscriptionBySubscriptionId(orderId: String): HuaweiSubscription?
+
+    fun getHuaweiSubscriptionByOriSubscriptionId(oriSubscriptionId: String): HuaweiSubscription?
 }
