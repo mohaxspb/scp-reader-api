@@ -200,7 +200,7 @@ class FirebaseService @Autowired constructor(
                             userUidArticles.user.avatar = ScpReaderConstants.DEFAULT_AVATAR_URL
 //                            println("insert user with base64 avatar: ${userUidArticles.user}")
                         }
-                        userInDb = scpReaderUserService.save(userUidArticles.user)
+                        userInDb = scpReaderUserService.update(userUidArticles.user)
 
                         userToAuthorityService.save(UserToAuthority(userId = userInDb.id!!, authority = AuthorityType.USER))
                         newUsersInserted++
@@ -224,7 +224,7 @@ class FirebaseService @Autowired constructor(
                         userInDb.curLevelScore = curLevel.score
                         userInDb.scoreToNextLevel = levelsJson.scoreToNextLevel(userInDb.score, curLevel)
                         //update user in DB
-                        scpReaderUserService.save(userInDb)
+                        scpReaderUserService.update(userInDb)
                     }
 
                     //insert read/favorite articles if need

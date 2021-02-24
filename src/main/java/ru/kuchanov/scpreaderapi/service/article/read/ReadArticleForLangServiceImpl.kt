@@ -58,7 +58,7 @@ class ReadArticleForLangServiceImpl @Autowired constructor(
             transactionService.save(transactionToSave)
 
             val userInDb = scpReaderUserService.getById(userId) ?: throw UserNotFoundException()
-            userScore = scpReaderUserService.save(userInDb.apply { score += transactionToSave.scoreAmount }).score
+            userScore = scpReaderUserService.update(userInDb.apply { score += transactionToSave.scoreAmount }).score
         } else {
             userScore = scpReaderUserService.getUserScoreById(userId)
             transactionService.save(transaction.copy(transactionData = true.toString()))

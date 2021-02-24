@@ -17,8 +17,8 @@ class WebConfig : WebMvcConfigurer {
                 .allowedOrigins(
                         "http://localhost:4200",
                         "http://localhost:80",
-                        "https://scpfoundation.app",
-                        "http://scpfoundation.app"
+                        "https://scp-reader.com",
+                        "http://scp-reader.com"
                 )
                 .allowedHeaders("*")
                 .allowCredentials(true)

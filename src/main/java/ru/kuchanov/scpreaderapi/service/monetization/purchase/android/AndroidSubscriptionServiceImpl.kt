@@ -10,7 +10,8 @@ class AndroidSubscriptionServiceImpl @Autowired constructor(
         val androidSubscriptionRepository: AndroidSubscriptionRepository
 ) : AndroidSubscriptionService {
 
-    override fun getById(id: Long) = androidSubscriptionRepository.getOneById(id)
+    override fun getById(id: Long) =
+            androidSubscriptionRepository.getOneById(id)
 
     override fun getByPurchaseToken(purchaseToken: String): AndroidSubscription? =
             androidSubscriptionRepository.getOneByPurchaseToken(purchaseToken)
@@ -21,7 +22,9 @@ class AndroidSubscriptionServiceImpl @Autowired constructor(
     override fun saveAll(subscriptions: List<AndroidSubscription>): List<AndroidSubscription> =
             androidSubscriptionRepository.saveAll(subscriptions)
 
-    override fun save(androidProduct: AndroidSubscription): AndroidSubscription = androidSubscriptionRepository.save(androidProduct)
+    override fun save(androidProduct: AndroidSubscription): AndroidSubscription =
+            androidSubscriptionRepository.save(androidProduct)
 
-    override fun deleteById(id: Long) = androidSubscriptionRepository.deleteById(id)
+    override fun deleteById(id: Long) =
+            androidSubscriptionRepository.deleteById(id)
 }

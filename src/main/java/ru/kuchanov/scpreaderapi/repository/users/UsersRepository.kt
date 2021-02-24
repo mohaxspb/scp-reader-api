@@ -16,6 +16,13 @@ interface UsersRepository : JpaRepository<User, Long> {
     fun findOneByFacebookId(id: String): User?
     fun findOneByVkId(id: String): User?
 
+    @Query("""
+        select distinct u from User u 
+        join UserToHuaweiSubscription uap on u.id = uap.userId 
+        where uap.huaweiSubscriptionId = :huaweiSubscriptionId
+    """)
+    fun getUserByHuaweiSubscriptionId(huaweiSubscriptionId: Long): User?
+
     @Query(
             "SELECT COUNT(*) from users u JOIN users_langs ul ON u.id = ul.user_id WHERE ul.lang_id = :langId",
             nativeQuery = true
@@ -36,11 +43,11 @@ interface UsersRepository : JpaRepository<User, Long> {
                 u.ads_disabled_end_date as adsDisabledEndDate,
                 u.offline_limit_disabled_end_date as offlineLimitDisabledEndDate,
                 case 
-                    when u.ads_disabled_end_date > cast(now() as timestamp) then true
+                    when u.ads_disabled_end_date > timezone('UTC', now()) then true
                     else false
                 end as adsDisabled,
                 case 
-                    when u.offline_limit_disabled_end_date > cast(now() as timestamp) then true
+                    when u.offline_limit_disabled_end_date > timezone('UTC', now()) then true
                     else false
                 end as offlineLimitDisabled, 
                 u.level_num as levelNum, 

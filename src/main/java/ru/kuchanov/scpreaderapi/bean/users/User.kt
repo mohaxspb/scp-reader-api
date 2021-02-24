@@ -12,9 +12,8 @@ import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
 import ru.kuchanov.scpreaderapi.bean.auth.UserToAuthority
 import ru.kuchanov.scpreaderapi.bean.purchase.UsersAndroidProduct
 import ru.kuchanov.scpreaderapi.bean.purchase.UsersAndroidSubscription
-import ru.kuchanov.scpreaderapi.utils.EncryptionConverter
 import java.sql.Timestamp
-import java.util.*
+import java.time.LocalDateTime
 import javax.persistence.*
 
 @Entity
@@ -28,7 +27,6 @@ data class User(
 
         @Column(columnDefinition = "TEXT", unique = true)
         private val username: String,
-        @Convert(converter = EncryptionConverter::class)
         private val password: String,
 
         val enabled: Boolean = true,
@@ -77,10 +75,10 @@ data class User(
 
         //monetization
         @Column(name = "ads_disabled_end_date")
-        var adsDisabledEndDate: Timestamp? = null,
+        var adsDisabledEndDate: LocalDateTime? = null,
 
         @Column(name = "offline_limit_disabled_end_date")
-        var offlineLimitDisabledEndDate: Timestamp? = null,
+        var offlineLimitDisabledEndDate: LocalDateTime? = null,
 
         //dates
         @field:CreationTimestamp
@@ -106,10 +104,10 @@ data class User(
     override fun isAccountNonLocked() = true
 
     fun isAdsDisabled() =
-            adsDisabledEndDate?.after(Date()) ?: false
+            adsDisabledEndDate?.isAfter(LocalDateTime.now()) ?: false
 
     fun isOfflineLimitDisabled() =
-            offlineLimitDisabledEndDate?.after(Date()) ?: false
+            offlineLimitDisabledEndDate?.isAfter(LocalDateTime.now()) ?: false
 }
 
 fun User.isAdmin(): Boolean {

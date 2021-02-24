@@ -30,14 +30,15 @@ class SocialAuthConfiguration @Autowired constructor(
             .setAudience(listOf(googleClientId))
             .build()
 
+    //facebook auth
     @Bean
-    fun retrofit(): Retrofit = Retrofit.Builder()
-            .baseUrl(FacebookApi.BASE_API_URL)
-            .client(okHttpClient)
-            .addConverterFactory(converterFactory)
-            .addCallAdapterFactory(callAdapterFactory)
-            .build()
-
-    @Bean
-    fun facebookApi(): FacebookApi = retrofit().create(FacebookApi::class.java)
+    fun facebookApi(): FacebookApi {
+        val retrofit = Retrofit.Builder()
+                .baseUrl(FacebookApi.BASE_API_URL)
+                .client(okHttpClient)
+                .addConverterFactory(converterFactory)
+                .addCallAdapterFactory(callAdapterFactory)
+                .build()
+        return retrofit.create(FacebookApi::class.java)
+    }
 }

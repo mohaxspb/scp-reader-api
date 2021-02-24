@@ -38,7 +38,7 @@ class UserTransactionController @Autowired constructor(
         )
 
         val userInDb = scpReaderUserService.getById(user.id) ?: throw UserNotFoundException()
-        val updatedUser = scpReaderUserService.save(userInDb.apply { score += transaction.scoreAmount })
+        val updatedUser = scpReaderUserService.update(userInDb.apply { score += transaction.scoreAmount })
 
         return AddUserDataTransactionResultDto(
                 userDataTransaction = transaction,

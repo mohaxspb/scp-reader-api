@@ -3,6 +3,7 @@ package ru.kuchanov.scpreaderapi.service.users
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.ResponseStatus
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
@@ -12,14 +13,16 @@ import ru.kuchanov.scpreaderapi.model.dto.user.LeaderboardUserProjection
 import ru.kuchanov.scpreaderapi.model.dto.user.UserProjection
 import ru.kuchanov.scpreaderapi.model.user.LeaderboardUserDto
 import ru.kuchanov.scpreaderapi.repository.users.UsersRepository
-import java.sql.Timestamp
 import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 
 
 @Service
 class ScpReaderUserServiceImpl @Autowired constructor(
-        val repository: UsersRepository
+        private val repository: UsersRepository,
+        private val passwordEncoder: PasswordEncoder
 ) : ScpReaderUserService {
 
     override fun getById(id: Long): User? =
@@ -34,18 +37,24 @@ class ScpReaderUserServiceImpl @Autowired constructor(
     override fun loadUserByUsername(username: String): User? =
             repository.findOneByUsername(username)
 
-    override fun save(user: User): User =
-            repository.save(user)
+    override fun update(user: User): User =
+            repository.saveAndFlush(user)
+
+    override fun create(user: User): User =
+            repository.saveAndFlush(user.copy(password = passwordEncoder.encode(user.password)))
 
     override fun getUsersByLangIdCount(langId: String): Long =
             repository.getUsersByLangCount(langId)
 
-    override fun getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(offset: Int, limit: Int) =
+    override fun getLeaderboardUsersByLangWithOffsetAndLimitSortedByScore(
+            offset: Int,
+            limit: Int
+    ): List<LeaderboardUserDto> =
             repository
                     .getLeaderboardUsersWithOffsetAndLimitSortedByScore(offset, limit)
                     .map { it.toDto() }
 
-    override fun getByProviderId(id: String, provider: ScpReaderConstants.SocialProvider) =
+    override fun getByProviderId(id: String, provider: ScpReaderConstants.SocialProvider): User? =
             when (provider) {
                 ScpReaderConstants.SocialProvider.GOOGLE -> repository.findOneByGoogleId(id)
                 ScpReaderConstants.SocialProvider.FACEBOOK -> repository.findOneByFacebookId(id)
@@ -80,8 +89,8 @@ class ScpReaderUserServiceImpl @Autowired constructor(
 
         val targetUser = getById(targetUserId) ?: throw UserNotFoundException()
 
-        val endDate = Timestamp.from(Instant.now().plus(period.toLong(), timeUnit))
-        save(
+        val endDate = LocalDateTime.ofInstant(Instant.now().plus(period.toLong(), timeUnit), ZoneOffset.UTC)
+        repository.save(
                 targetUser.apply {
                     if (disableAds) {
                         adsDisabledEndDate = endDate

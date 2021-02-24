@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.configuration.purchase
+package ru.kuchanov.scpreaderapi.configuration.monetization
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration
 import ru.kuchanov.scpreaderapi.utils.FileUtils
 
 @Configuration
-class AndroidPurchaseConfiguration {
+class GooglePurchaseConfiguration {
 
     companion object {
         const val ANDROID_DEVELOPER_SERVICE_KEY = "googlePlay/googlePlayAndroidDeveloperServiceKey.json"

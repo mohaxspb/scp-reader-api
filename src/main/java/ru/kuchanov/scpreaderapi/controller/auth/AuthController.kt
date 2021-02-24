@@ -69,7 +69,7 @@ class AuthController @Autowired constructor(
                 ScpReaderConstants.SocialProvider.GOOGLE -> {
                     if (userInDb.googleId.isNullOrEmpty()) {
                         userInDb.googleId = commonUserData.id
-                        usersServiceScpReader.save(userInDb)
+                        usersServiceScpReader.update(userInDb)
                     } else if (userInDb.googleId != commonUserData.id) {
                         log.error("login with ${commonUserData.id}/$email for user with mismatched googleId: ${userInDb.googleId}")
                     }
@@ -77,7 +77,7 @@ class AuthController @Autowired constructor(
                 ScpReaderConstants.SocialProvider.FACEBOOK -> {
                     if (userInDb.facebookId.isNullOrEmpty()) {
                         userInDb.facebookId = commonUserData.id
-                        usersServiceScpReader.save(userInDb)
+                        usersServiceScpReader.update(userInDb)
                     } else if (userInDb.facebookId != commonUserData.id) {
                         log.error("login with ${commonUserData.id}/$email for user with mismatched facebookId: ${userInDb.facebookId}")
                     }
@@ -85,7 +85,7 @@ class AuthController @Autowired constructor(
                 ScpReaderConstants.SocialProvider.VK -> {
                     if (userInDb.vkId.isNullOrEmpty()) {
                         userInDb.vkId = commonUserData.id
-                        usersServiceScpReader.save(userInDb)
+                        usersServiceScpReader.update(userInDb)
                     } else if (userInDb.vkId != commonUserData.id) {
                         log.error("login with ${commonUserData.id}/$email for user with mismatched vkId: ${userInDb.vkId}")
                     }
@@ -127,7 +127,7 @@ class AuthController @Autowired constructor(
                     }
                 }
 
-                val newUserInDb = usersServiceScpReader.save(userToSave)
+                val newUserInDb = usersServiceScpReader.create(userToSave)
 
                 userToAuthorityService.save(UserToAuthority(userId = newUserInDb.id!!, authority = AuthorityType.USER))
                 usersLangsService.insert(UsersLangs(userId = newUserInDb.id, langId = lang.id))

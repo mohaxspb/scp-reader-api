@@ -35,9 +35,3 @@ data class ArticleParseError(
         @field:UpdateTimestamp
         val updated: Timestamp? = null
 )
-
-
-@ResponseStatus(value = HttpStatus.NOT_FOUND)
-class ArticleCategoryNotFoundException(
-        override val message: String? = "ArticleParseError not found in db!"
-) : RuntimeException(message)
