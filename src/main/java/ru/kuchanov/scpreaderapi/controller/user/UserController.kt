@@ -9,6 +9,7 @@ import ru.kuchanov.scpreaderapi.bean.purchase.AndroidSubscription
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
 import ru.kuchanov.scpreaderapi.model.dto.user.UserProjection
+import ru.kuchanov.scpreaderapi.model.dto.user.UserProjectionV2
 import ru.kuchanov.scpreaderapi.model.user.LeaderboardUserDto
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.UserAndroidPurchaseService
 import ru.kuchanov.scpreaderapi.service.users.ScpReaderUserService
@@ -22,10 +23,16 @@ class UserController @Autowired constructor(
         val userAndroidPurchaseService: UserAndroidPurchaseService
 ) {
 
+    @Deprecated("Uses deprecated return type", ReplaceWith("showMeV2"))
     @GetMapping("/me")
     fun showMe(@AuthenticationPrincipal user: User): UserProjection =
             scpReaderUserService.getByIdAsDto(user.id!!) ?: throw UserNotFoundException()
 
+    @GetMapping("/me/v2")
+    fun showMeV2(@AuthenticationPrincipal user: User): UserProjectionV2 =
+            scpReaderUserService.getByIdAsDtoV2(user.id!!) ?: throw UserNotFoundException()
+
+    @Deprecated("Uses deprecated return type", ReplaceWith("edit/v2"))
     @PostMapping("/edit")
     fun editAccount(
             @AuthenticationPrincipal user: User,
@@ -33,6 +40,14 @@ class UserController @Autowired constructor(
             @RequestParam(value = "avatarUrl") avatarUrl: String
     ): UserProjection =
             scpReaderUserService.editAccount(user.id!!, name, avatarUrl)
+
+    @PostMapping("/edit/v2")
+    fun editAccountV2(
+            @AuthenticationPrincipal user: User,
+            @RequestParam(value = "name") name: String,
+            @RequestParam(value = "avatarUrl") avatarUrl: String
+    ): UserProjectionV2 =
+            scpReaderUserService.editAccountV2(user.id!!, name, avatarUrl)
 
     @PostMapping("/disableAdsAndOfflineLimit")
     fun disableAdsAndOfflineLimit(
@@ -42,7 +57,7 @@ class UserController @Autowired constructor(
             @RequestParam disableOfflineLimit: Boolean,
             @RequestParam period: Int,
             @RequestParam timeUnit: ChronoUnit
-    ): UserProjection =
+    ): UserProjectionV2 =
             scpReaderUserService.disableAdsAndOfflineLimit(
                     targetUserId,
                     disableAds,

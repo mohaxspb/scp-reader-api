@@ -14,7 +14,7 @@ import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
 import ru.kuchanov.scpreaderapi.model.dto.monetization.UserSubscriptionsDto
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
-import ru.kuchanov.scpreaderapi.model.dto.user.UserProjection
+import ru.kuchanov.scpreaderapi.model.dto.user.UserProjectionV2
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.SubscriptionValidateAttemptsService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiApiService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiApiService.Companion.ACCOUNT_FLAG_GERMANY_APP_TOUCH
@@ -56,7 +56,7 @@ class PurchaseController @Autowired constructor(
             @RequestParam purchaseToken: String,
             @RequestParam(defaultValue = ACCOUNT_FLAG_GERMANY_APP_TOUCH.toString()) accountFlag: Int,
             @AuthenticationPrincipal user: User?
-    ): UserProjection {
+    ): UserProjectionV2 {
         check(user != null) { "User is null!" }
         check(user.id != null) { "User ID is null!" }
         // 1. Verify product
@@ -82,7 +82,7 @@ class PurchaseController @Autowired constructor(
             InappType.SUBS -> {
                 updateUserSubscriptionExpiration(user.id)
 
-                return userService.getByIdAsDto(user.id) ?: throw UserNotFoundException()
+                return userService.getByIdAsDtoV2(user.id) ?: throw UserNotFoundException()
             }
         }
     }
