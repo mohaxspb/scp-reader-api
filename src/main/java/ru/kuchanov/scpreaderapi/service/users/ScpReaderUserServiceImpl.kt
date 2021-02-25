@@ -11,6 +11,7 @@ import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
 import ru.kuchanov.scpreaderapi.model.dto.user.LeaderboardUserProjection
 import ru.kuchanov.scpreaderapi.model.dto.user.UserProjection
+import ru.kuchanov.scpreaderapi.model.dto.user.UserProjectionV2
 import ru.kuchanov.scpreaderapi.model.user.LeaderboardUserDto
 import ru.kuchanov.scpreaderapi.repository.users.UsersRepository
 import java.time.Instant
@@ -28,8 +29,13 @@ class ScpReaderUserServiceImpl @Autowired constructor(
     override fun getById(id: Long): User? =
             repository.findByIdOrNull(id)
 
-    override fun getByIdAsDto(id: Long) =
+
+    @Deprecated("Uses deprecated return type", ReplaceWith("getByIdAsDtoV2"))
+    override fun getByIdAsDto(id: Long): UserProjection? =
             repository.getByIdAsProjection(id)
+
+    override fun getByIdAsDtoV2(id: Long): UserProjectionV2? =
+            repository.getByIdAsProjectionV2(id)
 
     override fun getByUsername(username: String) =
             repository.findOneByUsername(username)
@@ -64,10 +70,20 @@ class ScpReaderUserServiceImpl @Autowired constructor(
     override fun getUserPositionInLeaderboard(userId: Long, langId: String): Int =
             repository.getUserPositionInLeaderboard(userId, langId)
 
+    @Deprecated("Uses deprecated return type")
     override fun editAccount(userId: Long, name: String, avatarUrl: String): UserProjection {
         if (avatarUrl.startsWith("http") || avatarUrl.startsWith("https")) {
             repository.editAccount(userId, name, avatarUrl)
             return repository.getByIdAsProjection(userId)!!
+        } else {
+            throw InvalidUrlException("$avatarUrl is not a valid url!")
+        }
+    }
+
+    override fun editAccountV2(userId: Long, name: String, avatarUrl: String): UserProjectionV2 {
+        if (avatarUrl.startsWith("http") || avatarUrl.startsWith("https")) {
+            repository.editAccount(userId, name, avatarUrl)
+            return repository.getByIdAsProjectionV2(userId)!!
         } else {
             throw InvalidUrlException("$avatarUrl is not a valid url!")
         }
@@ -82,7 +98,7 @@ class ScpReaderUserServiceImpl @Autowired constructor(
             disableOfflineLimit: Boolean,
             period: Int,
             timeUnit: ChronoUnit
-    ): UserProjection {
+    ): UserProjectionV2 {
         if (!disableAds && !disableOfflineLimit) {
             throw InvalidConditionException("One of disableAds or disableOfflineLimit must be true!")
         }
@@ -101,7 +117,7 @@ class ScpReaderUserServiceImpl @Autowired constructor(
                 }
         )
 
-        return getByIdAsDto(targetUserId)!!
+        return getByIdAsDtoV2(targetUserId)!!
     }
 
     override fun countUsersCreatedBetweenDates(startDate: String, endDate: String): Int =
