@@ -11,13 +11,18 @@ import javax.persistence.*
 @NoArgConstructor
 data class OAuthAccessToken(
         @Id
-        val token_id: String,
+        @Column(name = "token_id")
+        val tokenId: String,
         val token: ByteArray,
-        val authentication_id: String,
-        val user_name: String,
-        val client_id: String,
+        @Column(name = "authentication_id")
+        val authenticationId: String,
+        @Column(name = "user_name")
+        val userName: String,
+        @Column(name = "client_id")
+        val clientId: String,
         val authentication: ByteArray,
-        val refresh_token: String,
+        @Column(name = "refresh_token")
+        val refreshToken: String,
         @field:CreationTimestamp
         val created: Timestamp,
         @field:UpdateTimestamp

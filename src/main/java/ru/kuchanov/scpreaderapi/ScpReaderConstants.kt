@@ -8,6 +8,13 @@ object ScpReaderConstants {
 
     const val NUM_OF_ARTICLES_RATED_PAGE = 20
 
+    object InternalAuthData {
+        /**
+         * used for getting articles and other stuff, that don't need user auth
+         */
+        const val IMPLICIT_FLOW_CLIENT_ID = "implicit_flow_client_id"
+    }
+
     object Api {
         const val GRANT_TYPE_REFRESH_TOKEN = "refresh_token"
         const val GRANT_TYPE_CLIENT_CREDENTIALS = "client_credentials"
@@ -22,6 +29,7 @@ object ScpReaderConstants {
         const val DEFAULT_SCORE_FOR_READ_ARTICLE = 1
         const val DEFAULT_SCORE_FOR_REWARDED_VIDEO = 50
     }
+
     object Path {
         const val FIREBASE = "firebase"
         const val MESSAGING = "messaging"
