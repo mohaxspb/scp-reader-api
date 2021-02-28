@@ -2,6 +2,7 @@ package ru.kuchanov.scpreaderapi.controller.auth
 
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.oauth2.common.OAuth2AccessToken
 import org.springframework.security.oauth2.provider.ClientDetailsService
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
+import ru.kuchanov.scpreaderapi.ScpReaderConstants.InternalAuthData.IMPLICIT_FLOW_CLIENT_ID
 import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
 import ru.kuchanov.scpreaderapi.bean.auth.UserToAuthority
 import ru.kuchanov.scpreaderapi.bean.users.User
@@ -21,6 +23,7 @@ import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.UsersLangs
 import ru.kuchanov.scpreaderapi.model.user.LevelsJson
 import ru.kuchanov.scpreaderapi.network.ApiClient
+import ru.kuchanov.scpreaderapi.service.auth.AccessTokenService
 import ru.kuchanov.scpreaderapi.service.auth.UserToAuthorityService
 import ru.kuchanov.scpreaderapi.service.users.LangService
 import ru.kuchanov.scpreaderapi.service.users.ScpReaderUserService
@@ -37,6 +40,7 @@ class AuthController @Autowired constructor(
         val clientDetailsService: ClientDetailsService,
         val userToAuthorityService: UserToAuthorityService,
         val usersServiceScpReader: ScpReaderUserService,
+        val accessTokenService: AccessTokenService,
         val langService: LangService,
         val usersLangsService: UsersLangsService,
         val tokenStore: TokenStore,
@@ -133,6 +137,26 @@ class AuthController @Autowired constructor(
                 usersLangsService.insert(UsersLangs(userId = newUserInDb.id, langId = lang.id))
 
                 return generateAccessToken(newUserInDb.username, clientId)
+            }
+        }
+    }
+
+    /**
+     * There is bug, when there are more than one access_token for implicit flow auth.
+     * So, we'll just check it every minute and delete redundant ones... =\
+     */
+    @Scheduled(
+            /**
+             * second, minute, hour, day, month, day of week
+             */
+            cron = "0 * * * * *"
+    )
+    fun checkImplicitFlowAccessTokens() {
+        val tokens = accessTokenService.findAllByClientId(IMPLICIT_FLOW_CLIENT_ID)
+
+        if (tokens.size > 1) {
+            tokens.subList(1, tokens.size).forEach {
+                accessTokenService.delete(it)
             }
         }
     }
