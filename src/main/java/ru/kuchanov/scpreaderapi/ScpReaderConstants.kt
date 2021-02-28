@@ -22,6 +22,7 @@ object ScpReaderConstants {
         const val DEFAULT_SCORE_FOR_READ_ARTICLE = 1
         const val DEFAULT_SCORE_FOR_REWARDED_VIDEO = 50
     }
+
     object Path {
         const val FIREBASE = "firebase"
         const val MESSAGING = "messaging"

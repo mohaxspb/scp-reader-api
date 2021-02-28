@@ -92,12 +92,12 @@ class AuthController @Autowired constructor(
                 }
             }
             revokeUserTokens(email, clientId)
-            return getAccessToken(email, clientId)
+            return generateAccessToken(email, clientId)
         } else {
             //try to find by providers id as email may be changed
             userInDb = usersServiceScpReader.getByProviderId(commonUserData.id!!, provider)
             if (userInDb != null) {
-                return getAccessToken(userInDb.username, clientId)
+                return generateAccessToken(userInDb.username, clientId)
             } else {
                 //if cant find - register new user and give it initial score
                 val score = ScpReaderConstants.DEFAULT_NEW_USER_SCORE
@@ -132,7 +132,7 @@ class AuthController @Autowired constructor(
                 userToAuthorityService.save(UserToAuthority(userId = newUserInDb.id!!, authority = AuthorityType.USER))
                 usersLangsService.insert(UsersLangs(userId = newUserInDb.id, langId = lang.id))
 
-                return getAccessToken(newUserInDb.username, clientId)
+                return generateAccessToken(newUserInDb.username, clientId)
             }
         }
     }
@@ -142,7 +142,7 @@ class AuthController @Autowired constructor(
                     .findTokensByClientIdAndUserName(clientId, email)
                     .forEach { tokenServices.revokeToken(it.value) }
 
-    fun getAccessToken(email: String, clientId: String): OAuth2AccessToken {
+    fun generateAccessToken(email: String, clientId: String): OAuth2AccessToken {
         val clientDetails = clientDetailsService.loadClientByClientId(clientId)
 
         val requestParameters = mapOf<String, String>()
