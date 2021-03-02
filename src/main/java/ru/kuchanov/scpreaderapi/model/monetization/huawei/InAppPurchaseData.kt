@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.model.huawei.purchase
+package ru.kuchanov.scpreaderapi.model.monetization.huawei
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 

@@ -6,8 +6,8 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
-import ru.kuchanov.scpreaderapi.bean.monetization.InappType
-import ru.kuchanov.scpreaderapi.bean.monetization.Store
+import ru.kuchanov.scpreaderapi.model.monetization.InappType
+import ru.kuchanov.scpreaderapi.model.monetization.Store
 import ru.kuchanov.scpreaderapi.bean.purchase.SubscriptionValidationAttempts
 import ru.kuchanov.scpreaderapi.bean.purchase.huawei.HuaweiSubscription
 import ru.kuchanov.scpreaderapi.bean.users.User

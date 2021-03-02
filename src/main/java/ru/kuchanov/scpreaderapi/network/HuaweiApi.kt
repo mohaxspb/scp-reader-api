@@ -5,7 +5,7 @@ import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.POST
 import ru.kuchanov.scpreaderapi.model.monetization.huawei.HuaweiProductVerifyResponse
-import ru.kuchanov.scpreaderapi.model.monetization.huawei.HuaweiSubscriptionCancelResponse
+import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.HuaweiSubscriptionCancelResponse
 
 /**
  * For url see this doc:

@@ -7,13 +7,13 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.ResponseStatus
-import ru.kuchanov.scpreaderapi.bean.monetization.InappType
+import ru.kuchanov.scpreaderapi.model.monetization.InappType
 import ru.kuchanov.scpreaderapi.configuration.monetization.HuaweiPurchaseConfiguration
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationStatus
-import ru.kuchanov.scpreaderapi.model.huawei.purchase.InAppPurchaseData
+import ru.kuchanov.scpreaderapi.model.monetization.huawei.InAppPurchaseData
 import ru.kuchanov.scpreaderapi.model.monetization.huawei.HuaweiProductVerifyResponse
-import ru.kuchanov.scpreaderapi.model.monetization.huawei.HuaweiSubscriptionCancelResponse
+import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.HuaweiSubscriptionCancelResponse
 import ru.kuchanov.scpreaderapi.network.HuaweiApi
 
 @Service

@@ -4,7 +4,7 @@ import retrofit2.Call
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.POST
-import ru.kuchanov.scpreaderapi.model.huawei.TokenResponse
+import ru.kuchanov.scpreaderapi.model.huawei.auth.TokenResponse
 
 /**
  * For url see this doc:
