@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.purchase.SubscriptionValidationAttempts
 import ru.kuchanov.scpreaderapi.bean.purchase.huawei.HuaweiSubscription
+import ru.kuchanov.scpreaderapi.bean.purchase.huawei.HuaweiSubscriptionEventHandleAttemptRecord
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
 import ru.kuchanov.scpreaderapi.model.dto.monetization.UserSubscriptionsDto
@@ -21,7 +22,9 @@ import ru.kuchanov.scpreaderapi.service.monetization.purchase.SubscriptionValida
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiApiService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiApiService.Companion.ACCOUNT_FLAG_GERMANY_APP_TOUCH
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiMonetizationService
+import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiSubsEventHandleAttemptService
 import ru.kuchanov.scpreaderapi.service.users.ScpReaderUserService
+import ru.kuchanov.scpreaderapi.utils.ErrorUtils
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDateTime
@@ -35,6 +38,8 @@ class PurchaseController @Autowired constructor(
         private val huaweiMonetizationService: HuaweiMonetizationService,
         private val userService: ScpReaderUserService,
         private val subscriptionValidateAttemptsService: SubscriptionValidateAttemptsService,
+        private val huaweiSubsEventHandleAttemptService: HuaweiSubsEventHandleAttemptService,
+        private val errorUtils: ErrorUtils,
         private val log: Logger
 ) {
 
@@ -53,7 +58,7 @@ class PurchaseController @Autowired constructor(
     fun huaweiSubscriptionEventsWebHook(
             @RequestBody huaweiSubscriptionEventDto: HuaweiSubscriptionEventDto
     ): HuaweiSubscriptionEventResponse {
-        val error: Exception?
+        var error: Exception? = null
 
         try {
             //todo go through subscription flow
@@ -61,7 +66,23 @@ class PurchaseController @Autowired constructor(
             error = e
             log.error("Error while handle huawei subscription event", error)
         } finally {
-            //todo write huaweiSubscriptionEventDto and handle result to DB (null or error)
+            huaweiSubsEventHandleAttemptService.save(
+                    HuaweiSubscriptionEventHandleAttemptRecord(
+                            statusUpdateNotification = huaweiSubscriptionEventDto.statusUpdateNotification,
+                            notificationSignature = huaweiSubscriptionEventDto.notifycationSignature
+                    ).apply {
+                        error?.let { e ->
+                            errorClass = e::class.java.simpleName
+                            errorMessage = e.message
+                            stacktrace = errorUtils.stackTraceAsString(e)
+                            error.cause?.let {
+                                causeErrorClass = it::class.java.simpleName
+                                causeErrorMessage = it.message
+                                causeStacktrace = errorUtils.stackTraceAsString(it)
+                            }
+                        }
+                    }
+            )
         }
 
         return HuaweiSubscriptionEventResponse()
