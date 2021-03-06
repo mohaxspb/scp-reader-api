@@ -23,11 +23,11 @@ data class HuaweiSubscriptionEventHandleAttemptRecord(
         val notificationSignature: String,
 
         @Column(name = "error_class", columnDefinition = "TEXT")
-        val errorClass: String,
+        var errorClass: String? = null,
         @Column(name = "error_message", columnDefinition = "TEXT")
-        val errorMessage: String?,
+        var errorMessage: String? = null,
         @Column(name = "stacktrace", columnDefinition = "TEXT")
-        val stacktrace: String,
+        var stacktrace: String? = null,
         @Column(name = "cause_error_class", columnDefinition = "TEXT")
         var causeErrorClass: String? = null,
         @Column(name = "cause_error_message", columnDefinition = "TEXT")
