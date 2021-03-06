@@ -6,8 +6,6 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
-import ru.kuchanov.scpreaderapi.model.monetization.InappType
-import ru.kuchanov.scpreaderapi.model.monetization.Store
 import ru.kuchanov.scpreaderapi.bean.purchase.SubscriptionValidationAttempts
 import ru.kuchanov.scpreaderapi.bean.purchase.huawei.HuaweiSubscription
 import ru.kuchanov.scpreaderapi.bean.users.User
@@ -15,6 +13,10 @@ import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
 import ru.kuchanov.scpreaderapi.model.dto.monetization.UserSubscriptionsDto
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
 import ru.kuchanov.scpreaderapi.model.dto.user.UserProjectionV2
+import ru.kuchanov.scpreaderapi.model.monetization.InappType
+import ru.kuchanov.scpreaderapi.model.monetization.Store
+import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.HuaweiSubscriptionEventDto
+import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.HuaweiSubscriptionEventResponse
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.SubscriptionValidateAttemptsService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiApiService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiApiService.Companion.ACCOUNT_FLAG_GERMANY_APP_TOUCH
@@ -45,6 +47,24 @@ class PurchaseController @Autowired constructor(
 
     private enum class Period {
         MINUTES_5, HOUR, DAY, WEEK
+    }
+
+    @PostMapping("/subscriptionEvents/huawei")
+    fun huaweiSubscriptionEventsWebHook(
+            @RequestBody huaweiSubscriptionEventDto: HuaweiSubscriptionEventDto
+    ): HuaweiSubscriptionEventResponse {
+        val error: Exception?
+
+        try {
+            //todo go through subscription flow
+        } catch (e: Exception) {
+            error = e
+            log.error("Error while handle huawei subscription event", error)
+        } finally {
+            //todo write huaweiSubscriptionEventDto and handle result to DB (null or error)
+        }
+
+        return HuaweiSubscriptionEventResponse()
     }
 
     @PostMapping("/apply/{store}/{purchaseType}")
