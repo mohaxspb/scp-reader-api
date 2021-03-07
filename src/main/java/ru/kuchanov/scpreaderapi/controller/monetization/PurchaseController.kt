@@ -1,5 +1,6 @@
 package ru.kuchanov.scpreaderapi.controller.monetization
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
@@ -16,8 +17,9 @@ import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
 import ru.kuchanov.scpreaderapi.model.dto.user.UserProjectionV2
 import ru.kuchanov.scpreaderapi.model.monetization.InappType
 import ru.kuchanov.scpreaderapi.model.monetization.Store
-import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.HuaweiSubscriptionEventDto
-import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.HuaweiSubscriptionEventResponse
+import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.subevent.HuaweiSubscriptionEventDto
+import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.subevent.HuaweiSubscriptionEventResponse
+import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.subevent.StatusUpdateNotification
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.SubscriptionValidateAttemptsService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiApiService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiApiService.Companion.ACCOUNT_FLAG_GERMANY_APP_TOUCH
@@ -40,6 +42,7 @@ class PurchaseController @Autowired constructor(
         private val subscriptionValidateAttemptsService: SubscriptionValidateAttemptsService,
         private val huaweiSubsEventHandleAttemptService: HuaweiSubsEventHandleAttemptService,
         private val errorUtils: ErrorUtils,
+        private val objectMapper: ObjectMapper,
         private val log: Logger
 ) {
 
@@ -61,6 +64,11 @@ class PurchaseController @Autowired constructor(
         var error: Exception? = null
 
         try {
+            val parsedRequest = objectMapper.readValue(
+                    huaweiSubscriptionEventDto.statusUpdateNotification,
+                    StatusUpdateNotification::class.java
+            )
+            log.error("parsedRequest: $parsedRequest")
             //todo go through subscription flow
         } catch (e: Exception) {
             error = e
