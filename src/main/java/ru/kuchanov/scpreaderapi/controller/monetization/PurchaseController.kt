@@ -10,6 +10,7 @@ import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.purchase.SubscriptionValidationAttempts
 import ru.kuchanov.scpreaderapi.bean.purchase.huawei.HuaweiSubscription
 import ru.kuchanov.scpreaderapi.bean.purchase.huawei.HuaweiSubscriptionEventHandleAttemptRecord
+import ru.kuchanov.scpreaderapi.bean.purchase.huawei.HuaweiSubscriptionNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
 import ru.kuchanov.scpreaderapi.model.dto.monetization.UserSubscriptionsDto
@@ -17,12 +18,14 @@ import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
 import ru.kuchanov.scpreaderapi.model.dto.user.UserProjectionV2
 import ru.kuchanov.scpreaderapi.model.monetization.InappType
 import ru.kuchanov.scpreaderapi.model.monetization.Store
+import ru.kuchanov.scpreaderapi.model.monetization.huawei.InAppPurchaseData
 import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.subevent.HuaweiSubscriptionEventDto
 import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.subevent.HuaweiSubscriptionEventResponse
 import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.subevent.StatusUpdateNotification
+import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.subevent.StatusUpdateNotification.NotificationType.*
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.SubscriptionValidateAttemptsService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiApiService
-import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiApiService.Companion.ACCOUNT_FLAG_GERMANY_APP_TOUCH
+import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiApiService.Companion.ACCOUNT_FLAG_HUAWEI_ID
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiMonetizationService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiSubsEventHandleAttemptService
 import ru.kuchanov.scpreaderapi.service.users.ScpReaderUserService
@@ -68,8 +71,67 @@ class PurchaseController @Autowired constructor(
                     huaweiSubscriptionEventDto.statusUpdateNotification,
                     StatusUpdateNotification::class.java
             )
-            log.error("parsedRequest: $parsedRequest")
-            //todo go through subscription flow
+            log.error("parsedRequest: ${objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(parsedRequest)}")
+
+            when (parsedRequest.notificationType) {
+                INITIAL_BUY, CANCEL, RENEWAL_STOPPED, ON_HOLD,
+                PAUSED, PAUSE_PLAN_CHANGED, PRICE_CHANGE_CONFIRMED, DEFERRED -> {
+                    //nothing to do.
+                }
+                RENEWAL, RENEWAL_RESTORED, RENEWAL_RECURRING -> {
+                    val inAppPurchaseData: InAppPurchaseData = objectMapper.readValue(
+                            parsedRequest.latestReceiptInfo!!,
+                            InAppPurchaseData::class.java
+                    )
+                    val huaweiSubscriptionInDb: HuaweiSubscription = huaweiMonetizationService
+                            .getHuaweiSubscriptionBySubscriptionId(inAppPurchaseData.subscriptionId!!)
+                            ?: throw HuaweiSubscriptionNotFoundException(
+                                    "HuaweiSubscription not found for subscriptionId: ${inAppPurchaseData.subscriptionId}"
+                            )
+                    val user: User = huaweiMonetizationService
+                            .getUserByHuaweiSubscriptionId(huaweiSubscriptionInDb.id!!) ?: throw UserNotFoundException()
+
+                    val updatedUser = applyHuaweiSubscription(
+                            inAppPurchaseData.subscriptionId,
+                            inAppPurchaseData.purchaseToken,
+                            inAppPurchaseData.accountFlag ?: ACCOUNT_FLAG_HUAWEI_ID,
+                            user
+                    )
+                    val updatedSubscription = huaweiMonetizationService
+                            .getHuaweiSubscriptionBySubscriptionId(inAppPurchaseData.subscriptionId)
+                    log.error("""
+                        Successfully update renewed Huawei subscription!
+                        User: ${updatedUser.id}/${updatedUser.offlineLimitDisabledEndDate}. 
+                        Subscription: ${huaweiSubscriptionInDb.id}/${updatedSubscription?.expiryTimeMillis}.
+                    """.trimIndent())
+                }
+                INTERACTIVE_RENEWAL -> {
+                    //seems to be, here we can found oriSubscriptionId,
+                    //which must be equal to inAppPurchaseDataForPreviousSub.subscriptionId
+                    val inAppPurchaseDataForCurrentSub: InAppPurchaseData = objectMapper.readValue(
+                            parsedRequest.latestReceiptInfo!!,
+                            InAppPurchaseData::class.java
+                    )
+                    //use it find user by his previous sub
+                    val inAppPurchaseDataForPreviousSub: InAppPurchaseData = objectMapper.readValue(
+                            parsedRequest.latestExpiredReceiptInfo!!,
+                            InAppPurchaseData::class.java
+                    )
+
+                    //todo find user by inAppPurchaseDataForCurrentSub or inAppPurchaseDataForPreviousSub
+                    //todo validate and apply to user. (expired subscription renew or this maybe change to new subscription)
+                }
+                NEW_RENEWAL_PREF -> {
+                    //A user selects another subscription in the group and it takes effect after the current subscription expires.
+                    //The current validity period is not affected.
+                    //That is, the subscription takes effect in the next validity period after downgrade or crossgrade.
+                    //
+                    //The notification carries the last valid receipt and new subscription information,
+                     //including the product ID and subscription ID.
+
+                    //todo write to db, connect to user, validate (?)
+                }
+            }
         } catch (e: Exception) {
             error = e
             log.error("Error while handle huawei subscription event", error)
