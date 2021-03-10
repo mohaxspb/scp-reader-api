@@ -94,7 +94,7 @@ data class StatusUpdateNotification(
 ) {
     @Suppress("unused")
     enum class Environment {
-        PROD, Sandbox, SandBox/*fixme when get correct version from DTSE*/
+        PROD, Sandbox
     }
 
     @Suppress("unused")
