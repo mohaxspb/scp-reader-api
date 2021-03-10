@@ -282,7 +282,6 @@ class PurchaseController @Autowired constructor(
             }
             val verificationResult: ValidationResponse? = try {
                 huaweiApiService.verifyPurchase(
-                        currentSubscription.productId!!,
                         currentSubscription.subscriptionId,
                         InappType.SUBS,
                         currentSubscription.purchaseToken,

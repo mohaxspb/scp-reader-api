@@ -37,7 +37,6 @@ class HuaweiApiService @Autowired constructor(
 
     @Throws(VerifyProductException::class)
     fun verifyPurchase(
-            productId: String,
             subscriptionId: String,
             purchaseType: InappType,
             purchaseToken: String,
@@ -46,7 +45,6 @@ class HuaweiApiService @Autowired constructor(
         log.info(
                 """
                     verifyPurchase:
-                    productId: $productId, 
                     purchaseType: $purchaseType, 
                     purchaseToken: $purchaseToken, 
                     accountFlag: $accountFlag
@@ -55,7 +53,6 @@ class HuaweiApiService @Autowired constructor(
         return when (purchaseType) {
             InappType.SUBS -> {
                 val result = verifySubscription(
-                        productId,
                         subscriptionId,
                         purchaseToken,
                         accountFlag
@@ -68,7 +65,6 @@ class HuaweiApiService @Autowired constructor(
 
     @Throws(VerifyProductException::class)
     fun verifySubscription(
-            productId: String,
             subscriptionId: String,
             purchaseToken: String,
             accountFlag: Int
