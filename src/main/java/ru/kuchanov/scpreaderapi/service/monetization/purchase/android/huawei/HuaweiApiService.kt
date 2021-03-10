@@ -31,6 +31,7 @@ class HuaweiApiService @Autowired constructor(
 ) {
 
     companion object {
+        const val ACCOUNT_FLAG_HUAWEI_ID = 0
         const val ACCOUNT_FLAG_GERMANY_APP_TOUCH = 1
     }
 
