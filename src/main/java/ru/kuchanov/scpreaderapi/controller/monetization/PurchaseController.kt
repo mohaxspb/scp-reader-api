@@ -109,31 +109,45 @@ class PurchaseController @Autowired constructor(
         check(user != null) { "User is null!" }
         check(user.id != null) { "User ID is null!" }
         // 1. Verify product
-        val verificationResult = when (store) {
-            Store.HUAWEI -> huaweiApiService.verifyPurchase(
-                    productId,
-                    subscriptionId,
-                    purchaseType,
-                    purchaseToken,
-                    accountFlag
-            )
+        when (store) {
+            Store.HUAWEI -> {
+                when (purchaseType) {
+                    InappType.SUBS -> {
+                        return applyHuaweiSubscription(subscriptionId, purchaseToken, accountFlag, user)
+                    }
+                    InappType.INAPP, InappType.CONSUMABLE -> TODO()
+                }
+
+            }
             Store.GOOGLE -> TODO()
             Store.AMAZON -> TODO()
             Store.APPLE -> TODO()
         }
+    }
+
+    private fun applyHuaweiSubscription(
+            subscriptionId: String,
+            purchaseToken: String,
+            accountFlag: Int,
+            user: User
+    ): UserProjectionV2 {
+        // 1. Verify product
+        val verificationResult = huaweiApiService.verifyPurchase(
+                subscriptionId,
+                InappType.SUBS,
+                purchaseToken,
+                accountFlag
+        )
+
         val huaweiSubscriptionResponse = (verificationResult as ValidationResponse.HuaweiSubscriptionResponse)
+
         //2. Write product info to DB.
         huaweiMonetizationService.saveSubscription(huaweiSubscriptionResponse.androidSubscription!!, user)
 
         //3. Update user in DB.
-        when (purchaseType) {
-            InappType.INAPP, InappType.CONSUMABLE -> TODO()
-            InappType.SUBS -> {
-                updateUserSubscriptionExpiration(user.id)
+        updateUserSubscriptionExpiration(user.id!!)
 
-                return userService.getByIdAsDtoV2(user.id) ?: throw UserNotFoundException()
-            }
-        }
+        return userService.getByIdAsDtoV2(user.id) ?: throw UserNotFoundException()
     }
 
     private fun updateUserSubscriptionExpiration(userId: Long): User {
