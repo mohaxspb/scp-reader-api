@@ -2,6 +2,8 @@ package ru.kuchanov.scpreaderapi.bean.purchase.huawei
 
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
+import org.springframework.http.HttpStatus
+import org.springframework.web.bind.annotation.ResponseStatus
 import java.time.LocalDateTime
 import javax.persistence.*
 
@@ -131,3 +133,8 @@ data class HuaweiSubscription(
         @field:UpdateTimestamp
         val updated: LocalDateTime? = null
 )
+
+@ResponseStatus(value = HttpStatus.NOT_FOUND)
+class HuaweiSubscriptionNotFoundException(
+        override val message: String? = "HuaweiSubscription not found in db!"
+) : RuntimeException(message)
