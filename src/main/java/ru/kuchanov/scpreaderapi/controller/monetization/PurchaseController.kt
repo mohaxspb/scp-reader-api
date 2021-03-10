@@ -103,7 +103,7 @@ class PurchaseController @Autowired constructor(
             @RequestParam productId: String,
             @RequestParam subscriptionId: String,
             @RequestParam purchaseToken: String,
-            @RequestParam(defaultValue = ACCOUNT_FLAG_GERMANY_APP_TOUCH.toString()) accountFlag: Int,
+            @RequestParam(defaultValue = ACCOUNT_FLAG_HUAWEI_ID.toString()) accountFlag: Int,
             @AuthenticationPrincipal user: User?
     ): UserProjectionV2 {
         check(user != null) { "User is null!" }
