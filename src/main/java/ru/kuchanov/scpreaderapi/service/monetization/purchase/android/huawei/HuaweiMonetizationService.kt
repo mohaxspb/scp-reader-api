@@ -25,6 +25,9 @@ class HuaweiMonetizationService @Autowired constructor(
     fun getHuaweiSubscriptionsForUser(userId: Long): List<HuaweiSubscription> =
             huaweiSubscriptionRepository.getHuaweiSubscriptionsByUserId(userId)
 
+    fun getHuaweiSubscriptionBySubscriptionId(subscriptionId: String): HuaweiSubscription? =
+            huaweiSubscriptionRepository.getHuaweiSubscriptionBySubscriptionId(subscriptionId)
+
     fun getUserByHuaweiSubscriptionId(huaweiSubscriptionId: Long): User? =
             userRepository.getUserByHuaweiSubscriptionId(huaweiSubscriptionId)
 
