@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 data class InAppPurchaseData(
         val applicationId: Long,
         val autoRenewing: Boolean,
-        val orderId: String,
+        val orderId: String?,
         /**
          * 0: consumable
          * 1: non-consumable

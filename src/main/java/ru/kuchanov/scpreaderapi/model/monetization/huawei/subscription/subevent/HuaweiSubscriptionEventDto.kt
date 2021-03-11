@@ -17,9 +17,8 @@ data class HuaweiSubscriptionEventDto(
 data class StatusUpdateNotification(
         /**
          * Environment for sending a notification. The options are as follows:
-
-        PROD: official environment
-        SandBox: sandbox testing environment
+         * PROD: official environment
+         * SandBox: sandbox testing environment
          */
         val environment: Environment,
         /**

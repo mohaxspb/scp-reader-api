@@ -150,7 +150,8 @@ class PurchaseController @Autowired constructor(
                     """.trimIndent())
                 }
                 NEW_RENEWAL_PREF -> {
-                    //A user selects another subscription in the group and it takes effect after the current subscription expires.
+                    //A user selects another subscription in the group and it takes effect
+                    //after the current subscription expires.
                     //The current validity period is not affected.
                     //That is, the subscription takes effect in the next validity period after downgrade or crossgrade.
                     //
@@ -376,6 +377,7 @@ class PurchaseController @Autowired constructor(
         }
 
         //2. Iterate them, verify and update DB records
+        @Suppress("UnnecessaryVariable")
         val updatedSubscriptions: List<HuaweiSubscription> = recentlyExpiredSubscriptions.mapNotNull { currentSubscription ->
             //Do not try to validate after 3 days of unsuccessful attempts if period is not Period.WEEK
             val previousAttempts = subscriptionValidateAttemptsService
