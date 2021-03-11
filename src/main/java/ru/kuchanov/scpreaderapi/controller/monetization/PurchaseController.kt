@@ -121,8 +121,33 @@ class PurchaseController @Autowired constructor(
                             InAppPurchaseData::class.java
                     )
 
-                    //todo find user by inAppPurchaseDataForCurrentSub or inAppPurchaseDataForPreviousSub
-                    //todo validate and apply to user. (expired subscription renew or this maybe change to new subscription)
+                    //find user by inAppPurchaseDataForCurrentSub or inAppPurchaseDataForPreviousSub
+                    //validate and apply to user. (expired subscription renew or this maybe change to new subscription)
+
+                    val existingHuaweiSubId = inAppPurchaseDataForPreviousSub.subscriptionId!!
+
+                    val huaweiSubscriptionInDb: HuaweiSubscription = huaweiMonetizationService
+                            .getHuaweiSubscriptionBySubscriptionId(existingHuaweiSubId)
+                            ?: throw HuaweiSubscriptionNotFoundException(
+                                    "HuaweiSubscription not found for subscriptionId: $existingHuaweiSubId"
+                            )
+
+                    val user: User = huaweiMonetizationService
+                            .getUserByHuaweiSubscriptionId(huaweiSubscriptionInDb.id!!) ?: throw UserNotFoundException()
+
+                    val updatedUser = applyHuaweiSubscription(
+                            inAppPurchaseDataForCurrentSub.subscriptionId!!,
+                            inAppPurchaseDataForCurrentSub.purchaseToken,
+                            inAppPurchaseDataForCurrentSub.accountFlag ?: ACCOUNT_FLAG_HUAWEI_ID,
+                            user
+                    )
+                    val updatedSubscription = huaweiMonetizationService
+                            .getHuaweiSubscriptionBySubscriptionId(inAppPurchaseDataForCurrentSub.subscriptionId)
+                    log.error("""
+                        Successfully update renewed Huawei subscription (INTERACTIVE_RENEWAL)!
+                        User: ${updatedUser.id}/${updatedUser.offlineLimitDisabledEndDate}. 
+                        Subscription: ${huaweiSubscriptionInDb.id}/${updatedSubscription?.expiryTimeMillis}.
+                    """.trimIndent())
                 }
                 NEW_RENEWAL_PREF -> {
                     //A user selects another subscription in the group and it takes effect after the current subscription expires.
