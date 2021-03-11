@@ -7,7 +7,7 @@ import ru.kuchanov.scpreaderapi.bean.purchase.huawei.HuaweiProduct
 import ru.kuchanov.scpreaderapi.bean.purchase.huawei.HuaweiSubscription
 import ru.kuchanov.scpreaderapi.bean.purchase.huawei.UserToHuaweiSubscription
 import ru.kuchanov.scpreaderapi.bean.users.User
-import ru.kuchanov.scpreaderapi.model.huawei.purchase.InAppPurchaseData
+import ru.kuchanov.scpreaderapi.model.monetization.huawei.InAppPurchaseData
 import ru.kuchanov.scpreaderapi.repository.monetization.purchase.android.huawei.HuaweiSubscriptionRepository
 import ru.kuchanov.scpreaderapi.repository.monetization.purchase.android.huawei.UserToHuaweiSubscriptionRepository
 import ru.kuchanov.scpreaderapi.repository.users.UsersRepository
@@ -24,6 +24,9 @@ class HuaweiMonetizationService @Autowired constructor(
 
     fun getHuaweiSubscriptionsForUser(userId: Long): List<HuaweiSubscription> =
             huaweiSubscriptionRepository.getHuaweiSubscriptionsByUserId(userId)
+
+    fun getHuaweiSubscriptionBySubscriptionId(subscriptionId: String): HuaweiSubscription? =
+            huaweiSubscriptionRepository.getHuaweiSubscriptionBySubscriptionId(subscriptionId)
 
     fun getUserByHuaweiSubscriptionId(huaweiSubscriptionId: Long): User? =
             userRepository.getUserByHuaweiSubscriptionId(huaweiSubscriptionId)

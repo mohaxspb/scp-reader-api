@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.bean.monetization
+package ru.kuchanov.scpreaderapi.model.monetization
 
 data class Product(
         private val productType: InappType,

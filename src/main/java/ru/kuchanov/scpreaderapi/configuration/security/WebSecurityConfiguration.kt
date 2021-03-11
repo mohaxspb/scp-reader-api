@@ -100,7 +100,8 @@ class WebSecurityConfiguration @Autowired constructor(
                         "/encrypt",
                         "/login**",
                         "/error**",
-                        "/${ScpReaderConstants.Path.FIREBASE}/${ScpReaderConstants.Path.MESSAGING}/all/byTypes"
+                        "/${ScpReaderConstants.Path.FIREBASE}/${ScpReaderConstants.Path.MESSAGING}/all/byTypes",
+                        "/${ScpReaderConstants.Path.MONETIZATION}/${ScpReaderConstants.Path.PURCHASE}/subscriptionEvents/huawei"
                 )
                 .permitAll()
         http

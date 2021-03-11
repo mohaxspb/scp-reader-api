@@ -3,7 +3,7 @@ package ru.kuchanov.scpreaderapi.model.dto.purchase
 import com.fasterxml.jackson.annotation.JsonValue
 import com.google.api.services.androidpublisher.model.ProductPurchase
 import com.google.api.services.androidpublisher.model.SubscriptionPurchase
-import ru.kuchanov.scpreaderapi.model.huawei.purchase.InAppPurchaseData
+import ru.kuchanov.scpreaderapi.model.monetization.huawei.InAppPurchaseData
 
 enum class ValidationStatus {
 

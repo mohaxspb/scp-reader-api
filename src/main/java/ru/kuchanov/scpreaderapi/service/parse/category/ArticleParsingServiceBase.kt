@@ -65,9 +65,8 @@ import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_IMG
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_P
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_TABLE
 import ru.kuchanov.scpreaderapi.service.users.LangService
+import ru.kuchanov.scpreaderapi.utils.ErrorUtils
 import java.io.IOException
-import java.io.PrintWriter
-import java.io.StringWriter
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.*
@@ -139,6 +138,9 @@ class ArticleParsingServiceBase {
 
     @Autowired
     lateinit var articleParseErrorService: ArticleParseErrorService
+
+    @Autowired
+    lateinit var errorUtils: ErrorUtils
 
     @Autowired
     lateinit var cacheManager: CacheManager
@@ -283,10 +285,7 @@ class ArticleParsingServiceBase {
         val message = if (errorNotOccurred) {
             "Sync all sites data done in $minutesSpent minutes."
         } else {
-            val stringWriter = StringWriter()
-            error?.printStackTrace(PrintWriter(stringWriter))
-            val stacktraceAsString = stringWriter.toString()
-            "Sync all sites data failed after $minutesSpent minutes.\n\n Error:\n$stacktraceAsString"
+            "Sync all sites data failed after $minutesSpent minutes.\n\n Error:\n${errorUtils.stackTraceAsString(error)}"
         }
         log.error(message)
         if (sendMail) {
@@ -818,29 +817,22 @@ class ArticleParsingServiceBase {
     }
 
     private fun saveArticleParseError(langId: String, url: String, e: Throwable) {
-        val stringWriter = StringWriter()
-        e.printStackTrace(PrintWriter(stringWriter))
-        val stacktraceAsString = stringWriter.toString()
-
         val error = ArticleParseError(
                 langId = langId,
                 urlRelative = url,
                 errorClass = e::class.java.simpleName,
                 errorMessage = e.message,
-                stacktrace = stacktraceAsString
+                stacktrace = errorUtils.stackTraceAsString(e)!!
         )
 
         val cause = e.cause
         if (cause != null) {
             val causeErrorClass = cause::class.java.simpleName
             val causeErrorMessage = cause.message
-            stringWriter.buffer.setLength(0)
-            cause.printStackTrace(PrintWriter(stringWriter))
-            val causeStacktraceAsString = stringWriter.toString()
 
             error.causeErrorClass = causeErrorClass
             error.causeErrorMessage = causeErrorMessage
-            error.causeStacktrace = causeStacktraceAsString
+            error.causeStacktrace = errorUtils.stackTraceAsString(cause)
         }
 
         articleParseErrorService.save(error)

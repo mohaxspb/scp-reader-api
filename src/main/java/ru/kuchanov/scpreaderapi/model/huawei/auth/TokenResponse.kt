@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.model.huawei
+package ru.kuchanov.scpreaderapi.model.huawei.auth
 
 import com.fasterxml.jackson.annotation.JsonProperty
 

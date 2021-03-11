@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.model.monetization.huawei
+package ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription
 
 data class HuaweiSubscriptionCancelResponse(
         /**

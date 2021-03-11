@@ -2,7 +2,7 @@ package ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei
 
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.purchase.huawei.HuaweiSubscription
-import ru.kuchanov.scpreaderapi.model.huawei.purchase.InAppPurchaseData
+import ru.kuchanov.scpreaderapi.model.monetization.huawei.InAppPurchaseData
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset

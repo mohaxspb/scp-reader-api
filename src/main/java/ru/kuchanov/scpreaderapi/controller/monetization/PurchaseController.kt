@@ -1,25 +1,35 @@
 package ru.kuchanov.scpreaderapi.controller.monetization
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
-import ru.kuchanov.scpreaderapi.bean.monetization.InappType
-import ru.kuchanov.scpreaderapi.bean.monetization.Store
 import ru.kuchanov.scpreaderapi.bean.purchase.SubscriptionValidationAttempts
 import ru.kuchanov.scpreaderapi.bean.purchase.huawei.HuaweiSubscription
+import ru.kuchanov.scpreaderapi.bean.purchase.huawei.HuaweiSubscriptionEventHandleAttemptRecord
+import ru.kuchanov.scpreaderapi.bean.purchase.huawei.HuaweiSubscriptionNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
 import ru.kuchanov.scpreaderapi.model.dto.monetization.UserSubscriptionsDto
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
 import ru.kuchanov.scpreaderapi.model.dto.user.UserProjectionV2
+import ru.kuchanov.scpreaderapi.model.monetization.InappType
+import ru.kuchanov.scpreaderapi.model.monetization.Store
+import ru.kuchanov.scpreaderapi.model.monetization.huawei.InAppPurchaseData
+import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.subevent.HuaweiSubscriptionEventDto
+import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.subevent.HuaweiSubscriptionEventResponse
+import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.subevent.StatusUpdateNotification
+import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.subevent.StatusUpdateNotification.NotificationType.*
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.SubscriptionValidateAttemptsService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiApiService
-import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiApiService.Companion.ACCOUNT_FLAG_GERMANY_APP_TOUCH
+import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiApiService.Companion.ACCOUNT_FLAG_HUAWEI_ID
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiMonetizationService
+import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiSubsEventHandleAttemptService
 import ru.kuchanov.scpreaderapi.service.users.ScpReaderUserService
+import ru.kuchanov.scpreaderapi.utils.ErrorUtils
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDateTime
@@ -33,6 +43,9 @@ class PurchaseController @Autowired constructor(
         private val huaweiMonetizationService: HuaweiMonetizationService,
         private val userService: ScpReaderUserService,
         private val subscriptionValidateAttemptsService: SubscriptionValidateAttemptsService,
+        private val huaweiSubsEventHandleAttemptService: HuaweiSubsEventHandleAttemptService,
+        private val errorUtils: ErrorUtils,
+        private val objectMapper: ObjectMapper,
         private val log: Logger
 ) {
 
@@ -47,6 +60,165 @@ class PurchaseController @Autowired constructor(
         MINUTES_5, HOUR, DAY, WEEK
     }
 
+    @PostMapping("/subscriptionEvents/huawei")
+    fun huaweiSubscriptionEventsWebHook(
+            @RequestBody huaweiSubscriptionEventDto: HuaweiSubscriptionEventDto
+    ): HuaweiSubscriptionEventResponse {
+        var error: Exception? = null
+
+        try {
+            val parsedRequest = objectMapper.readValue(
+                    huaweiSubscriptionEventDto.statusUpdateNotification,
+                    StatusUpdateNotification::class.java
+            )
+            log.error("parsedRequest: ${objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(parsedRequest)}")
+
+            when (parsedRequest.notificationType) {
+                INITIAL_BUY, CANCEL, RENEWAL_STOPPED, ON_HOLD,
+                PAUSED, PAUSE_PLAN_CHANGED, PRICE_CHANGE_CONFIRMED, DEFERRED -> {
+                    //nothing to do.
+                }
+                RENEWAL, RENEWAL_RESTORED, RENEWAL_RECURRING -> {
+                    val inAppPurchaseData: InAppPurchaseData = objectMapper.readValue(
+                            parsedRequest.latestReceiptInfo!!,
+                            InAppPurchaseData::class.java
+                    )
+                    val huaweiSubId = inAppPurchaseData.subscriptionId!!
+
+                    val huaweiSubscriptionInDb: HuaweiSubscription = huaweiMonetizationService
+                            .getHuaweiSubscriptionBySubscriptionId(huaweiSubId)
+                            ?: throw HuaweiSubscriptionNotFoundException(
+                                    "HuaweiSubscription not found for subscriptionId: $huaweiSubId"
+                            )
+                    val user: User = huaweiMonetizationService
+                            .getUserByHuaweiSubscriptionId(huaweiSubscriptionInDb.id!!) ?: throw UserNotFoundException()
+
+                    val updatedUser = applyHuaweiSubscription(
+                            huaweiSubId,
+                            inAppPurchaseData.purchaseToken,
+                            inAppPurchaseData.accountFlag ?: ACCOUNT_FLAG_HUAWEI_ID,
+                            user
+                    )
+                    val updatedSubscription = huaweiMonetizationService
+                            .getHuaweiSubscriptionBySubscriptionId(huaweiSubId)
+                    log.error("""
+                        Successfully update renewed Huawei subscription (RENEWAL, RENEWAL_RESTORED, RENEWAL_RECURRING)!
+                        User: ${updatedUser.id}/${updatedUser.offlineLimitDisabledEndDate}. 
+                        Subscription: ${huaweiSubscriptionInDb.id}/${updatedSubscription?.expiryTimeMillis}.
+                    """.trimIndent())
+                }
+                INTERACTIVE_RENEWAL -> {
+                    //seems to be, here we can found oriSubscriptionId,
+                    //which must be equal to inAppPurchaseDataForPreviousSub.subscriptionId
+                    val inAppPurchaseDataForCurrentSub: InAppPurchaseData = objectMapper.readValue(
+                            parsedRequest.latestReceiptInfo!!,
+                            InAppPurchaseData::class.java
+                    )
+                    //use it find user by his previous sub
+                    @Suppress("DuplicatedCode")
+                    val inAppPurchaseDataForPreviousSub: InAppPurchaseData = objectMapper.readValue(
+                            parsedRequest.latestExpiredReceiptInfo!!,
+                            InAppPurchaseData::class.java
+                    )
+
+                    //find user by inAppPurchaseDataForCurrentSub or inAppPurchaseDataForPreviousSub
+                    //validate and apply to user. (expired subscription renew or this maybe change to new subscription)
+
+                    val existingHuaweiSubId = inAppPurchaseDataForPreviousSub.subscriptionId!!
+
+                    val huaweiSubscriptionInDb: HuaweiSubscription = huaweiMonetizationService
+                            .getHuaweiSubscriptionBySubscriptionId(existingHuaweiSubId)
+                            ?: throw HuaweiSubscriptionNotFoundException(
+                                    "HuaweiSubscription not found for subscriptionId: $existingHuaweiSubId"
+                            )
+
+                    val user: User = huaweiMonetizationService
+                            .getUserByHuaweiSubscriptionId(huaweiSubscriptionInDb.id!!) ?: throw UserNotFoundException()
+
+                    val updatedUser = applyHuaweiSubscription(
+                            inAppPurchaseDataForCurrentSub.subscriptionId!!,
+                            inAppPurchaseDataForCurrentSub.purchaseToken,
+                            inAppPurchaseDataForCurrentSub.accountFlag ?: ACCOUNT_FLAG_HUAWEI_ID,
+                            user
+                    )
+                    val updatedSubscription = huaweiMonetizationService
+                            .getHuaweiSubscriptionBySubscriptionId(inAppPurchaseDataForCurrentSub.subscriptionId)
+                    log.error("""
+                        Successfully update renewed Huawei subscription (INTERACTIVE_RENEWAL)!
+                        User: ${updatedUser.id}/${updatedUser.offlineLimitDisabledEndDate}. 
+                        Subscription: ${huaweiSubscriptionInDb.id}/${updatedSubscription?.expiryTimeMillis}.
+                    """.trimIndent())
+                }
+                NEW_RENEWAL_PREF -> {
+                    //A user selects another subscription in the group and it takes effect
+                    //after the current subscription expires.
+                    //The current validity period is not affected.
+                    //That is, the subscription takes effect in the next validity period after downgrade or crossgrade.
+                    //
+                    //The notification carries the last valid receipt and new subscription information,
+                    //including the product ID and subscription ID.
+
+                    //write to db, connect to user, validate
+
+                    val inAppPurchaseData: InAppPurchaseData = objectMapper.readValue(
+                            parsedRequest.latestReceiptInfo!!,
+                            InAppPurchaseData::class.java
+                    )
+                    val huaweiSubId = inAppPurchaseData.subscriptionId!!
+                    val huaweiOriSubId = inAppPurchaseData.oriSubscriptionId!!
+
+                    val huaweiSubscriptionInDb: HuaweiSubscription = huaweiMonetizationService
+                            .getHuaweiSubscriptionBySubscriptionId(huaweiOriSubId)
+                            ?: throw HuaweiSubscriptionNotFoundException(
+                                    "HuaweiSubscription not found for huaweiOriSubId: $huaweiOriSubId"
+                            )
+
+                    @Suppress("DuplicatedCode")
+                    val user: User = huaweiMonetizationService
+                            .getUserByHuaweiSubscriptionId(huaweiSubscriptionInDb.id!!) ?: throw UserNotFoundException()
+
+                    @Suppress("DuplicatedCode")
+                    val updatedUser = applyHuaweiSubscription(
+                            huaweiSubId,
+                            inAppPurchaseData.purchaseToken,
+                            inAppPurchaseData.accountFlag ?: ACCOUNT_FLAG_HUAWEI_ID,
+                            user
+                    )
+                    val updatedSubscription = huaweiMonetizationService
+                            .getHuaweiSubscriptionBySubscriptionId(huaweiSubId)
+                    log.error("""
+                        Successfully save changed Huawei subscription (NEW_RENEWAL_PREF)!
+                        User: ${updatedUser.id}/${updatedUser.offlineLimitDisabledEndDate}. 
+                        Subscription: ${huaweiSubscriptionInDb.id}/${updatedSubscription?.expiryTimeMillis}.
+                    """.trimIndent())
+                }
+            }
+        } catch (e: Exception) {
+            error = e
+            log.error("Error while handle huawei subscription event", error)
+        } finally {
+            huaweiSubsEventHandleAttemptService.save(
+                    HuaweiSubscriptionEventHandleAttemptRecord(
+                            statusUpdateNotification = huaweiSubscriptionEventDto.statusUpdateNotification,
+                            notificationSignature = huaweiSubscriptionEventDto.notifycationSignature
+                    ).apply {
+                        error?.let { e ->
+                            errorClass = e::class.java.simpleName
+                            errorMessage = e.message
+                            stacktrace = errorUtils.stackTraceAsString(e)
+                            error.cause?.let {
+                                causeErrorClass = it::class.java.simpleName
+                                causeErrorMessage = it.message
+                                causeStacktrace = errorUtils.stackTraceAsString(it)
+                            }
+                        }
+                    }
+            )
+        }
+
+        return HuaweiSubscriptionEventResponse()
+    }
+
     @PostMapping("/apply/{store}/{purchaseType}")
     fun applyAndroidProduct(
             @PathVariable store: Store,
@@ -54,37 +226,51 @@ class PurchaseController @Autowired constructor(
             @RequestParam productId: String,
             @RequestParam subscriptionId: String,
             @RequestParam purchaseToken: String,
-            @RequestParam(defaultValue = ACCOUNT_FLAG_GERMANY_APP_TOUCH.toString()) accountFlag: Int,
+            @RequestParam(defaultValue = ACCOUNT_FLAG_HUAWEI_ID.toString()) accountFlag: Int,
             @AuthenticationPrincipal user: User?
     ): UserProjectionV2 {
         check(user != null) { "User is null!" }
         check(user.id != null) { "User ID is null!" }
         // 1. Verify product
-        val verificationResult = when (store) {
-            Store.HUAWEI -> huaweiApiService.verifyPurchase(
-                    productId,
-                    subscriptionId,
-                    purchaseType,
-                    purchaseToken,
-                    accountFlag
-            )
+        when (store) {
+            Store.HUAWEI -> {
+                when (purchaseType) {
+                    InappType.SUBS -> {
+                        return applyHuaweiSubscription(subscriptionId, purchaseToken, accountFlag, user)
+                    }
+                    InappType.INAPP, InappType.CONSUMABLE -> TODO()
+                }
+
+            }
             Store.GOOGLE -> TODO()
             Store.AMAZON -> TODO()
             Store.APPLE -> TODO()
         }
+    }
+
+    private fun applyHuaweiSubscription(
+            subscriptionId: String,
+            purchaseToken: String,
+            accountFlag: Int,
+            user: User
+    ): UserProjectionV2 {
+        // 1. Verify product
+        val verificationResult = huaweiApiService.verifyPurchase(
+                subscriptionId,
+                InappType.SUBS,
+                purchaseToken,
+                accountFlag
+        )
+
         val huaweiSubscriptionResponse = (verificationResult as ValidationResponse.HuaweiSubscriptionResponse)
+
         //2. Write product info to DB.
         huaweiMonetizationService.saveSubscription(huaweiSubscriptionResponse.androidSubscription!!, user)
 
         //3. Update user in DB.
-        when (purchaseType) {
-            InappType.INAPP, InappType.CONSUMABLE -> TODO()
-            InappType.SUBS -> {
-                updateUserSubscriptionExpiration(user.id)
+        updateUserSubscriptionExpiration(user.id!!)
 
-                return userService.getByIdAsDtoV2(user.id) ?: throw UserNotFoundException()
-            }
-        }
+        return userService.getByIdAsDtoV2(user.id) ?: throw UserNotFoundException()
     }
 
     private fun updateUserSubscriptionExpiration(userId: Long): User {
@@ -223,6 +409,7 @@ class PurchaseController @Autowired constructor(
         }
 
         //2. Iterate them, verify and update DB records
+        @Suppress("UnnecessaryVariable")
         val updatedSubscriptions: List<HuaweiSubscription> = recentlyExpiredSubscriptions.mapNotNull { currentSubscription ->
             //Do not try to validate after 3 days of unsuccessful attempts if period is not Period.WEEK
             val previousAttempts = subscriptionValidateAttemptsService
@@ -233,7 +420,6 @@ class PurchaseController @Autowired constructor(
             }
             val verificationResult: ValidationResponse? = try {
                 huaweiApiService.verifyPurchase(
-                        currentSubscription.productId!!,
                         currentSubscription.subscriptionId,
                         InappType.SUBS,
                         currentSubscription.purchaseToken,

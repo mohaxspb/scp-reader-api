@@ -7,13 +7,13 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.ResponseStatus
-import ru.kuchanov.scpreaderapi.bean.monetization.InappType
+import ru.kuchanov.scpreaderapi.model.monetization.InappType
 import ru.kuchanov.scpreaderapi.configuration.monetization.HuaweiPurchaseConfiguration
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationStatus
-import ru.kuchanov.scpreaderapi.model.huawei.purchase.InAppPurchaseData
+import ru.kuchanov.scpreaderapi.model.monetization.huawei.InAppPurchaseData
 import ru.kuchanov.scpreaderapi.model.monetization.huawei.HuaweiProductVerifyResponse
-import ru.kuchanov.scpreaderapi.model.monetization.huawei.HuaweiSubscriptionCancelResponse
+import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.HuaweiSubscriptionCancelResponse
 import ru.kuchanov.scpreaderapi.network.HuaweiApi
 
 @Service
@@ -31,12 +31,12 @@ class HuaweiApiService @Autowired constructor(
 ) {
 
     companion object {
+        const val ACCOUNT_FLAG_HUAWEI_ID = 0
         const val ACCOUNT_FLAG_GERMANY_APP_TOUCH = 1
     }
 
     @Throws(VerifyProductException::class)
     fun verifyPurchase(
-            productId: String,
             subscriptionId: String,
             purchaseType: InappType,
             purchaseToken: String,
@@ -45,7 +45,6 @@ class HuaweiApiService @Autowired constructor(
         log.info(
                 """
                     verifyPurchase:
-                    productId: $productId, 
                     purchaseType: $purchaseType, 
                     purchaseToken: $purchaseToken, 
                     accountFlag: $accountFlag
@@ -54,7 +53,6 @@ class HuaweiApiService @Autowired constructor(
         return when (purchaseType) {
             InappType.SUBS -> {
                 val result = verifySubscription(
-                        productId,
                         subscriptionId,
                         purchaseToken,
                         accountFlag
@@ -67,7 +65,6 @@ class HuaweiApiService @Autowired constructor(
 
     @Throws(VerifyProductException::class)
     fun verifySubscription(
-            productId: String,
             subscriptionId: String,
             purchaseToken: String,
             accountFlag: Int
