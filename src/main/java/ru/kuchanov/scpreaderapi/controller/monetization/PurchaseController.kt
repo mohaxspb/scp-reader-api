@@ -158,7 +158,39 @@ class PurchaseController @Autowired constructor(
                     //The notification carries the last valid receipt and new subscription information,
                     //including the product ID and subscription ID.
 
-                    //todo write to db, connect to user, validate (?)
+                    //write to db, connect to user, validate
+
+                    val inAppPurchaseData: InAppPurchaseData = objectMapper.readValue(
+                            parsedRequest.latestReceiptInfo!!,
+                            InAppPurchaseData::class.java
+                    )
+                    val huaweiSubId = inAppPurchaseData.subscriptionId!!
+                    val huaweiOriSubId = inAppPurchaseData.oriSubscriptionId!!
+
+                    val huaweiSubscriptionInDb: HuaweiSubscription = huaweiMonetizationService
+                            .getHuaweiSubscriptionBySubscriptionId(huaweiOriSubId)
+                            ?: throw HuaweiSubscriptionNotFoundException(
+                                    "HuaweiSubscription not found for huaweiOriSubId: $huaweiOriSubId"
+                            )
+
+                    @Suppress("DuplicatedCode")
+                    val user: User = huaweiMonetizationService
+                            .getUserByHuaweiSubscriptionId(huaweiSubscriptionInDb.id!!) ?: throw UserNotFoundException()
+
+                    @Suppress("DuplicatedCode")
+                    val updatedUser = applyHuaweiSubscription(
+                            huaweiSubId,
+                            inAppPurchaseData.purchaseToken,
+                            inAppPurchaseData.accountFlag ?: ACCOUNT_FLAG_HUAWEI_ID,
+                            user
+                    )
+                    val updatedSubscription = huaweiMonetizationService
+                            .getHuaweiSubscriptionBySubscriptionId(huaweiSubId)
+                    log.error("""
+                        Successfully save changed Huawei subscription (NEW_RENEWAL_PREF)!
+                        User: ${updatedUser.id}/${updatedUser.offlineLimitDisabledEndDate}. 
+                        Subscription: ${huaweiSubscriptionInDb.id}/${updatedSubscription?.expiryTimeMillis}.
+                    """.trimIndent())
                 }
             }
         } catch (e: Exception) {
