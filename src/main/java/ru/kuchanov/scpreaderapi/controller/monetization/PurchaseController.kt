@@ -83,24 +83,26 @@ class PurchaseController @Autowired constructor(
                             parsedRequest.latestReceiptInfo!!,
                             InAppPurchaseData::class.java
                     )
+                    val huaweiSubId = inAppPurchaseData.subscriptionId!!
+
                     val huaweiSubscriptionInDb: HuaweiSubscription = huaweiMonetizationService
-                            .getHuaweiSubscriptionBySubscriptionId(inAppPurchaseData.subscriptionId!!)
+                            .getHuaweiSubscriptionBySubscriptionId(huaweiSubId)
                             ?: throw HuaweiSubscriptionNotFoundException(
-                                    "HuaweiSubscription not found for subscriptionId: ${inAppPurchaseData.subscriptionId}"
+                                    "HuaweiSubscription not found for subscriptionId: $huaweiSubId"
                             )
                     val user: User = huaweiMonetizationService
                             .getUserByHuaweiSubscriptionId(huaweiSubscriptionInDb.id!!) ?: throw UserNotFoundException()
 
                     val updatedUser = applyHuaweiSubscription(
-                            inAppPurchaseData.subscriptionId,
+                            huaweiSubId,
                             inAppPurchaseData.purchaseToken,
                             inAppPurchaseData.accountFlag ?: ACCOUNT_FLAG_HUAWEI_ID,
                             user
                     )
                     val updatedSubscription = huaweiMonetizationService
-                            .getHuaweiSubscriptionBySubscriptionId(inAppPurchaseData.subscriptionId)
+                            .getHuaweiSubscriptionBySubscriptionId(huaweiSubId)
                     log.error("""
-                        Successfully update renewed Huawei subscription!
+                        Successfully update renewed Huawei subscription (RENEWAL, RENEWAL_RESTORED, RENEWAL_RECURRING)!
                         User: ${updatedUser.id}/${updatedUser.offlineLimitDisabledEndDate}. 
                         Subscription: ${huaweiSubscriptionInDb.id}/${updatedSubscription?.expiryTimeMillis}.
                     """.trimIndent())
@@ -113,6 +115,7 @@ class PurchaseController @Autowired constructor(
                             InAppPurchaseData::class.java
                     )
                     //use it find user by his previous sub
+                    @Suppress("DuplicatedCode")
                     val inAppPurchaseDataForPreviousSub: InAppPurchaseData = objectMapper.readValue(
                             parsedRequest.latestExpiredReceiptInfo!!,
                             InAppPurchaseData::class.java
@@ -127,7 +130,7 @@ class PurchaseController @Autowired constructor(
                     //That is, the subscription takes effect in the next validity period after downgrade or crossgrade.
                     //
                     //The notification carries the last valid receipt and new subscription information,
-                     //including the product ID and subscription ID.
+                    //including the product ID and subscription ID.
 
                     //todo write to db, connect to user, validate (?)
                 }
