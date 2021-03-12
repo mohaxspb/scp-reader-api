@@ -95,4 +95,8 @@ object ScpReaderConstants {
     enum class UserDataTransactionType {
         READ_ARTICLE, REWARDED_VIDEO
     }
+
+    enum class PushProvider {
+        HUAWEI, GOOGLE
+    }
 }

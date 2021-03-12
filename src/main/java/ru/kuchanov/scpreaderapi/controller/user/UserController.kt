@@ -100,4 +100,13 @@ class UserController @Autowired constructor(
     @GetMapping("/android/subscription/all")
     fun showAndroidSubscriptions(@AuthenticationPrincipal user: User): List<AndroidSubscription> =
             userAndroidPurchaseService.findAllSubscriptions(user.id!!)
+
+    @PostMapping("/push/token/{provider}")
+    fun receiveUserPushToken(
+            @PathVariable(value = "provider") provider: ScpReaderConstants.PushProvider,
+            @RequestParam(value = "pushToken") pushToken: String,
+            @AuthenticationPrincipal user: User
+    ) {
+        //todo write to DB connection of token (with provider) to user.
+    }
 }
