@@ -5,8 +5,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.users.User
-import ru.kuchanov.scpreaderapi.service.firebase.push.FirebaseMessagingService
-import ru.kuchanov.scpreaderapi.service.firebase.push.PushMessageService
+import ru.kuchanov.scpreaderapi.service.push.firebase.FirebaseMessagingService
+import ru.kuchanov.scpreaderapi.service.push.PushMessageService
 
 
 @RestController

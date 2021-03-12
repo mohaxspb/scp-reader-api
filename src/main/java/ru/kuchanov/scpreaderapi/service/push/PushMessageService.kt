@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.service.firebase.push
+package ru.kuchanov.scpreaderapi.service.push
 
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.firebase.push.PushMessage

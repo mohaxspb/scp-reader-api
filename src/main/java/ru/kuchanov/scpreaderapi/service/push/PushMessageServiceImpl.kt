@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.service.firebase.push
+package ru.kuchanov.scpreaderapi.service.push
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
