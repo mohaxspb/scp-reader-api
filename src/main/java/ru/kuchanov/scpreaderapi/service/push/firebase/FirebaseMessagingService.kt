@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.service.firebase.push
+package ru.kuchanov.scpreaderapi.service.push.firebase
 
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.Message
@@ -12,14 +12,16 @@ import ru.kuchanov.scpreaderapi.bean.firebase.push.PushMessageNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.model.exception.ScpAccessDeniedException
 import ru.kuchanov.scpreaderapi.model.exception.ScpServerException
+import ru.kuchanov.scpreaderapi.service.push.PushMessageService
+import ru.kuchanov.scpreaderapi.service.push.PushProviderMessagingService
 import java.time.format.DateTimeFormatter
 
 @Service
 class FirebaseMessagingService @Autowired constructor(
         val log: Logger,
         val pushMessageService: PushMessageService
-) {
-    fun sendMessageToTopic(
+): PushProviderMessagingService {
+    override fun sendMessageToTopic(
             topicName: String,
             type: Fcm.MessageType,
             title: String,
@@ -41,7 +43,7 @@ class FirebaseMessagingService @Autowired constructor(
         return sendMessageToTopic(topicName, savedMessage, author)
     }
 
-    fun sendMessageToTopicById(
+    override fun sendMessageToTopicById(
             topicName: String,
             pushMessageId: Long,
             author: User
