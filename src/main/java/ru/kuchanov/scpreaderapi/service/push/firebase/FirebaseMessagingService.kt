@@ -5,7 +5,7 @@ import com.google.firebase.messaging.Message
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import ru.kuchanov.scpreaderapi.ScpReaderConstants.Firebase.Fcm
+import ru.kuchanov.scpreaderapi.ScpReaderConstants.Push
 import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
 import ru.kuchanov.scpreaderapi.bean.firebase.push.PushMessage
 import ru.kuchanov.scpreaderapi.bean.firebase.push.PushMessageNotFoundException
@@ -23,7 +23,7 @@ class FirebaseMessagingService @Autowired constructor(
 ): PushProviderMessagingService {
     override fun sendMessageToTopic(
             topicName: String,
-            type: Fcm.MessageType,
+            type: Push.MessageType,
             title: String,
             message: String,
             url: String?,
@@ -85,18 +85,18 @@ class FirebaseMessagingService @Autowired constructor(
         }
 
         val data = mutableMapOf<String, String>()
-        data[Fcm.DataParamName.ID.name] = pushMessage.id!!.toString()
+        data[Push.DataParamName.ID.name] = pushMessage.id!!.toString()
         when (pushMessage.type) {
-            Fcm.MessageType.MESSAGE -> {
+            Push.MessageType.MESSAGE -> {
             }
-            Fcm.MessageType.EXTERNAL_URL, Fcm.MessageType.NEW_VERSION -> {
-                data[Fcm.DataParamName.URL.name] = pushMessage.url!!
+            Push.MessageType.EXTERNAL_URL, Push.MessageType.NEW_VERSION -> {
+                data[Push.DataParamName.URL.name] = pushMessage.url!!
             }
         }
-        data[Fcm.DataParamName.TYPE.name] = pushMessage.type.name
-        data[Fcm.DataParamName.MESSAGE.name] = pushMessage.message
-        data[Fcm.DataParamName.TITLE.name] = pushMessage.title
-        data[Fcm.DataParamName.UPDATED.name] = DateTimeFormatter.ISO_INSTANT.format(pushMessage.updated!!.toInstant())
+        data[Push.DataParamName.TYPE.name] = pushMessage.type.name
+        data[Push.DataParamName.MESSAGE.name] = pushMessage.message
+        data[Push.DataParamName.TITLE.name] = pushMessage.title
+        data[Push.DataParamName.UPDATED.name] = DateTimeFormatter.ISO_INSTANT.format(pushMessage.updated!!.toInstant())
 
         return Message.builder()
                 .putAllData(data)

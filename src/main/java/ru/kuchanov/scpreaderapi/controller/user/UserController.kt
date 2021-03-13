@@ -103,7 +103,7 @@ class UserController @Autowired constructor(
 
     @PostMapping("/push/token/{provider}")
     fun receiveUserPushToken(
-            @PathVariable(value = "provider") provider: ScpReaderConstants.PushProvider,
+            @PathVariable(value = "provider") provider: ScpReaderConstants.Push.Provider,
             @RequestParam(value = "pushToken") pushToken: String,
             @AuthenticationPrincipal user: User
     ) {

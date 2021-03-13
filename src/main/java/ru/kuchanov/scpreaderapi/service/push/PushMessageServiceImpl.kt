@@ -12,7 +12,7 @@ class PushMessageServiceImpl @Autowired constructor(
         private val pushMessageRepository: PushMessageRepository
 ) : PushMessageService {
 
-    override fun findAllByTypeIn(types: List<ScpReaderConstants.Firebase.Fcm.MessageType>): List<PushMessage> =
+    override fun findAllByTypeIn(types: List<ScpReaderConstants.Push.MessageType>): List<PushMessage> =
             pushMessageRepository.findAllByTypeInOrderByCreatedDesc(types)
 
     override fun findAllByUserId(userId: Long): List<PushMessage> =

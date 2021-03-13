@@ -19,7 +19,7 @@ class FirebaseMessagingController @Autowired constructor(
     @GetMapping("/send/topic")
     fun sendToTopic(
             @RequestParam(value = "topicName") topicName: String,
-            @RequestParam(value = "type") type: ScpReaderConstants.Firebase.Fcm.MessageType,
+            @RequestParam(value = "type") type: ScpReaderConstants.Push.MessageType,
             @RequestParam(value = "title") title: String,
             @RequestParam(value = "message") message: String,
             @RequestParam(value = "url") url: String?,
@@ -35,7 +35,7 @@ class FirebaseMessagingController @Autowired constructor(
 
     @GetMapping("/all/byTypes")
     fun getAllByTypes(
-            @RequestParam(value = "types") types: List<ScpReaderConstants.Firebase.Fcm.MessageType>
+            @RequestParam(value = "types") types: List<ScpReaderConstants.Push.MessageType>
     ) = pushMessageService.findAllByTypeIn(types)
 
     @GetMapping("/delete/{id}")

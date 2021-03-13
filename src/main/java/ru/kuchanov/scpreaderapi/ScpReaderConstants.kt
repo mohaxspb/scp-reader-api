@@ -67,20 +67,6 @@ object ScpReaderConstants {
             PT("pt"),
             ZH("zh")
         }
-
-        object Fcm {
-            enum class Topic(val topicName: String) {
-                MAIN("/topics/main")
-            }
-
-            enum class MessageType {
-                MESSAGE, EXTERNAL_URL, NEW_VERSION
-            }
-
-            enum class DataParamName {
-                ID, TYPE, TITLE, MESSAGE, URL, UPDATED
-            }
-        }
     }
 
     enum class ArticleTypeEnum {
@@ -96,7 +82,22 @@ object ScpReaderConstants {
         READ_ARTICLE, REWARDED_VIDEO
     }
 
-    enum class PushProvider {
-        HUAWEI, GOOGLE
+    object Push {
+
+        enum class Topic(val topicName: String) {
+            MAIN("/topics/main")
+        }
+
+        enum class MessageType {
+            MESSAGE, EXTERNAL_URL, NEW_VERSION
+        }
+
+        enum class DataParamName {
+            ID, TYPE, TITLE, MESSAGE, URL, UPDATED
+        }
+
+        enum class Provider {
+            HUAWEI, GOOGLE
+        }
     }
 }

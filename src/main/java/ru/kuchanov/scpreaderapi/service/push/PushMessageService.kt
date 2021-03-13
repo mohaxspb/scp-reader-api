@@ -5,7 +5,7 @@ import ru.kuchanov.scpreaderapi.bean.firebase.push.PushMessage
 
 interface PushMessageService {
 
-    fun findAllByTypeIn(types: List<ScpReaderConstants.Firebase.Fcm.MessageType>): List<PushMessage>
+    fun findAllByTypeIn(types: List<ScpReaderConstants.Push.MessageType>): List<PushMessage>
 
     fun findAllByUserId(userId: Long): List<PushMessage>
 

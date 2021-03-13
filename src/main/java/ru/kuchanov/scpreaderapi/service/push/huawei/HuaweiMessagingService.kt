@@ -10,7 +10,7 @@ import ru.kuchanov.scpreaderapi.service.push.PushProviderMessagingService
 class HuaweiMessagingService : PushProviderMessagingService {
     override fun sendMessageToTopic(
             topicName: String,
-            type: ScpReaderConstants.Firebase.Fcm.MessageType,
+            type: ScpReaderConstants.Push.MessageType,
             title: String,
             message: String,
             url: String?,

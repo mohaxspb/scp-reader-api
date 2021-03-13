@@ -6,7 +6,7 @@ import ru.kuchanov.scpreaderapi.bean.firebase.push.PushMessage
 
 interface PushMessageRepository : JpaRepository<PushMessage, Long> {
 
-    fun findAllByTypeInOrderByCreatedDesc(types: List<ScpReaderConstants.Firebase.Fcm.MessageType>): List<PushMessage>
+    fun findAllByTypeInOrderByCreatedDesc(types: List<ScpReaderConstants.Push.MessageType>): List<PushMessage>
 
     fun findAllByUserId(userId: Long): List<PushMessage>
 }
