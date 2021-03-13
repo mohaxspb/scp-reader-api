@@ -6,10 +6,10 @@ import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.ScpReaderConstants.Push
-import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
 import ru.kuchanov.scpreaderapi.bean.firebase.push.PushMessage
 import ru.kuchanov.scpreaderapi.bean.firebase.push.PushMessageNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.User
+import ru.kuchanov.scpreaderapi.bean.users.isAdmin
 import ru.kuchanov.scpreaderapi.model.exception.ScpAccessDeniedException
 import ru.kuchanov.scpreaderapi.model.exception.ScpServerException
 import ru.kuchanov.scpreaderapi.service.push.PushMessageService
@@ -20,7 +20,8 @@ import java.time.format.DateTimeFormatter
 class FirebaseMessagingService @Autowired constructor(
         val log: Logger,
         val pushMessageService: PushMessageService
-): PushProviderMessagingService {
+) : PushProviderMessagingService {
+
     override fun sendMessageToTopic(
             topicName: String,
             type: Push.MessageType,
@@ -59,7 +60,7 @@ class FirebaseMessagingService @Autowired constructor(
             author: User
     ): PushMessage {
         //check is admin
-        if (!author.userAuthorities.map { it.authority }.contains(AuthorityType.ADMIN)) {
+        if (author.isAdmin().not()) {
             throw ScpAccessDeniedException()
         }
 

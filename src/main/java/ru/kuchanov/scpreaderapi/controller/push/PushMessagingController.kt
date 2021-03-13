@@ -1,18 +1,20 @@
-package ru.kuchanov.scpreaderapi.controller.firebase
+package ru.kuchanov.scpreaderapi.controller.push
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.users.User
-import ru.kuchanov.scpreaderapi.service.push.firebase.FirebaseMessagingService
 import ru.kuchanov.scpreaderapi.service.push.PushMessageService
+import ru.kuchanov.scpreaderapi.service.push.firebase.FirebaseMessagingService
+import ru.kuchanov.scpreaderapi.service.push.huawei.HuaweiMessagingService
 
 
 @RestController
-@RequestMapping("/" + ScpReaderConstants.Path.FIREBASE + "/" + ScpReaderConstants.Path.MESSAGING)
-class FirebaseMessagingController @Autowired constructor(
+@RequestMapping("/" + ScpReaderConstants.Path.PUSH + "/" + ScpReaderConstants.Path.MESSAGING)
+class PushMessagingController @Autowired constructor(
         val fcmService: FirebaseMessagingService,
+        val huaweiMessagingService: HuaweiMessagingService,
         val pushMessageService: PushMessageService
 ) {
 
@@ -24,14 +26,14 @@ class FirebaseMessagingController @Autowired constructor(
             @RequestParam(value = "message") message: String,
             @RequestParam(value = "url") url: String?,
             @AuthenticationPrincipal user: User
-    ) = fcmService.sendMessageToTopic(topicName, type, title, message, url, user)
+    ) = fcmService.sendMessageToTopic(topicName, type, title, message, url, user) //todo use huawei
 
     @GetMapping("/send/topic/{id}")
     fun sendToTopic(
             @PathVariable(value = "id") id: Long,
             @RequestParam(value = "topicName") topicName: String,
             @AuthenticationPrincipal user: User
-    ) = fcmService.sendMessageToTopicById(topicName, id, user)
+    ) = fcmService.sendMessageToTopicById(topicName, id, user) //todo use huawei
 
     @GetMapping("/all/byTypes")
     fun getAllByTypes(
@@ -39,7 +41,7 @@ class FirebaseMessagingController @Autowired constructor(
     ) = pushMessageService.findAllByTypeIn(types)
 
     @GetMapping("/delete/{id}")
-    fun getAllByTypes(
+    fun delete(
             @PathVariable(value = "id") id: Long
     ) = pushMessageService.deleteById(id)
 }

@@ -32,6 +32,7 @@ object ScpReaderConstants {
 
     object Path {
         const val FIREBASE = "firebase"
+        const val PUSH = "push"
         const val MESSAGING = "messaging"
         const val AUTH = "auth"
         const val MONETIZATION = "monetization"
