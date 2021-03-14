@@ -84,8 +84,7 @@ class AllProvidersMessagingServiceImpl @Autowired constructor(
                     provider = Push.Provider.GOOGLE,
                     pushMessage = firebaseMessagingService.sendMessageToTopicById(
                             topicName,
-                            savedMessage.id!!,
-                            author
+                            savedMessage.id!!
                     )
             )
         } catch (e: Throwable) {

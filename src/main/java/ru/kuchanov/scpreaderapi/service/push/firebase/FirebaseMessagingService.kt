@@ -44,8 +44,7 @@ class FirebaseMessagingService @Autowired constructor(
 
     override fun sendMessageToTopicById(
             topicName: String,
-            pushMessageId: Long,
-            author: User
+            pushMessageId: Long
     ): PushMessage {
         val savedMessage = pushMessageService.findOneById(pushMessageId) ?: throw PushMessageNotFoundException()
 
@@ -62,8 +61,7 @@ class FirebaseMessagingService @Autowired constructor(
             FirebaseMessaging.getInstance().send(fcmMessage)
             return pushMessageService.save(pushMessage.apply { sent = true })
         } catch (e: Exception) {
-            e.printStackTrace()
-            log.error(e.message)
+            log.error(e.message, e)
             pushMessageService.save(pushMessage.apply { sent = false })
             throw ScpServerException(e.message, e)
         }

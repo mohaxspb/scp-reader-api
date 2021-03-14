@@ -16,7 +16,6 @@ interface PushProviderMessagingService {
 
     fun sendMessageToTopicById(
             topicName: String,
-            pushMessageId: Long,
-            author: User
+            pushMessageId: Long
     ): PushMessage
 }
