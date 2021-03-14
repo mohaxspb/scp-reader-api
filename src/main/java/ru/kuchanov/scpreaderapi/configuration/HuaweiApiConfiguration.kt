@@ -12,9 +12,11 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.util.Base64Utils
 import retrofit2.CallAdapter
 import retrofit2.Converter
+import retrofit2.Response
 import retrofit2.Retrofit
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.auth.huawei.HuaweiOAuthAccessToken
+import ru.kuchanov.scpreaderapi.model.huawei.auth.TokenResponse
 import ru.kuchanov.scpreaderapi.network.HuaweiAuthApi
 import ru.kuchanov.scpreaderapi.repository.auth.huawei.HuaweiAccessTokenRepository
 import java.net.HttpURLConnection
@@ -28,8 +30,8 @@ class HuaweiApiConfiguration @Autowired constructor(
         private val converterFactory: Converter.Factory,
         private val callAdapterFactory: CallAdapter.Factory,
         private val huaweiAccessTokenRepository: HuaweiAccessTokenRepository,
-        private @Value("\${my.api.huawei.client_id}") val huaweiClientId: String,
-        private @Value("\${my.api.huawei.client_secret}") val huaweiClientSecret: String,
+        @Value("\${my.api.huawei.client_id}") private val huaweiClientId: String,
+        @Value("\${my.api.huawei.client_secret}")private  val huaweiClientSecret: String,
         private val log: Logger
 ) {
 
@@ -55,14 +57,14 @@ class HuaweiApiConfiguration @Autowired constructor(
             val initialRequest = chain.request()
             val initialResponse = chain.proceed(initialRequest)
             if (initialResponse.code() == HttpURLConnection.HTTP_UNAUTHORIZED) {
-                val response = huaweiAuthApi()
+                val response: Response<TokenResponse> = huaweiAuthApi()
                         .getAccessToken(
                                 ScpReaderConstants.Api.GRANT_TYPE_CLIENT_CREDENTIALS,
                                 huaweiClientId,
                                 huaweiClientSecret
                         )
                         .execute()
-                val tokenResponse = if (response.isSuccessful) {
+                val tokenResponseBody = if (response.isSuccessful) {
                     response.body()
                             ?: throw NullPointerException("Body is null while get accessToken by refreshToken!")
                 } else {
@@ -75,9 +77,9 @@ class HuaweiApiConfiguration @Autowired constructor(
 
                 val token = HuaweiOAuthAccessToken(
                         clientId = huaweiClientId,
-                        accessToken = tokenResponse.accessToken,
-                        expiresIn = tokenResponse.expiresIn,
-                        tokenType = tokenResponse.tokenType
+                        accessToken = tokenResponseBody.accessToken,
+                        expiresIn = tokenResponseBody.expiresIn,
+                        tokenType = tokenResponseBody.tokenType
                 )
                 huaweiAccessTokenRepository.save(token)
 
