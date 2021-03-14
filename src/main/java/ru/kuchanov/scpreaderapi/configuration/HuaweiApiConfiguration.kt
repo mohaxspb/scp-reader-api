@@ -31,12 +31,17 @@ class HuaweiApiConfiguration @Autowired constructor(
         private val callAdapterFactory: CallAdapter.Factory,
         private val huaweiAccessTokenRepository: HuaweiAccessTokenRepository,
         @Value("\${my.api.huawei.client_id}") private val huaweiClientId: String,
-        @Value("\${my.api.huawei.client_secret}")private  val huaweiClientSecret: String,
+        @Value("\${my.api.huawei.client_secret}") private val huaweiClientSecret: String,
         private val log: Logger
 ) {
 
     companion object {
-        const val QUALIFIER_OK_HTTP_CLIENT_HUAWEI_AUTH = "QUALIFIER_OK_HTTP_CLIENT_HUAWEI_AUTH"
+        const val QUALIFIER_OK_HTTP_CLIENT_HUAWEI_PURCHASE_AUTH = "QUALIFIER_OK_HTTP_CLIENT_HUAWEI_PURCHASE_AUTH"
+        const val QUALIFIER_OK_HTTP_CLIENT_HUAWEI_COMMON_AUTH = "QUALIFIER_OK_HTTP_CLIENT_HUAWEI_COMMON_AUTH"
+
+
+        const val HUAWEI_COMMON_API_AUTH_ERROR_CODE = "80200001"
+        const val HUAWEI_COMMON_API_AUTH_EXPIRED_ERROR_CODE = "80200003"
     }
 
     @Bean
