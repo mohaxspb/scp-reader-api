@@ -89,7 +89,7 @@ class HuaweiApiConfiguration @Autowired constructor(
                         .newBuilder()
                         .header(
                                 ScpReaderConstants.Api.HEADER_AUTHORIZATION,
-                                createAuthValue(token)
+                                createHuaweiPurchaseApiAuthValue(token)
                         )
                         .build()
                 chain.proceed(authorizedRequest)
@@ -99,7 +99,7 @@ class HuaweiApiConfiguration @Autowired constructor(
         }
 
         val accessTokenInterceptor = Interceptor { chain ->
-            val token = huaweiAccessTokenRepository.findFirstByClientId(huaweiClientId)?.let { createAuthValue(it) }
+            val token = huaweiAccessTokenRepository.findFirstByClientId(huaweiClientId)?.let { createHuaweiPurchaseApiAuthValue(it) }
                     ?: ""
             log.error("accessTokenInterceptor: $token")
             val request =
@@ -121,7 +121,7 @@ class HuaweiApiConfiguration @Autowired constructor(
                 .build()
     }
 
-    private fun createAuthValue(token: HuaweiOAuthAccessToken): String {
+    private fun createHuaweiPurchaseApiAuthValue(token: HuaweiOAuthAccessToken): String {
         val tokenValue = "APPAT:${token.accessToken}"
         return "${ScpReaderConstants.Api.HEADER_PART_BASIC} " + Base64Utils.encodeToString(tokenValue.toByteArray(StandardCharsets.UTF_8))
     }
