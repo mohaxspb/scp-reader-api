@@ -9,8 +9,6 @@ import ru.kuchanov.scpreaderapi.ScpReaderConstants.Push
 import ru.kuchanov.scpreaderapi.bean.firebase.push.PushMessage
 import ru.kuchanov.scpreaderapi.bean.firebase.push.PushMessageNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.User
-import ru.kuchanov.scpreaderapi.bean.users.isAdmin
-import ru.kuchanov.scpreaderapi.model.exception.ScpAccessDeniedException
 import ru.kuchanov.scpreaderapi.model.exception.ScpServerException
 import ru.kuchanov.scpreaderapi.service.push.PushMessageService
 import ru.kuchanov.scpreaderapi.service.push.PushProviderMessagingService
@@ -41,7 +39,7 @@ class FirebaseMessagingService @Autowired constructor(
                 )
         )
 
-        return sendMessageToTopic(topicName, savedMessage, author)
+        return sendMessageToTopic(topicName, savedMessage)
     }
 
     override fun sendMessageToTopicById(
@@ -51,19 +49,13 @@ class FirebaseMessagingService @Autowired constructor(
     ): PushMessage {
         val savedMessage = pushMessageService.findOneById(pushMessageId) ?: throw PushMessageNotFoundException()
 
-        return sendMessageToTopic(topicName, savedMessage, author)
+        return sendMessageToTopic(topicName, savedMessage)
     }
 
     private fun sendMessageToTopic(
             topicName: String,
-            pushMessage: PushMessage,
-            author: User
+            pushMessage: PushMessage
     ): PushMessage {
-        //check is admin
-        if (author.isAdmin().not()) {
-            throw ScpAccessDeniedException()
-        }
-
         val fcmMessage = fcmMessageFromPushMessage(pushMessage, topicName = topicName)
 
         try {
