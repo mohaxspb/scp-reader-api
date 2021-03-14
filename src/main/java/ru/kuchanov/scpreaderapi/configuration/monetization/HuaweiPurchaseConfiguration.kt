@@ -9,7 +9,7 @@ import retrofit2.CallAdapter
 import retrofit2.Converter
 import retrofit2.Retrofit
 import ru.kuchanov.scpreaderapi.configuration.HuaweiApiConfiguration
-import ru.kuchanov.scpreaderapi.network.HuaweiApi
+import ru.kuchanov.scpreaderapi.network.HuaweiPurchaseApi
 
 @Configuration
 class HuaweiPurchaseConfiguration @Autowired constructor(
@@ -28,49 +28,49 @@ class HuaweiPurchaseConfiguration @Autowired constructor(
 
     @Bean
     @Qualifier(QUALIFIER_SUBS_GERMANY_APP_TOUCH)
-    fun huaweiApiSubsGermanyAppTouch(): HuaweiApi {
+    fun huaweiApiSubsGermanyAppTouch(): HuaweiPurchaseApi {
         val retrofit = Retrofit.Builder()
-                .baseUrl(HuaweiApi.SUBS_GERMANY_APP_TOUCH_API_URL)
+                .baseUrl(HuaweiPurchaseApi.SUBS_GERMANY_APP_TOUCH_API_URL)
                 .client(huaweiAuthOkHttpClient)
                 .addConverterFactory(converterFactory)
                 .addCallAdapterFactory(callAdapterFactory)
                 .build()
-        return retrofit.create(HuaweiApi::class.java)
+        return retrofit.create(HuaweiPurchaseApi::class.java)
     }
 
     @Bean
     @Qualifier(QUALIFIER_ORDER_GERMANY_APP_TOUCH)
-    fun huaweiApiOrderGermanyAppTouch(): HuaweiApi {
+    fun huaweiApiOrderGermanyAppTouch(): HuaweiPurchaseApi {
         val retrofit = Retrofit.Builder()
-                .baseUrl(HuaweiApi.ORDER_GERMANY_APP_TOUCH_API_URL)
+                .baseUrl(HuaweiPurchaseApi.ORDER_GERMANY_APP_TOUCH_API_URL)
                 .client(huaweiAuthOkHttpClient)
                 .addConverterFactory(converterFactory)
                 .addCallAdapterFactory(callAdapterFactory)
                 .build()
-        return retrofit.create(HuaweiApi::class.java)
+        return retrofit.create(HuaweiPurchaseApi::class.java)
     }
 
     @Bean
     @Qualifier(QUALIFIER_SUBS_RUSSIA)
-    fun huaweiApiSubsRussia(): HuaweiApi {
+    fun huaweiApiSubsRussia(): HuaweiPurchaseApi {
         val retrofit = Retrofit.Builder()
-                .baseUrl(HuaweiApi.SUBS_RUSSIA_API_URL)
+                .baseUrl(HuaweiPurchaseApi.SUBS_RUSSIA_API_URL)
                 .client(huaweiAuthOkHttpClient)
                 .addConverterFactory(converterFactory)
                 .addCallAdapterFactory(callAdapterFactory)
                 .build()
-        return retrofit.create(HuaweiApi::class.java)
+        return retrofit.create(HuaweiPurchaseApi::class.java)
     }
 
     @Bean
     @Qualifier(QUALIFIER_ORDER_RUSSIA)
-    fun huaweiApiOrderRussia(): HuaweiApi {
+    fun huaweiApiOrderRussia(): HuaweiPurchaseApi {
         val retrofit = Retrofit.Builder()
-                .baseUrl(HuaweiApi.ORDER_RUSSIA_API_URL)
+                .baseUrl(HuaweiPurchaseApi.ORDER_RUSSIA_API_URL)
                 .client(huaweiAuthOkHttpClient)
                 .addConverterFactory(converterFactory)
                 .addCallAdapterFactory(callAdapterFactory)
                 .build()
-        return retrofit.create(HuaweiApi::class.java)
+        return retrofit.create(HuaweiPurchaseApi::class.java)
     }
 }
