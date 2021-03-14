@@ -56,11 +56,28 @@ class HuaweiApiConfiguration @Autowired constructor(
     }
 
     @Bean
-    @Qualifier(QUALIFIER_OK_HTTP_CLIENT_HUAWEI_AUTH)
-    fun createAuthorizedOkHttpClient(): OkHttpClient {
+    @Qualifier(QUALIFIER_OK_HTTP_CLIENT_HUAWEI_PURCHASE_AUTH)
+    fun createOkHttpClientHuaweiPurchase(): OkHttpClient =
+            createAuthorizedOkHttpClient(
+                    ::createHuaweiPurchaseApiAuthValue,
+                    ::huaweiPurchaseRequestUnauthorizedResolver
+            )
+
+    @Bean
+    @Qualifier(QUALIFIER_OK_HTTP_CLIENT_HUAWEI_COMMON_AUTH)
+    fun createOkHttpClientHuaweiCommon(): OkHttpClient =
+            createAuthorizedOkHttpClient(
+                    ::createHuaweiCommonApiAuthValue,
+                    ::huaweiCommonRequestUnauthorizedResolver
+            )
+
+    fun createAuthorizedOkHttpClient(
+            authValueCreator: (HuaweiOAuthAccessToken) -> String,
+            unauthorizedRequestResolver: (okhttp3.Response) -> Boolean
+    ): OkHttpClient {
         val unAuthAccessTokenInterceptor = Interceptor { chain ->
             val initialRequest = chain.request()
-            val initialResponse = chain.proceed(initialRequest)
+            val initialResponse: okhttp3.Response = chain.proceed(initialRequest)
             if (initialResponse.code() == HttpURLConnection.HTTP_UNAUTHORIZED) {
                 val response: Response<TokenResponse> = huaweiAuthApi()
                         .getAccessToken(
@@ -94,7 +111,7 @@ class HuaweiApiConfiguration @Autowired constructor(
                         .newBuilder()
                         .header(
                                 ScpReaderConstants.Api.HEADER_AUTHORIZATION,
-                                createHuaweiPurchaseApiAuthValue(token)
+                                authValueCreator(token)
                         )
                         .build()
                 chain.proceed(authorizedRequest)
@@ -104,7 +121,9 @@ class HuaweiApiConfiguration @Autowired constructor(
         }
 
         val accessTokenInterceptor = Interceptor { chain ->
-            val token = huaweiAccessTokenRepository.findFirstByClientId(huaweiClientId)?.let { createHuaweiPurchaseApiAuthValue(it) }
+            val token = huaweiAccessTokenRepository
+                    .findFirstByClientId(huaweiClientId)
+                    ?.let { authValueCreator(it) }
                     ?: ""
             log.error("accessTokenInterceptor: $token")
             val request =
@@ -129,5 +148,17 @@ class HuaweiApiConfiguration @Autowired constructor(
     private fun createHuaweiPurchaseApiAuthValue(token: HuaweiOAuthAccessToken): String {
         val tokenValue = "APPAT:${token.accessToken}"
         return "${ScpReaderConstants.Api.HEADER_PART_BASIC} " + Base64Utils.encodeToString(tokenValue.toByteArray(StandardCharsets.UTF_8))
+    }
+
+    private fun huaweiPurchaseRequestUnauthorizedResolver(initialResponse: okhttp3.Response) =
+            initialResponse.code() == HttpURLConnection.HTTP_UNAUTHORIZED
+
+    private fun createHuaweiCommonApiAuthValue(token: HuaweiOAuthAccessToken): String =
+            "${ScpReaderConstants.Api.HEADER_PART_BEARER} ${token.accessToken}"
+
+    private fun huaweiCommonRequestUnauthorizedResolver(initialResponse: okhttp3.Response): Boolean {
+        val responseBodyAsString = initialResponse.body()!!.string()
+        return responseBodyAsString.contains(""""code": "$HUAWEI_COMMON_API_AUTH_ERROR_CODE"""")
+                || responseBodyAsString.contains(""""code": "$HUAWEI_COMMON_API_AUTH_EXPIRED_ERROR_CODE"""")
     }
 }
