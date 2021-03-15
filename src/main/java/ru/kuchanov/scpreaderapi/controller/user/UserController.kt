@@ -6,12 +6,14 @@ import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.purchase.AndroidProduct
 import ru.kuchanov.scpreaderapi.bean.purchase.AndroidSubscription
+import ru.kuchanov.scpreaderapi.bean.push.UsersToPushTokens
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
 import ru.kuchanov.scpreaderapi.model.dto.user.UserProjection
 import ru.kuchanov.scpreaderapi.model.dto.user.UserProjectionV2
 import ru.kuchanov.scpreaderapi.model.user.LeaderboardUserDto
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.UserAndroidPurchaseService
+import ru.kuchanov.scpreaderapi.service.push.UserToPushTokensService
 import ru.kuchanov.scpreaderapi.service.users.ScpReaderUserService
 import java.time.temporal.ChronoUnit
 
@@ -19,8 +21,9 @@ import java.time.temporal.ChronoUnit
 @RestController
 @RequestMapping("/" + ScpReaderConstants.Path.USER)
 class UserController @Autowired constructor(
-        val scpReaderUserService: ScpReaderUserService,
-        val userAndroidPurchaseService: UserAndroidPurchaseService
+        private val scpReaderUserService: ScpReaderUserService,
+        private val userAndroidPurchaseService: UserAndroidPurchaseService,
+        private val userToPushTokensService: UserToPushTokensService
 ) {
 
     @Deprecated("Uses deprecated return type", ReplaceWith("showMeV2"))
@@ -106,7 +109,11 @@ class UserController @Autowired constructor(
             @PathVariable(value = "provider") provider: ScpReaderConstants.Push.Provider,
             @RequestParam(value = "pushToken") pushToken: String,
             @AuthenticationPrincipal user: User
-    ) {
-        //todo write to DB connection of token (with provider) to user.
-    }
+    ) = userToPushTokensService.save(
+            UsersToPushTokens(
+                    userId = user.id!!,
+                    pushTokenValue = pushToken,
+                    pushTokenProvider = provider
+            )
+    )
 }
