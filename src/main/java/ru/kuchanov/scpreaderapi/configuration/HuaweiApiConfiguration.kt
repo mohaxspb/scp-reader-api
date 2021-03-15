@@ -18,6 +18,7 @@ import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.auth.huawei.HuaweiOAuthAccessToken
 import ru.kuchanov.scpreaderapi.model.huawei.auth.TokenResponse
 import ru.kuchanov.scpreaderapi.network.HuaweiAuthApi
+import ru.kuchanov.scpreaderapi.network.HuaweiPushApi
 import ru.kuchanov.scpreaderapi.repository.auth.huawei.HuaweiAccessTokenRepository
 import java.net.HttpURLConnection
 import java.nio.charset.StandardCharsets
@@ -39,6 +40,7 @@ class HuaweiApiConfiguration @Autowired constructor(
         const val QUALIFIER_OK_HTTP_CLIENT_HUAWEI_PURCHASE_AUTH = "QUALIFIER_OK_HTTP_CLIENT_HUAWEI_PURCHASE_AUTH"
         const val QUALIFIER_OK_HTTP_CLIENT_HUAWEI_COMMON_AUTH = "QUALIFIER_OK_HTTP_CLIENT_HUAWEI_COMMON_AUTH"
 
+        const val HUAWEI_PUSH_SENDING_SUCCESS_CODE = "80000000"
 
         const val HUAWEI_COMMON_API_AUTH_ERROR_CODE = "80200001"
         const val HUAWEI_COMMON_API_AUTH_EXPIRED_ERROR_CODE = "80200003"
@@ -70,6 +72,17 @@ class HuaweiApiConfiguration @Autowired constructor(
                     ::createHuaweiCommonApiAuthValue,
                     ::huaweiCommonRequestUnauthorizedResolver
             )
+
+    @Bean
+    fun huaweiPushApi(): HuaweiPushApi {
+        val retrofit = Retrofit.Builder()
+                .baseUrl(HuaweiPushApi.BASE_API_URL)
+                .client(createOkHttpClientHuaweiCommon())
+                .addConverterFactory(converterFactory)
+                .addCallAdapterFactory(callAdapterFactory)
+                .build()
+        return retrofit.create(HuaweiPushApi::class.java)
+    }
 
     fun createAuthorizedOkHttpClient(
             authValueCreator: (HuaweiOAuthAccessToken) -> String,
