@@ -14,9 +14,9 @@ import ru.kuchanov.scpreaderapi.network.HuaweiPurchaseApi
 @Configuration
 class HuaweiPurchaseConfiguration @Autowired constructor(
         @Qualifier(HuaweiApiConfiguration.QUALIFIER_OK_HTTP_CLIENT_HUAWEI_PURCHASE_AUTH)
-        val huaweiAuthOkHttpClient: OkHttpClient,
-        val converterFactory: Converter.Factory,
-        val callAdapterFactory: CallAdapter.Factory
+        private val huaweiAuthOkHttpClient: OkHttpClient,
+        private val converterFactory: Converter.Factory,
+        private val callAdapterFactory: CallAdapter.Factory
 ) {
 
     companion object {

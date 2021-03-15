@@ -13,8 +13,8 @@ data class HuaweiPushMessage(
              * in pseudo-JSON format, i.e. "{'type':'message', 'message':'test'}"
              */
             val data: String,
-            val token: List<String>?,
-            val topic: String?
+            val token: List<String>? = null,
+            val topic: String? = null
     ) {
         init {
             check(token.isNullOrEmpty() && topic.isNullOrEmpty()) {

@@ -12,7 +12,6 @@ import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.model.exception.ScpServerException
 import ru.kuchanov.scpreaderapi.service.push.PushMessageService
 import ru.kuchanov.scpreaderapi.service.push.PushProviderMessagingService
-import java.time.format.DateTimeFormatter
 
 @Service
 class FirebaseMessagingService @Autowired constructor(
@@ -75,22 +74,8 @@ class FirebaseMessagingService @Autowired constructor(
             throw ScpServerException(message = "Topic and token are null or empty!")
         }
 
-        val data = mutableMapOf<String, String>()
-        data[Push.DataParamName.ID.name] = pushMessage.id!!.toString()
-        when (pushMessage.type) {
-            Push.MessageType.MESSAGE -> {
-            }
-            Push.MessageType.EXTERNAL_URL, Push.MessageType.NEW_VERSION -> {
-                data[Push.DataParamName.URL.name] = pushMessage.url!!
-            }
-        }
-        data[Push.DataParamName.TYPE.name] = pushMessage.type.name
-        data[Push.DataParamName.MESSAGE.name] = pushMessage.message
-        data[Push.DataParamName.TITLE.name] = pushMessage.title
-        data[Push.DataParamName.UPDATED.name] = DateTimeFormatter.ISO_INSTANT.format(pushMessage.updated!!.toInstant())
-
         return Message.builder()
-                .putAllData(data)
+                .putAllData(pushMessageToMap(pushMessage))
                 .apply {
                     token?.let { setToken(token) }
                     topicName?.let { setTopic(it) }
