@@ -21,8 +21,9 @@ import org.springframework.security.oauth2.provider.token.TokenStore
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
+import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.service.auth.ClientServiceImpl
-import ru.kuchanov.scpreaderapi.service.users.ScpReaderUserServiceImpl
+import ru.kuchanov.scpreaderapi.service.users.ScpReaderUserService
 import javax.servlet.Filter
 
 
@@ -62,7 +63,7 @@ class WebSecurityConfiguration @Autowired constructor(
             super.authenticationManagerBean()
 
     @Autowired
-    lateinit var userDetailsService: ScpReaderUserServiceImpl
+    lateinit var userDetailsService: ScpReaderUserService
 
     @Autowired
     fun configureGlobal(auth: AuthenticationManagerBuilder) {
@@ -100,7 +101,7 @@ class WebSecurityConfiguration @Autowired constructor(
                         "/encrypt",
                         "/login**",
                         "/error**",
-                        "/${ScpReaderConstants.Path.FIREBASE}/${ScpReaderConstants.Path.MESSAGING}/all/byTypes",
+                        "/${ScpReaderConstants.Path.PUSH}/${ScpReaderConstants.Path.MESSAGING}/all/byTypes",
                         "/${ScpReaderConstants.Path.MONETIZATION}/${ScpReaderConstants.Path.PURCHASE}/subscriptionEvents/huawei"
                 )
                 .permitAll()
