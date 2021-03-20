@@ -61,9 +61,23 @@ class AllProvidersMessagingServiceImpl @Autowired constructor(
             PushSendResult.Fail(provider = Push.Provider.GOOGLE, error = e, pushMessage = savedMessage)
         }
 
-        //todo huawei push sending
+        val huaweiResult: PushSendResult = try {
+            PushSendResult.Success(
+                    provider = Push.Provider.HUAWEI,
+                    pushMessage = huaweiMessagingService.sendMessageToTopic(
+                            topicName,
+                            type,
+                            title,
+                            message,
+                            url,
+                            author
+                    )
+            )
+        } catch (e: Throwable) {
+            PushSendResult.Fail(provider = Push.Provider.HUAWEI, error = e, pushMessage = savedMessage)
+        }
 
-        return listOf(firebaseResult)
+        return listOf(firebaseResult, huaweiResult)
     }
 
     override fun sendMessageToTopicById(
@@ -91,7 +105,20 @@ class AllProvidersMessagingServiceImpl @Autowired constructor(
             PushSendResult.Fail(provider = Push.Provider.GOOGLE, error = e, pushMessage = savedMessage)
         }
 
-        //todo huawei push sending
+        val huaweiResult: PushSendResult = try {
+            PushSendResult.Success(
+                    provider = Push.Provider.HUAWEI,
+                    pushMessage = huaweiMessagingService.sendMessageToTopicById(
+                            topicName,
+                            savedMessage.id!!
+                    )
+            )
+        } catch (e: Throwable) {
+            PushSendResult.Fail(provider = Push.Provider.HUAWEI, error = e, pushMessage = savedMessage)
+        }
+
+        return listOf(firebaseResult, huaweiResult)
+    }
 
         return listOf(firebaseResult)
     }
