@@ -21,6 +21,15 @@ class UserToPushTokensServiceImpl @Autowired constructor(
     ): UsersToPushTokens? =
             repository.findByUserIdAndPushTokenProviderAndPushTokenValue(userId, pushTokenProvider, pushTokenValue)
 
+    override fun findByUserIdAndPushTokenValue(
+            userId: Long,
+            pushTokenValue: String
+    ): UsersToPushTokens? =
+            repository.findByUserIdAndPushTokenValue(userId, pushTokenValue)
+
     override fun findAllByUserId(userId: Long): List<UsersToPushTokens> =
             repository.findAllByUserId(userId)
+
+    override fun deleteById(id: Long) =
+            repository.deleteById(id)
 }

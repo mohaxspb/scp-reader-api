@@ -1,6 +1,5 @@
 package ru.kuchanov.scpreaderapi.configuration.security
 
-import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -21,7 +20,6 @@ import org.springframework.security.oauth2.provider.token.TokenStore
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
-import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.service.auth.ClientServiceImpl
 import ru.kuchanov.scpreaderapi.service.users.ScpReaderUserService
 import javax.servlet.Filter
@@ -30,9 +28,7 @@ import javax.servlet.Filter
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
-class WebSecurityConfiguration @Autowired constructor(
-        private val log: Logger
-) : WebSecurityConfigurerAdapter() {
+class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
 
     @Autowired
     lateinit var clientDetailsService: ClientServiceImpl
@@ -120,8 +116,6 @@ class WebSecurityConfiguration @Autowired constructor(
 
         http
                 .formLogin()
-                .and()
-                .logout()
                 .permitAll()
 
         http

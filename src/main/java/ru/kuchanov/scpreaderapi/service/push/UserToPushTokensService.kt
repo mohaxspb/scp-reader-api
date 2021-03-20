@@ -13,5 +13,12 @@ interface UserToPushTokensService {
             pushTokenValue: String
     ): UsersToPushTokens?
 
+    fun findByUserIdAndPushTokenValue(
+            userId: Long,
+            pushTokenValue: String
+    ): UsersToPushTokens?
+
+    fun deleteById(id: Long)
+
     fun findAllByUserId(userId: Long): List<UsersToPushTokens>
 }

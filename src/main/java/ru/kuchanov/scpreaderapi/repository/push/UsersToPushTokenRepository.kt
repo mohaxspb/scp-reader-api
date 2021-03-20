@@ -12,5 +12,10 @@ interface UsersToPushTokenRepository : JpaRepository<UsersToPushTokens, Long> {
             pushTokenValue: String
     ): UsersToPushTokens?
 
+    fun findByUserIdAndPushTokenValue(
+            userId: Long,
+            pushTokenValue: String
+    ): UsersToPushTokens?
+
     fun findAllByUserId(userId: Long): List<UsersToPushTokens>
 }

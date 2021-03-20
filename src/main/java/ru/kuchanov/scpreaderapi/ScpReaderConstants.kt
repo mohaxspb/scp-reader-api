@@ -20,6 +20,7 @@ object ScpReaderConstants {
         const val GRANT_TYPE_CLIENT_CREDENTIALS = "client_credentials"
         const val PARAM_GRANT_TYPE = "grant_type"
         const val PARAM_REFRESH_TOKEN = "refresh_token"
+        const val PARAM_PUSH_TOKEN = "pushToken"
         const val HEADER_AUTHORIZATION = "Authorization"
         const val HEADER_PART_BEARER = "Bearer"
         const val HEADER_PART_BASIC = "Basic"

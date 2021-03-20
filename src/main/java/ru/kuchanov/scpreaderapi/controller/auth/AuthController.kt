@@ -4,12 +4,14 @@ import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.common.OAuth2AccessToken
 import org.springframework.security.oauth2.provider.ClientDetailsService
 import org.springframework.security.oauth2.provider.OAuth2Authentication
 import org.springframework.security.oauth2.provider.OAuth2Request
 import org.springframework.security.oauth2.provider.token.DefaultTokenServices
 import org.springframework.security.oauth2.provider.token.TokenStore
+import org.springframework.security.web.authentication.logout.LogoutHandler
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -31,6 +33,8 @@ import ru.kuchanov.scpreaderapi.service.users.UsersLangsService
 import java.io.Serializable
 import java.util.*
 import javax.security.auth.message.AuthException
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
 
 
 @RestController
@@ -45,8 +49,18 @@ class AuthController @Autowired constructor(
         val usersLangsService: UsersLangsService,
         val tokenStore: TokenStore,
         val tokenServices: DefaultTokenServices,
-        val apiClient: ApiClient
+        val apiClient: ApiClient,
+        val logoutHandler: LogoutHandler
 ) {
+
+    @PostMapping("/logout")
+    fun logout(
+            request: HttpServletRequest,
+            response: HttpServletResponse
+    ) {
+        val auth = SecurityContextHolder.getContext().authentication
+        logoutHandler.logout(request, response, auth)
+    }
 
     @PostMapping("/socialLogin")
     fun authorize(
