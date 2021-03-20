@@ -2,6 +2,8 @@ package ru.kuchanov.scpreaderapi.bean.push
 
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
+import org.springframework.http.HttpStatus
+import org.springframework.web.bind.annotation.ResponseStatus
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import java.sql.Timestamp
 import javax.persistence.*
@@ -17,6 +19,7 @@ data class UsersToPushTokens(
         val userId: Long,
         @Column(name = "push_token_value")
         val pushTokenValue: String,
+        @Enumerated(EnumType.STRING)
         @Column(name = "push_token_provider", columnDefinition = "TEXT")
         val pushTokenProvider: ScpReaderConstants.Push.Provider,
 
@@ -26,3 +29,8 @@ data class UsersToPushTokens(
         @field:UpdateTimestamp
         val updated: Timestamp? = null
 )
+
+@ResponseStatus(value = HttpStatus.CONFLICT)
+class UsersToPushTokensAlreadyExistsException(
+        override val message: String? = "This token already in DB!"
+) : RuntimeException(message)

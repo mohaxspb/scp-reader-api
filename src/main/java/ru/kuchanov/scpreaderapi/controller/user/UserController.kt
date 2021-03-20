@@ -109,11 +109,20 @@ class UserController @Autowired constructor(
             @PathVariable(value = "provider") provider: ScpReaderConstants.Push.Provider,
             @RequestParam(value = "pushToken") pushToken: String,
             @AuthenticationPrincipal user: User
-    ) = userToPushTokensService.save(
-            UsersToPushTokens(
-                    userId = user.id!!,
-                    pushTokenValue = pushToken,
-                    pushTokenProvider = provider
-            )
-    )
+    ): UsersToPushTokens {
+        checkNotNull(user.id)
+        val tokenToUserConnectionToUpdate = userToPushTokensService
+                .findByUserIdAndPushTokenProviderAndPushTokenValue(
+                        user.id,
+                        provider,
+                        pushToken
+                )
+                ?: UsersToPushTokens(
+                        userId = user.id,
+                        pushTokenValue = pushToken,
+                        pushTokenProvider = provider
+                )
+
+        return userToPushTokensService.save(tokenToUserConnectionToUpdate)
+    }
 }
