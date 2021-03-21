@@ -14,18 +14,18 @@ import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationStatus
 import ru.kuchanov.scpreaderapi.model.monetization.huawei.InAppPurchaseData
 import ru.kuchanov.scpreaderapi.model.monetization.huawei.HuaweiProductVerifyResponse
 import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.HuaweiSubscriptionCancelResponse
-import ru.kuchanov.scpreaderapi.network.HuaweiApi
+import ru.kuchanov.scpreaderapi.network.HuaweiPurchaseApi
 
 @Service
 class HuaweiApiService @Autowired constructor(
         @Qualifier(HuaweiPurchaseConfiguration.QUALIFIER_SUBS_GERMANY_APP_TOUCH)
-        private val huaweiApiSubsGermany: HuaweiApi,
+        private val huaweiPurchaseApiSubsGermany: HuaweiPurchaseApi,
         @Qualifier(HuaweiPurchaseConfiguration.QUALIFIER_ORDER_GERMANY_APP_TOUCH)
-        private val huaweiApiOrderGermany: HuaweiApi,
+        private val huaweiPurchaseApiOrderGermany: HuaweiPurchaseApi,
         @Qualifier(HuaweiPurchaseConfiguration.QUALIFIER_SUBS_RUSSIA)
-        private val huaweiApiSubsRussia: HuaweiApi,
+        private val huaweiPurchaseApiSubsRussia: HuaweiPurchaseApi,
         @Qualifier(HuaweiPurchaseConfiguration.QUALIFIER_ORDER_RUSSIA)
-        private val huaweiApiOrderRussia: HuaweiApi,
+        private val huaweiPurchaseApiOrderRussia: HuaweiPurchaseApi,
         private val objectMapper: ObjectMapper,
         private val log: Logger
 ) {
@@ -70,9 +70,9 @@ class HuaweiApiService @Autowired constructor(
             accountFlag: Int
     ): InAppPurchaseData {
         val api = if (accountFlag == ACCOUNT_FLAG_GERMANY_APP_TOUCH) {
-            huaweiApiSubsGermany
+            huaweiPurchaseApiSubsGermany
         } else {
-            huaweiApiSubsRussia
+            huaweiPurchaseApiSubsRussia
         }
 
         return try {
@@ -116,9 +116,9 @@ class HuaweiApiService @Autowired constructor(
             accountFlag: Int
     ): HuaweiSubscriptionCancelResponse {
         val api = if (accountFlag == ACCOUNT_FLAG_GERMANY_APP_TOUCH) {
-            huaweiApiSubsGermany
+            huaweiPurchaseApiSubsGermany
         } else {
-            huaweiApiSubsRussia
+            huaweiPurchaseApiSubsRussia
         }
         return try {
             api.cancelSubscription(productId, purchaseToken).execute().body()!!

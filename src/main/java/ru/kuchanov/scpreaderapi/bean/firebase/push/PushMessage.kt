@@ -23,7 +23,7 @@ data class PushMessage(
         val userId: Long? = null,
         @Enumerated(EnumType.STRING)
         @Column(name = "type")
-        val type: ScpReaderConstants.Firebase.Fcm.MessageType,
+        val type: ScpReaderConstants.Push.MessageType,
         @Column(name = "title", columnDefinition = "TEXT")
         val title: String,
         @Column(name = "message", columnDefinition = "TEXT")

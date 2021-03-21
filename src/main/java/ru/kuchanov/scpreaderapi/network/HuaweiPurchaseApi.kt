@@ -11,7 +11,7 @@ import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.HuaweiSub
  * For url see this doc:
  * https://developer.huawei.com/consumer/en/doc/development/HMS-References/iap-api-specification-related-v4#h1-1578554539083-0
  */
-interface HuaweiApi {
+interface HuaweiPurchaseApi {
 
     companion object {
         const val SUBS_RUSSIA_API_URL = "https://subscr-drru.iap.hicloud.com/"

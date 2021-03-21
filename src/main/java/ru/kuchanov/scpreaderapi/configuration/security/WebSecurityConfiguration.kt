@@ -1,6 +1,5 @@
 package ru.kuchanov.scpreaderapi.configuration.security
 
-import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -22,16 +21,14 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
 import ru.kuchanov.scpreaderapi.service.auth.ClientServiceImpl
-import ru.kuchanov.scpreaderapi.service.users.ScpReaderUserServiceImpl
+import ru.kuchanov.scpreaderapi.service.users.ScpReaderUserService
 import javax.servlet.Filter
 
 
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
-class WebSecurityConfiguration @Autowired constructor(
-        private val log: Logger
-) : WebSecurityConfigurerAdapter() {
+class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
 
     @Autowired
     lateinit var clientDetailsService: ClientServiceImpl
@@ -62,7 +59,7 @@ class WebSecurityConfiguration @Autowired constructor(
             super.authenticationManagerBean()
 
     @Autowired
-    lateinit var userDetailsService: ScpReaderUserServiceImpl
+    lateinit var userDetailsService: ScpReaderUserService
 
     @Autowired
     fun configureGlobal(auth: AuthenticationManagerBuilder) {
@@ -100,7 +97,7 @@ class WebSecurityConfiguration @Autowired constructor(
                         "/encrypt",
                         "/login**",
                         "/error**",
-                        "/${ScpReaderConstants.Path.FIREBASE}/${ScpReaderConstants.Path.MESSAGING}/all/byTypes",
+                        "/${ScpReaderConstants.Path.PUSH}/${ScpReaderConstants.Path.MESSAGING}/all/byTypes",
                         "/${ScpReaderConstants.Path.MONETIZATION}/${ScpReaderConstants.Path.PURCHASE}/subscriptionEvents/huawei"
                 )
                 .permitAll()
@@ -119,8 +116,6 @@ class WebSecurityConfiguration @Autowired constructor(
 
         http
                 .formLogin()
-                .and()
-                .logout()
                 .permitAll()
 
         http

@@ -114,5 +114,7 @@ fun User.isAdmin(): Boolean {
     return authorities.find { AuthorityType.ADMIN.name.equals(it.authority, ignoreCase = true) } != null
 }
 
-@ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "No such user")
-class UserNotFoundException : RuntimeException()
+@ResponseStatus(value = HttpStatus.NOT_FOUND)
+class UserNotFoundException(
+        override val message: String? = "No such user!"
+) : RuntimeException()

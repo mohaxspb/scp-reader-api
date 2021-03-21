@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.service.firebase.push
+package ru.kuchanov.scpreaderapi.service.push
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
@@ -12,8 +12,19 @@ class PushMessageServiceImpl @Autowired constructor(
         private val pushMessageRepository: PushMessageRepository
 ) : PushMessageService {
 
-    override fun findAllByTypeIn(types: List<ScpReaderConstants.Firebase.Fcm.MessageType>): List<PushMessage> =
-            pushMessageRepository.findAllByTypeInOrderByCreatedDesc(types)
+    override fun findAllByTypeIn(
+            types: List<ScpReaderConstants.Push.MessageType>,
+            userId: Long?
+    ): List<PushMessage> {
+        return if (userId != null) {
+            //need to convert to String to prevent `ERROR: operator does not exist: text = bytea`
+            pushMessageRepository.findAllByTypeInAndUserIdOrderByCreatedDesc(types.map { it.name }, userId)
+        } else {
+            val clearedSubscriptionEventsList = types.toMutableList()
+            clearedSubscriptionEventsList.remove(ScpReaderConstants.Push.MessageType.SUBSCRIPTION_EVENT)
+            pushMessageRepository.findAllByTypeInOrderByCreatedDesc(clearedSubscriptionEventsList)
+        }
+    }
 
     override fun findAllByUserId(userId: Long): List<PushMessage> =
             pushMessageRepository.findAllByUserId(userId)

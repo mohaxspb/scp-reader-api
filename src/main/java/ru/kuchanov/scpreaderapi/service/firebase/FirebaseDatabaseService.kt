@@ -47,7 +47,7 @@ import java.util.concurrent.TimeUnit
 import javax.transaction.Transactional
 
 @Service
-class FirebaseService @Autowired constructor(
+class FirebaseDatabaseService @Autowired constructor(
         val log: Logger,
         val mailService: MailService,
         val scpReaderUserService: ScpReaderUserService,

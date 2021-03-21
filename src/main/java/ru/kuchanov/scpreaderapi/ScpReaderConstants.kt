@@ -20,6 +20,7 @@ object ScpReaderConstants {
         const val GRANT_TYPE_CLIENT_CREDENTIALS = "client_credentials"
         const val PARAM_GRANT_TYPE = "grant_type"
         const val PARAM_REFRESH_TOKEN = "refresh_token"
+        const val PARAM_PUSH_TOKEN = "pushToken"
         const val HEADER_AUTHORIZATION = "Authorization"
         const val HEADER_PART_BEARER = "Bearer"
         const val HEADER_PART_BASIC = "Basic"
@@ -32,6 +33,7 @@ object ScpReaderConstants {
 
     object Path {
         const val FIREBASE = "firebase"
+        const val PUSH = "push"
         const val MESSAGING = "messaging"
         const val AUTH = "auth"
         const val MONETIZATION = "monetization"
@@ -67,20 +69,6 @@ object ScpReaderConstants {
             PT("pt"),
             ZH("zh")
         }
-
-        object Fcm {
-            enum class Topic(val topicName: String) {
-                MAIN("/topics/main")
-            }
-
-            enum class MessageType {
-                MESSAGE, EXTERNAL_URL, NEW_VERSION
-            }
-
-            enum class DataParamName {
-                ID, TYPE, TITLE, MESSAGE, URL, UPDATED
-            }
-        }
     }
 
     enum class ArticleTypeEnum {
@@ -94,5 +82,24 @@ object ScpReaderConstants {
 
     enum class UserDataTransactionType {
         READ_ARTICLE, REWARDED_VIDEO
+    }
+
+    object Push {
+
+        enum class Topic(val topicName: String) {
+            MAIN("/topics/main")
+        }
+
+        enum class MessageType {
+            MESSAGE, EXTERNAL_URL, NEW_VERSION, SUBSCRIPTION_EVENT
+        }
+
+        enum class DataParamName {
+            ID, TYPE, TITLE, MESSAGE, URL, UPDATED
+        }
+
+        enum class Provider {
+            HUAWEI, GOOGLE
+        }
     }
 }
