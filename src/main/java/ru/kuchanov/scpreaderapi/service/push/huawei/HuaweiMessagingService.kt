@@ -30,6 +30,21 @@ class HuaweiMessagingService @Autowired constructor(
         private val log: Logger
 ) : PushProviderMessagingService {
 
+    override fun sendMessageToUserById(userId: Long, pushMessageId: Long, author: User): PushMessage {
+        checkNotNull(author.id)
+        val savedMessage = pushMessageService.findOneById(pushMessageId) ?: throw PushMessageNotFoundException()
+
+        val userHuaweiTokens = userToPushTokensService.findByUserIdAndPushTokenProvider(
+                userId,
+                ScpReaderConstants.Push.Provider.HUAWEI
+        )
+
+        return sendMessage(
+                userPushTokens = userHuaweiTokens.map { it.pushTokenValue },
+                pushMessage = savedMessage
+        )
+    }
+
     override fun sendMessageToUser(
             userId: Long,
             type: ScpReaderConstants.Push.MessageType,

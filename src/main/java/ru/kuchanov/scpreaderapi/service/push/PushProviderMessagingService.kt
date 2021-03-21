@@ -15,6 +15,12 @@ interface PushProviderMessagingService {
             author: User
     ): PushMessage
 
+    fun sendMessageToUserById(
+            userId: Long,
+            pushMessageId: Long,
+            author: User
+    ): PushMessage
+
     fun sendMessageToTopic(
             topicName: String,
             type: ScpReaderConstants.Push.MessageType,
@@ -33,11 +39,12 @@ interface PushProviderMessagingService {
         val data = mutableMapOf<String, String>()
         data[ScpReaderConstants.Push.DataParamName.ID.name] = pushMessage.id!!.toString()
         when (pushMessage.type) {
-            ScpReaderConstants.Push.MessageType.MESSAGE -> {
-            }
             ScpReaderConstants.Push.MessageType.EXTERNAL_URL,
             ScpReaderConstants.Push.MessageType.NEW_VERSION -> {
                 data[ScpReaderConstants.Push.DataParamName.URL.name] = pushMessage.url!!
+            }
+            else -> {
+                //do nothing
             }
         }
         data[ScpReaderConstants.Push.DataParamName.TYPE.name] = pushMessage.type.name

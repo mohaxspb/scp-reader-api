@@ -64,7 +64,7 @@ class AllProvidersMessagingServiceImpl @Autowired constructor(
         val huaweiResult: PushSendResult = try {
             PushSendResult.Success(
                     provider = Push.Provider.HUAWEI,
-                    pushMessage = huaweiMessagingService.sendMessage(
+                    pushMessage = huaweiMessagingService.sendMessageToTopic(
                             topicName,
                             type,
                             title,
@@ -141,8 +141,19 @@ class AllProvidersMessagingServiceImpl @Autowired constructor(
 
         //todo send to fucking google
 
-        //todo send to huawei
+        val huaweiResult: PushSendResult = try {
+            PushSendResult.Success(
+                    provider = Push.Provider.HUAWEI,
+                    pushMessage = huaweiMessagingService.sendMessageToUserById(
+                            userId = userId,
+                            pushMessageId = savedMessage.id!!,
+                            author = author
+                    )
+            )
+        } catch (e: Throwable) {
+            PushSendResult.Fail(provider = Push.Provider.HUAWEI, error = e, pushMessage = savedMessage)
+        }
 
-        TODO("Not yet implemented")
+        return listOf(TODO("Not yet implemented"), huaweiResult)
     }
 }
