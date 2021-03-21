@@ -120,7 +120,13 @@ class AllProvidersMessagingServiceImpl @Autowired constructor(
         return listOf(firebaseResult, huaweiResult)
     }
 
-    override fun sendToUser(userId: Long, title: String, message: String, type: Push.MessageType, author: User) {
+    override fun sendToUser(
+            userId: Long,
+            title: String,
+            message: String,
+            type: Push.MessageType,
+            author: User
+    ): List<PushSendResult> {
         checkNotNull(author.id)
         //check is admin
         if (author.isAdmin().not()) {
@@ -139,7 +145,18 @@ class AllProvidersMessagingServiceImpl @Autowired constructor(
                 )
         )
 
-        //todo send to fucking google
+        val firebaseResult: PushSendResult = try {
+            PushSendResult.Success(
+                    provider = Push.Provider.GOOGLE,
+                    pushMessage = firebaseMessagingService.sendMessageToUserById(
+                            userId = userId,
+                            pushMessageId = savedMessage.id!!,
+                            author = author
+                    )
+            )
+        } catch (e: Throwable) {
+            PushSendResult.Fail(provider = Push.Provider.GOOGLE, error = e, pushMessage = savedMessage)
+        }
 
         val huaweiResult: PushSendResult = try {
             PushSendResult.Success(
@@ -154,6 +171,6 @@ class AllProvidersMessagingServiceImpl @Autowired constructor(
             PushSendResult.Fail(provider = Push.Provider.HUAWEI, error = e, pushMessage = savedMessage)
         }
 
-        return listOf(TODO("Not yet implemented"), huaweiResult)
+        return listOf(firebaseResult, huaweiResult)
     }
 }

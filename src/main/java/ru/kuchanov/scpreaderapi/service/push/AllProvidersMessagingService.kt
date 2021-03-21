@@ -27,7 +27,7 @@ interface AllProvidersMessagingService {
             message: String,
             type: ScpReaderConstants.Push.MessageType,
             author: User
-    )
+    ): List<PushSendResult>
 }
 
 sealed class PushSendResult(open val provider: ScpReaderConstants.Push.Provider) {
