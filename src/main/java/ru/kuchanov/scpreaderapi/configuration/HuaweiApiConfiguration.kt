@@ -42,6 +42,12 @@ class HuaweiApiConfiguration @Autowired constructor(
 
         const val HUAWEI_PUSH_SENDING_SUCCESS_CODE = "80000000"
 
+        /**
+         * see msg in response for failed tokens:
+         * "msg": "{\"success\":3,\"failure\":1,\"illegal_tokens\":[\"xxx\"]}"
+         */
+        const val HUAWEI_PUSH_SENDING_PARTIAL_SUCCESS_CODE = "80100000"
+
         const val HUAWEI_COMMON_API_AUTH_ERROR_CODE = "80200001"
         const val HUAWEI_COMMON_API_AUTH_EXPIRED_ERROR_CODE = "80200003"
     }
