@@ -17,7 +17,8 @@ class PushMessageServiceImpl @Autowired constructor(
             userId: Long?
     ): List<PushMessage> {
         return if (userId != null) {
-            pushMessageRepository.findAllByTypeInAndUserIdOrderByCreatedDesc(types, userId)
+            //need to convert to String to prevent `ERROR: operator does not exist: text = bytea`
+            pushMessageRepository.findAllByTypeInAndUserIdOrderByCreatedDesc(types.map { it.name }, userId)
         } else {
             val clearedSubscriptionEventsList = types.toMutableList()
             clearedSubscriptionEventsList.remove(ScpReaderConstants.Push.MessageType.SUBSCRIPTION_EVENT)

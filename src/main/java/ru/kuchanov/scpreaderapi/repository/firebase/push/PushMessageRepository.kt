@@ -20,7 +20,7 @@ interface PushMessageRepository : JpaRepository<PushMessage, Long> {
             nativeQuery = true
     )
     fun findAllByTypeInAndUserIdOrderByCreatedDesc(
-            types: List<ScpReaderConstants.Push.MessageType>,
+            types: List<String>,
             userId: Long
     ): List<PushMessage>
 
