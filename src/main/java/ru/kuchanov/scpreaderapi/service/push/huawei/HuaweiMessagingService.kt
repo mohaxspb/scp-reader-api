@@ -1,5 +1,7 @@
 package ru.kuchanov.scpreaderapi.service.push.huawei
 
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -8,21 +10,54 @@ import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.firebase.push.PushMessage
 import ru.kuchanov.scpreaderapi.bean.firebase.push.PushMessageNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.User
+import ru.kuchanov.scpreaderapi.configuration.HuaweiApiConfiguration.Companion.HUAWEI_PUSH_SENDING_PARTIAL_SUCCESS_CODE
 import ru.kuchanov.scpreaderapi.configuration.HuaweiApiConfiguration.Companion.HUAWEI_PUSH_SENDING_SUCCESS_CODE
 import ru.kuchanov.scpreaderapi.model.exception.ScpServerException
 import ru.kuchanov.scpreaderapi.model.huawei.push.HuaweiPushMessage
 import ru.kuchanov.scpreaderapi.network.HuaweiPushApi
 import ru.kuchanov.scpreaderapi.service.push.PushMessageService
 import ru.kuchanov.scpreaderapi.service.push.PushProviderMessagingService
+import ru.kuchanov.scpreaderapi.service.push.UserToPushTokensService
 import java.net.HttpURLConnection
 
 @Service
 class HuaweiMessagingService @Autowired constructor(
-        private val log: Logger,
+        @Value("\${my.api.huawei.client_id}") private val huaweiClientId: String,
         private val pushMessageService: PushMessageService,
+        private val userToPushTokensService: UserToPushTokensService,
         private val huaweiPushApi: HuaweiPushApi,
-        @Value("\${my.api.huawei.client_id}") private val huaweiClientId: String
+        private val objectMapper: ObjectMapper,
+        private val log: Logger
 ) : PushProviderMessagingService {
+
+    override fun sendMessageToUser(
+            userId: Long,
+            type: ScpReaderConstants.Push.MessageType,
+            title: String,
+            message: String,
+            author: User
+    ): PushMessage {
+        checkNotNull(author.id)
+        val savedMessage = pushMessageService.save(
+                PushMessage(
+                        userId = userId,
+                        type = type,
+                        title = title,
+                        message = message,
+                        authorId = author.id
+                )
+        )
+
+        val userHuaweiTokens = userToPushTokensService.findByUserIdAndPushTokenProvider(
+                userId,
+                ScpReaderConstants.Push.Provider.HUAWEI
+        )
+
+        return sendMessage(
+                userPushTokens = userHuaweiTokens.map { it.pushTokenValue },
+                pushMessage = savedMessage
+        )
+    }
 
     override fun sendMessageToTopic(
             topicName: String,
@@ -43,7 +78,7 @@ class HuaweiMessagingService @Autowired constructor(
                 )
         )
 
-        return sendMessageToTopic(topicName, savedMessage)
+        return sendMessage(topicName = topicName, pushMessage = savedMessage)
     }
 
     override fun sendMessageToTopicById(
@@ -52,19 +87,15 @@ class HuaweiMessagingService @Autowired constructor(
     ): PushMessage {
         val savedMessage = pushMessageService.findOneById(pushMessageId) ?: throw PushMessageNotFoundException()
 
-        return sendMessageToTopic(topicName, savedMessage)
+        return sendMessage(topicName = topicName, pushMessage = savedMessage)
     }
 
-    private fun sendMessageToTopic(
-            topicName: String,
+    private fun sendMessage(
+            topicName: String? = null,
+            userPushTokens: List<String>? = null,
             pushMessage: PushMessage
     ): PushMessage {
-        val data = pushMessageToMap(pushMessage).asIterable().joinToString(
-                prefix = "{",
-                postfix = "}",
-                separator = ", ",
-                transform = { (key, value) -> "'$key':'$value'" }
-        )
+        val data = createDataString(pushMessageToMap(pushMessage))
 
         try {
             val result = huaweiPushApi.send(
@@ -72,7 +103,8 @@ class HuaweiMessagingService @Autowired constructor(
                     huaweiPushMessage = HuaweiPushMessage(
                             message = HuaweiPushMessage.Message(
                                     data = data,
-                                    topic = topicName
+                                    topic = topicName,
+                                    token = userPushTokens
                             )
                     )
             ).execute()
@@ -83,16 +115,37 @@ class HuaweiMessagingService @Autowired constructor(
                                 "Body is null while send push to topic to Huawei",
                                 NullPointerException()
                         )
-                if (response.code == HUAWEI_PUSH_SENDING_SUCCESS_CODE) {
-                    return pushMessageService.save(pushMessage.apply { sent = true })
-                } else {
-                    val errorMessage = """
+                when (response.code) {
+                    HUAWEI_PUSH_SENDING_SUCCESS_CODE -> {
+                        return pushMessageService.save(pushMessage.apply { sent = true })
+                    }
+                    HUAWEI_PUSH_SENDING_PARTIAL_SUCCESS_CODE -> {
+                        try {
+                            val responseDetails = objectMapper.readValue(
+                                    response.msg,
+                                    PushSendingPartialSuccess::class.java
+                            )
+                            log.error("Handle partial push sending success: " +
+                                    "${responseDetails.success}/${responseDetails.success}: " +
+                                    "${responseDetails.illegalTokens}")
+                            responseDetails.illegalTokens.forEach {
+                                userToPushTokensService.deleteByPushTokenValue(it)
+                            }
+                        } catch (e: Exception) {
+                            log.error("Error while handle partial push sending success", e)
+                        }
+
+                        return pushMessageService.save(pushMessage.apply { sent = true })
+                    }
+                    else -> {
+                        val errorMessage = """
                          Send push to Huawei topic failed! 
                          Huawei API response: $response
                     """.trimIndent()
-                    log.error(errorMessage)
-                    pushMessageService.save(pushMessage.apply { sent = false })
-                    throw ScpServerException(errorMessage)
+                        log.error(errorMessage)
+                        pushMessageService.save(pushMessage.apply { sent = false })
+                        throw ScpServerException(errorMessage)
+                    }
                 }
             } else {
                 val errorMessage = """
@@ -109,4 +162,19 @@ class HuaweiMessagingService @Autowired constructor(
             throw ScpServerException(e.message, e)
         }
     }
+
+    private fun createDataString(data: Map<String, String>) =
+            data.asIterable().joinToString(
+                    prefix = "{",
+                    postfix = "}",
+                    separator = ", ",
+                    transform = { (key, value) -> "'$key':'$value'" }
+            )
+
+    data class PushSendingPartialSuccess(
+            val success: Int,
+            val failure: Int,
+            @JsonProperty("illegal_tokens")
+            val illegalTokens: List<String>
+    )
 }
