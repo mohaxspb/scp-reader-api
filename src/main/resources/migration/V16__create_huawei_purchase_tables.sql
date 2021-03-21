@@ -106,14 +106,14 @@ ALTER TABLE user__to__huawei_products
 alter table user__to__huawei_products
     add constraint fk_user_id__to__users
         foreign key (user_id)
-            REFERENCES users (id);
+            REFERENCES users (id) ON DELETE CASCADE;
 
 ALTER TABLE user__to__huawei_products
     drop constraint IF EXISTS fk_huawei_product_id__to__huawei_products CASCADE;
 alter table user__to__huawei_products
     add constraint fk_huawei_product_id__to__huawei_products
         foreign key (huawei_product_id)
-            REFERENCES huawei_products (id);
+            REFERENCES huawei_products (id) ON DELETE CASCADE;
 
 alter table user__to__huawei_products
     drop constraint if exists huawei_product_id_and_user_id_unique;
@@ -136,14 +136,14 @@ ALTER TABLE user__to__huawei_subscriptions
 alter table user__to__huawei_subscriptions
     add constraint fk_user_id__to__users
         foreign key (user_id)
-            REFERENCES users (id);
+            REFERENCES users (id) ON DELETE CASCADE;
 
 ALTER TABLE user__to__huawei_subscriptions
     drop constraint IF EXISTS fk_huawei_subscription_id__to__huawei_subscriptions CASCADE;
 alter table user__to__huawei_subscriptions
     add constraint fk_huawei_subscription_id__to__huawei_subscriptions
         foreign key (huawei_subscription_id)
-            REFERENCES huawei_subscriptions (id);
+            REFERENCES huawei_subscriptions (id) ON DELETE CASCADE;
 
 alter table user__to__huawei_subscriptions
     drop constraint if exists huawei_subscription_id_and_user_id_unique;
