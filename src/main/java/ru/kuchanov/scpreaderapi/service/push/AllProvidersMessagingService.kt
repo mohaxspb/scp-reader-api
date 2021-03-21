@@ -20,6 +20,14 @@ interface AllProvidersMessagingService {
             pushMessageId: Long,
             author: User
     ): List<PushSendResult>
+
+    fun sendToUser(
+            userId: Long,
+            title: String,
+            message: String,
+            type: ScpReaderConstants.Push.MessageType,
+            author: User
+    )
 }
 
 sealed class PushSendResult(open val provider: ScpReaderConstants.Push.Provider) {

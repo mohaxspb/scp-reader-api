@@ -7,6 +7,14 @@ import java.time.format.DateTimeFormatter
 
 interface PushProviderMessagingService {
 
+    fun sendMessageToUser(
+            userId: Long,
+            type: ScpReaderConstants.Push.MessageType,
+            title: String,
+            message: String,
+            author: User
+    ): PushMessage
+
     fun sendMessageToTopic(
             topicName: String,
             type: ScpReaderConstants.Push.MessageType,

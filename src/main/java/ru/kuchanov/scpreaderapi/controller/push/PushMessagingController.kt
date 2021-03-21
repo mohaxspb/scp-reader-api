@@ -5,6 +5,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.users.User
+import ru.kuchanov.scpreaderapi.bean.users.isAdmin
+import ru.kuchanov.scpreaderapi.model.exception.ScpAccessDeniedException
 import ru.kuchanov.scpreaderapi.service.push.AllProvidersMessagingService
 import ru.kuchanov.scpreaderapi.service.push.PushMessageService
 import ru.kuchanov.scpreaderapi.service.push.PushSendResult
@@ -39,6 +41,24 @@ class PushMessagingController @Autowired constructor(
     fun getAllByTypes(
             @RequestParam(value = "types") types: List<ScpReaderConstants.Push.MessageType>
     ) = pushMessageService.findAllByTypeIn(types)
+
+    @GetMapping("/send/to/{userId}")
+    fun sendToUser(
+            @PathVariable(value = "userId") userId: Long,
+            @AuthenticationPrincipal user: User
+    ) {
+        if (user.isAdmin().not()) {
+            throw ScpAccessDeniedException()
+        }
+
+        allProvidersMessagingService.sendToUser(
+                userId = userId,
+                title = "titleTest",
+                message = "messageTest",
+                type = ScpReaderConstants.Push.MessageType.SUBSCRIPTION_EVENT,
+                author = user
+        )
+    }
 
     @GetMapping("/delete/{id}")
     fun delete(
