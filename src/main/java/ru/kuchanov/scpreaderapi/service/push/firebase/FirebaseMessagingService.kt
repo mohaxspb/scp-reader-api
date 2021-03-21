@@ -2,6 +2,7 @@ package ru.kuchanov.scpreaderapi.service.push.firebase
 
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.Message
+import com.google.firebase.messaging.MulticastMessage
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -12,19 +13,44 @@ import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.model.exception.ScpServerException
 import ru.kuchanov.scpreaderapi.service.push.PushMessageService
 import ru.kuchanov.scpreaderapi.service.push.PushProviderMessagingService
+import ru.kuchanov.scpreaderapi.service.push.UserToPushTokensService
 
 @Service
 class FirebaseMessagingService @Autowired constructor(
-        val log: Logger,
-        val pushMessageService: PushMessageService
+        private val log: Logger,
+        private val pushMessageService: PushMessageService,
+        private val userToPushTokensService: UserToPushTokensService
 ) : PushProviderMessagingService {
 
-    override fun sendMessageToUser(userId: Long, type: Push.MessageType, title: String, message: String, author: User): PushMessage {
-        TODO("Not yet implemented")
+    override fun sendMessageToUser(
+            userId: Long,
+            type: Push.MessageType,
+            title: String,
+            message: String,
+            author: User
+    ): PushMessage {
+        checkNotNull(author.id)
+        val savedMessage = pushMessageService.save(
+                PushMessage(
+                        userId = userId,
+                        type = type,
+                        title = title,
+                        message = message,
+                        authorId = author.id
+                )
+        )
+
+        return sendMessageToUser(savedMessage, userId)
     }
 
-    override fun sendMessageToUserById(userId: Long, pushMessageId: Long, author: User): PushMessage {
-        TODO("Not yet implemented")
+    override fun sendMessageToUserById(
+            userId: Long,
+            pushMessageId: Long,
+            author: User
+    ): PushMessage {
+        val savedMessage = pushMessageService.findOneById(pushMessageId) ?: throw PushMessageNotFoundException()
+
+        return sendMessageToUser(savedMessage, userId)
     }
 
     override fun sendMessageToTopic(
@@ -58,6 +84,41 @@ class FirebaseMessagingService @Autowired constructor(
         return sendMessageToTopic(topicName, savedMessage)
     }
 
+    private fun sendMessageToUser(pushMessage: PushMessage, userId: Long): PushMessage {
+        val tokens = userToPushTokensService.findByUserIdAndPushTokenProvider(
+                userId,
+                Push.Provider.GOOGLE
+        ).map { it.pushTokenValue }
+
+        val fcmMessage = fcmMulticastMessageFromPushMessage(pushMessage, tokens)
+
+        try {
+            val result = FirebaseMessaging.getInstance().sendMulticast(fcmMessage)
+
+            //handle failures
+            if (tokens.size == result.responses.size) {
+                result.responses.forEachIndexed { index, _ ->
+                    try {
+                        userToPushTokensService.deleteByPushTokenValue(tokens[index])
+                    } catch (e: Exception) {
+                        log.error("Error while handle partial push sending success", e)
+                    }
+                }
+            }
+            if (result.successCount > 0) {
+                return pushMessageService.save(pushMessage.apply { sent = true })
+            } else {
+                val firstError = result.responses.first { it.isSuccessful.not() }.exception
+                pushMessageService.save(pushMessage.apply { sent = false })
+                throw ScpServerException(firstError.message, firstError)
+            }
+        } catch (e: Exception) {
+            log.error(e.message, e)
+            pushMessageService.save(pushMessage.apply { sent = false })
+            throw ScpServerException(e.message, e)
+        }
+    }
+
     private fun sendMessageToTopic(
             topicName: String,
             pushMessage: PushMessage
@@ -74,20 +135,31 @@ class FirebaseMessagingService @Autowired constructor(
         }
     }
 
-    private fun fcmMessageFromPushMessage(pushMessage: PushMessage, token: String? = null, topicName: String? = null): Message? {
-        if (token != null && topicName != null) {
-            throw ScpServerException(message = "Use only topic or token, not both!")
-        }
-        if (token.isNullOrEmpty() && topicName.isNullOrEmpty()) {
-            throw ScpServerException(message = "Topic and token are null or empty!")
+    private fun fcmMessageFromPushMessage(
+            pushMessage: PushMessage,
+            topicName: String
+    ): Message {
+        if (topicName.isEmpty()) {
+            throw ScpServerException(message = "Topic is null or empty!")
         }
 
         return Message.builder()
                 .putAllData(pushMessageToMap(pushMessage))
-                .apply {
-                    token?.let { setToken(token) }
-                    topicName?.let { setTopic(it) }
-                }
+                .setTopic(topicName)
+                .build()
+    }
+
+    private fun fcmMulticastMessageFromPushMessage(
+            pushMessage: PushMessage,
+            tokens: List<String>
+    ): MulticastMessage {
+        if (tokens.isEmpty()) {
+            throw ScpServerException(message = "Topics list is empty!")
+        }
+
+        return MulticastMessage.builder()
+                .putAllData(pushMessageToMap(pushMessage))
+                .addAllTokens(tokens)
                 .build()
     }
 }
