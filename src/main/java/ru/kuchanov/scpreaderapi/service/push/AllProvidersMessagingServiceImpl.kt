@@ -64,7 +64,7 @@ class AllProvidersMessagingServiceImpl @Autowired constructor(
         val huaweiResult: PushSendResult = try {
             PushSendResult.Success(
                     provider = Push.Provider.HUAWEI,
-                    pushMessage = huaweiMessagingService.sendMessageToTopic(
+                    pushMessage = huaweiMessagingService.sendMessage(
                             topicName,
                             type,
                             title,
@@ -120,6 +120,29 @@ class AllProvidersMessagingServiceImpl @Autowired constructor(
         return listOf(firebaseResult, huaweiResult)
     }
 
-        return listOf(firebaseResult)
+    override fun sendToUser(userId: Long, title: String, message: String, type: Push.MessageType, author: User) {
+        checkNotNull(author.id)
+        //check is admin
+        if (author.isAdmin().not()) {
+            log.error("Attempt to send push by non admin user! User: $author")
+            throw ScpAccessDeniedException()
+        }
+
+        val savedMessage = pushMessageService.save(
+                PushMessage(
+                        userId = userId,
+                        type = type,
+                        title = title,
+                        message = message,
+                        url = null,
+                        authorId = author.id
+                )
+        )
+
+        //todo send to fucking google
+
+        //todo send to huawei
+
+        TODO("Not yet implemented")
     }
 }
