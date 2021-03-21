@@ -19,6 +19,14 @@ class FirebaseMessagingService @Autowired constructor(
         val pushMessageService: PushMessageService
 ) : PushProviderMessagingService {
 
+    override fun sendMessageToUser(userId: Long, type: Push.MessageType, title: String, message: String, author: User): PushMessage {
+        TODO("Not yet implemented")
+    }
+
+    override fun sendMessageToUserById(userId: Long, pushMessageId: Long, author: User): PushMessage {
+        TODO("Not yet implemented")
+    }
+
     override fun sendMessageToTopic(
             topicName: String,
             type: Push.MessageType,
