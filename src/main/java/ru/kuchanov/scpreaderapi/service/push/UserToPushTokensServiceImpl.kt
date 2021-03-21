@@ -27,9 +27,18 @@ class UserToPushTokensServiceImpl @Autowired constructor(
     ): UsersToPushTokens? =
             repository.findByUserIdAndPushTokenValue(userId, pushTokenValue)
 
+    override fun findByUserIdAndPushTokenProvider(
+            userId: Long,
+            pushTokenProvider: ScpReaderConstants.Push.Provider
+    ): List<UsersToPushTokens> =
+            repository.findByUserIdAndPushTokenProvider(userId, pushTokenProvider)
+
     override fun findAllByUserId(userId: Long): List<UsersToPushTokens> =
             repository.findAllByUserId(userId)
 
     override fun deleteById(id: Long) =
             repository.deleteById(id)
+
+    override fun deleteByPushTokenValue(pushTokenValue: String) =
+            repository.deleteByPushTokenValue(pushTokenValue)
 }

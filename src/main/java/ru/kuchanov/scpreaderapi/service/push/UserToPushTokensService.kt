@@ -18,7 +18,14 @@ interface UserToPushTokensService {
             pushTokenValue: String
     ): UsersToPushTokens?
 
+    fun findByUserIdAndPushTokenProvider(
+            userId: Long,
+            pushTokenProvider: ScpReaderConstants.Push.Provider
+    ): List<UsersToPushTokens>
+
     fun deleteById(id: Long)
 
     fun findAllByUserId(userId: Long): List<UsersToPushTokens>
+
+    fun deleteByPushTokenValue(pushTokenValue: String)
 }
