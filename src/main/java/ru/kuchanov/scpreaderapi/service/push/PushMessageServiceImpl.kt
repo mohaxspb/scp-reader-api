@@ -12,8 +12,18 @@ class PushMessageServiceImpl @Autowired constructor(
         private val pushMessageRepository: PushMessageRepository
 ) : PushMessageService {
 
-    override fun findAllByTypeIn(types: List<ScpReaderConstants.Push.MessageType>): List<PushMessage> =
-            pushMessageRepository.findAllByTypeInOrderByCreatedDesc(types)
+    override fun findAllByTypeIn(
+            types: List<ScpReaderConstants.Push.MessageType>,
+            userId: Long?
+    ): List<PushMessage> {
+        return if (userId != null) {
+            pushMessageRepository.findAllByTypeInAndUserIdOrderByCreatedDesc(types, userId)
+        } else {
+            val clearedSubscriptionEventsList = types.toMutableList()
+            clearedSubscriptionEventsList.remove(ScpReaderConstants.Push.MessageType.SUBSCRIPTION_EVENT)
+            pushMessageRepository.findAllByTypeInOrderByCreatedDesc(clearedSubscriptionEventsList)
+        }
+    }
 
     override fun findAllByUserId(userId: Long): List<PushMessage> =
             pushMessageRepository.findAllByUserId(userId)

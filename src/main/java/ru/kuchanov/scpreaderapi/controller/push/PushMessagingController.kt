@@ -39,8 +39,9 @@ class PushMessagingController @Autowired constructor(
 
     @GetMapping("/all/byTypes")
     fun getAllByTypes(
-            @RequestParam(value = "types") types: List<ScpReaderConstants.Push.MessageType>
-    ) = pushMessageService.findAllByTypeIn(types)
+            @RequestParam(value = "types") types: List<ScpReaderConstants.Push.MessageType>,
+            @AuthenticationPrincipal user: User?
+    ) = pushMessageService.findAllByTypeIn(types, user?.id)
 
     @GetMapping("/send/to/{userId}")
     fun sendToUser(
