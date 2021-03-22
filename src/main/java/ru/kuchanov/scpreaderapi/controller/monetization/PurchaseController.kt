@@ -28,6 +28,7 @@ import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.Hua
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiApiService.Companion.ACCOUNT_FLAG_HUAWEI_ID
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiMonetizationService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiSubsEventHandleAttemptService
+import ru.kuchanov.scpreaderapi.service.push.AllProvidersMessagingService
 import ru.kuchanov.scpreaderapi.service.users.ScpReaderUserService
 import ru.kuchanov.scpreaderapi.utils.ErrorUtils
 import java.sql.Timestamp
@@ -44,6 +45,7 @@ class PurchaseController @Autowired constructor(
         private val userService: ScpReaderUserService,
         private val subscriptionValidateAttemptsService: SubscriptionValidateAttemptsService,
         private val huaweiSubsEventHandleAttemptService: HuaweiSubsEventHandleAttemptService,
+        private val allProvidersMessagingService: AllProvidersMessagingService,
         private val errorUtils: ErrorUtils,
         private val objectMapper: ObjectMapper,
         private val log: Logger
@@ -97,7 +99,9 @@ class PurchaseController @Autowired constructor(
                             huaweiSubId,
                             inAppPurchaseData.purchaseToken,
                             inAppPurchaseData.accountFlag ?: ACCOUNT_FLAG_HUAWEI_ID,
-                            user
+                            user,
+                            pushTitle = "Subscription renewal!",
+                            pushMessage = "Your subscription was successfully renewed!"
                     )
                     val updatedSubscription = huaweiMonetizationService
                             .getHuaweiSubscriptionBySubscriptionId(huaweiSubId)
@@ -139,7 +143,9 @@ class PurchaseController @Autowired constructor(
                             inAppPurchaseDataForCurrentSub.subscriptionId!!,
                             inAppPurchaseDataForCurrentSub.purchaseToken,
                             inAppPurchaseDataForCurrentSub.accountFlag ?: ACCOUNT_FLAG_HUAWEI_ID,
-                            user
+                            user,
+                            pushTitle = "Subscription resuming!",
+                            pushMessage = "Your subscription was successfully resumed!"
                     )
                     val updatedSubscription = huaweiMonetizationService
                             .getHuaweiSubscriptionBySubscriptionId(inAppPurchaseDataForCurrentSub.subscriptionId)
@@ -179,10 +185,12 @@ class PurchaseController @Autowired constructor(
 
                     @Suppress("DuplicatedCode")
                     val updatedUser = applyHuaweiSubscription(
-                            huaweiSubId,
-                            inAppPurchaseData.purchaseToken,
-                            inAppPurchaseData.accountFlag ?: ACCOUNT_FLAG_HUAWEI_ID,
-                            user
+                            subscriptionId = huaweiSubId,
+                            purchaseToken = inAppPurchaseData.purchaseToken,
+                            accountFlag = inAppPurchaseData.accountFlag ?: ACCOUNT_FLAG_HUAWEI_ID,
+                            user = user,
+                            pushTitle = "Subscription plan changed!",
+                            pushMessage = "Your subscription was successfully changed to new one!"
                     )
                     val updatedSubscription = huaweiMonetizationService
                             .getHuaweiSubscriptionBySubscriptionId(huaweiSubId)
@@ -236,7 +244,14 @@ class PurchaseController @Autowired constructor(
             Store.HUAWEI -> {
                 when (purchaseType) {
                     InappType.SUBS -> {
-                        return applyHuaweiSubscription(subscriptionId, purchaseToken, accountFlag, user)
+                        return applyHuaweiSubscription(
+                                subscriptionId = subscriptionId,
+                                purchaseToken = purchaseToken,
+                                accountFlag = accountFlag,
+                                user = user,
+                                pushTitle = "Subscription is active!",
+                                pushMessage = "Your subscription was successfully activated!"
+                        )
                     }
                     InappType.INAPP, InappType.CONSUMABLE -> TODO()
                 }
@@ -252,7 +267,9 @@ class PurchaseController @Autowired constructor(
             subscriptionId: String,
             purchaseToken: String,
             accountFlag: Int,
-            user: User
+            user: User,
+            pushTitle: String,
+            pushMessage: String
     ): UserProjectionV2 {
         // 1. Verify product
         val verificationResult = huaweiApiService.verifyPurchase(
@@ -269,6 +286,16 @@ class PurchaseController @Autowired constructor(
 
         //3. Update user in DB.
         updateUserSubscriptionExpiration(user.id!!)
+
+        //4. Send push
+        allProvidersMessagingService.sendToUser(
+                userId = user.id,
+                title = pushTitle,
+                message = pushMessage,
+                type = ScpReaderConstants.Push.MessageType.SUBSCRIPTION_EVENT,
+                author = userService.getById(ScpReaderConstants.InternalAuthData.ADMIN_ID)
+                        ?: throw UserNotFoundException()
+        )
 
         return userService.getByIdAsDtoV2(user.id) ?: throw UserNotFoundException()
     }
@@ -321,7 +348,7 @@ class PurchaseController @Autowired constructor(
             @PathVariable purchaseType: InappType,
             @RequestParam productId: String,
             @RequestParam purchaseToken: String,
-            @RequestParam(defaultValue = "-1") accountFlag: Int
+            @RequestParam(defaultValue = ACCOUNT_FLAG_HUAWEI_ID.toString()) accountFlag: Int
     ): String {
         val test = when (store) {
             Store.HUAWEI -> huaweiApiService.cancelSubscription(productId, purchaseToken, accountFlag)
@@ -456,14 +483,26 @@ class PurchaseController @Autowired constructor(
             //2. Write product info to DB.
             val owner = huaweiMonetizationService.getUserByHuaweiSubscriptionId(currentSubscription.id)
                     ?: throw UserNotFoundException()
-            val updatedSubscription = huaweiMonetizationService.saveSubscription(huaweiSubscriptionResponse.androidSubscription!!, owner)
+            val updatedSubscription = huaweiMonetizationService.saveSubscription(
+                    huaweiSubscriptionResponse.androidSubscription!!,
+                    owner
+            )
 
             //3. Update user
             updateUserSubscriptionExpiration(owner.id!!)
 
+            // 4. Send push messages to users with subscription update info.
+            allProvidersMessagingService.sendToUser(
+                    userId = owner.id,
+                    message = "Subscription was updated in your profile.",
+                    title = "Subscription updated!",
+                    type = ScpReaderConstants.Push.MessageType.SUBSCRIPTION_EVENT,
+                    author = userService.getById(ScpReaderConstants.InternalAuthData.ADMIN_ID)
+                            ?: throw UserNotFoundException()
+            )
+
             updatedSubscription
 
-            // TODO 4. Send push messages to users with subscription update info.
         }
 
         return updatedSubscriptions

@@ -13,6 +13,7 @@ object ScpReaderConstants {
          * used for getting articles and other stuff, that don't need user auth
          */
         const val IMPLICIT_FLOW_CLIENT_ID = "implicit_flow_client_id"
+        const val ADMIN_ID = 1L
     }
 
     object Api {

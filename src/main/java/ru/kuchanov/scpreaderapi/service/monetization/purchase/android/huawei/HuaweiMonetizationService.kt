@@ -37,15 +37,6 @@ class HuaweiMonetizationService @Autowired constructor(
     ): List<HuaweiSubscription> =
             huaweiSubscriptionRepository.getHuaweiSubscriptionsBetweenDates(startDate, endDate)
 
-//    fun savePurchasedProduct(inAppPurchaseData: InAppPurchaseData, user: User) {
-//        when (HuaweiProductKind.findByType(inAppPurchaseData.kind)) {
-//            HuaweiProductKind.CONSUMABLE, HuaweiProductKind.NON_CONSUMABLE -> saveProduct(TODO(), user)
-//            HuaweiProductKind.RENEWABLE_SUBSCRIPTION, HuaweiProductKind.NON_RENEWABLE_SUBSCRIPTION -> {
-//                saveSubscription(converter.convertToSubscription(inAppPurchaseData), user)
-//            }
-//        }
-//    }
-
     fun saveSubscription(inAppPurchaseData: InAppPurchaseData, user: User): HuaweiSubscription {
         val huaweiSubscription: HuaweiSubscription = converter.convertToSubscription(inAppPurchaseData)
         val huaweiSubscriptionInDb = huaweiSubscriptionRepository
