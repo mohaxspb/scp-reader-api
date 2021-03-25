@@ -3,6 +3,7 @@ package ru.kuchanov.scpreaderapi.network
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier
+import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -14,15 +15,22 @@ import ru.kuchanov.scpreaderapi.model.facebook.ValidatedTokenWrapper
 
 @Service
 class ApiClient @Autowired constructor(
-        val objectMapper: ObjectMapper,
-        val facebookApi: FacebookApi,
-        val googleIdTokenVerifier: GoogleIdTokenVerifier
+        private val objectMapper: ObjectMapper,
+        private val facebookApi: FacebookApi,
+        private val googleIdTokenVerifier: GoogleIdTokenVerifier,
+        private val huaweiAuthApi: HuaweiAuthApi,
+        @Value("\${my.api.facebook.client_id}")
+        private val facebookClientId: String,
+        @Value("\${my.api.facebook.client_secret}")
+        private val facebookClientSecret: String,
+        @Value("\${my.api.huawei.client_id}")
+        private val huaweiClientId: String,
+        @Value("\${my.api.huawei.client_secret}")
+        private val huaweiClientSecret: String,
+        @Value("\${my.api.huawei.redirect_uri}")
+        private val huaweiRedirectUri: String,
+        private val log: Logger
 ) {
-
-    @Value("\${my.api.facebook.client_id}")
-    private var facebookClientId: String? = null
-    @Value("\${my.api.facebook.client_secret}")
-    private lateinit var facebookClientSecret: String
 
     fun getUserDataFromProvider(
             provider: ScpReaderConstants.SocialProvider,
@@ -84,6 +92,19 @@ class ApiClient @Autowired constructor(
                     lastName = facebookProfile.lastName,
                     avatarUrl = facebookProfile.picture?.data?.url
             )
+        }
+        ScpReaderConstants.SocialProvider.HUAWEI -> {
+            val tokenResponse = huaweiAuthApi.getAccessToken(
+                    code = token,
+                    redirectUri = huaweiRedirectUri,
+                    clientId = huaweiClientId,
+                    clientSecret = huaweiClientSecret
+            ).execute()
+
+            log.error("tokenResponse body: ${tokenResponse.body()}")
+            log.error("tokenResponse errorBody: ${tokenResponse.errorBody()?.string()}")
+
+            TODO()
         }
         ScpReaderConstants.SocialProvider.VK -> {
             val commonUserData = objectMapper.readValue(token, CommonUserData::class.java)
