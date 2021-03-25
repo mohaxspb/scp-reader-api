@@ -65,6 +65,7 @@ class ScpReaderUserServiceImpl @Autowired constructor(
                 ScpReaderConstants.SocialProvider.GOOGLE -> repository.findOneByGoogleId(id)
                 ScpReaderConstants.SocialProvider.FACEBOOK -> repository.findOneByFacebookId(id)
                 ScpReaderConstants.SocialProvider.VK -> repository.findOneByVkId(id)
+                ScpReaderConstants.SocialProvider.HUAWEI -> repository.findOneByHuaweiId(id)
             }
 
     override fun getUserPositionInLeaderboard(userId: Long, langId: String): Int =
