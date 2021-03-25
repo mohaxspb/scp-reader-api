@@ -62,6 +62,9 @@ data class User(
         @Column(name = "vk_id", columnDefinition = "TEXT")
         var vkId: String? = null,
 
+        @Column(name = "huawei_id", columnDefinition = "TEXT")
+        var huaweiId: String? = null,
+
         //misc
         @Column(columnDefinition = "TEXT")
         var avatar: String? = null,
