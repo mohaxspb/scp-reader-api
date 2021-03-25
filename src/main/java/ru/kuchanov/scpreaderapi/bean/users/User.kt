@@ -102,12 +102,6 @@ data class User(
     override fun isAccountNonExpired() = true
 
     override fun isAccountNonLocked() = true
-
-    fun isAdsDisabled() =
-            adsDisabledEndDate?.isAfter(LocalDateTime.now()) ?: false
-
-    fun isOfflineLimitDisabled() =
-            offlineLimitDisabledEndDate?.isAfter(LocalDateTime.now()) ?: false
 }
 
 fun User.isAdmin(): Boolean {
