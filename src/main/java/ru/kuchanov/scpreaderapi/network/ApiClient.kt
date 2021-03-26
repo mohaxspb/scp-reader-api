@@ -19,6 +19,7 @@ class ApiClient @Autowired constructor(
         private val facebookApi: FacebookApi,
         private val googleIdTokenVerifier: GoogleIdTokenVerifier,
         private val huaweiAuthApi: HuaweiAuthApi,
+        private val huaweiAccountApi: HuaweiAccountApi,
         @Value("\${my.api.facebook.client_id}")
         private val facebookClientId: String,
         @Value("\${my.api.facebook.client_secret}")
@@ -101,10 +102,31 @@ class ApiClient @Autowired constructor(
                     clientSecret = huaweiClientSecret
             ).execute()
 
-            log.error("tokenResponse body: ${tokenResponse.body()}")
-            log.error("tokenResponse errorBody: ${tokenResponse.errorBody()?.string()}")
+            if (tokenResponse.isSuccessful.not()) {
+                throw IllegalStateException("Huawei accessToken request failed. ErrorBody: ${tokenResponse.errorBody()?.string()}")
+            }
 
-            TODO()
+            val huaweiAccessTokenValue = tokenResponse.body()
+                    ?: throw IllegalStateException("Huawei accessToken is null!")
+
+            log.error("tokenResponse body: $huaweiAccessTokenValue")
+
+            val accountResponse = huaweiAccountApi.getAccount(huaweiAccessTokenValue.accessToken).execute()
+
+            if (accountResponse.isSuccessful.not()) {
+                throw IllegalStateException("Huawei account request failed. ErrorBody: ${accountResponse.errorBody()?.string()}")
+            }
+
+            val accountData = accountResponse.body() ?: throw IllegalStateException("Huawei account is null!")
+
+            CommonUserData(
+                    id = accountData.openID,
+                    email = accountData.email ?: throw IllegalStateException("Can't login without email!"),
+                    fullName = accountData.displayName,
+                    firstName = "",
+                    lastName = "",
+                    avatarUrl = accountData.headPictureURL
+            )
         }
         ScpReaderConstants.SocialProvider.VK -> {
             val commonUserData = objectMapper.readValue(token, CommonUserData::class.java)

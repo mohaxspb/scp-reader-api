@@ -17,6 +17,7 @@ import retrofit2.Retrofit
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.auth.huawei.HuaweiOAuthAccessToken
 import ru.kuchanov.scpreaderapi.model.huawei.auth.TokenResponse
+import ru.kuchanov.scpreaderapi.network.HuaweiAccountApi
 import ru.kuchanov.scpreaderapi.network.HuaweiAuthApi
 import ru.kuchanov.scpreaderapi.network.HuaweiPushApi
 import ru.kuchanov.scpreaderapi.repository.auth.huawei.HuaweiAccessTokenRepository
@@ -61,6 +62,17 @@ class HuaweiApiConfiguration @Autowired constructor(
                 .addCallAdapterFactory(callAdapterFactory)
                 .build()
         return retrofit.create(HuaweiAuthApi::class.java)
+    }
+
+    @Bean
+    fun huaweiAccountApi(): HuaweiAccountApi {
+        val retrofit = Retrofit.Builder()
+                .baseUrl(HuaweiAccountApi.BASE_API_URL)
+                .client(okHttpClient)
+                .addConverterFactory(converterFactory)
+                .addCallAdapterFactory(callAdapterFactory)
+                .build()
+        return retrofit.create(HuaweiAccountApi::class.java)
     }
 
     @Bean
