@@ -108,6 +108,14 @@ class AuthController @Autowired constructor(
                         log.error("login with ${commonUserData.id}/$email for user with mismatched vkId: ${userInDb.vkId}")
                     }
                 }
+                ScpReaderConstants.SocialProvider.HUAWEI -> {
+                    if (userInDb.huaweiId.isNullOrEmpty()) {
+                        userInDb.huaweiId = commonUserData.id
+                        usersServiceScpReader.update(userInDb)
+                    } else if (userInDb.huaweiId != commonUserData.id) {
+                        log.error("login with ${commonUserData.id}/$email for user with mismatched huaweiId: ${userInDb.huaweiId}")
+                    }
+                }
             }
             revokeUserTokens(email, clientId)
             return generateAccessToken(email, clientId)
@@ -142,6 +150,7 @@ class AuthController @Autowired constructor(
                         ScpReaderConstants.SocialProvider.GOOGLE -> googleId = commonUserData.id
                         ScpReaderConstants.SocialProvider.FACEBOOK -> facebookId = commonUserData.id
                         ScpReaderConstants.SocialProvider.VK -> vkId = commonUserData.id
+                        ScpReaderConstants.SocialProvider.HUAWEI -> huaweiId = commonUserData.id
                     }
                 }
 

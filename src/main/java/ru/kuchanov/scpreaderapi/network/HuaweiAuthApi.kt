@@ -4,6 +4,7 @@ import retrofit2.Call
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.POST
+import ru.kuchanov.scpreaderapi.ScpReaderConstants.Api.GRANT_TYPE_AUTHORIZATION_CODE
 import ru.kuchanov.scpreaderapi.model.huawei.auth.TokenResponse
 
 /**
@@ -20,6 +21,16 @@ interface HuaweiAuthApi {
     @POST("oauth2/v2/token")
     fun getAccessToken(
             @Field("grant_type") grantType: String,
+            @Field("client_id") clientId: String,
+            @Field("client_secret") clientSecret: String
+    ): Call<TokenResponse>
+
+    @FormUrlEncoded
+    @POST("oauth2/v3/token")
+    fun getAccessToken(
+            @Field("grant_type") grantType: String = GRANT_TYPE_AUTHORIZATION_CODE,
+            @Field("code") code: String,
+            @Field("redirect_uri") redirectUri: String,
             @Field("client_id") clientId: String,
             @Field("client_secret") clientSecret: String
     ): Call<TokenResponse>

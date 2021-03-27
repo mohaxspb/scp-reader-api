@@ -18,6 +18,7 @@ object ScpReaderConstants {
 
     object Api {
         const val GRANT_TYPE_REFRESH_TOKEN = "refresh_token"
+        const val GRANT_TYPE_AUTHORIZATION_CODE = "authorization_code"
         const val GRANT_TYPE_CLIENT_CREDENTIALS = "client_credentials"
         const val PARAM_GRANT_TYPE = "grant_type"
         const val PARAM_REFRESH_TOKEN = "refresh_token"
@@ -55,7 +56,7 @@ object ScpReaderConstants {
     }
 
     enum class SocialProvider {
-        GOOGLE, FACEBOOK, VK
+        GOOGLE, FACEBOOK, VK, HUAWEI
     }
 
     object Firebase {

@@ -3,6 +3,7 @@ package ru.kuchanov.scpreaderapi.network
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier
+import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -14,15 +15,23 @@ import ru.kuchanov.scpreaderapi.model.facebook.ValidatedTokenWrapper
 
 @Service
 class ApiClient @Autowired constructor(
-        val objectMapper: ObjectMapper,
-        val facebookApi: FacebookApi,
-        val googleIdTokenVerifier: GoogleIdTokenVerifier
+        private val objectMapper: ObjectMapper,
+        private val facebookApi: FacebookApi,
+        private val googleIdTokenVerifier: GoogleIdTokenVerifier,
+        private val huaweiAuthApi: HuaweiAuthApi,
+        private val huaweiAccountApi: HuaweiAccountApi,
+        @Value("\${my.api.facebook.client_id}")
+        private val facebookClientId: String,
+        @Value("\${my.api.facebook.client_secret}")
+        private val facebookClientSecret: String,
+        @Value("\${my.api.huawei.client_id}")
+        private val huaweiClientId: String,
+        @Value("\${my.api.huawei.client_secret}")
+        private val huaweiClientSecret: String,
+        @Value("\${my.api.huawei.redirect_uri}")
+        private val huaweiRedirectUri: String,
+        private val log: Logger
 ) {
-
-    @Value("\${my.api.facebook.client_id}")
-    private var facebookClientId: String? = null
-    @Value("\${my.api.facebook.client_secret}")
-    private lateinit var facebookClientSecret: String
 
     fun getUserDataFromProvider(
             provider: ScpReaderConstants.SocialProvider,
@@ -83,6 +92,40 @@ class ApiClient @Autowired constructor(
                     firstName = facebookProfile.firstName,
                     lastName = facebookProfile.lastName,
                     avatarUrl = facebookProfile.picture?.data?.url
+            )
+        }
+        ScpReaderConstants.SocialProvider.HUAWEI -> {
+            val tokenResponse = huaweiAuthApi.getAccessToken(
+                    code = token,
+                    redirectUri = huaweiRedirectUri,
+                    clientId = huaweiClientId,
+                    clientSecret = huaweiClientSecret
+            ).execute()
+
+            if (tokenResponse.isSuccessful.not()) {
+                throw IllegalStateException("Huawei accessToken request failed. ErrorBody: ${tokenResponse.errorBody()?.string()}")
+            }
+
+            val huaweiAccessTokenValue = tokenResponse.body()
+                    ?: throw IllegalStateException("Huawei accessToken is null!")
+
+            log.error("tokenResponse body: $huaweiAccessTokenValue")
+
+            val accountResponse = huaweiAccountApi.getAccount(huaweiAccessTokenValue.accessToken).execute()
+
+            if (accountResponse.isSuccessful.not()) {
+                throw IllegalStateException("Huawei account request failed. ErrorBody: ${accountResponse.errorBody()?.string()}")
+            }
+
+            val accountData = accountResponse.body() ?: throw IllegalStateException("Huawei account is null!")
+
+            CommonUserData(
+                    id = accountData.openID,
+                    email = accountData.email ?: throw IllegalStateException("Can't login without email!"),
+                    fullName = accountData.displayName,
+                    firstName = "",
+                    lastName = "",
+                    avatarUrl = accountData.headPictureURL
             )
         }
         ScpReaderConstants.SocialProvider.VK -> {

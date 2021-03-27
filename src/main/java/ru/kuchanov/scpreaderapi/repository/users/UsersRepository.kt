@@ -16,6 +16,7 @@ interface UsersRepository : JpaRepository<User, Long> {
     fun findOneByGoogleId(id: String): User?
     fun findOneByFacebookId(id: String): User?
     fun findOneByVkId(id: String): User?
+    fun findOneByHuaweiId(id: String): User?
 
     @Query("""
         select distinct u from User u 
