@@ -1,5 +1,6 @@
 package ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.subevent
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonValue
 
 /**
@@ -14,6 +15,7 @@ data class HuaweiSubscriptionEventDto(
 /**
  * [doc](https://developer.huawei.com/consumer/en/doc/development/HMSCore-References-V5/api-notifications-about-subscription-events-0000001050706084-V5#EN-US_TOPIC_0000001050706084__section241419524310)
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class StatusUpdateNotification(
         /**
          * Environment for sending a notification. The options are as follows:
@@ -25,6 +27,15 @@ data class StatusUpdateNotification(
          * Type of a notification event. For details, please refer to Table 2.
          */
         val notificationType: NotificationType,
+        /**
+         * The latest purchaseToken parameter obtained after payment indicates the mapping between the product and the user.
+         *
+         * latestReceipt indicates the token of the receipt for successful charging,
+         * and latestExpiredReceipt indicates the token of the receipt in the last period.
+         * For renewal, the value of purchaseToken is the same as that of latestReceipt.
+         * For switchover, the value of purchaseToken is different from that of latestReceipt.
+         */
+        val purchaseToken: String?,
         val subscriptionId: String,
         /**
          * Refund time. The value is a UTC timestamp, in milliseconds.
