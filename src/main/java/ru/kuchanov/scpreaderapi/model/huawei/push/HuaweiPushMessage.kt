@@ -18,7 +18,7 @@ data class HuaweiPushMessage(
     ) {
         init {
             check(token.isNullOrEmpty() && topic.isNullOrEmpty()) {
-                "You must set topic or at least one token!"
+                "You must set topic or at least one token! Topic: $topic, token: $token"
             }
         }
 
