@@ -14,7 +14,6 @@ interface HuaweiPushApi {
         const val BASE_API_URL = "https://push-api.cloud.huawei.com/v1/"
     }
 
-    @FormUrlEncoded
     @POST("{applicationId}/messages:send")
     fun send(
             @Path("applicationId") applicationId: String,
