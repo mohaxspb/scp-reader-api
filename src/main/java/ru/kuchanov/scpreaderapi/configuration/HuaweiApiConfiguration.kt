@@ -109,7 +109,7 @@ class HuaweiApiConfiguration @Autowired constructor(
         val unAuthAccessTokenInterceptor = Interceptor { chain ->
             val initialRequest = chain.request()
             val initialResponse: okhttp3.Response = chain.proceed(initialRequest)
-            if (initialResponse.code() == HttpURLConnection.HTTP_UNAUTHORIZED) {
+            if (unauthorizedRequestResolver(initialResponse)) {
                 val response: Response<TokenResponse> = huaweiAuthApi()
                         .getAccessToken(
                                 ScpReaderConstants.Api.GRANT_TYPE_CLIENT_CREDENTIALS,
