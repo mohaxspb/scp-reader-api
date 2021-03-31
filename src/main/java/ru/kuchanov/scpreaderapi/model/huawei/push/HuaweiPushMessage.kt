@@ -16,11 +16,6 @@ data class HuaweiPushMessage(
             val token: List<String>? = null,
             val topic: String? = null
     ) {
-        init {
-            check(token.isNullOrEmpty() && topic.isNullOrEmpty()) {
-                "You must set topic or at least one token! Topic: $topic, token: $token"
-            }
-        }
 
         data class Android(
                 val urgency: URGENCY = URGENCY.NORMAL,
