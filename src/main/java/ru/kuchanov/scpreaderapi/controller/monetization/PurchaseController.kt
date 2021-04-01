@@ -89,6 +89,9 @@ class PurchaseController @Autowired constructor(
 
                     val huaweiSubscriptionInDb: HuaweiSubscription = huaweiMonetizationService
                             .getHuaweiSubscriptionBySubscriptionId(huaweiSubId)
+                            //there can be subscription switch, so check oriSubscriptionId too
+                            ?: huaweiMonetizationService
+                                    .getHuaweiSubscriptionBySubscriptionId(inAppPurchaseData.oriSubscriptionId!!)
                             ?: throw HuaweiSubscriptionNotFoundException(
                                     "HuaweiSubscription not found for subscriptionId: $huaweiSubId"
                             )
@@ -492,10 +495,21 @@ class PurchaseController @Autowired constructor(
             updateUserSubscriptionExpiration(owner.id!!)
 
             // 4. Send push messages to users with subscription update info.
+            val title = if (updatedSubscription.subIsValid) {
+                "Subscription was successfully updated!"
+            } else {
+                "Subscription expired!"
+            }
+            val message = if (updatedSubscription.subIsValid) {
+                "Subscription was updated in your profile."
+            } else {
+                "Subscription has expired and no longer active."
+            }
+
             allProvidersMessagingService.sendToUser(
                     userId = owner.id,
-                    message = "Subscription was updated in your profile.",
-                    title = "Subscription updated!",
+                    title = title,
+                    message = message,
                     type = ScpReaderConstants.Push.MessageType.SUBSCRIPTION_EVENT,
                     author = userService.getById(ScpReaderConstants.InternalAuthData.ADMIN_ID)
                             ?: throw UserNotFoundException()

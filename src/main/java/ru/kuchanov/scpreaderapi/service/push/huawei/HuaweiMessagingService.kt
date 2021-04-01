@@ -38,6 +38,7 @@ class HuaweiMessagingService @Autowired constructor(
                 userId,
                 ScpReaderConstants.Push.Provider.HUAWEI
         )
+        log.error("sendMessageToUserById: $userHuaweiTokens")
 
         return sendMessage(
                 userPushTokens = userHuaweiTokens.map { it.pushTokenValue },
