@@ -99,7 +99,7 @@ dependencies {
     //cache
     implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'org.springframework:spring-context-support:5.2.5.RELEASE'
-    implementation 'com.github.ben-manes.caffeine:caffeine:2.8.1'
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.0.1'
     //tests
     implementation 'org.springframework.boot:spring-boot-starter-test'
     //spring END
