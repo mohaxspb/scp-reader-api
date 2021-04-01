@@ -188,7 +188,8 @@ class HuaweiApiConfiguration @Autowired constructor(
             "${ScpReaderConstants.Api.HEADER_PART_BEARER} ${token.accessToken}"
 
     private fun huaweiCommonRequestUnauthorizedResolver(initialResponse: okhttp3.Response): Boolean {
-        val responseBodyAsString = initialResponse.body()!!.string()
+        // body can be read only once, so create copy of it to prevent initialResponse corrupting.
+        val responseBodyAsString = initialResponse.newBuilder().build().body()!!.string()
         return responseBodyAsString.contains(""""code": "$HUAWEI_COMMON_API_AUTH_ERROR_CODE"""")
                 || responseBodyAsString.contains(""""code": "$HUAWEI_COMMON_API_AUTH_EXPIRED_ERROR_CODE"""")
     }
