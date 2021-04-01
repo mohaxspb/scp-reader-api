@@ -1,5 +1,6 @@
 package ru.kuchanov.scpreaderapi.controller.article
 
+import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.web.bind.annotation.*
@@ -20,11 +21,12 @@ import ru.kuchanov.scpreaderapi.service.users.LangService
 @RestController
 @RequestMapping("/" + ScpReaderConstants.Path.ARTICLE)
 class ArticleController @Autowired constructor(
-        val articleForLangService: ArticleForLangService,
-        val langService: LangService,
-        val categoryForLangService: ArticleCategoryForLangService,
-        val categoryService: ArticleCategoryService,
-        val textPartService: TextPartService
+        private val articleForLangService: ArticleForLangService,
+        private val langService: LangService,
+        private val categoryForLangService: ArticleCategoryForLangService,
+        private val categoryService: ArticleCategoryService,
+        private val textPartService: TextPartService,
+        private val log: Logger
 ) {
 
     @GetMapping("/{langEnum}/recent")
@@ -43,12 +45,14 @@ class ArticleController @Autowired constructor(
     ): List<ArticleToLangDto> =
             articleForLangService.getMostRatedArticlesForLang(langEnum.lang, offset, limit)
 
-    @Cacheable(value = ["getArticlesByCategoryAndLang"])
+    @Cacheable(value = [ScpReaderConstants.Cache.Keys.CATEGORIES_ARTICLES])
     @GetMapping("/{langEnum}/category/{categoryId}")
     fun getArticlesByCategoryAndLang(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
             @PathVariable(value = "categoryId") categoryId: Long
     ): List<ArticleToLangDto> {
+        //fixme remove logs
+        log.error("getArticlesByCategoryAndLang: $langEnum, $categoryId")
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
         val category = categoryService.getById(categoryId)
                 ?: throw ArticleCategoryNotFoundException()
@@ -68,7 +72,7 @@ class ArticleController @Autowired constructor(
             articleForLangService.getOneByLangIdAndArticleId(articleId, langEnum.lang)
                     ?: throw ArticleForLangNotFoundException()
 
-    @Cacheable(value = ["showArticleForLangById"])
+    @Cacheable(value = [ScpReaderConstants.Cache.Keys.ARTICLE_TO_LANG_DTO_BY_ID])
     @GetMapping("{id}")
     fun showArticleForLangById(
             @PathVariable(value = "id") articleToLangId: Long
@@ -88,7 +92,7 @@ class ArticleController @Autowired constructor(
                 ?: throw ArticleForLangNotFoundException()
     }
 
-    @Cacheable(value = ["showArticleForUrlRelativeAndLangIdFull"])
+    @Cacheable(value = [ScpReaderConstants.Cache.Keys.ARTICLE_TO_LANG_DTO_BY_URL_RELATIVE_AND_LANG])
     @GetMapping("{langEnum}/full")
     fun showArticleForUrlRelativeAndLangIdFull(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,

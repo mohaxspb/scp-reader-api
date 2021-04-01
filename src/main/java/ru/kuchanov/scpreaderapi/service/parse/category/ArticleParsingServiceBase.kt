@@ -29,6 +29,9 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.ResponseStatus
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
+import ru.kuchanov.scpreaderapi.ScpReaderConstants.Cache.Keys.ARTICLE_TO_LANG_DTO_BY_ID
+import ru.kuchanov.scpreaderapi.ScpReaderConstants.Cache.Keys.ARTICLE_TO_LANG_DTO_BY_URL_RELATIVE_AND_LANG
+import ru.kuchanov.scpreaderapi.ScpReaderConstants.Cache.Keys.CATEGORIES_ARTICLES
 import ru.kuchanov.scpreaderapi.bean.articles.Article
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLangToArticleForLang
@@ -506,9 +509,10 @@ class ArticleParsingServiceBase {
                                 articlesForCategory
                         )
 
+                        //todo fill cache after evicting
                         val langEnum = ScpReaderConstants.Firebase.FirebaseInstance.valueOf(lang.id.toUpperCase())
                         cacheManager
-                                .getCache("getArticlesByCategoryAndLang")
+                                .getCache(CATEGORIES_ARTICLES)
                                 ?.evict(SimpleKey(langEnum, categoryToLang.articleCategoryId))
                     }
                     .doOnError { saveArticleParseError(lang.id, objectsUrl, it) }
@@ -795,14 +799,15 @@ class ArticleParsingServiceBase {
 
             createArticleToArticleRelation(articleDownloaded, articleForLangInDb.id!!, lang)
 
+            //todo fill cache after evicting
             //evict cache
             val langEnum =
                     ScpReaderConstants.Firebase.FirebaseInstance.valueOf(lang.id.toUpperCase())
             cacheManager
-                    .getCache("showArticleForUrlRelativeAndLangIdFull")
+                    .getCache(ARTICLE_TO_LANG_DTO_BY_URL_RELATIVE_AND_LANG)
                     ?.evict(SimpleKey(langEnum, articleForLangInDb.urlRelative))
             cacheManager
-                    .getCache("showArticleForLangById")
+                    .getCache(ARTICLE_TO_LANG_DTO_BY_ID)
                     ?.evict(articleForLangInDb.id!!)
 
             return articleForLangInDb
