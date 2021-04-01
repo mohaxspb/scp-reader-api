@@ -2,6 +2,7 @@ package ru.kuchanov.scpreaderapi.configuration
 
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.ResponseBody
 import okhttp3.logging.HttpLoggingInterceptor
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
@@ -109,7 +110,24 @@ class HuaweiApiConfiguration @Autowired constructor(
         val unAuthAccessTokenInterceptor = Interceptor { chain ->
             val initialRequest = chain.request()
             val initialResponse: okhttp3.Response = chain.proceed(initialRequest)
-            if (unauthorizedRequestResolver(initialResponse)) {
+//            log.error("initialResponse: ${initialResponse.isSuccessful}")
+//            log.error("initialResponse: ${initialResponse.code()}")
+//            log.error("initialResponse: ${initialResponse.request().url()}")
+            val initialResponseBody = initialResponse.body()
+                    ?: throw NullPointerException("Body is null while request: ${initialRequest.url().url()}!")
+//            log.error("initialResponseBody: $initialResponseBody")
+            val initialResponseBodyContentType = initialResponseBody.contentType()
+//            log.error("initialResponseBodyContentType: $initialResponseBodyContentType")
+            val initialResponseBodyContent = initialResponseBody.string()
+//            log.error("initialResponseBodyContent: $initialResponseBodyContent")
+            val bodyToCheck = ResponseBody.create(initialResponseBodyContentType, initialResponseBodyContent)
+//            log.error("bodyToCheck: $bodyToCheck")
+            val responseToCheck = initialResponse.newBuilder().body(bodyToCheck).build()
+            val unauthResult = unauthorizedRequestResolver(responseToCheck)
+            responseToCheck.close()
+//            log.error("unauthResult: $unauthResult")
+            if (unauthResult) {
+//                log.error("unauthorizedRequestResolver: true")
                 val response: Response<TokenResponse> = huaweiAuthApi()
                         .getAccessToken(
                                 ScpReaderConstants.Api.GRANT_TYPE_CLIENT_CREDENTIALS,
@@ -135,7 +153,6 @@ class HuaweiApiConfiguration @Autowired constructor(
                         tokenType = tokenResponseBody.tokenType
                 )
                 huaweiAccessTokenRepository.save(token)
-
                 //we need to close response to be able to start new request
                 initialResponse.close()
                 val authorizedRequest = initialRequest
@@ -147,7 +164,7 @@ class HuaweiApiConfiguration @Autowired constructor(
                         .build()
                 chain.proceed(authorizedRequest)
             } else {
-                initialResponse
+                initialResponse.newBuilder().body(bodyToCheck).build()
             }
         }
 
@@ -189,8 +206,9 @@ class HuaweiApiConfiguration @Autowired constructor(
 
     private fun huaweiCommonRequestUnauthorizedResolver(initialResponse: okhttp3.Response): Boolean {
         // body can be read only once, so create copy of it to prevent initialResponse corrupting.
-        val responseBodyAsString = initialResponse.newBuilder().build().body()!!.string()
-        return responseBodyAsString.contains(""""code": "$HUAWEI_COMMON_API_AUTH_ERROR_CODE"""")
-                || responseBodyAsString.contains(""""code": "$HUAWEI_COMMON_API_AUTH_EXPIRED_ERROR_CODE"""")
+        val responseBodyAsString = initialResponse.body()!!.string()
+//        log.error("responseBodyAsString: $responseBodyAsString")
+        return responseBodyAsString.contains(""""code":"$HUAWEI_COMMON_API_AUTH_ERROR_CODE"""")
+                || responseBodyAsString.contains(""""code":"$HUAWEI_COMMON_API_AUTH_EXPIRED_ERROR_CODE"""")
     }
 }
