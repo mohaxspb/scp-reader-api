@@ -46,7 +46,7 @@ class HuaweiMonetizationService @Autowired constructor(
 
         log.error("huaweiSubscriptionInDb: $huaweiSubscriptionInDb")
 
-        val oriSubscriptionInDb = huaweiSubscriptionInDb?.oriSubscriptionId?.let {
+        val oriSubscriptionInDb = huaweiSubscription.oriSubscriptionId?.let {
             huaweiSubscriptionRepository.getHuaweiSubscriptionByOriSubscriptionId(it)
         }
         log.error("Subscription has ORI subscription: $oriSubscriptionInDb")

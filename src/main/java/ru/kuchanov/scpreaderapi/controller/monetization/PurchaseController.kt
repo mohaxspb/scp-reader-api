@@ -89,6 +89,9 @@ class PurchaseController @Autowired constructor(
 
                     val huaweiSubscriptionInDb: HuaweiSubscription = huaweiMonetizationService
                             .getHuaweiSubscriptionBySubscriptionId(huaweiSubId)
+                            //there can be subscription switch, so check oriSubscriptionId too
+                            ?: huaweiMonetizationService
+                                    .getHuaweiSubscriptionBySubscriptionId(inAppPurchaseData.oriSubscriptionId!!)
                             ?: throw HuaweiSubscriptionNotFoundException(
                                     "HuaweiSubscription not found for subscriptionId: $huaweiSubId"
                             )
