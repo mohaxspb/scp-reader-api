@@ -5,6 +5,7 @@ import ru.kuchanov.scpreaderapi.model.dto.article.ArticleCategoryToLangProjectio
 
 
 interface ArticleCategoryForLangService {
+
     fun findAllByLangId(langId: String): List<ArticleCategoryToLangProjection>
 
     fun findByLangIdAndArticleCategoryId(langId: String, articleCategoryId: Long): ArticleCategoryForLang?
