@@ -51,8 +51,7 @@ class ArticleController @Autowired constructor(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
             @PathVariable(value = "categoryId") categoryId: Long
     ): List<ArticleToLangDto> {
-        //fixme remove logs
-        log.error("getArticlesByCategoryAndLang: $langEnum, $categoryId")
+//        log.error("getArticlesByCategoryAndLang: $langEnum, $categoryId")
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
         val category = categoryService.getById(categoryId)
                 ?: throw ArticleCategoryNotFoundException()
@@ -77,7 +76,7 @@ class ArticleController @Autowired constructor(
     fun showArticleForLangById(
             @PathVariable(value = "id") articleToLangId: Long
     ): ArticleToLangDto {
-//        println("showArticleForLangById: $articleToLangId")
+//        log.error("showArticleForLangById: $articleToLangId")
         return articleForLangService.getOneByIdAsDto(articleToLangId)
                 ?: throw ArticleForLangNotFoundException()
     }
@@ -98,7 +97,7 @@ class ArticleController @Autowired constructor(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
             @RequestParam(value = "urlRelative") urlRelative: String
     ): ArticleToLangDto {
-//        println("showArticleForUrlRelativeAndLangIdFull: $langEnum$urlRelative")
+//        log.error("showArticleForUrlRelativeAndLangIdFull: $langEnum$urlRelative")
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
         return articleForLangService.getArticleForLangByUrlRelativeAndLangAsDto(urlRelative, lang.id)
                 ?: throw ArticleForLangNotFoundException()

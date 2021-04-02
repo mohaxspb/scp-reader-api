@@ -29,6 +29,8 @@ interface ArticleForLangService {
 
     fun findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId: Long): List<ArticleToLangDto>
 
+    fun findAllByIdsWithTextParts(articleToLangIds: List<Long>): List<ArticleToLangDto>
+
     fun getRandomArticle(langId: String?): ArticleToLangDto
 
     fun findIdsByArticleIds(articleIds: List<Long>): List<Long>

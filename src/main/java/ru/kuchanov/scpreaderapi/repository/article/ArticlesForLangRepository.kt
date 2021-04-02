@@ -165,6 +165,25 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
     fun findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId: Long): List<ArticleInListProjection>
 
     @Query(
+            value = """
+                select 
+                art.id, 
+                art.lang_id as langId,
+                art.article_id as articleId,
+                art.url_relative as urlRelative,
+                art.title,
+                art.rating,
+                art.created_on_site as createdOnSite,
+                art.has_iframe_tag as hasIframeTag 
+                from articles_langs art
+                join article_categories_to_lang__to__articles_to_lang art_cat on art.id = art_cat.article_to_lang_id
+                where art.id in :articleToLangIds
+            """,
+            nativeQuery = true
+    )
+    fun findAllByIds(articleToLangIds: List<Long>): List<ArticleInListProjection>
+
+    @Query(
             """
                 select 
                 art.id, 

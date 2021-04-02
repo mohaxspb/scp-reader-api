@@ -79,6 +79,11 @@ class ArticleToLangServiceImpl @Autowired constructor(
                     .findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId)
                     .map { it.toDto().withImages().withTags().withType() }
 
+    override fun findAllByIdsWithTextParts(articleToLangIds: List<Long>): List<ArticleToLangDto> =
+            articlesForLangRepository
+                    .findAllByIds(articleToLangIds)
+                    .map { it.toDto().withImages().withTags().withType().withTextParts() }
+
     override fun deleteByIds(ids: List<Long>) =
             ids.forEach { articlesForLangRepository.deleteById(it) }
 
