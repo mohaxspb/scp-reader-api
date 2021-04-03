@@ -10,6 +10,9 @@ interface ArticleForLangService {
 
     fun getOneByLangIdAndArticleIdAsDto(articleId: Long, langId: String): ArticleToLangDto?
 
+    /**
+     * returns article with all data, including text
+     */
     fun getOneByIdAsDto(id: Long): ArticleToLangDto?
 
     fun getArticleForLangByUrlRelativeAndLang(urlRelative: String, langId: String): ArticleForLang?

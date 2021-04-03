@@ -509,11 +509,15 @@ class ArticleParsingServiceBase {
                                 articlesForCategory
                         )
 
-                        //todo fill cache after evicting
                         val langEnum = ScpReaderConstants.Firebase.FirebaseInstance.valueOf(lang.id.toUpperCase())
+                        val articlesToCategoryForCache = articleForLangService
+                                .findAllArticlesForLangByArticleCategoryToLangId(categoryToLang.articleCategoryId)
                         cacheManager
                                 .getCache(CATEGORIES_ARTICLES)
-                                ?.evict(SimpleKey(langEnum, categoryToLang.articleCategoryId))
+                                ?.put(
+                                        SimpleKey(langEnum, categoryToLang.articleCategoryId),
+                                        articlesToCategoryForCache
+                                )
                     }
                     .doOnError { saveArticleParseError(lang.id, objectsUrl, it) }
                     .subscribeOn(Schedulers.io())
@@ -799,16 +803,15 @@ class ArticleParsingServiceBase {
 
             createArticleToArticleRelation(articleDownloaded, articleForLangInDb.id!!, lang)
 
-            //todo fill cache after evicting
-            //evict cache
             val langEnum =
                     ScpReaderConstants.Firebase.FirebaseInstance.valueOf(lang.id.toUpperCase())
+            val articleWithTextForCache = articleForLangService.getOneByIdAsDto(articleForLangInDb.id!!)
             cacheManager
                     .getCache(ARTICLE_TO_LANG_DTO_BY_URL_RELATIVE_AND_LANG)
-                    ?.evict(SimpleKey(langEnum, articleForLangInDb.urlRelative))
+                    ?.put(SimpleKey(langEnum, articleForLangInDb.urlRelative), articleWithTextForCache)
             cacheManager
                     .getCache(ARTICLE_TO_LANG_DTO_BY_ID)
-                    ?.evict(articleForLangInDb.id!!)
+                    ?.put(SimpleKey(articleForLangInDb.id), articleWithTextForCache)
 
             return articleForLangInDb
         } catch (e: Exception) {
