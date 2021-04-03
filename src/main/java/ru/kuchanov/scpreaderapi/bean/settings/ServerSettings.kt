@@ -28,10 +28,14 @@ data class ServerSettings(
 ) {
 
     enum class Key {
-        HOURLY_SYNC_TASK_ENABLED
+        HOURLY_SYNC_TASK_ENABLED,
+        MOST_RECENT_ARTICLES_CACHE_SIZE,
+        MOST_RATED_ARTICLES_CACHE_SIZE,
     }
 }
 
 
-@ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "No such ServerSettings")
-class ServerSettingsNotFoundException : RuntimeException()
+@ResponseStatus(value = HttpStatus.NOT_FOUND)
+class ServerSettingsNotFoundException(
+        override val message: String? = "No such ServerSettings!"
+) : RuntimeException()

@@ -29,6 +29,9 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.ResponseStatus
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
+import ru.kuchanov.scpreaderapi.ScpReaderConstants.Cache.Keys.ARTICLE_TO_LANG_DTO_BY_ID
+import ru.kuchanov.scpreaderapi.ScpReaderConstants.Cache.Keys.ARTICLE_TO_LANG_DTO_BY_URL_RELATIVE_AND_LANG
+import ru.kuchanov.scpreaderapi.ScpReaderConstants.Cache.Keys.CATEGORIES_ARTICLES
 import ru.kuchanov.scpreaderapi.bean.articles.Article
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLangToArticleForLang
@@ -507,9 +510,14 @@ class ArticleParsingServiceBase {
                         )
 
                         val langEnum = ScpReaderConstants.Firebase.FirebaseInstance.valueOf(lang.id.toUpperCase())
+                        val articlesToCategoryForCache = articleForLangService
+                                .findAllArticlesForLangByArticleCategoryToLangId(categoryToLang.articleCategoryId)
                         cacheManager
-                                .getCache("getArticlesByCategoryAndLang")
-                                ?.evict(SimpleKey(langEnum, categoryToLang.articleCategoryId))
+                                .getCache(CATEGORIES_ARTICLES)
+                                ?.put(
+                                        SimpleKey(langEnum, categoryToLang.articleCategoryId),
+                                        articlesToCategoryForCache
+                                )
                     }
                     .doOnError { saveArticleParseError(lang.id, objectsUrl, it) }
                     .subscribeOn(Schedulers.io())
@@ -795,15 +803,15 @@ class ArticleParsingServiceBase {
 
             createArticleToArticleRelation(articleDownloaded, articleForLangInDb.id!!, lang)
 
-            //evict cache
             val langEnum =
                     ScpReaderConstants.Firebase.FirebaseInstance.valueOf(lang.id.toUpperCase())
+            val articleWithTextForCache = articleForLangService.getOneByIdAsDto(articleForLangInDb.id!!)
             cacheManager
-                    .getCache("showArticleForUrlRelativeAndLangIdFull")
-                    ?.evict(SimpleKey(langEnum, articleForLangInDb.urlRelative))
+                    .getCache(ARTICLE_TO_LANG_DTO_BY_URL_RELATIVE_AND_LANG)
+                    ?.put(SimpleKey(langEnum, articleForLangInDb.urlRelative), articleWithTextForCache)
             cacheManager
-                    .getCache("showArticleForLangById")
-                    ?.evict(articleForLangInDb.id!!)
+                    .getCache(ARTICLE_TO_LANG_DTO_BY_ID)
+                    ?.put(SimpleKey(articleForLangInDb.id), articleWithTextForCache)
 
             return articleForLangInDb
         } catch (e: Exception) {
