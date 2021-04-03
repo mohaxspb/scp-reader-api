@@ -25,11 +25,15 @@ class IndexController @Autowired constructor(
     @GetMapping("/")
     fun index(): String = "Welcome to ScpReader API!"
 
-    @GetMapping("/")
-    fun populateCache(): String {
-        cacheService.populateCache()
+    @GetMapping("/populateCache")
+    fun populateCache(@AuthenticationPrincipal user: User): String {
+        return if (user.isAdmin()) {
+            cacheService.populateCache()
 
-        return "Populate cache started"
+            "Populate cache started"
+        } else {
+            throw ScpAccessDeniedException()
+        }
     }
 
     @GetMapping("/encrypt")
