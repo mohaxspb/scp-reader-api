@@ -25,7 +25,11 @@ interface ArticleForLangService {
 
     fun getMostRecentArticlesForLang(langId: String, offset: Int, limit: Int): List<ArticleToLangDto>
 
+    fun getMostRecentArticlesForLangIds(langId: String, offset: Int, limit: Int): List<Long>
+
     fun getMostRatedArticlesForLang(langId: String, offset: Int, limit: Int): List<ArticleToLangDto>
+
+    fun getMostRatedArticlesForLangIds(langId: String, offset: Int, limit: Int): List<Long>
 
     fun findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId: Long): List<ArticleToLangDto>
 

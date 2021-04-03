@@ -69,12 +69,21 @@ class ArticleToLangServiceImpl @Autowired constructor(
                     .getMostRecentArticlesForLang(langId, offset, limit)
                     .map { it.toDto().withImages().withTags().withType() }
 
+    override fun getMostRecentArticlesForLangIds(langId: String, offset: Int, limit: Int): List<Long> =
+            articlesForLangRepository
+                    .getMostRecentArticlesForLangIds(langId, offset, limit)
+
     override fun getMostRatedArticlesForLang(langId: String, offset: Int, limit: Int): List<ArticleToLangDto> =
             articlesForLangRepository
                     .getMostRatedArticlesForLang(langId, offset, limit)
                     .map { it.toDto().withImages().withTags().withType() }
 
-    override fun findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId: Long) =
+    override fun getMostRatedArticlesForLangIds(langId: String, offset: Int, limit: Int): List<Long> =
+            articlesForLangRepository.getMostRatedArticlesForLangIds(langId, offset, limit)
+
+    override fun findAllArticlesForLangByArticleCategoryToLangId(
+            articleCategoryToLangId: Long
+    ): List<ArticleToLangDto> =
             articlesForLangRepository
                     .findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId)
                     .map { it.toDto().withImages().withTags().withType() }
