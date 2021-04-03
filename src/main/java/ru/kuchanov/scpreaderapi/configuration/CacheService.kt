@@ -2,12 +2,11 @@ package ru.kuchanov.scpreaderapi.configuration
 
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.cache.CacheManager
 import org.springframework.cache.caffeine.CaffeineCache
 import org.springframework.cache.interceptor.SimpleKey
-import org.springframework.context.ApplicationListener
-import org.springframework.stereotype.Component
+import org.springframework.scheduling.annotation.Async
+import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.ScpReaderConstants.Cache.Keys.ARTICLE_TO_LANG_DTO_BY_ID
 import ru.kuchanov.scpreaderapi.ScpReaderConstants.Cache.Keys.ARTICLE_TO_LANG_DTO_BY_URL_RELATIVE_AND_LANG
@@ -20,17 +19,18 @@ import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryForLangS
 import ru.kuchanov.scpreaderapi.service.settings.ServerSettingsService
 import ru.kuchanov.scpreaderapi.service.users.LangService
 
-@Component
-class ApplicationReadyListener @Autowired constructor(
+@Service
+class CacheService @Autowired constructor(
         private val articleForLangService: ArticleForLangService,
         private val langService: LangService,
         private val categoryForLangService: ArticleCategoryForLangService,
         private val cacheManager: CacheManager,
         private val serverSettingsService: ServerSettingsService,
         private val log: Logger
-) : ApplicationListener<ApplicationReadyEvent> {
+) {
 
-    override fun onApplicationEvent(event: ApplicationReadyEvent) {
+    @Async
+    fun populateCache() {
         val categoriesArticlesCache = cacheManager.getCache(CATEGORIES_ARTICLES)
         val articlesByIdCache = cacheManager.getCache(ARTICLE_TO_LANG_DTO_BY_ID)
         val articlesByLangAndUrlRelativeCache = cacheManager.getCache(ARTICLE_TO_LANG_DTO_BY_URL_RELATIVE_AND_LANG)

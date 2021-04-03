@@ -9,19 +9,28 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.isAdmin
+import ru.kuchanov.scpreaderapi.configuration.CacheService
 import ru.kuchanov.scpreaderapi.model.exception.ScpAccessDeniedException
 import ru.kuchanov.scpreaderapi.service.mail.MailService
 
 
 @RestController
 class IndexController @Autowired constructor(
-        val log: Logger,
-        val passwordEncoder: PasswordEncoder,
-        val mailService: MailService
+        private val log: Logger,
+        private val passwordEncoder: PasswordEncoder,
+        private val mailService: MailService,
+        private val cacheService: CacheService,
 ) {
 
     @GetMapping("/")
     fun index(): String = "Welcome to ScpReader API!"
+
+    @GetMapping("/")
+    fun populateCache(): String {
+        cacheService.populateCache()
+
+        return "Populate cache started"
+    }
 
     @GetMapping("/encrypt")
     fun encrypt(@RequestParam(value = "target") target: String): String =
