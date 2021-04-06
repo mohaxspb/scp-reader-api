@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.articles.types.ArticlesAndArticleTypes
 import ru.kuchanov.scpreaderapi.model.dto.article.ArticleTypeToArticleDto
+import ru.kuchanov.scpreaderapi.model.dto.article.ArticleTypeToArticleProjection
 import ru.kuchanov.scpreaderapi.repository.article.type.ArticleAndArticleTypeRepository
 
 @Service
@@ -21,6 +22,9 @@ class ArticleAndArticleTypeServiceImpl @Autowired constructor(
 
     override fun getByArticleIdAndLangIdAsDto(articleId: Long, langId: String): ArticleTypeToArticleDto? =
             repository.findByArticleId(articleId)?.toDto(langId)
+
+    override fun findByArticleIdInAndLangId(articleIds: List<Long>, langId: String): List<ArticleTypeToArticleProjection> =
+            repository.findByArticleIdInAndLangId(articleIds, langId)
 
     private fun ArticlesAndArticleTypes.toDto(langId: String): ArticleTypeToArticleDto =
             ArticleTypeToArticleDto(
