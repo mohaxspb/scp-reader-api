@@ -18,6 +18,7 @@ import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryForLangService
 import ru.kuchanov.scpreaderapi.service.settings.ServerSettingsService
 import ru.kuchanov.scpreaderapi.service.users.LangService
+import ru.kuchanov.scpreaderapi.utils.millisToMinutesAndSeconds
 
 @Service
 class CacheService @Autowired constructor(
@@ -106,11 +107,5 @@ class CacheService @Autowired constructor(
 
         val caffeineArticlesByIdCache = (articlesByIdCache as CaffeineCache).nativeCache
         log.error("caffeineArticlesByIdCache estimatedSize: ${caffeineArticlesByIdCache.estimatedSize()}")
-    }
-
-    private fun millisToMinutesAndSeconds(millis: Long): Pair<Long, Long> {
-        val minutes = millis / 1000 / 60
-        val seconds = millis / 1000 % 60
-        return minutes to seconds
     }
 }
