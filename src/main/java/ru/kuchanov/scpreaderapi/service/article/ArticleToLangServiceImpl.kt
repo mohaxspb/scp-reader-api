@@ -1,15 +1,18 @@
 package ru.kuchanov.scpreaderapi.service.article
 
+import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInListProjection
 import ru.kuchanov.scpreaderapi.model.dto.article.ArticleToLangDto
+import ru.kuchanov.scpreaderapi.model.dto.article.toDto
 import ru.kuchanov.scpreaderapi.repository.article.ArticlesForLangRepository
 import ru.kuchanov.scpreaderapi.repository.article.tags.TagForLangRepository
 import ru.kuchanov.scpreaderapi.service.article.image.ArticlesImagesService
 import ru.kuchanov.scpreaderapi.service.article.text.TextPartService
 import ru.kuchanov.scpreaderapi.service.article.type.ArticleAndArticleTypeService
+import ru.kuchanov.scpreaderapi.utils.millisToMinutesAndSeconds
 
 
 @Service
@@ -18,7 +21,8 @@ class ArticleToLangServiceImpl @Autowired constructor(
         val imagesService: ArticlesImagesService,
         val tagsForLangRepository: TagForLangRepository,
         val articleAndArticleTypeService: ArticleAndArticleTypeService,
-        val textPartService: TextPartService
+        val textPartService: TextPartService,
+        private val log: Logger
 ) : ArticleForLangService {
 
     override fun save(articleForLang: ArticleForLang): ArticleForLang =
@@ -83,11 +87,44 @@ class ArticleToLangServiceImpl @Autowired constructor(
 
     override fun findAllArticlesForLangByArticleCategoryToLangId(
             articleCategoryToLangId: Long
-    ): List<ArticleToLangDto> =
-            articlesForLangRepository
-                    .findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId)
-                    .map { it.toDto().withImages().withTags().withType() }
+    ): List<ArticleToLangDto> {
+        val startTime = System.currentTimeMillis()
+        val articles = articlesForLangRepository
+                .findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId)
 
+        val articleToLangIds = articles.map { it.id }
+        val articlesIds = articles.map { it.articleId }
+//        log.error("articlesIds: ${articleToLangIds.size}")
+
+        val images = imagesService.findAllByArticleForLangIds(articleToLangIds)
+                .groupBy(
+                        keySelector = { it.articleForLangId },
+                        valueTransform = { it.toDto() }
+                )
+
+        val tags = tagsForLangRepository.getAllForLangIdAndArticleForLangIds(articles[0].langId, articleToLangIds)
+                .groupBy(
+                        keySelector = { it.articleToLangId },
+                        valueTransform = { it.toDto() }
+                )
+        val types = articleAndArticleTypeService
+                .findByArticleIdInAndLangId(articlesIds, articles[0].langId)
+//        log.error("types: ${types.size}")
+
+        val articlesFilled = articles.map { article ->
+            article.toDto().apply {
+                imageUrls = images[id]
+                tagDtos = tags[id]
+                articleTypeToArticleDto = types.firstOrNull { articleId == it.articleId }?.toDto()
+            }
+        }
+        val (minutes, seconds) = millisToMinutesAndSeconds(System.currentTimeMillis() - startTime)
+        log.error("findAllArticlesForLangByArticleCategoryToLangId END: " +
+                "(min:sec): $minutes:$seconds")
+        return articlesFilled
+    }
+
+    //todo use IN optimization
     override fun findAllByIdsWithTextParts(articleToLangIds: List<Long>): List<ArticleToLangDto> =
             articlesForLangRepository
                     .findAllByIds(articleToLangIds)
@@ -131,11 +168,14 @@ class ArticleToLangServiceImpl @Autowired constructor(
                 tagDtos = tagsForLangRepository.getAllForLangIdAndArticleForLangIdAsDto(
                         langId = langId,
                         articleForLangId = id
-                )
+                ).map { it.toDto() }
             }
 
     private fun ArticleToLangDto.withType(): ArticleToLangDto =
-            this.apply { articleTypeToArticleDto = articleAndArticleTypeService.getByArticleIdAndLangIdAsDto(articleId, langId) }
+            this.apply {
+                articleTypeToArticleDto =
+                        articleAndArticleTypeService.getByArticleIdAndLangIdAsDto(articleId, langId)
+            }
 
     private fun ArticleToLangDto.withTextParts(): ArticleToLangDto {
         return if (!hasIframeTag) {
