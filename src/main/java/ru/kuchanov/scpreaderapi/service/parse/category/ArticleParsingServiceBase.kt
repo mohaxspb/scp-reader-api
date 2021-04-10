@@ -854,6 +854,7 @@ class ArticleParsingServiceBase {
         if (textPartsToSave.isNotEmpty()) {
             //clear textPartsInDB before write
             textPartService.deleteByArticleToLangId(articleForLangInDb.id!!)
+            //todo save in one insert request
             textPartsToSave.forEach { saveTextPart(it, articleForLangInDb.id, null) }
         }
     }
