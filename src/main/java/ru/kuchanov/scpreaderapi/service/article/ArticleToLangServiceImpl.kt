@@ -28,10 +28,10 @@ class ArticleToLangServiceImpl @Autowired constructor(
     override fun save(articleForLang: ArticleForLang): ArticleForLang =
             articlesForLangRepository.save(articleForLang)
 
-    override fun getOneByLangIdAndArticleId(articleId: Long, langId: String) =
+    override fun getOneByLangIdAndArticleId(articleId: Long, langId: String): ArticleForLang? =
             articlesForLangRepository.getOneByArticleIdAndLangId(articleId, langId)
 
-    override fun getOneByLangIdAndArticleIdAsDto(articleId: Long, langId: String) =
+    override fun getOneByLangIdAndArticleIdAsDto(articleId: Long, langId: String): ArticleToLangDto? =
             articlesForLangRepository
                     .getOneByArticleIdAndLangIdAsProjection(articleId, langId)
                     ?.toDto()
@@ -58,10 +58,10 @@ class ArticleToLangServiceImpl @Autowired constructor(
         return article
     }
 
-    override fun getArticleForLangByUrlRelativeAndLang(urlRelative: String, langId: String) =
+    override fun getArticleForLangByUrlRelativeAndLang(urlRelative: String, langId: String): ArticleForLang? =
             articlesForLangRepository.findByUrlRelativeAndLangId(urlRelative, langId)
 
-    override fun getArticleForLangByUrlRelativeAndLangAsDto(urlRelative: String, langId: String) =
+    override fun getArticleForLangByUrlRelativeAndLangAsDto(urlRelative: String, langId: String): ArticleToLangDto? =
             articlesForLangRepository
                     .findByUrlRelativeAndLangIdAsProjection(urlRelative, langId)
                     ?.toDto()
@@ -70,14 +70,14 @@ class ArticleToLangServiceImpl @Autowired constructor(
                     ?.withTags()
                     ?.withTextPartsV2()
 
-    override fun getIdByUrlRelativeAndLangId(urlRelative: String, langId: String) =
+    override fun getIdByUrlRelativeAndLangId(urlRelative: String, langId: String): Long? =
             articlesForLangRepository.getIdByUrlRelativeAndLangId(urlRelative, langId)
 
     override fun getCreatedArticleToLangsBetweenDates(startDate: String, endDate: String): List<ArticleToLangDto> =
             articlesForLangRepository.getCreatedArticlesBetweenDates(startDate, endDate)
                     .map { it.toDto() }
 
-    override fun getMostRecentArticlesForLang(langId: String, offset: Int, limit: Int) =
+    override fun getMostRecentArticlesForLang(langId: String, offset: Int, limit: Int): List<ArticleToLangDto> =
             articlesForLangRepository
                     .getMostRecentArticlesForLang(langId, offset, limit)
                     .map { it.toDto().withImages().withTags().withType() }
@@ -163,8 +163,9 @@ class ArticleToLangServiceImpl @Autowired constructor(
         }
     }
 
-    override fun deleteByIds(ids: List<Long>) =
-            articlesForLangRepository.deleteByIdIn(ids)
+    override fun deleteByIds(ids: List<Long>) {
+        articlesForLangRepository.deleteByIdIn(ids)
+    }
 
     override fun findIdsByArticleIds(articleIds: List<Long>): List<Long> =
             articlesForLangRepository.getIdsByArticleIds(articleIds)
@@ -181,7 +182,7 @@ class ArticleToLangServiceImpl @Autowired constructor(
                     .withType()
                     .withTextPartsV2()
 
-    fun ArticleInListProjection.toDto() =
+    fun ArticleInListProjection.toDto(): ArticleToLangDto =
             ArticleToLangDto(
                     id = this.id,
                     articleId = this.articleId,
