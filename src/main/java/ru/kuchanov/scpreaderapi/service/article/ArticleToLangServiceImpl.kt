@@ -38,16 +38,25 @@ class ArticleToLangServiceImpl @Autowired constructor(
                     ?.withType()
                     ?.withImages()
                     ?.withTags()
-                    ?.withTextParts()
+                    ?.withTextPartsV2()
 
-    override fun getOneByIdAsDto(id: Long): ArticleToLangDto? =
-            articlesForLangRepository
-                    .getOneByIdAsProjection(id)
-                    ?.toDto()
-                    ?.withType()
-                    ?.withImages()
-                    ?.withTags()
-                    ?.withTextParts()
+    override fun getOneByIdAsDto(id: Long): ArticleToLangDto? {
+//        val startTime = System.currentTimeMillis()
+
+        val article = articlesForLangRepository
+                .getOneByIdAsProjection(id)
+                ?.toDto()
+                ?.withType()
+                ?.withImages()
+                ?.withTags()
+                ?.withTextPartsV2()
+
+//        val (minutes, seconds) = millisToMinutesAndSeconds(System.currentTimeMillis() - startTime)
+//        log.error("findAllArticlesForLangByArticleCategoryToLangId END: " +
+//                "(min:sec): $minutes:$seconds")
+
+        return article
+    }
 
     override fun getArticleForLangByUrlRelativeAndLang(urlRelative: String, langId: String) =
             articlesForLangRepository.findByUrlRelativeAndLangId(urlRelative, langId)
@@ -59,7 +68,7 @@ class ArticleToLangServiceImpl @Autowired constructor(
                     ?.withType()
                     ?.withImages()
                     ?.withTags()
-                    ?.withTextParts()
+                    ?.withTextPartsV2()
 
     override fun getIdByUrlRelativeAndLangId(urlRelative: String, langId: String) =
             articlesForLangRepository.getIdByUrlRelativeAndLangId(urlRelative, langId)
@@ -92,9 +101,35 @@ class ArticleToLangServiceImpl @Autowired constructor(
         val articles = articlesForLangRepository
                 .findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId)
 
-        val articleToLangIds = articles.map { it.id }
-        val articlesIds = articles.map { it.articleId }
+        val articlesFilled = fillArticleToLangDtoByArticleToLangIds(articles)
+        val (minutes, seconds) = millisToMinutesAndSeconds(System.currentTimeMillis() - startTime)
+        log.error("findAllArticlesForLangByArticleCategoryToLangId END: " +
+                "(min:sec): $minutes:$seconds")
+        return articlesFilled
+    }
+
+    override fun findAllByIdsWithTextParts(articleToLangIds: List<Long>): List<ArticleToLangDto> {
+//        val startTime = System.currentTimeMillis()
+        val articles: List<ArticleInListProjection> = articlesForLangRepository
+                .findAllByIds(articleToLangIds)
+
+        val articlesFilled = fillArticleToLangDtoByArticleToLangIds(articles, true)
+//        val (minutes, seconds) = millisToMinutesAndSeconds(System.currentTimeMillis() - startTime)
+//        log.error("findAllArticlesForLangByArticleCategoryToLangId END: " +
+//                "(min:sec): $minutes:$seconds")
+        return articlesFilled
+    }
+
+    private fun fillArticleToLangDtoByArticleToLangIds(
+            articleToLangs: List<ArticleInListProjection>,
+            withTextParts: Boolean = false
+    ): List<ArticleToLangDto> {
+        if (articleToLangs.isEmpty()) {
+            return listOf()
+        }
+        val articleToLangIds = articleToLangs.map { it.id }
 //        log.error("articlesIds: ${articleToLangIds.size}")
+        val articleIds = articleToLangs.map { it.articleId }
 
         val images = imagesService.findAllByArticleForLangIds(articleToLangIds)
                 .groupBy(
@@ -102,36 +137,34 @@ class ArticleToLangServiceImpl @Autowired constructor(
                         valueTransform = { it.toDto() }
                 )
 
-        val tags = tagsForLangRepository.getAllForLangIdAndArticleForLangIds(articles[0].langId, articleToLangIds)
+        val tags = tagsForLangRepository.getAllForLangIdAndArticleForLangIds(articleToLangs[0].langId, articleToLangIds)
                 .groupBy(
                         keySelector = { it.articleToLangId },
                         valueTransform = { it.toDto() }
                 )
         val types = articleAndArticleTypeService
-                .findByArticleIdInAndLangId(articlesIds, articles[0].langId)
-//        log.error("types: ${types.size}")
+                .findByArticleIdInAndLangId(articleIds, articleToLangs[0].langId)
 
-        val articlesFilled = articles.map { article ->
+        val articlesToTextParts = if (withTextParts) {
+            textPartService.findAllByArticleToLangIds(articleToLangIds).groupBy { it.articleToLangId }
+        } else {
+            null
+        }
+
+        return articleToLangs.map { article ->
             article.toDto().apply {
                 imageUrls = images[id]
                 tagDtos = tags[id]
                 articleTypeToArticleDto = types.firstOrNull { articleId == it.articleId }?.toDto()
+                if (withTextParts) {
+                    this.textParts = articlesToTextParts?.get(id)?.let { textPartService.textPartsTreeFromFlattenedList(it) }
+                }
             }
         }
-        val (minutes, seconds) = millisToMinutesAndSeconds(System.currentTimeMillis() - startTime)
-        log.error("findAllArticlesForLangByArticleCategoryToLangId END: " +
-                "(min:sec): $minutes:$seconds")
-        return articlesFilled
     }
 
-    //todo use IN optimization
-    override fun findAllByIdsWithTextParts(articleToLangIds: List<Long>): List<ArticleToLangDto> =
-            articlesForLangRepository
-                    .findAllByIds(articleToLangIds)
-                    .map { it.toDto().withImages().withTags().withType().withTextParts() }
-
     override fun deleteByIds(ids: List<Long>) =
-            ids.forEach { articlesForLangRepository.deleteById(it) }
+            articlesForLangRepository.deleteByIdIn(ids)
 
     override fun findIdsByArticleIds(articleIds: List<Long>): List<Long> =
             articlesForLangRepository.getIdsByArticleIds(articleIds)
@@ -146,7 +179,7 @@ class ArticleToLangServiceImpl @Autowired constructor(
                     .withImages()
                     .withTags()
                     .withType()
-                    .withTextParts()
+                    .withTextPartsV2()
 
     fun ArticleInListProjection.toDto() =
             ArticleToLangDto(
@@ -177,9 +210,9 @@ class ArticleToLangServiceImpl @Autowired constructor(
                         articleAndArticleTypeService.getByArticleIdAndLangIdAsDto(articleId, langId)
             }
 
-    private fun ArticleToLangDto.withTextParts(): ArticleToLangDto {
+    private fun ArticleToLangDto.withTextPartsV2(): ArticleToLangDto {
         return if (!hasIframeTag) {
-            this.apply { textParts = textPartService.findAllByArticleToLangId(id) }
+            this.apply { textParts = textPartService.findAllByArticleToLangIdV2(id) }
         } else {
             this
         }
