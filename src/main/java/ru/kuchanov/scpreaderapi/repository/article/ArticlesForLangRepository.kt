@@ -250,4 +250,6 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
             nativeQuery = true
     )
     fun getRandomArticle(langId: String): ArticleInListProjection
+
+    fun deleteByIdIn(ids: List<Long>)
 }

@@ -9,8 +9,6 @@ interface ArticleAndArticleTypeRepository : JpaRepository<ArticlesAndArticleType
 
     fun findByArticleId(articleId: Long): ArticlesAndArticleTypes?
 
-    fun findByArticleIdIn(articleIds: List<Long>): List<ArticlesAndArticleTypes>
-
     @Suppress("SpringDataRepositoryMethodReturnTypeInspection")
     @Query("""
             select
