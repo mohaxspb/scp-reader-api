@@ -2,6 +2,7 @@ package ru.kuchanov.scpreaderapi.bean.articles.text
 
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
+import ru.kuchanov.scpreaderapi.model.dto.article.TextPartDto
 import ru.kuchanov.scpreaderapi.service.parse.article.TextType
 import java.sql.Timestamp
 import javax.persistence.*
@@ -41,3 +42,10 @@ data class TextPart(
         return "TextPart(type=$type, order=$orderInText, data=$shortenedData, inner=$innerTextParts)"
     }
 }
+
+fun TextPart.toDto() =
+        TextPartDto(
+                id = id!!,
+                data = data,
+                type = type
+        )

@@ -34,6 +34,9 @@ class TextPartServiceImpl @Autowired constructor(
         return topLevelTextParts
     }
 
+    override fun findAllByArticleToLangIds(articleToLangIds: List<Long>): List<TextPart> =
+            textPartRepository.findAllByArticleToLangIdAndParentIdNullOrderedCorrectlyBitch(articleToLangIds)
+
     override fun deleteByArticleToLangId(articleToLangId: Long) =
             textPartRepository.deleteByArticleToLangIdAndParentIdNull(articleToLangId)
 

@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.articles.favorite.FavoriteArticleByLang
 import ru.kuchanov.scpreaderapi.model.dto.article.ReadOrFavoriteArticleProjection
 import ru.kuchanov.scpreaderapi.model.dto.article.ReadOrFavoriteArticleToLangDto
+import ru.kuchanov.scpreaderapi.model.dto.article.toDto
 import ru.kuchanov.scpreaderapi.repository.article.favorite.FavoriteArticlesForLangRepository
 import ru.kuchanov.scpreaderapi.repository.article.tags.TagForLangRepository
 import ru.kuchanov.scpreaderapi.service.article.image.ArticlesImagesService
@@ -66,7 +67,7 @@ class FavoriteArticleForLangServiceImpl constructor(
                 tagDtos = tagsForLangRepository.getAllForLangIdAndArticleForLangIdAsDto(
                         langId = langId,
                         articleForLangId = articleToLangId
-                )
+                ).map { it.toDto() }
             }
 
     fun ReadOrFavoriteArticleToLangDto.withType(): ReadOrFavoriteArticleToLangDto =
