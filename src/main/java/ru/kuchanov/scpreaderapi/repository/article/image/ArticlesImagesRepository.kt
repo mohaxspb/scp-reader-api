@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import ru.kuchanov.scpreaderapi.bean.articles.image.ArticlesImages
 import ru.kuchanov.scpreaderapi.model.dto.article.ArticlesImagesDto
+import ru.kuchanov.scpreaderapi.model.dto.article.ArticlesImagesProjection
 
 interface ArticlesImagesRepository : JpaRepository<ArticlesImages, Long> {
 
@@ -11,4 +12,7 @@ interface ArticlesImagesRepository : JpaRepository<ArticlesImages, Long> {
 
     @Query("select a from ArticlesImages a where a.articleForLangId = :articleForLangId")
     fun findAllByArticleForLangIdFull(articleForLangId: Long): List<ArticlesImages>
+
+    @Suppress("SpringDataRepositoryMethodReturnTypeInspection")
+    fun findAllByArticleForLangIdIn(articleForLangIds: List<Long>): List<ArticlesImagesProjection>
 }

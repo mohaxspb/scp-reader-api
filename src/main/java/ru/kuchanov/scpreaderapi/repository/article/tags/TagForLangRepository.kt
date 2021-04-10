@@ -3,7 +3,7 @@ package ru.kuchanov.scpreaderapi.repository.article.tags
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import ru.kuchanov.scpreaderapi.bean.articles.tags.TagForLang
-import ru.kuchanov.scpreaderapi.model.dto.article.TagDto
+import ru.kuchanov.scpreaderapi.model.dto.article.TagProjection
 
 interface TagForLangRepository : JpaRepository<TagForLang, Long> {
 
@@ -32,8 +32,9 @@ interface TagForLangRepository : JpaRepository<TagForLang, Long> {
                 SELECT 
                 tl.tag_id as tagId, 
                 tl.id as tagToLangId, 
+                tl.title,
                 tal.id as tagToLangToArticleToLangId, 
-                tl.title 
+                tal.article_for_lang_id as articleToLangId 
                 FROM tags_langs tl
                 JOIN tags_articles_langs tal
                 ON tal.tag_for_lang_id = tl.id AND tal.article_for_lang_id = :articleForLangId
@@ -41,5 +42,23 @@ interface TagForLangRepository : JpaRepository<TagForLang, Long> {
             """,
             nativeQuery = true
     )
-    fun getAllForLangIdAndArticleForLangIdAsDto(langId: String, articleForLangId: Long): List<TagDto>
+    fun getAllForLangIdAndArticleForLangIdAsDto(langId: String, articleForLangId: Long): List<TagProjection>
+
+    @Query(
+            value =
+            """
+                SELECT 
+                tl.tag_id as tagId, 
+                tl.id as tagToLangId, 
+                tl.title, 
+                tal.id as tagToLangToArticleToLangId, 
+                tal.article_for_lang_id as articleToLangId 
+                FROM tags_langs tl
+                JOIN tags_articles_langs tal
+                ON tal.tag_for_lang_id = tl.id AND tal.article_for_lang_id in :articleForLangIds
+                WHERE tl.lang_id = :langId
+            """,
+            nativeQuery = true
+    )
+    fun getAllForLangIdAndArticleForLangIds(langId: String, articleForLangIds: List<Long>): List<TagProjection>
 }

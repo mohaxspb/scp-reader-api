@@ -12,9 +12,11 @@ interface TextPartService {
     @Transactional
     fun insert(data: List<TextPart>): List<TextPart>
 
-    fun findAllByParentId(parentId: Long): List<TextPartDto>
+    fun findAllByArticleToLangIdV2(articleToLangId: Long): List<TextPartDto>
 
-    fun findAllByArticleToLangId(articleToLangId: Long): List<TextPartDto>
+    fun findAllByArticleToLangIds(articleToLangIds: List<Long>): List<TextPart>
+
+    fun textPartsTreeFromFlattenedList(rawTextParts: List<TextPart>): List<TextPartDto>
 
     @Transactional
     fun deleteByArticleToLangId(articleToLangId: Long)

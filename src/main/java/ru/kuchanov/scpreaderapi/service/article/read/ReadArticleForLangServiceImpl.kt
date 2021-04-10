@@ -11,6 +11,7 @@ import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
 import ru.kuchanov.scpreaderapi.model.dto.article.AddToReadResultDto
 import ru.kuchanov.scpreaderapi.model.dto.article.ReadOrFavoriteArticleProjection
 import ru.kuchanov.scpreaderapi.model.dto.article.ReadOrFavoriteArticleToLangDto
+import ru.kuchanov.scpreaderapi.model.dto.article.toDto
 import ru.kuchanov.scpreaderapi.repository.article.read.ReadArticlesForLangRepository
 import ru.kuchanov.scpreaderapi.repository.article.tags.TagForLangRepository
 import ru.kuchanov.scpreaderapi.service.article.image.ArticlesImagesService
@@ -139,7 +140,7 @@ class ReadArticleForLangServiceImpl @Autowired constructor(
                 tagDtos = tagsForLangRepository.getAllForLangIdAndArticleForLangIdAsDto(
                         langId = langId,
                         articleForLangId = articleToLangId
-                )
+                ).map { it.toDto() }
             }
 
     fun ReadOrFavoriteArticleToLangDto.withType(): ReadOrFavoriteArticleToLangDto =

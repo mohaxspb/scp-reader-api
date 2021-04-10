@@ -680,7 +680,7 @@ class ArticleParsingServiceBase {
         }
         val allArticles = document.getElementsByTag(TAG_BODY).first().html()
         val arrayOfArticles = allArticles.split("<br>").toTypedArray()
-        val articles: MutableList<ArticleForLang> = ArrayList()
+        val articles: MutableList<ArticleForLang> = mutableListOf()
         for (arrayItem in arrayOfArticles) {
             if (TextUtils.isEmpty(arrayItem.trim())) {
                 continue
@@ -854,6 +854,7 @@ class ArticleParsingServiceBase {
         if (textPartsToSave.isNotEmpty()) {
             //clear textPartsInDB before write
             textPartService.deleteByArticleToLangId(articleForLangInDb.id!!)
+            //todo save in one insert request
             textPartsToSave.forEach { saveTextPart(it, articleForLangInDb.id, null) }
         }
     }
@@ -1052,6 +1053,7 @@ class ArticleParsingServiceBase {
                     |Article types not equal!
                     | Article id: ${articleForLangInDb.articleId}, 
                     | ArticleForLangId: ${articleForLangInDb.id},
+                    | ArticleForLang urlRelative: ${articleForLangInDb.urlRelative},
                     | Saved typeId: ${articleToArticleTypeInDb.articleTypeId},
                     | New typeId: ${articleType.id}
                     """.trimMargin()
@@ -1101,11 +1103,16 @@ class ArticleParsingServiceBase {
 
         when (imageURL) {
             "http://scp-ru.wdfiles.com/local--files/scp-list-5/na.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-series-5/na.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-4/na.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-series-4/na.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-3/na.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-series-3/na.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-2/na.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-series-2/na.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-ru/na(1).png",
             "http://scp-ru.wdfiles.com/local--files/scp-list/na.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-series/na.png",
             "http://scp-ru.wdfiles.com/local--files/archive/na.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-j/na(1).png",
                 //other filials
@@ -1117,11 +1124,16 @@ class ArticleParsingServiceBase {
                 typeEnum = ScpReaderConstants.ArticleTypeEnum.NEUTRAL_OR_NOT_ADDED
 
             "http://scp-ru.wdfiles.com/local--files/scp-list-5/safe.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-series-5/safe.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-4/safe.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-series-4/safe.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-3/safe.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-series-3/safe.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-2/safe.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-series-2/safe.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-ru/safe(1).png",
             "http://scp-ru.wdfiles.com/local--files/scp-list/safe.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-series/safe.png",
             "http://scp-ru.wdfiles.com/local--files/archive/safe.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-j/safe(1).png",
                 //other filials
@@ -1133,11 +1145,16 @@ class ArticleParsingServiceBase {
                 typeEnum = ScpReaderConstants.ArticleTypeEnum.SAFE
 
             "http://scp-ru.wdfiles.com/local--files/scp-list-5/euclid.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-series-5/euclid.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-4/euclid.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-series-4/euclid.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-3/euclid.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-series-3/euclid.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-2/euclid.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-series-2/euclid.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-ru/euclid(1).png",
             "http://scp-ru.wdfiles.com/local--files/scp-list/euclid.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-series/euclid.png",
             "http://scp-ru.wdfiles.com/local--files/archive/euclid.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-j/euclid(1).png",
                 //other filials
@@ -1149,11 +1166,16 @@ class ArticleParsingServiceBase {
                 typeEnum = ScpReaderConstants.ArticleTypeEnum.EUCLID
 
             "http://scp-ru.wdfiles.com/local--files/scp-list-5/keter.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-series-5/keter.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-4/keter.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-series-4/keter.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-3/keter.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-series-3/keter.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-2/keter.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-series-2/keter.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-ru/keter(1).png",
             "http://scp-ru.wdfiles.com/local--files/scp-list/keter.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-series/keter.png",
             "http://scp-ru.wdfiles.com/local--files/archive/keter.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-j/keter(1).png",
                 //other filials
@@ -1165,11 +1187,17 @@ class ArticleParsingServiceBase {
                 typeEnum = ScpReaderConstants.ArticleTypeEnum.KETER
 
             "http://scp-ru.wdfiles.com/local--files/scp-list-5/thaumiel.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-series-5/thaumiel.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-4/thaumiel.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-series-4/thaumiel.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-3/thaumiel.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-series-3/thaumiel.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-2/thaumiel.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-series-2/thaumiel.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-ru/thaumiel(1).png",
+            "http://scp-ru.wdfiles.com/local--files/scp-series-ru/thaumiel(1).png",
             "http://scp-ru.wdfiles.com/local--files/scp-list/thaumiel.png",
+            "http://scp-ru.wdfiles.com/local--files/scp-series/thaumiel.png",
             "http://scp-ru.wdfiles.com/local--files/archive/thaumiel.png",
             "http://scp-ru.wdfiles.com/local--files/scp-list-j/thaumiel(1).png",
                 //other filials

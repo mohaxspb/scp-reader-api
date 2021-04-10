@@ -37,7 +37,7 @@ To unignore it execute:
 
 ### Troubleshooting
 
-1. If you have duplicates in articles_langs table - exucute smt like this: 
+1. If you have duplicates in articles_langs table - execute smt like this: 
 
     ```postgresql
     with toDelete as (
