@@ -15,6 +15,7 @@ import retrofit2.CallAdapter
 import retrofit2.Converter
 import retrofit2.Response
 import retrofit2.Retrofit
+import ru.kuchanov.scpreaderapi.Application.Companion.HUAWEI_LOGGER
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.auth.huawei.HuaweiOAuthAccessToken
 import ru.kuchanov.scpreaderapi.model.huawei.auth.TokenResponse
@@ -35,7 +36,7 @@ class HuaweiApiConfiguration @Autowired constructor(
         private val huaweiAccessTokenRepository: HuaweiAccessTokenRepository,
         @Value("\${my.api.huawei.client_id}") private val huaweiClientId: String,
         @Value("\${my.api.huawei.client_secret}") private val huaweiClientSecret: String,
-        private val log: Logger
+        @Qualifier(HUAWEI_LOGGER) private val log: Logger
 ) {
 
     companion object {

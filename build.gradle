@@ -100,6 +100,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'org.springframework:spring-context-support:5.2.5.RELEASE'
     implementation 'com.github.ben-manes.caffeine:caffeine:3.0.1'
+    //logs
+//    implementation "org.springframework.boot:spring-boot-starter"
+    implementation 'org.codehaus.janino:janino:3.0.7'
+    implementation 'org.codehaus.janino:commons-compiler:3.0.7'
     //tests
     implementation 'org.springframework.boot:spring-boot-starter-test'
     //spring END

@@ -2,11 +2,13 @@ package ru.kuchanov.scpreaderapi.controller.article
 
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
+import ru.kuchanov.scpreaderapi.Application
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.settings.ServerSettings
 import ru.kuchanov.scpreaderapi.bean.users.LangNotFoundException
@@ -21,11 +23,11 @@ import ru.kuchanov.scpreaderapi.utils.toBooleanOrNull
 @RestController
 @RequestMapping("/" + ScpReaderConstants.Path.ARTICLE + "/" + ScpReaderConstants.Path.PARSE)
 class ArticleParseController @Autowired constructor(
-        val log: Logger,
-        val serverSettingsService: ServerSettingsService,
-        val articleParsingService: ArticleParsingServiceBase,
-        val articleForLangService: ArticleForLangService,
-        val langService: LangService
+        @Qualifier(Application.PARSING_LOGGER) private val log: Logger,
+        private val serverSettingsService: ServerSettingsService,
+        private val articleParsingService: ArticleParsingServiceBase,
+        private val articleForLangService: ArticleForLangService,
+        private val langService: LangService
 ) {
     data class State(val state: String)
 
@@ -47,7 +49,7 @@ class ArticleParseController @Autowired constructor(
         val hourlySyncTaskEnabledSettings = serverSettingsService.findByKey(ServerSettings.Key.HOURLY_SYNC_TASK_ENABLED.name)
         val hourlySyncTaskEnabled = hourlySyncTaskEnabledSettings?.value?.toBooleanOrNull()
         if (hourlySyncTaskEnabled == true && !articleParsingService.isDownloadAllRunning) {
-            log.error("Start hourly parseRecentTask")
+            log.info("Start hourly parseRecentTask")
             articleParsingService.parseEverything(
                     maxPageCount = 1,
                     downloadRecent = true,
@@ -163,7 +165,7 @@ class ArticleParseController @Autowired constructor(
         val articleForLang = articleForLangService
                 .getArticleForLangByUrlRelativeAndLang(urlRelative, lang.id)
 
-        println("""
+        log.info("""
             parseArticleByUrlRelativeAndLang
             lang: ${lang.id}, 
             articleForLang.id: ${articleForLang?.id},

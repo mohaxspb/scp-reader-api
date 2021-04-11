@@ -15,8 +15,8 @@ import ru.kuchanov.scpreaderapi.service.push.PushSendResult
 @RestController
 @RequestMapping("/" + ScpReaderConstants.Path.PUSH + "/" + ScpReaderConstants.Path.MESSAGING)
 class PushMessagingController @Autowired constructor(
-        val pushMessageService: PushMessageService,
-        val allProvidersMessagingService: AllProvidersMessagingService
+        private val pushMessageService: PushMessageService,
+        private val allProvidersMessagingService: AllProvidersMessagingService
 ) {
 
     @GetMapping("/send/topic")

@@ -3,9 +3,11 @@ package ru.kuchanov.scpreaderapi.controller.monetization
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
+import ru.kuchanov.scpreaderapi.Application
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.purchase.SubscriptionValidationAttempts
 import ru.kuchanov.scpreaderapi.bean.purchase.huawei.HuaweiSubscription
@@ -48,7 +50,7 @@ class PurchaseController @Autowired constructor(
         private val allProvidersMessagingService: AllProvidersMessagingService,
         private val errorUtils: ErrorUtils,
         private val objectMapper: ObjectMapper,
-        private val log: Logger
+        @Qualifier(Application.HUAWEI_LOGGER) private val huaweiLog: Logger
 ) {
 
     companion object {
@@ -73,7 +75,7 @@ class PurchaseController @Autowired constructor(
                     huaweiSubscriptionEventDto.statusUpdateNotification,
                     StatusUpdateNotification::class.java
             )
-            log.error("parsedRequest: ${objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(parsedRequest)}")
+            huaweiLog.info("parsedRequest: ${objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(parsedRequest)}")
 
             when (parsedRequest.notificationType) {
                 INITIAL_BUY, CANCEL, RENEWAL_STOPPED, ON_HOLD,
@@ -108,7 +110,7 @@ class PurchaseController @Autowired constructor(
                     )
                     val updatedSubscription = huaweiMonetizationService
                             .getHuaweiSubscriptionBySubscriptionId(huaweiSubId)
-                    log.error("""
+                    huaweiLog.info("""
                         Successfully update renewed Huawei subscription (RENEWAL, RENEWAL_RESTORED, RENEWAL_RECURRING)!
                         User: ${updatedUser.id}/${updatedUser.offlineLimitDisabledEndDate}. 
                         Subscription: ${huaweiSubscriptionInDb.id}/${updatedSubscription?.expiryTimeMillis}.
@@ -152,7 +154,7 @@ class PurchaseController @Autowired constructor(
                     )
                     val updatedSubscription = huaweiMonetizationService
                             .getHuaweiSubscriptionBySubscriptionId(inAppPurchaseDataForCurrentSub.subscriptionId)
-                    log.error("""
+                    huaweiLog.info("""
                         Successfully update renewed Huawei subscription (INTERACTIVE_RENEWAL)!
                         User: ${updatedUser.id}/${updatedUser.offlineLimitDisabledEndDate}. 
                         Subscription: ${huaweiSubscriptionInDb.id}/${updatedSubscription?.expiryTimeMillis}.
@@ -197,7 +199,7 @@ class PurchaseController @Autowired constructor(
                     )
                     val updatedSubscription = huaweiMonetizationService
                             .getHuaweiSubscriptionBySubscriptionId(huaweiSubId)
-                    log.error("""
+                    huaweiLog.info("""
                         Successfully save changed Huawei subscription (NEW_RENEWAL_PREF)!
                         User: ${updatedUser.id}/${updatedUser.offlineLimitDisabledEndDate}. 
                         Subscription: ${huaweiSubscriptionInDb.id}/${updatedSubscription?.expiryTimeMillis}.
@@ -206,7 +208,7 @@ class PurchaseController @Autowired constructor(
             }
         } catch (e: Exception) {
             error = e
-            log.error("Error while handle huawei subscription event", error)
+            huaweiLog.error("Error while handle huawei subscription event", error)
         } finally {
             huaweiSubsEventHandleAttemptService.save(
                     HuaweiSubscriptionEventHandleAttemptRecord(
@@ -316,7 +318,7 @@ class PurchaseController @Autowired constructor(
             userInDb
         } else {
             val maxExpireTimeSub = userNonExpiredAndValidSubscriptions.first()
-            log.error("userNonExpiredAndValidSubscriptions max expiryTimeMillis: ${maxExpireTimeSub.expiryTimeMillis}")
+            huaweiLog.info("userNonExpiredAndValidSubscriptions max expiryTimeMillis: ${maxExpireTimeSub.expiryTimeMillis}")
             userService.update(
                     userInDb.apply { offlineLimitDisabledEndDate = maxExpireTimeSub.expiryTimeMillis }
             )
@@ -412,7 +414,7 @@ class PurchaseController @Autowired constructor(
 
     private fun validateRecentlyExpiredSubsForPeriod(period: Period): List<HuaweiSubscription> {
         val nowTimeWithoutZone = LocalDateTime.now(ZoneOffset.UTC)
-        log.error("validateRecentlyExpiredSubsForPeriod: $nowTimeWithoutZone")
+        huaweiLog.info("validateRecentlyExpiredSubsForPeriod: $nowTimeWithoutZone")
         val startDate = when (period) {
             Period.MINUTES_5 -> nowTimeWithoutZone.minusMinutes(5)
             Period.HOUR -> nowTimeWithoutZone.minusHours(1)
@@ -427,9 +429,9 @@ class PurchaseController @Autowired constructor(
                 startDate, endDate
         ).sortedByDescending { it.expiryTimeMillis }
         if (recentlyExpiredSubscriptions.isEmpty()) {
-            log.error("THERE ARE NO RECENTLY EXPIRED SUBSCRIPTIONS TO VALIDATE: $period!")
+            huaweiLog.info("THERE ARE NO RECENTLY EXPIRED SUBSCRIPTIONS TO VALIDATE: $period!")
         } else {
-            log.error(
+            huaweiLog.info(
                     recentlyExpiredSubscriptions.joinToString(
                             prefix = "Start validating subs:",
                             separator = "\n",
@@ -445,7 +447,7 @@ class PurchaseController @Autowired constructor(
             val previousAttempts = subscriptionValidateAttemptsService
                     .getByStoreAndSubscriptionId(Store.HUAWEI.name, currentSubscription.id!!)
             if (period != Period.WEEK && previousAttempts != null && previousAttempts.attempts >= MAX_VALIDATION_ATTEMPTS) {
-                log.error("MAX VALIDATE ATTEMPTS LIMIT EXCEEDED: $currentSubscription!")
+                huaweiLog.error("MAX VALIDATE ATTEMPTS LIMIT EXCEEDED: $currentSubscription!")
                 return@mapNotNull null
             }
             val verificationResult: ValidationResponse? = try {
@@ -456,7 +458,7 @@ class PurchaseController @Autowired constructor(
                         currentSubscription.accountFlag ?: 0
                 )
             } catch (e: Exception) {
-                log.error("Error while validate subscription: $currentSubscription, error: $e", e)
+                huaweiLog.error("Error while validate subscription: $currentSubscription, error: $e", e)
                 null
             }
             //increment attempt

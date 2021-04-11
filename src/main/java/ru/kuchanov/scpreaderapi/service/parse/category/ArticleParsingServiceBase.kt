@@ -28,6 +28,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.ResponseStatus
+import ru.kuchanov.scpreaderapi.Application
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.ScpReaderConstants.Cache.Keys.ARTICLE_TO_LANG_DTO_BY_ID
 import ru.kuchanov.scpreaderapi.ScpReaderConstants.Cache.Keys.ARTICLE_TO_LANG_DTO_BY_URL_RELATIVE_AND_LANG
@@ -90,6 +91,7 @@ class ArticleParsingServiceBase {
     @Autowired
     private lateinit var mailService: MailService
 
+    @Qualifier(Application.PARSING_LOGGER)
     @Autowired
     private lateinit var log: Logger
 
@@ -217,10 +219,10 @@ class ArticleParsingServiceBase {
                                                     processOnlyCount = processOnlyCount
                                             )
                                             .doOnSubscribe {
-                                                log.error("Start loading objects ($objectsUrl) for lang ${lang.id}")
+                                                log.info("Start loading objects ($objectsUrl) for lang ${lang.id}")
                                             }
                                             .doOnSuccess {
-                                                log.error("Done loading objects ($objectsUrl) for lang ${lang.id}. Saved: ${it.size}")
+                                                log.info("Done loading objects ($objectsUrl) for lang ${lang.id}. Saved: ${it.size}")
                                             }
                                             .ignoreElement()
                                 } else {
@@ -236,10 +238,10 @@ class ArticleParsingServiceBase {
                                                         processOnlyCount = processOnlyCount
                                                 )
                                                 .doOnSubscribe {
-                                                    log.error("Start downloadAndSaveAllRecentArticles for lang: ${lang.id}")
+                                                    log.info("Start downloadAndSaveAllRecentArticles for lang: ${lang.id}")
                                                 }
                                                 .doOnSuccess {
-                                                    log.error("Finish downloadAndSaveAllRecentArticles for lang ${lang.id}: ${it.size}")
+                                                    log.info("Finish downloadAndSaveAllRecentArticles for lang ${lang.id}: ${it.size}")
                                                 }
                                                 .ignoreElement()
                                     } else {
@@ -254,14 +256,14 @@ class ArticleParsingServiceBase {
 //                                            .ignoreElement()
 //                            )
                             .toFlowable<Nothing>()
-                            .doOnSubscribe { log.error("Articles save started for lang: ${lang.id}") }
-                            .doOnComplete { log.error("Articles save ended for lang: ${lang.id}") }
+                            .doOnSubscribe { log.info("Articles save started for lang: ${lang.id}") }
+                            .doOnComplete { log.info("Articles save ended for lang: ${lang.id}") }
                 }
                 .sequential()
                 .ignoreElements()
                 .doOnEvent { doOnDownloadEverythingComplete(startTime, it, sendMail) }
                 .subscribeBy(
-                        onComplete = { log.error("Download everything completed!") },
+                        onComplete = { log.info("Download everything completed!") },
                         onError = {
                             log.error("Error while parse everything")
                             it.printStackTrace()
