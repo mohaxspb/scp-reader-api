@@ -5,8 +5,11 @@ import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.parser.Tag
 import org.jsoup.select.Elements
+import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
+import ru.kuchanov.scpreaderapi.Application
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.image.ArticlesImages
 import ru.kuchanov.scpreaderapi.bean.articles.tags.TagForLang
@@ -28,7 +31,8 @@ import ru.kuchanov.scpreaderapi.service.parse.category.ScpParseException
 
 @Service
 class ParseArticleService @Autowired constructor(
-        private val parseArticleTextService: ParseArticleTextService
+        private val parseArticleTextService: ParseArticleTextService,
+        @Qualifier(Application.PARSING_LOGGER) private val log: Logger
 ) {
 
     /**
@@ -41,13 +45,13 @@ class ParseArticleService @Autowired constructor(
             lang: Lang,
             printTextParts: Boolean = false
     ): ArticleForLang {
-        //println("parseArticle: $urlRelative, ${lang.id}, $printTextParts")
-        //println("PageContent before parsing: ${pageContent.toString().length}")
+        //log.info("parseArticle: $urlRelative, ${lang.id}, $printTextParts")
+        //log.info("PageContent before parsing: ${pageContent.toString().length}")
 
         //some article are in div... I.e. http://scp-wiki-cn.wikidot.com/taboo
         //so check it and extract text
         unwrapDivs(pageContent)
-        //println("PageContent after unwrap divs: ${pageContent.toString().length}")
+        //log.info("PageContent after unwrap divs: ${pageContent.toString().length}")
 
         //some fucking articles have all its content in 2 div... WTF?! One more fucking Kludge.
         //see http://scpfoundation.net/scp-2111/offset/2
@@ -63,7 +67,7 @@ class ParseArticleService @Autowired constructor(
                 divWithAllContent.remove()
             }
         }
-        //println("PageContent after fix articles like scp-2111/offset/2: ${pageContent.toString().length}")
+        //log.info("PageContent after fix articles like scp-2111/offset/2: ${pageContent.toString().length}")
 
         //also delete all divs with no content
         pageContent.getElementsByTag(TAG_DIV).forEach {
@@ -71,7 +75,7 @@ class ParseArticleService @Autowired constructor(
                 it.remove()
             }
         }
-        //println("PageContent after remove empty divs: ${pageContent.toString().length}")
+        //log.info("PageContent after remove empty divs: ${pageContent.toString().length}")
 
         //and remove all mobile divs
         pageContent.getElementsByClass("warning-mobile").forEach { it.remove() }
@@ -82,15 +86,15 @@ class ParseArticleService @Autowired constructor(
         for (snoska in footnoterefs) {
             val aTag = snoska.getElementsByTag(TAG_A).first()
             val idAsString = aTag.id().replace("footnoteref-", "")
-//            println("idAsString: $idAsString")
+//            log.info("idAsString: $idAsString")
             val digits = StringBuilder()
             idAsString.toCharArray().forEach { char ->
-//                println("footnoterefs: $char")
+//                log.info("footnoterefs: $char")
                 if (char.isDigit() || char == '-') {
                     digits.append(char.toString())
                 }
             }
-//            println("digits: $digits")
+//            log.info("digits: $digits")
             aTag.attr(ATTR_HREF, "scp://$digits")
         }
         val footnoterefsFooter = pageContent.getElementsByClass("footnote-footer")
@@ -163,18 +167,18 @@ class ParseArticleService @Autowired constructor(
         }
 
         parseImgsTags(pageContent)
-        //println("PageContent after parse img tags: ${pageContent.toString().length}")
+        //log.info("PageContent after parse img tags: ${pageContent.toString().length}")
 
         //extract tables, which are single tag in div
         extractTablesFromDivs(pageContent)
-        //println("PageContent after extract tables from div: ${pageContent.toString().length}")
+        //log.info("PageContent after extract tables from div: ${pageContent.toString().length}")
         //unwrap divs with text alignment
         unwrapTextAlignmentDivs(pageContent)
-        //println("PageContent after unwrap text-alignment divs: ${pageContent.toString().length}")
+        //log.info("PageContent after unwrap text-alignment divs: ${pageContent.toString().length}")
         //unwrap gallery div... see `/transcript-epsilon-12-1555`
         val galleryDivs = pageContent.getElementsByClass("gallery-box")
         galleryDivs.forEach { it.unwrap() }
-        //println("PageContent after unwrap gallery: ${pageContent.toString().length}")
+        //log.info("PageContent after unwrap gallery: ${pageContent.toString().length}")
 
         //put all text which is not in any tag in div tag
         for (element in pageContent.children()) {
@@ -183,7 +187,7 @@ class ParseArticleService @Autowired constructor(
                 element.after(Element(TAG_DIV).appendChild(nextSibling))
             }
         }
-        //println("PageContent after put untaged children: ${pageContent.toString().length}")
+        //log.info("PageContent after put untaged children: ${pageContent.toString().length}")
 
         //replace styles with underline and strike
         val spans = pageContent.getElementsByTag(TAG_SPAN)
@@ -199,7 +203,7 @@ class ParseArticleService @Autowired constructor(
                 element.replaceWith(sTag)
             }
         }
-        //println("PageContent after underline: ${pageContent.toString().length}")
+        //log.info("PageContent after underline: ${pageContent.toString().length}")
 
         //replace all links to not translated articles
         for (a in pageContent.getElementsByTag(TAG_A)) {
@@ -234,8 +238,8 @@ class ParseArticleService @Autowired constructor(
         val innerATags = pageContent.getElementsByTag(TAG_A)
         innerATags.forEach {
             val innerUrl = it.attr(ATTR_HREF)
-//            println("innerUrl: $innerUrl")
-//            println("LinkType.getLinkType(innerUrl, lang): ${LinkType.getLinkType(innerUrl, lang)}")
+//            log.info("innerUrl: $innerUrl")
+//            log.info("LinkType.getLinkType(innerUrl, lang): ${LinkType.getLinkType(innerUrl, lang)}")
             if (LinkType.getLinkType(innerUrl, lang) == LinkType.INNER) {
                 val relativeUrl = lang.removeDomainFromUrl(innerUrl)
                 it.attr(ATTR_HREF, relativeUrl)
@@ -244,25 +248,25 @@ class ParseArticleService @Autowired constructor(
         }
 
         //this we store as article text
-        //println("PageContent result: ${pageContent.toString().length}")
+        //log.info("PageContent result: ${pageContent.toString().length}")
         val rawText = pageContent.toString()
 
         //do not parse textParts if article has iframe
         val hasIframeTag = pageContent.getElementsByTag(TAG_IFRAME).isNotEmpty()
         val textParts = if (hasIframeTag) {
-            println("IFRAME FOUND for article: $urlRelative for lang: ${lang.id}!")
+            log.info("IFRAME FOUND for article: $urlRelative for lang: ${lang.id}!")
             emptyList()
         } else {
             parseArticleTextService.parseArticleText(rawText, printTextParts)
         }
 
         if (printTextParts) {
-            println("===================== parsed text parts =====================")
+            log.info("===================== parsed text parts =====================")
             textParts.forEach {
-                println(it)
-                println("\n")
+                log.info(it.toString())
+                log.info("\n")
             }
-            println("===========END========== parsed text parts ===========END==========")
+            log.info("===========END========== parsed text parts ===========END==========")
         }
 
         //comments url
@@ -271,10 +275,10 @@ class ParseArticleService @Autowired constructor(
                 ?.attr(ATTR_HREF)
 
         if (commentsUrl?.contains("javascript") == true) {
-            println("COMMENTS URL ERROR: $urlRelative")
+            log.error("COMMENTS URL ERROR: $urlRelative")
         }
 
-//        println("parseArticle: $urlRelative, ${lang.id}, $printTextParts END")
+//        log.info("parseArticle: $urlRelative, ${lang.id}, $printTextParts END")
 
         //finally fill article info
         return ArticleForLang(
@@ -361,9 +365,9 @@ class ParseArticleService @Autowired constructor(
     }
 
     private fun extractTablesFromDivs(pageContent: Element) {
-        //println("extractTablesFromDivs START")
+        //log.info("extractTablesFromDivs START")
         pageContent.getElementsByTag(TAG_DIV).forEachIndexed { _, divTag ->
-            //println("divTag index: $index, content: $divTag")
+            //log.info("divTag index: $index, content: $divTag")
             val isNotPageContentDiv = divTag.id() != ID_PAGE_CONTENT
             //there are articles with many tables in div. see `/operation-overmeta`
             //and do not unwrap spoilers and tabs divs
@@ -376,7 +380,7 @@ class ParseArticleService @Autowired constructor(
                 }
             }
         }
-        //println("extractTablesFromDivs END")
+        //log.info("extractTablesFromDivs END")
     }
 
     private fun unwrapTextAlignmentDivs(element: Element) {
@@ -399,9 +403,9 @@ class ParseArticleService @Autowired constructor(
 
             if (!theOnlyChildDiv.hasClass("collapsible-block-content")) {
 //                if (theOnlyChildDiv.html().length > 100) {
-//                    println(theOnlyChildDiv.html().substring(0, 100))
+//                    log.info(theOnlyChildDiv.html().substring(0, 100))
 //                } else {
-//                    println(theOnlyChildDiv.html())
+//                    log.info(theOnlyChildDiv.html())
 //                }
                 theOnlyChildDiv.unwrap()
             }
