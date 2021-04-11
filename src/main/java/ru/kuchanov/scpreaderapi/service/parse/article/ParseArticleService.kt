@@ -28,7 +28,7 @@ import ru.kuchanov.scpreaderapi.service.parse.category.ScpParseException
 
 @Service
 class ParseArticleService @Autowired constructor(
-        val parseArticleTextService: ParseArticleTextService
+        private val parseArticleTextService: ParseArticleTextService
 ) {
 
     /**

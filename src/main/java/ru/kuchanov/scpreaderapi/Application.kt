@@ -35,6 +35,11 @@ class Application : SpringBootServletInitializer() {
     fun huaweiLogger(): Logger =
             LoggerFactory.getLogger(HUAWEI_LOGGER)
 
+    @Qualifier(PARSING_LOGGER)
+    @Bean
+    fun parsingLogger(): Logger =
+            LoggerFactory.getLogger(PARSING_LOGGER)
+
     override fun configure(application: SpringApplicationBuilder): SpringApplicationBuilder =
             application.sources(Application::class.java)
 
@@ -42,6 +47,7 @@ class Application : SpringBootServletInitializer() {
         const val APPLICATION_LOGGER = "application"
         const val CACHE_LOGGER = "cache"
         const val HUAWEI_LOGGER = "huawei"
+        const val PARSING_LOGGER = "parsing"
 
         @JvmStatic
         fun main(args: Array<String>) {
