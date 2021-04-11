@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.ResponseStatus
+import ru.kuchanov.scpreaderapi.Application
 import ru.kuchanov.scpreaderapi.model.monetization.InappType
 import ru.kuchanov.scpreaderapi.configuration.monetization.HuaweiPurchaseConfiguration
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
@@ -27,7 +28,7 @@ class HuaweiApiService @Autowired constructor(
         @Qualifier(HuaweiPurchaseConfiguration.QUALIFIER_ORDER_RUSSIA)
         private val huaweiPurchaseApiOrderRussia: HuaweiPurchaseApi,
         private val objectMapper: ObjectMapper,
-        private val log: Logger
+        @Qualifier(Application.HUAWEI_LOGGER) private val log: Logger
 ) {
 
     companion object {

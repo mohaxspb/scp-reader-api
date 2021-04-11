@@ -4,8 +4,10 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import ru.kuchanov.scpreaderapi.Application
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.firebase.push.PushMessage
 import ru.kuchanov.scpreaderapi.bean.firebase.push.PushMessageNotFoundException
@@ -27,7 +29,7 @@ class HuaweiMessagingService @Autowired constructor(
         private val userToPushTokensService: UserToPushTokensService,
         private val huaweiPushApi: HuaweiPushApi,
         private val objectMapper: ObjectMapper,
-        private val log: Logger
+        @Qualifier(Application.HUAWEI_LOGGER) private val log: Logger
 ) : PushProviderMessagingService {
 
     override fun sendMessageToUserById(userId: Long, pushMessageId: Long, author: User): PushMessage {

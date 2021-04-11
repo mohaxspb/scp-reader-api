@@ -17,11 +17,11 @@ import ru.kuchanov.scpreaderapi.utils.millisToMinutesAndSeconds
 
 @Service
 class ArticleToLangServiceImpl @Autowired constructor(
-        val articlesForLangRepository: ArticlesForLangRepository,
-        val imagesService: ArticlesImagesService,
-        val tagsForLangRepository: TagForLangRepository,
-        val articleAndArticleTypeService: ArticleAndArticleTypeService,
-        val textPartService: TextPartService,
+        private val articlesForLangRepository: ArticlesForLangRepository,
+        private val imagesService: ArticlesImagesService,
+        private val tagsForLangRepository: TagForLangRepository,
+        private val articleAndArticleTypeService: ArticleAndArticleTypeService,
+        private val textPartService: TextPartService,
         private val log: Logger
 ) : ArticleForLangService {
 
@@ -97,14 +97,13 @@ class ArticleToLangServiceImpl @Autowired constructor(
     override fun findAllArticlesForLangByArticleCategoryToLangId(
             articleCategoryToLangId: Long
     ): List<ArticleToLangDto> {
+        log.error("START")
         val startTime = System.currentTimeMillis()
-        val articles = articlesForLangRepository
-                .findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId)
+        val articles = articlesForLangRepository.findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId)
 
         val articlesFilled = fillArticleToLangDtoByArticleToLangIds(articles)
         val (minutes, seconds) = millisToMinutesAndSeconds(System.currentTimeMillis() - startTime)
-        log.error("findAllArticlesForLangByArticleCategoryToLangId END: " +
-                "(min:sec): $minutes:$seconds")
+        log.error("END (min:sec): $minutes:$seconds")
         return articlesFilled
     }
 

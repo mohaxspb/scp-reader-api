@@ -2,11 +2,13 @@ package ru.kuchanov.scpreaderapi.configuration
 
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.cache.CacheManager
 import org.springframework.cache.caffeine.CaffeineCache
 import org.springframework.cache.interceptor.SimpleKey
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
+import ru.kuchanov.scpreaderapi.Application
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.ScpReaderConstants.Cache.Keys.ARTICLE_TO_LANG_DTO_BY_ID
 import ru.kuchanov.scpreaderapi.ScpReaderConstants.Cache.Keys.ARTICLE_TO_LANG_DTO_BY_URL_RELATIVE_AND_LANG
@@ -27,7 +29,7 @@ class CacheService @Autowired constructor(
         private val categoryForLangService: ArticleCategoryForLangService,
         private val cacheManager: CacheManager,
         private val serverSettingsService: ServerSettingsService,
-        private val log: Logger
+        @Qualifier(Application.CACHE_LOGGER) private val log: Logger
 ) {
 
     @Async
