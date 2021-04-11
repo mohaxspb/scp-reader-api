@@ -2,7 +2,11 @@ package ru.kuchanov.scpreaderapi.service.parse.article
 
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
+import org.slf4j.Logger
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
+import ru.kuchanov.scpreaderapi.Application
 import ru.kuchanov.scpreaderapi.bean.articles.text.TextPart
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ATTR_HREF
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.ATTR_SRC
@@ -24,16 +28,18 @@ import ru.kuchanov.scpreaderapi.service.parse.category.ScpParseException
 
 
 @Service
-class ParseArticleTextService {
+class ParseArticleTextService @Autowired constructor(
+        @Qualifier(Application.PARSING_LOGGER) private val log: Logger
+) {
 
     /**
      * @throws ScpParseException
      */
     fun parseArticleText(rawText: String, printTextParts: Boolean = false): List<TextPart> {
         val textParts = getArticlesTextParts(rawText)
-        //println("textParts: ${textParts.size}")
+        //log.debug("textParts: ${textParts.size}")
         val textPartsTypes = getListOfTextTypes(textParts)
-        //println("textPartsTypes: ${textPartsTypes.size}")
+        //log.debug("textPartsTypes: ${textPartsTypes.size}")
 
         val finalTextParts = mutableListOf<TextPart>()
 
@@ -114,7 +120,7 @@ class ParseArticleTextService {
 
         val document = Jsoup.parse(html)
 
-        //println("document: $document")
+        //log.debug("document: $document")
         //parse collapsed part
         val elementFolded = document.getElementsByClass("collapsible-block-folded").first()
         val elementA = elementFolded.getElementsByTag(TAG_A).first()
@@ -143,12 +149,12 @@ class ParseArticleTextService {
                 //so return empty string...
                 //see `http://www.scp-wiki.net/sexycontainmentprocedures`
                 if (elementUnfoldedContent.children().isEmpty()) {
-                    println("NO DATA IN SPOILER!")
+                    log.debug("NO DATA IN SPOILER!")
                     spoilerData = ""
                 } else {
-//                println("elementUnfoldedContent: $elementUnfoldedContent")
-//                println("elementUnfoldedContent: ${elementUnfoldedContent.parent()}")
-//                println("elementUnfoldedContent: ${elementUnfoldedContent.parent().parent()}")
+//                log.debug("elementUnfoldedContent: $elementUnfoldedContent")
+//                log.debug("elementUnfoldedContent: ${elementUnfoldedContent.parent()}")
+//                log.debug("elementUnfoldedContent: ${elementUnfoldedContent.parent().parent()}")
                     throw ScpParseException("ERROR 0 WHILE PARSING SPOILER CONTENT. Please, let developers know about it, if you see this message)")
                 }
             }
@@ -165,7 +171,7 @@ class ParseArticleTextService {
                 //in some articles there is really no data in spoiler...
                 //so return empty string...
                 //see `/scp-2747`
-                println("NO DATA IN SPOILER!")
+                log.debug("NO DATA IN SPOILER!")
                 spoilerData = ""
                 //throw IllegalStateException("ERROR 1 WHILE PARSING SPOILER CONTENT. Please, let developers know about it, if you see this message)")
             }
@@ -190,7 +196,7 @@ class ParseArticleTextService {
             val yuiContent = tabsElement.getElementsByClass("yui-content").first()
             var tabOrder = 0
 
-            //println("Parse tabs: $yuiContent")
+            //log.debug("Parse tabs: $yuiContent")
             tabsTextPart.innerTextParts = yuiContent.children().mapIndexed { index, element ->
                 val tabTextPart = TextPart(data = tabsTitles[index], type = TextType.TAB, orderInText = tabOrder++)
                 tabTextPart.innerTextParts = parseArticleText(element.html(), false)
@@ -232,7 +238,7 @@ class ParseArticleTextService {
     }
 
     private fun getArticlesTextParts(html: String): List<String> {
-        //println("getArticlesTextParts: $html")
+        //log.debug("getArticlesTextParts: $html")
         val document = Jsoup.parse(html)
         val contentPage = document.getElementById(ID_PAGE_CONTENT) ?: document.body()
         return contentPage!!.children().map { it.outerHtml() }
