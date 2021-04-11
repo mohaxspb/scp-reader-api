@@ -13,7 +13,7 @@
     <property name="HUAWEI_LOG_NAME" value="huaweiLog"/>
     <property name="HUAWEI_LOG" value="${LOG_DIR}/${HUAWEI_LOG_NAME}.log"/>
 
-    <property name="PARSING_LOG_NAME" value="huaweiLog"/>
+    <property name="PARSING_LOG_NAME" value="parsingLog"/>
     <property name="PARSING_LOG" value="${LOG_DIR}/${PARSING_LOG_NAME}.log"/>
 
     <property
