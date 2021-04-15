@@ -31,7 +31,7 @@ data class TextPart(
         val updated: Timestamp? = null,
 
         @Transient
-        var innerTextParts: List<TextPart>? = null
+        var innerTextParts: List<TextPart> = listOf()
 ) {
     override fun toString(): String {
         val shortenedData = if (data != null && data.length > 30) {

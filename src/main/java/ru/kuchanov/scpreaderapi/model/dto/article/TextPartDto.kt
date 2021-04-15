@@ -8,5 +8,5 @@ data class TextPartDto(
         val data: String?,
         val type: TextType
 ) {
-    var innerTextParts: List<TextPartDto>? = null
+    var innerTextParts: List<TextPartDto> = listOf()
 }

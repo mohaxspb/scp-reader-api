@@ -41,6 +41,7 @@ class CacheService @Autowired constructor(
             val startTimeLang = System.currentTimeMillis()
             log.error("==populate cache for $langEnum START")
             val lang = langEnum.lang.let { langService.getById(it) ?: throw LangNotFoundException() }
+            //todo exclude recent and rated lists
             categoryForLangService.findAllByLangId(lang.id).forEach categoryToLang@{ categoryToLang ->
                 log.error("====categoriesArticlesCache $langEnum ${categoryToLang.defaultTitle} START")
                 val articleCategoryToLang = categoryForLangService.findByLangIdAndArticleCategoryId(
