@@ -15,7 +15,7 @@ data class ReadOrFavoriteArticleToLangDto(
         val createdOnSite: Timestamp?,
         val hasIframeTag: Boolean
 ) {
-    var imageUrls: List<ArticlesImagesDto>? = null
+    var imageUrls: List<ArticlesImagesDto> = listOf()
     var tagDtos: List<TagDto>? = null
     var articleTypeToArticleDto: ArticleTypeToArticleDto? = null
 }

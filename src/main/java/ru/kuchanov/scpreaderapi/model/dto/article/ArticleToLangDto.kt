@@ -13,8 +13,8 @@ data class ArticleToLangDto(
         val createdOnSite: Timestamp?,
         val hasIframeTag: Boolean
 ) {
-    var imageUrls: List<ArticlesImagesDto>? = null
+    var imageUrls: List<ArticlesImagesDto> = listOf()
     var tagDtos: List<TagDto>? = null
     var articleTypeToArticleDto: ArticleTypeToArticleDto? = null
-    var textParts: List<TextPartDto>? = null
+    var textParts: List<TextPartDto> = listOf()
 }
