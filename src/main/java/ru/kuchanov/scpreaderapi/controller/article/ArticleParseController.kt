@@ -50,13 +50,14 @@ class ArticleParseController @Autowired constructor(
     fun parseRecentTask(): ParsingStartedResponse {
         val hourlySyncTaskEnabledSettings = serverSettingsService.findByKey(ServerSettings.Key.HOURLY_SYNC_TASK_ENABLED.name)
         val hourlySyncTaskEnabled = hourlySyncTaskEnabledSettings?.value?.toBooleanOrNull()
-        return if (hourlySyncTaskEnabled == true && !articleParsingService.isDownloadAllRunning) {
+        return if (hourlySyncTaskEnabled == true && !articleParsingService.isDownloadRecentRunning) {
             log.info("Start hourly parseRecentTask")
             articleParsingService.parseEverything(
                     maxPageCount = 1,
                     downloadRecent = true,
                     downloadObjects = false,
-                    sendMail = false
+                    sendMail = false,
+                    massDownloadTaskType = ArticleParsingServiceBase.MassDownloadTaskType.RECENT
             )
             ParsingStartedResponse()
         } else {
@@ -107,7 +108,8 @@ class ArticleParseController @Autowired constructor(
             articleParsingService.parseEverything(
                     maxPageCount = maxPageCount,
                     processOnlyCount = processOnlyCount,
-                    sendMail = true
+                    sendMail = true,
+                    massDownloadTaskType = ArticleParsingServiceBase.MassDownloadTaskType.ALL
             )
             ParsingStartedResponse()
         } else {
