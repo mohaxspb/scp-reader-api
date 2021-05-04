@@ -37,18 +37,20 @@ class ArticleParseController @Autowired constructor(
 
     ) : ResponseEntity<State>(State(state), status)
 
+    /**
+     * Executes hourly (on every 30 minute of each hour) to parse first page of all lang recent articles list
+     */
     @GetMapping("/allLangsRecent")
     @Scheduled(
             /**
              * second, minute, hour, day, month, day of week
              */
-//        cron = "*/30 * * * * *" //fi xme test
-            cron = "0 0 * * * *"
+            cron = "0 30 * * * *"
     )
-    fun parseRecentTask() {
+    fun parseRecentTask(): ParsingStartedResponse {
         val hourlySyncTaskEnabledSettings = serverSettingsService.findByKey(ServerSettings.Key.HOURLY_SYNC_TASK_ENABLED.name)
         val hourlySyncTaskEnabled = hourlySyncTaskEnabledSettings?.value?.toBooleanOrNull()
-        if (hourlySyncTaskEnabled == true && !articleParsingService.isDownloadAllRunning) {
+        return if (hourlySyncTaskEnabled == true && !articleParsingService.isDownloadAllRunning) {
             log.info("Start hourly parseRecentTask")
             articleParsingService.parseEverything(
                     maxPageCount = 1,
@@ -56,6 +58,7 @@ class ArticleParseController @Autowired constructor(
                     downloadObjects = false,
                     sendMail = false
             )
+            ParsingStartedResponse()
         } else {
             log.error("Start hourly parseRecentTask failed!")
             log.error("articleParsingService.isDownloadAllRunning: ${articleParsingService.isDownloadAllRunning}")
