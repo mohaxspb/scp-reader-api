@@ -81,7 +81,25 @@ class ArticleParseController @Autowired constructor(
             cron = "0 0 0 * * *"
     )
     fun updateAllCategoriesDaily(): ParsingStartedResponse {
-        TODO()
+        val dailyCategoriesSyncTaskEnabledSettings = serverSettingsService
+                .findByKey(ServerSettings.Key.DAILY_CATEGORIES_SYNC_TASK_ENABLED.name)
+        val dailySyncTaskEnabled = dailyCategoriesSyncTaskEnabledSettings?.value?.toBooleanOrNull()
+        return if (dailySyncTaskEnabled == true && !articleParsingService.isDownloadCategoriesRunning) {
+            log.info("Start daily parseCategoriesTask")
+            articleParsingService.parseEverything(
+                    maxPageCount = 0,
+                    downloadRecent = false,
+                    downloadObjects = true,
+                    sendMail = false,
+                    massDownloadTaskType = ArticleParsingServiceBase.MassDownloadTaskType.CATEGORIES
+            )
+            ParsingStartedResponse()
+        } else {
+            log.error("Start daily parseCategoriesTask failed!")
+            log.error("articleParsingService.isDownloadCategoriesRunning: ${articleParsingService.isDownloadCategoriesRunning}")
+            log.error("dailySyncTaskEnabled: $dailySyncTaskEnabled")
+            ParsingStartedResponse(state = "Already running of disabled in config", status = HttpStatus.CONFLICT)
+        }
     }
 
     /**
