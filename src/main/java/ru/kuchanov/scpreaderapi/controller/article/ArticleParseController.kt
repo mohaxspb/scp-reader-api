@@ -63,7 +63,38 @@ class ArticleParseController @Autowired constructor(
             log.error("Start hourly parseRecentTask failed!")
             log.error("articleParsingService.isDownloadAllRunning: ${articleParsingService.isDownloadAllRunning}")
             log.error("hourlySyncTaskEnabled: $hourlySyncTaskEnabled")
+            ParsingStartedResponse(state = "Already running of disabled in config", status = HttpStatus.CONFLICT)
         }
+    }
+
+    /**
+     * Executes every day at midnight
+     *
+     * Updates every category for every lang
+     */
+    @GetMapping("/allLangsCategories")
+    @Scheduled(
+            /**
+             * second, minute, hour, day, month, day of week
+             */
+            cron = "0 0 0 * * *"
+    )
+    fun updateAllCategoriesDaily(): ParsingStartedResponse {
+        TODO()
+    }
+
+    /**
+     * Executes every day at midday
+     */
+    @GetMapping("/allLangsRated")
+    @Scheduled(
+            /**
+             * second, minute, hour, day, month, day of week
+             */
+            cron = "0 0 12 * * *"
+    )
+    fun updateAllRatedDaily(): ParsingStartedResponse {
+        TODO()
     }
 
     @GetMapping("/everything")
