@@ -130,11 +130,11 @@ fun parseForObjectArticlesENStyle(lang: Lang, doc: Document): List<ArticleForLan
             ?: throw ScpParseException("Parse error! \"page-content\" tag is null!")
     val listPagesBox = pageContent.getElementsByTag("h1")
     listPagesBox.remove()
-    val collapsibleBlock = pageContent.getElementsByTag(TAG_UL).first()
+    val collapsibleBlock: Element? = pageContent.getElementsByTag(TAG_UL).first()
     collapsibleBlock?.remove()
-    val table = pageContent.getElementsByClass("content-toc").first()
-    table.remove()
-    val allUls = pageContent.getElementsByClass("content-panel").first().getElementsByTag(TAG_UL)
+    val table: Element? = pageContent.getElementsByClass("content-toc").first()
+    table?.remove()
+    val allUls = pageContent.getElementsByClass("content-panel").first()?.getElementsByTag(TAG_UL) ?: listOf<Element>()
 
     val articles = mutableListOf<ArticleForLang>()
 
