@@ -158,6 +158,7 @@ class ArticleParsingServiceImplPT : ArticleParsingServiceBase() {
 
     override fun getObjectTypeByImageUrl(imageURL: String): ScpReaderConstants.ArticleTypeEnum =
             when (imageURL) {
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-6/na.png",
                 "http://scp-pt-br.wdfiles.com/local--files/scp-series-5/na.png",
                 "http://scp-pt-br.wdfiles.com/local--files/scp-series-4/na.png",
                 "http://scp-pt-br.wdfiles.com/local--files/scp-series-3/na.png",
@@ -165,6 +166,7 @@ class ArticleParsingServiceImplPT : ArticleParsingServiceBase() {
                 "http://scp-pt-br.wdfiles.com/local--files/scp-series/na.png" ->
                     ScpReaderConstants.ArticleTypeEnum.NEUTRAL_OR_NOT_ADDED
 
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-6/seguro.png",
                 "http://scp-pt-br.wdfiles.com/local--files/scp-series-5/seguro.png",
                 "http://scp-pt-br.wdfiles.com/local--files/scp-series-4/seguro.png",
                 "http://scp-pt-br.wdfiles.com/local--files/scp-series-3/seguro.png",
@@ -172,13 +174,21 @@ class ArticleParsingServiceImplPT : ArticleParsingServiceBase() {
                 "http://scp-pt-br.wdfiles.com/local--files/scp-series/seguro.png" ->
                     ScpReaderConstants.ArticleTypeEnum.SAFE
 
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-6/euclídeo.png",
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-6/eucl%C3%ADdeo.png",
                 "http://scp-pt-br.wdfiles.com/local--files/scp-series-5/euclídeo.png",
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-5/eucl%C3%ADdeo.png",
                 "http://scp-pt-br.wdfiles.com/local--files/scp-series-4/euclídeo.png",
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-4/eucl%C3%ADdeo.png",
                 "http://scp-pt-br.wdfiles.com/local--files/scp-series-3/euclídeo.png",
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-3/eucl%C3%ADdeo.png",
                 "http://scp-pt-br.wdfiles.com/local--files/scp-series-2/euclídeo.png",
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-2/eucl%C3%ADdeo.png",
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series/eucl%C3%ADdeo.png",
                 "http://scp-pt-br.wdfiles.com/local--files/scp-series/euclídeo.png" ->
                     ScpReaderConstants.ArticleTypeEnum.EUCLID
 
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-6/keter.png",
                 "http://scp-pt-br.wdfiles.com/local--files/scp-series-5/keter.png",
                 "http://scp-pt-br.wdfiles.com/local--files/scp-series-4/keter.png",
                 "http://scp-pt-br.wdfiles.com/local--files/scp-series-3/keter.png",
@@ -186,6 +196,7 @@ class ArticleParsingServiceImplPT : ArticleParsingServiceBase() {
                 "http://scp-pt-br.wdfiles.com/local--files/scp-series/keter.png" ->
                     ScpReaderConstants.ArticleTypeEnum.KETER
 
+                "http://scp-pt-br.wdfiles.com/local--files/scp-series-6/thaumiel.png",
                 "http://scp-pt-br.wdfiles.com/local--files/scp-series-5/thaumiel.png",
                 "http://scp-pt-br.wdfiles.com/local--files/scp-series-4/thaumiel.png",
                 "http://scp-pt-br.wdfiles.com/local--files/scp-series-3/thaumiel.png",
