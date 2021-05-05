@@ -3,7 +3,6 @@ package ru.kuchanov.scpreaderapi.configuration
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
-import okhttp3.logging.HttpLoggingInterceptor
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
@@ -30,7 +29,6 @@ import java.nio.charset.StandardCharsets
 class HuaweiApiConfiguration @Autowired constructor(
         @Qualifier(NetworkConfiguration.QUALIFIER_OK_HTTP_CLIENT_COMMON)
         private val okHttpClient: OkHttpClient,
-        private val loggingInterceptor: HttpLoggingInterceptor,
         private val converterFactory: Converter.Factory,
         private val callAdapterFactory: CallAdapter.Factory,
         private val huaweiAccessTokenRepository: HuaweiAccessTokenRepository,
@@ -190,7 +188,6 @@ class HuaweiApiConfiguration @Autowired constructor(
         return okHttpClient.newBuilder()
                 .addInterceptor(accessTokenInterceptor)
                 .addInterceptor(unAuthAccessTokenInterceptor)
-                .addInterceptor(loggingInterceptor)
                 .build()
     }
 

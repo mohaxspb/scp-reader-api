@@ -39,6 +39,7 @@ class NetworkConfiguration {
             .connectTimeout(ApiClient.OK_HTTP_CONNECT_TIMEOUT, TimeUnit.SECONDS)
             .readTimeout(ApiClient.OK_HTTP_READ_TIMEOUT, TimeUnit.SECONDS)
             .writeTimeout(ApiClient.OK_HTTP_WRITE_TIMEOUT, TimeUnit.SECONDS)
+            .addInterceptor(loggingInterceptor())
             .build()
 
     @Bean
