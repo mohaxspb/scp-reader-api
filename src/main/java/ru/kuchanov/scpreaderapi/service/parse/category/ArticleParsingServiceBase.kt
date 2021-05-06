@@ -216,13 +216,21 @@ class ArticleParsingServiceBase {
             downloadRecent: Boolean = true,
             downloadObjects: Boolean = true,
             sendMail: Boolean,
-            massDownloadTaskType: MassDownloadTaskType
+            massDownloadTaskType: MassDownloadTaskType,
+            parseOnlyLang: ScpReaderConstants.Firebase.FirebaseInstance? = null
     ) {
         setFlagFromSyncTaskType(massDownloadTaskType, true)
 
         val startTime = System.currentTimeMillis()
 
         ScpReaderConstants.Firebase.FirebaseInstance.values().toFlowable()
+                .filter {
+                    if (parseOnlyLang == null) {
+                        true
+                    } else {
+                        parseOnlyLang == it
+                    }
+                }
                 .parallel()
                 .runOn(Schedulers.newThread())
                 .map { langService.getById(it.lang) ?: throw LangNotFoundException() }
