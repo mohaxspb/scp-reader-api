@@ -73,18 +73,20 @@ class ArticleParsingServiceImplPT : ArticleParsingServiceBase() {
                 .first() ?: throw ScpParseException("Parse error. white-paper is null!", NullPointerException())
 
         innerPageContent.getElementsByClass("wp_sheet c_intro-toc").first()?.remove()
-        innerPageContent.getElementsByClass("wp_sheet justify hyphens c_list-box").first()?.remove()
-        innerPageContent.children().forEach {
-            it.getElementsByTag("h1").first()?.remove()
-        }
+        //remove last block with no articles inside
+        innerPageContent.getElementsByClass("wp_sheet justify hyphens c_list-box").last()?.remove()
+        innerPageContent.getElementsByClass("panel-footer").remove()
+        innerPageContent.getElementsByTag("h1").remove()
         innerPageContent.children().unwrap()
 
         //now we will remove all html code before tag h2,with id toc1
-        val allHtml: String = pageContent.html()
+        val allHtml: String = innerPageContent.html()
+//        log.error("allHtml: $allHtml")
 
         val arrayOfArticles = allHtml.split("<br>").toTypedArray()
         val articles: MutableList<ArticleForLang> = mutableListOf()
         for (arrayItem in arrayOfArticles) {
+//            log.error(arrayItem)
             if (TextUtils.isEmpty(arrayItem.trim())) {
                 continue
             }
