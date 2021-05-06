@@ -93,7 +93,7 @@ class ArticleParsingServiceBase {
 
     @Qualifier(Application.PARSING_LOGGER)
     @Autowired
-    private lateinit var log: Logger
+    protected lateinit var log: Logger
 
     @Autowired
     @Qualifier(NetworkConfiguration.QUALIFIER_OK_HTTP_CLIENT_NOT_LOGGING)
@@ -150,7 +150,26 @@ class ArticleParsingServiceBase {
     @Autowired
     lateinit var cacheManager: CacheManager
 
+    enum class MassDownloadTaskType {
+        ALL, RECENT, RATED, CATEGORIES
+    }
+
     var isDownloadAllRunning = false
+    var isDownloadRecentRunning = false
+    var isDownloadRatedRunning = false
+    var isDownloadCategoriesRunning = false
+
+    private fun setFlagFromSyncTaskType(
+            massDownloadTaskType: MassDownloadTaskType,
+            value: Boolean
+    ) {
+        when (massDownloadTaskType) {
+            MassDownloadTaskType.ALL -> isDownloadAllRunning = value
+            MassDownloadTaskType.RECENT -> isDownloadRecentRunning = value
+            MassDownloadTaskType.RATED -> isDownloadRatedRunning = value
+            MassDownloadTaskType.CATEGORIES -> isDownloadCategoriesRunning = value
+        }
+    }
 
     fun getParsingRealizationForLang(lang: Lang): ArticleParsingServiceBase =
             when (lang.langCode) {
@@ -196,20 +215,43 @@ class ArticleParsingServiceBase {
             processOnlyCount: Int? = null,
             downloadRecent: Boolean = true,
             downloadObjects: Boolean = true,
-            sendMail: Boolean
+            sendMail: Boolean,
+            massDownloadTaskType: MassDownloadTaskType,
+            parseOnlyLang: ScpReaderConstants.Firebase.FirebaseInstance? = null,
+            parseCategoriesCount: Int? = null
     ) {
-        isDownloadAllRunning = true
+        setFlagFromSyncTaskType(massDownloadTaskType, true)
 
         val startTime = System.currentTimeMillis()
 
         ScpReaderConstants.Firebase.FirebaseInstance.values().toFlowable()
+                .filter {
+                    if (parseOnlyLang == null) {
+                        true
+                    } else {
+                        parseOnlyLang == it
+                    }
+                }
                 .parallel()
                 .runOn(Schedulers.newThread())
                 .map { langService.getById(it.lang) ?: throw LangNotFoundException() }
                 .map { it to getParsingRealizationForLang(it) }
                 .concatMap { (lang, service) ->
+                    val categoriesToLang = categoryToLangService.findAllByLangId(lang.id)
+                            .mapNotNull { it.siteUrl }
+                            .let {
+                                if (parseCategoriesCount != null) {
+                                    if (parseCategoriesCount >= it.size) {
+                                        it
+                                    } else {
+                                        it.take(parseCategoriesCount)
+                                    }
+                                } else {
+                                    it
+                                }
+                            }
                     Flowable
-                            .fromIterable(service.getObjectArticlesUrls())
+                            .fromIterable(categoriesToLang)
                             .concatMapCompletable { objectsUrl ->
                                 if (downloadObjects) {
                                     service
@@ -261,7 +303,7 @@ class ArticleParsingServiceBase {
                 }
                 .sequential()
                 .ignoreElements()
-                .doOnEvent { doOnDownloadEverythingComplete(startTime, it, sendMail) }
+                .doOnEvent { doOnDownloadEverythingComplete(startTime, it, sendMail, massDownloadTaskType) }
                 .subscribeBy(
                         onComplete = { log.info("Download everything completed!") },
                         onError = {
@@ -274,9 +316,10 @@ class ArticleParsingServiceBase {
     private fun doOnDownloadEverythingComplete(
             startTime: Long,
             error: Throwable? = null,
-            sendMail: Boolean
+            sendMail: Boolean,
+            massDownloadTaskType: MassDownloadTaskType
     ) {
-        isDownloadAllRunning = false
+        setFlagFromSyncTaskType(massDownloadTaskType, false)
 
         val timeSpent = System.currentTimeMillis() - startTime
         val minutesSpent = TimeUnit.MILLISECONDS.toMinutes(timeSpent)
@@ -865,7 +908,7 @@ class ArticleParsingServiceBase {
         textPart.articleToLangId = articleToLangId
         textPart.parentId = parentId
         val savedTextPart = textPartService.insert(textPart)
-        textPart.innerTextParts?.forEach { saveTextPart(it, articleToLangId, savedTextPart.id) }
+        textPart.innerTextParts.forEach { saveTextPart(it, articleToLangId, savedTextPart.id) }
     }
 
     @Suppress("DuplicatedCode")

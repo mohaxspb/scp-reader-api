@@ -37,30 +37,112 @@ class ArticleParseController @Autowired constructor(
 
     ) : ResponseEntity<State>(State(state), status)
 
+    /**
+     * Executes hourly (on every 30 minute of each hour) to parse first page of all lang recent articles list
+     */
     @GetMapping("/allLangsRecent")
     @Scheduled(
             /**
              * second, minute, hour, day, month, day of week
              */
-//        cron = "*/30 * * * * *" //fi xme test
-            cron = "0 0 * * * *"
+            cron = "0 30 * * * *"
     )
-    fun parseRecentTask() {
+    fun parseRecentTask(): ParsingStartedResponse {
         val hourlySyncTaskEnabledSettings = serverSettingsService.findByKey(ServerSettings.Key.HOURLY_SYNC_TASK_ENABLED.name)
         val hourlySyncTaskEnabled = hourlySyncTaskEnabledSettings?.value?.toBooleanOrNull()
-        if (hourlySyncTaskEnabled == true && !articleParsingService.isDownloadAllRunning) {
+        return if (hourlySyncTaskEnabled == true && !articleParsingService.isDownloadRecentRunning) {
             log.info("Start hourly parseRecentTask")
             articleParsingService.parseEverything(
                     maxPageCount = 1,
                     downloadRecent = true,
                     downloadObjects = false,
-                    sendMail = false
+                    sendMail = false,
+                    massDownloadTaskType = ArticleParsingServiceBase.MassDownloadTaskType.RECENT
             )
+            ParsingStartedResponse()
         } else {
             log.error("Start hourly parseRecentTask failed!")
             log.error("articleParsingService.isDownloadAllRunning: ${articleParsingService.isDownloadAllRunning}")
             log.error("hourlySyncTaskEnabled: $hourlySyncTaskEnabled")
+            ParsingStartedResponse(state = "Already running of disabled in config", status = HttpStatus.CONFLICT)
         }
+    }
+
+    @GetMapping("/allLangsCategories")
+    fun updateAllCategoriesForAllLangs(
+            @RequestParam(value = "parseOnlyLang") parseOnlyLang: ScpReaderConstants.Firebase.FirebaseInstance?,
+            @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
+            @RequestParam(value = "parseCategoriesCount") parseCategoriesCount: Int?,
+    ): ParsingStartedResponse {
+        return if (!articleParsingService.isDownloadCategoriesRunning) {
+            startAllCategoriesForAllLangsParsing(
+                    processOnlyCount = processOnlyCount,
+                    parseCategoriesCount = parseCategoriesCount,
+                    parseOnlyLang = parseOnlyLang
+            )
+            ParsingStartedResponse()
+        } else {
+            log.error("Start updateAllCategoriesForAllLangs failed!")
+            log.error("articleParsingService.isDownloadCategoriesRunning: ${articleParsingService.isDownloadCategoriesRunning}")
+            ParsingStartedResponse(state = "Already running", status = HttpStatus.CONFLICT)
+        }
+    }
+
+    /**
+     * Executes every day at midnight
+     *
+     * Updates every category for every lang
+     */
+    @Scheduled(
+            /**
+             * second, minute, hour, day, month, day of week
+             */
+            cron = "0 0 0 * * *"
+    )
+    fun updateAllCategoriesDaily() {
+        val dailyCategoriesSyncTaskEnabledSettings = serverSettingsService
+                .findByKey(ServerSettings.Key.DAILY_CATEGORIES_SYNC_TASK_ENABLED.name)
+        val dailySyncTaskEnabled = dailyCategoriesSyncTaskEnabledSettings?.value?.toBooleanOrNull()
+        if (dailySyncTaskEnabled == true && !articleParsingService.isDownloadCategoriesRunning) {
+            log.info("Start daily parseCategoriesTask")
+            startAllCategoriesForAllLangsParsing()
+        } else {
+            log.error("Start daily parseCategoriesTask failed!")
+            log.error("articleParsingService.isDownloadCategoriesRunning: ${articleParsingService.isDownloadCategoriesRunning}")
+            log.error("dailySyncTaskEnabled: $dailySyncTaskEnabled")
+            ParsingStartedResponse(state = "Already running of disabled in config", status = HttpStatus.CONFLICT)
+        }
+    }
+
+    private fun startAllCategoriesForAllLangsParsing(
+            processOnlyCount: Int? = null,
+            parseOnlyLang: ScpReaderConstants.Firebase.FirebaseInstance? = null,
+            parseCategoriesCount: Int? = null
+    ) {
+        articleParsingService.parseEverything(
+                maxPageCount = 0,
+                downloadRecent = false,
+                downloadObjects = true,
+                sendMail = false,
+                massDownloadTaskType = ArticleParsingServiceBase.MassDownloadTaskType.CATEGORIES,
+                processOnlyCount = processOnlyCount,
+                parseOnlyLang = parseOnlyLang,
+                parseCategoriesCount = parseCategoriesCount
+        )
+    }
+
+    /**
+     * Executes every day at midday
+     */
+    @GetMapping("/allLangsRated")
+    @Scheduled(
+            /**
+             * second, minute, hour, day, month, day of week
+             */
+            cron = "0 0 12 * * *"
+    )
+    fun updateAllRatedDaily(): ParsingStartedResponse {
+        TODO()
     }
 
     @GetMapping("/everything")
@@ -73,7 +155,8 @@ class ArticleParseController @Autowired constructor(
             articleParsingService.parseEverything(
                     maxPageCount = maxPageCount,
                     processOnlyCount = processOnlyCount,
-                    sendMail = true
+                    sendMail = true,
+                    massDownloadTaskType = ArticleParsingServiceBase.MassDownloadTaskType.ALL
             )
             ParsingStartedResponse()
         } else {

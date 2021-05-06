@@ -29,6 +29,8 @@ data class ServerSettings(
 
     enum class Key {
         HOURLY_SYNC_TASK_ENABLED,
+        DAILY_CATEGORIES_SYNC_TASK_ENABLED,
+        DAILY_RATED_SYNC_TASK_ENABLED,
         MOST_RECENT_ARTICLES_CACHE_SIZE,
         MOST_RATED_ARTICLES_CACHE_SIZE,
     }
