@@ -560,7 +560,7 @@ class ArticleParsingServiceBase {
 
                         val langEnum = ScpReaderConstants.Firebase.FirebaseInstance.valueOf(lang.id.toUpperCase())
                         val articlesToCategoryForCache = articleForLangService
-                                .findAllArticlesForLangByArticleCategoryToLangId(categoryToLang.articleCategoryId)
+                                .findAllArticlesForLangByArticleCategoryToLangId(categoryToLang.id)
                         cacheManager
                                 .getCache(CATEGORIES_ARTICLES)
                                 ?.put(
