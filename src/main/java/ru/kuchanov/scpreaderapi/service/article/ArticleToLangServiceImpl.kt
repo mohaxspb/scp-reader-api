@@ -97,13 +97,13 @@ class ArticleToLangServiceImpl @Autowired constructor(
     override fun findAllArticlesForLangByArticleCategoryToLangId(
             articleCategoryToLangId: Long
     ): List<ArticleToLangDto> {
-        log.error("START")
+        log.debug("START")
         val startTime = System.currentTimeMillis()
         val articles = articlesForLangRepository.findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId)
 
         val articlesFilled = fillArticleToLangDtoByArticleToLangIds(articles)
         val (minutes, seconds) = millisToMinutesAndSeconds(System.currentTimeMillis() - startTime)
-        log.error("END (min:sec): $minutes:$seconds")
+        log.debug("END (min:sec): $minutes:$seconds")
         return articlesFilled
     }
 

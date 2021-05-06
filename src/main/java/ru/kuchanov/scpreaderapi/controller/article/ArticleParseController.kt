@@ -68,38 +68,67 @@ class ArticleParseController @Autowired constructor(
         }
     }
 
+    @GetMapping("/allLangsCategories")
+    fun updateAllCategoriesForAllLangs(
+            @RequestParam(value = "parseOnlyLang") parseOnlyLang: ScpReaderConstants.Firebase.FirebaseInstance?,
+            @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
+            @RequestParam(value = "parseCategoriesCount") parseCategoriesCount: Int?,
+    ): ParsingStartedResponse {
+        return if (!articleParsingService.isDownloadCategoriesRunning) {
+            startAllCategoriesForAllLangsParsing(
+                    processOnlyCount = processOnlyCount,
+                    parseCategoriesCount = parseCategoriesCount,
+                    parseOnlyLang = parseOnlyLang
+            )
+            ParsingStartedResponse()
+        } else {
+            log.error("Start updateAllCategoriesForAllLangs failed!")
+            log.error("articleParsingService.isDownloadCategoriesRunning: ${articleParsingService.isDownloadCategoriesRunning}")
+            ParsingStartedResponse(state = "Already running", status = HttpStatus.CONFLICT)
+        }
+    }
+
     /**
      * Executes every day at midnight
      *
      * Updates every category for every lang
      */
-    @GetMapping("/allLangsCategories")
     @Scheduled(
             /**
              * second, minute, hour, day, month, day of week
              */
             cron = "0 0 0 * * *"
     )
-    fun updateAllCategoriesDaily(): ParsingStartedResponse {
+    fun updateAllCategoriesDaily() {
         val dailyCategoriesSyncTaskEnabledSettings = serverSettingsService
                 .findByKey(ServerSettings.Key.DAILY_CATEGORIES_SYNC_TASK_ENABLED.name)
         val dailySyncTaskEnabled = dailyCategoriesSyncTaskEnabledSettings?.value?.toBooleanOrNull()
-        return if (dailySyncTaskEnabled == true && !articleParsingService.isDownloadCategoriesRunning) {
+        if (dailySyncTaskEnabled == true && !articleParsingService.isDownloadCategoriesRunning) {
             log.info("Start daily parseCategoriesTask")
-            articleParsingService.parseEverything(
-                    maxPageCount = 0,
-                    downloadRecent = false,
-                    downloadObjects = true,
-                    sendMail = false,
-                    massDownloadTaskType = ArticleParsingServiceBase.MassDownloadTaskType.CATEGORIES
-            )
-            ParsingStartedResponse()
+            startAllCategoriesForAllLangsParsing()
         } else {
             log.error("Start daily parseCategoriesTask failed!")
             log.error("articleParsingService.isDownloadCategoriesRunning: ${articleParsingService.isDownloadCategoriesRunning}")
             log.error("dailySyncTaskEnabled: $dailySyncTaskEnabled")
             ParsingStartedResponse(state = "Already running of disabled in config", status = HttpStatus.CONFLICT)
         }
+    }
+
+    private fun startAllCategoriesForAllLangsParsing(
+            processOnlyCount: Int? = null,
+            parseOnlyLang: ScpReaderConstants.Firebase.FirebaseInstance? = null,
+            parseCategoriesCount: Int? = null
+    ) {
+        articleParsingService.parseEverything(
+                maxPageCount = 0,
+                downloadRecent = false,
+                downloadObjects = true,
+                sendMail = false,
+                massDownloadTaskType = ArticleParsingServiceBase.MassDownloadTaskType.CATEGORIES,
+                processOnlyCount = processOnlyCount,
+                parseOnlyLang = parseOnlyLang,
+                parseCategoriesCount = parseCategoriesCount
+        )
     }
 
     /**
