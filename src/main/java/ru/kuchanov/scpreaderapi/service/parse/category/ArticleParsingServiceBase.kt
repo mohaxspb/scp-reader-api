@@ -218,7 +218,8 @@ class ArticleParsingServiceBase {
             sendMail: Boolean,
             massDownloadTaskType: MassDownloadTaskType,
             parseOnlyLang: ScpReaderConstants.Firebase.FirebaseInstance? = null,
-            parseCategoriesCount: Int? = null
+            parseCategoriesCount: Int? = null,
+            parseCategoriesCountReversed: Boolean = false
     ) {
         setFlagFromSyncTaskType(massDownloadTaskType, true)
 
@@ -244,7 +245,8 @@ class ArticleParsingServiceBase {
                                     if (parseCategoriesCount >= it.size) {
                                         it
                                     } else {
-                                        it.take(parseCategoriesCount)
+                                        val urls = if(parseCategoriesCountReversed) it.reversed() else it
+                                        urls.take(parseCategoriesCount)
                                     }
                                 } else {
                                     it

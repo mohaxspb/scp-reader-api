@@ -73,12 +73,14 @@ class ArticleParseController @Autowired constructor(
             @RequestParam(value = "parseOnlyLang") parseOnlyLang: ScpReaderConstants.Firebase.FirebaseInstance?,
             @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
             @RequestParam(value = "parseCategoriesCount") parseCategoriesCount: Int?,
+            @RequestParam(value = "parseCategoriesCountReversed", defaultValue = "false") parseCategoriesCountReversed: Boolean,
     ): ParsingStartedResponse {
         return if (!articleParsingService.isDownloadCategoriesRunning) {
             startAllCategoriesForAllLangsParsing(
                     processOnlyCount = processOnlyCount,
                     parseCategoriesCount = parseCategoriesCount,
-                    parseOnlyLang = parseOnlyLang
+                    parseOnlyLang = parseOnlyLang,
+                    parseCategoriesCountReversed = parseCategoriesCountReversed
             )
             ParsingStartedResponse()
         } else {
@@ -117,7 +119,8 @@ class ArticleParseController @Autowired constructor(
     private fun startAllCategoriesForAllLangsParsing(
             processOnlyCount: Int? = null,
             parseOnlyLang: ScpReaderConstants.Firebase.FirebaseInstance? = null,
-            parseCategoriesCount: Int? = null
+            parseCategoriesCount: Int? = null,
+            parseCategoriesCountReversed: Boolean = false
     ) {
         articleParsingService.parseEverything(
                 maxPageCount = 0,
@@ -127,7 +130,8 @@ class ArticleParseController @Autowired constructor(
                 massDownloadTaskType = ArticleParsingServiceBase.MassDownloadTaskType.CATEGORIES,
                 processOnlyCount = processOnlyCount,
                 parseOnlyLang = parseOnlyLang,
-                parseCategoriesCount = parseCategoriesCount
+                parseCategoriesCount = parseCategoriesCount,
+                parseCategoriesCountReversed = parseCategoriesCountReversed
         )
     }
 
