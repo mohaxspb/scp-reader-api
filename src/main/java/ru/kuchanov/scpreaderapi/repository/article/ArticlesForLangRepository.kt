@@ -186,6 +186,7 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
                 where art.id in 
                     (select article_to_lang_id from article_categories_to_lang__to__articles_to_lang 
                         where article_category_to_lang_id = :articleCategoryToLangId order by order_in_category)
+                order by art_cat.order_in_category 
             """,
             nativeQuery = true
     )
