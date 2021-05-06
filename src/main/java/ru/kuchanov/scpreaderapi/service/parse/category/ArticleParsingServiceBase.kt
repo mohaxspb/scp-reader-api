@@ -93,7 +93,7 @@ class ArticleParsingServiceBase {
 
     @Qualifier(Application.PARSING_LOGGER)
     @Autowired
-    private lateinit var log: Logger
+    protected lateinit var log: Logger
 
     @Autowired
     @Qualifier(NetworkConfiguration.QUALIFIER_OK_HTTP_CLIENT_NOT_LOGGING)
@@ -217,7 +217,8 @@ class ArticleParsingServiceBase {
             downloadObjects: Boolean = true,
             sendMail: Boolean,
             massDownloadTaskType: MassDownloadTaskType,
-            parseOnlyLang: ScpReaderConstants.Firebase.FirebaseInstance? = null
+            parseOnlyLang: ScpReaderConstants.Firebase.FirebaseInstance? = null,
+            parseCategoriesCount: Int? = null
     ) {
         setFlagFromSyncTaskType(massDownloadTaskType, true)
 
@@ -236,7 +237,19 @@ class ArticleParsingServiceBase {
                 .map { langService.getById(it.lang) ?: throw LangNotFoundException() }
                 .map { it to getParsingRealizationForLang(it) }
                 .concatMap { (lang, service) ->
-                    val categoriesToLang = categoryToLangService.findAllByLangId(lang.id).mapNotNull { it.siteUrl }
+                    val categoriesToLang = categoryToLangService.findAllByLangId(lang.id)
+                            .mapNotNull { it.siteUrl }
+                            .let {
+                                if (parseCategoriesCount != null) {
+                                    if (parseCategoriesCount >= it.size) {
+                                        it
+                                    } else {
+                                        it.take(parseCategoriesCount)
+                                    }
+                                } else {
+                                    it
+                                }
+                            }
                     Flowable
                             .fromIterable(categoriesToLang)
                             .concatMapCompletable { objectsUrl ->

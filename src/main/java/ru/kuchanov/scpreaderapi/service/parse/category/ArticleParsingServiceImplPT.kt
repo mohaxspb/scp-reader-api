@@ -90,8 +90,15 @@ class ArticleParsingServiceImplPT : ArticleParsingServiceBase() {
             }
             val arrayItemParsed = Jsoup.parse(arrayItem)
             //type of object
-            val imageURL = arrayItemParsed.getElementsByTag(ParseConstants.TAG_IMG).first().attr(ParseConstants.ATTR_SRC)
-            val type = getObjectTypeByImageUrl(imageURL)
+            val imageURL = arrayItemParsed.getElementsByTag(ParseConstants.TAG_IMG).first()?.attr(ParseConstants.ATTR_SRC)
+            val type = if (imageURL != null) {
+                getObjectTypeByImageUrl(imageURL)
+            } else {
+                log.error("imageURL is null!")
+                log.error(arrayItem)
+                log.error("imageURL is null!")
+                ScpReaderConstants.ArticleTypeEnum.NONE
+            }
             val url = arrayItemParsed.getElementsByTag(TAG_A).first().attr(ATTR_HREF)
             val title = arrayItemParsed.text()
             val article = ArticleForLang(
