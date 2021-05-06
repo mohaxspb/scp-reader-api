@@ -58,9 +58,10 @@ class ArticleController @Autowired constructor(
 //        log.error("getArticlesByCategoryAndLang: $langEnum, $categoryId")
         val articlesCache = cacheManager.getCache(CATEGORIES_ARTICLES)
         val rawArticlesInCache = articlesCache?.get(SimpleKey(langEnum, categoryId))
-        @Suppress("UNCHECKED_CAST") val categories = rawArticlesInCache?.get() as? List<ArticleToLangDto>?
-        return if (categories != null) {
-            categories
+        @Suppress("UNCHECKED_CAST") val categoriesArticlesInCache = rawArticlesInCache?.get() as? List<ArticleToLangDto>?
+
+        return if (categoriesArticlesInCache != null) {
+            categoriesArticlesInCache
         } else {
             val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
             val category = categoryService.getById(categoryId)
