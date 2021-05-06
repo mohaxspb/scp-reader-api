@@ -101,6 +101,12 @@ class ArticleToLangServiceImpl @Autowired constructor(
         val startTime = System.currentTimeMillis()
         val articles = articlesForLangRepository.findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId)
 
+//        log.error("articles: ${articles.joinToString(
+//                prefix = "\n",
+//                separator = "\n",
+//                transform = {"${it.urlRelative}/${it.title}"}
+//        )}")
+
         val articlesFilled = fillArticleToLangDtoByArticleToLangIds(articles)
         val (minutes, seconds) = millisToMinutesAndSeconds(System.currentTimeMillis() - startTime)
         log.debug("END (min:sec): $minutes:$seconds")
