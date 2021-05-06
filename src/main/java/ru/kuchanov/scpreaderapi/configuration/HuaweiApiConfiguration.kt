@@ -3,6 +3,7 @@ package ru.kuchanov.scpreaderapi.configuration
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
+import okhttp3.logging.HttpLoggingInterceptor
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
@@ -27,7 +28,7 @@ import java.nio.charset.StandardCharsets
 
 @Configuration
 class HuaweiApiConfiguration @Autowired constructor(
-        @Qualifier(NetworkConfiguration.QUALIFIER_OK_HTTP_CLIENT_COMMON)
+        @Qualifier(NetworkConfiguration.QUALIFIER_OK_HTTP_CLIENT_NOT_LOGGING)
         private val okHttpClient: OkHttpClient,
         private val converterFactory: Converter.Factory,
         private val callAdapterFactory: CallAdapter.Factory,
@@ -57,7 +58,7 @@ class HuaweiApiConfiguration @Autowired constructor(
     fun huaweiAuthApi(): HuaweiAuthApi {
         val retrofit = Retrofit.Builder()
                 .baseUrl(HuaweiAuthApi.BASE_API_URL)
-                .client(okHttpClient)
+                .client(createLoggingOkHttpClient())
                 .addConverterFactory(converterFactory)
                 .addCallAdapterFactory(callAdapterFactory)
                 .build()
@@ -68,7 +69,7 @@ class HuaweiApiConfiguration @Autowired constructor(
     fun huaweiAccountApi(): HuaweiAccountApi {
         val retrofit = Retrofit.Builder()
                 .baseUrl(HuaweiAccountApi.BASE_API_URL)
-                .client(okHttpClient)
+                .client(createLoggingOkHttpClient())
                 .addConverterFactory(converterFactory)
                 .addCallAdapterFactory(callAdapterFactory)
                 .build()
@@ -102,7 +103,15 @@ class HuaweiApiConfiguration @Autowired constructor(
         return retrofit.create(HuaweiPushApi::class.java)
     }
 
-    fun createAuthorizedOkHttpClient(
+    private fun createLoggingOkHttpClient() =
+            okHttpClient.newBuilder()
+                    .addInterceptor(
+                            HttpLoggingInterceptor { log.debug("OkHttp: $it") }
+                                    .setLevel(HttpLoggingInterceptor.Level.BODY)
+                    )
+                    .build()
+
+    private fun createAuthorizedOkHttpClient(
             authValueCreator: (HuaweiOAuthAccessToken) -> String,
             unauthorizedRequestResolver: (okhttp3.Response) -> Boolean
     ): OkHttpClient {
@@ -185,7 +194,8 @@ class HuaweiApiConfiguration @Autowired constructor(
             chain.proceed(request)
         }
 
-        return okHttpClient.newBuilder()
+        return createLoggingOkHttpClient()
+                .newBuilder()
                 .addInterceptor(accessTokenInterceptor)
                 .addInterceptor(unAuthAccessTokenInterceptor)
                 .build()

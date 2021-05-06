@@ -21,6 +21,7 @@ import org.springframework.scheduling.annotation.EnableScheduling
 class Application : SpringBootServletInitializer() {
 
     @Primary
+    @Qualifier(APPLICATION_LOGGER)
     @Bean
     fun logger(): Logger =
             LoggerFactory.getLogger(APPLICATION_LOGGER)

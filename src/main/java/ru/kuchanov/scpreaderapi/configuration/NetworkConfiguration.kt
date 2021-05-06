@@ -8,19 +8,24 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import org.slf4j.Logger
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import retrofit2.Converter
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.jackson.JacksonConverterFactory
+import ru.kuchanov.scpreaderapi.Application.Companion.APPLICATION_LOGGER
 import ru.kuchanov.scpreaderapi.network.ApiClient
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 
 @Configuration
-class NetworkConfiguration {
+class NetworkConfiguration @Autowired constructor(
+        @Qualifier(APPLICATION_LOGGER) private val log: Logger
+) {
 
     companion object {
         const val QUALIFIER_OK_HTTP_CLIENT_COMMON = "okHttpCommon"
@@ -30,7 +35,7 @@ class NetworkConfiguration {
     //okHttp + retrofit
     @Bean
     fun loggingInterceptor(): HttpLoggingInterceptor =
-            HttpLoggingInterceptor { println("OkHttp: $it") }
+            HttpLoggingInterceptor { log.debug("OkHttp: $it") }
                     .setLevel(HttpLoggingInterceptor.Level.BODY)
 
     @Bean
