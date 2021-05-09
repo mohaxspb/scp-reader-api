@@ -836,6 +836,7 @@ class ArticleParsingServiceBase {
             val imagesToSave = articleDownloaded.images.map {
                 it.apply { articleForLangId = articleForLangInDb.id!! }
             }
+            articlesImagesService.deleteAllByArticleForLangId(articleForLangInDb.id!!)
             articlesImagesService.save(imagesToSave)
 
             articleToSave.articleTypeEnumEnumValue?.let {

@@ -13,4 +13,7 @@ interface ArticlesImagesService {
 
     @Transactional
     fun save(articlesImages: List<ArticlesImages>): List<ArticlesImages>
+
+    @Transactional
+    fun deleteAllByArticleForLangId(articleForLangId: Long)
 }

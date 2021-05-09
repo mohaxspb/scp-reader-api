@@ -10,7 +10,7 @@ import ru.kuchanov.scpreaderapi.repository.article.image.ArticlesImagesRepositor
 
 @Service
 class ArticlesImagesServiceImpl @Autowired constructor(
-        val repository: ArticlesImagesRepository
+        private val repository: ArticlesImagesRepository
 ) : ArticlesImagesService {
 
     override fun findAllByArticleForLangId(articleForLangId: Long): List<ArticlesImagesDto> =
@@ -21,4 +21,8 @@ class ArticlesImagesServiceImpl @Autowired constructor(
 
     override fun save(articlesImages: List<ArticlesImages>): List<ArticlesImages> =
             repository.saveAll(articlesImages)
+
+    override fun deleteAllByArticleForLangId(articleForLangId: Long) {
+        repository.deleteAllByArticleForLangId(articleForLangId)
+    }
 }
