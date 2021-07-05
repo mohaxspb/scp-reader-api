@@ -244,7 +244,7 @@ class PurchaseController @Autowired constructor(
             @PathVariable store: Store,
             @PathVariable purchaseType: InappType,
             @RequestParam productId: String,
-            @RequestParam subscriptionId: String,
+            @RequestParam subscriptionId: String?,
             @RequestParam purchaseToken: String,
             @RequestParam(defaultValue = ACCOUNT_FLAG_HUAWEI_ID.toString()) accountFlag: Int,
             @AuthenticationPrincipal user: User?
@@ -257,7 +257,7 @@ class PurchaseController @Autowired constructor(
                 when (purchaseType) {
                     InappType.SUBS -> {
                         return applyHuaweiSubscription(
-                                subscriptionId = subscriptionId,
+                                subscriptionId = subscriptionId!!,
                                 purchaseToken = purchaseToken,
                                 accountFlag = accountFlag,
                                 user = user,
@@ -267,9 +267,21 @@ class PurchaseController @Autowired constructor(
                     }
                     InappType.INAPP, InappType.CONSUMABLE -> TODO()
                 }
-
             }
-            Store.GOOGLE -> TODO()
+            Store.GOOGLE -> {
+                when (purchaseType) {
+                    InappType.SUBS -> {
+                        return applyGoogleSubscription(
+                            subscriptionId = productId,
+                            purchaseToken = purchaseToken,
+                            user = user,
+                            pushTitle = "Subscription is active!",
+                            pushMessage = "Your subscription was successfully activated!"
+                        )
+                    }
+                    InappType.INAPP, InappType.CONSUMABLE -> TODO()
+                }
+            }
             Store.AMAZON -> TODO()
             Store.APPLE -> TODO()
         }
