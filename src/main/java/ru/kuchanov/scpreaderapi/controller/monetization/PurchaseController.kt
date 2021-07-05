@@ -64,6 +64,13 @@ class PurchaseController @Autowired constructor(
         MINUTES_5, HOUR, DAY, WEEK
     }
 
+    @PostMapping("/subscriptionEvents/g_purchases")
+    fun googleSubscriptionEventsWebHook(
+        @RequestBody huaweiSubscriptionEventDto: HuaweiSubscriptionEventDto
+    ): HuaweiSubscriptionEventResponse {
+        TODO()
+    }
+
     @PostMapping("/subscriptionEvents/huawei")
     fun huaweiSubscriptionEventsWebHook(
             @RequestBody huaweiSubscriptionEventDto: HuaweiSubscriptionEventDto
