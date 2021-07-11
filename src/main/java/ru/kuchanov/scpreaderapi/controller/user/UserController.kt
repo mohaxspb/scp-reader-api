@@ -5,7 +5,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.purchase.AndroidProduct
-import ru.kuchanov.scpreaderapi.bean.purchase.AndroidSubscription
 import ru.kuchanov.scpreaderapi.bean.push.UsersToPushTokens
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
@@ -99,10 +98,6 @@ class UserController @Autowired constructor(
     @GetMapping("/android/product/all")
     fun showAndroidProducts(@AuthenticationPrincipal user: User): List<AndroidProduct> =
             userAndroidPurchaseService.findAllProducts(user.id!!)
-
-    @GetMapping("/android/subscription/all")
-    fun showAndroidSubscriptions(@AuthenticationPrincipal user: User): List<AndroidSubscription> =
-            userAndroidPurchaseService.findAllSubscriptions(user.id!!)
 
     @PostMapping("/push/token/{provider}")
     fun receiveUserPushToken(
