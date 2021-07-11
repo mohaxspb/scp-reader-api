@@ -3,11 +3,14 @@ package ru.kuchanov.scpreaderapi.service.monetization.purchase.android.google
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.services.androidpublisher.AndroidPublisher
 import com.google.api.services.androidpublisher.model.SubscriptionPurchase
+import com.google.api.services.androidpublisher.model.SubscriptionPurchasesAcknowledgeRequest
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.Application
+import ru.kuchanov.scpreaderapi.model.dto.purchase.GoogleAcknowledgeResult
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationStatus
 import javax.servlet.http.HttpServletResponse
@@ -16,6 +19,7 @@ import javax.servlet.http.HttpServletResponse
 class GooglePurchaseServiceImpl @Autowired constructor(
     private val androidPublisher: AndroidPublisher,
     @Qualifier(Application.GOOGLE_LOGGER) private val googleLog: Logger,
+    @Value("\${monetization.subscriptions.google.packageName}") private val googlePackageName: String
 ) : GooglePurchaseService {
 
     override fun validateProductPurchase(packageName: String, sku: String, purchaseToken: String): ValidationResponse {
@@ -60,10 +64,10 @@ class GooglePurchaseServiceImpl @Autowired constructor(
 
         return try {
             val subscription: SubscriptionPurchase = subscriptionRequest.execute()
-            ValidationResponse.AndroidSubscriptionResponse(ValidationStatus.VALID, subscription)
+            ValidationResponse.GoogleSubscriptionResponse(ValidationStatus.VALID, subscription)
         } catch (e: Throwable) {
             googleLog.error("Error while validate subscription: $e", e)
-            ValidationResponse.AndroidSubscriptionResponse(
+            ValidationResponse.GoogleSubscriptionResponse(
                 if (e is GoogleJsonResponseException && e.details.code == HttpServletResponse.SC_BAD_REQUEST) {
                     ValidationStatus.INVALID
                 } else {
@@ -71,6 +75,31 @@ class GooglePurchaseServiceImpl @Autowired constructor(
                 },
                 null
             )
+        }
+    }
+
+    /**
+     * @param subscriptionId aka SKU
+     */
+    override fun acknowledgeSubscription(
+        subscriptionId: String,
+        purchaseToken: String
+    ): GoogleAcknowledgeResult {
+        val content = SubscriptionPurchasesAcknowledgeRequest()
+        val acknowledgeRequest: AndroidPublisher.Purchases.Subscriptions.Acknowledge =
+            androidPublisher.purchases().subscriptions().acknowledge(
+                googlePackageName,
+                subscriptionId,
+                purchaseToken,
+                content
+            )
+
+        return try {
+            acknowledgeRequest.execute()
+            GoogleAcknowledgeResult.GoogleSubscriptionAcknowledgeSuccess()
+        } catch (e: Throwable) {
+            googleLog.error("Error while acknowledge subscription: $subscriptionId, $purchaseToken", e)
+            GoogleAcknowledgeResult.GoogleSubscriptionAcknowledgeFailure(e)
         }
     }
 }

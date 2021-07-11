@@ -1,5 +1,6 @@
 package ru.kuchanov.scpreaderapi.service.monetization.purchase.android.google
 
+import ru.kuchanov.scpreaderapi.model.dto.purchase.GoogleAcknowledgeResult
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
 
 interface GooglePurchaseService {
@@ -15,4 +16,9 @@ interface GooglePurchaseService {
             sku: String,
             purchaseToken: String
     ): ValidationResponse
+
+    fun acknowledgeSubscription(
+        subscriptionId: String,
+        purchaseToken: String
+    ): GoogleAcknowledgeResult
 }

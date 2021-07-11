@@ -15,17 +15,24 @@ enum class ValidationStatus {
 
 sealed class ValidationResponse(open val status: ValidationStatus) {
     data class AndroidProductResponse(
-            override val status: ValidationStatus,
-            val androidProduct: ProductPurchase?
+        override val status: ValidationStatus,
+        val androidProduct: ProductPurchase?
     ) : ValidationResponse(status)
 
-    data class AndroidSubscriptionResponse(
-            override val status: ValidationStatus,
-            val androidSubscription: SubscriptionPurchase?
+    data class GoogleSubscriptionResponse(
+        override val status: ValidationStatus,
+        val googleSubscription: SubscriptionPurchase?
     ) : ValidationResponse(status)
 
     data class HuaweiSubscriptionResponse(
-            override val status: ValidationStatus,
-            val androidSubscription: InAppPurchaseData?
+        override val status: ValidationStatus,
+        val androidSubscription: InAppPurchaseData?
     ) : ValidationResponse(status)
+}
+
+sealed class GoogleAcknowledgeResult(val success: Boolean) {
+
+    class GoogleSubscriptionAcknowledgeSuccess : GoogleAcknowledgeResult(true)
+
+    class GoogleSubscriptionAcknowledgeFailure(val cause: Throwable) : GoogleAcknowledgeResult(false)
 }
