@@ -33,3 +33,23 @@ alter table user__to__google_subscriptions
     drop constraint if exists google_subscription_id_and_user_id_unique;
 alter table user__to__google_subscriptions
     add constraint google_subscription_id_and_user_id_unique unique (google_subscription_id, user_id);
+
+
+create table if not exists google_subscription_event_handle_attempt
+(
+    id                  bigserial not null,
+
+    decoded_data_json   text      not null,
+    encodedData         text      not null,
+
+    error_class         text,
+    error_message       text,
+    stacktrace          text,
+    cause_error_class   text,
+    cause_error_message text,
+    cause_stacktrace    text,
+
+    created             timestamp,
+    updated             timestamp,
+    primary key (id)
+);

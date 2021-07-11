@@ -1,0 +1,6 @@
+package ru.kuchanov.scpreaderapi.repository.monetization.purchase.android.google
+
+import org.springframework.data.jpa.repository.JpaRepository
+import ru.kuchanov.scpreaderapi.bean.purchase.google.GoogleSubscriptionEventHandleAttemptRecord
+
+interface GoogleSubsEventHandleAttemptRepository : JpaRepository<GoogleSubscriptionEventHandleAttemptRecord, Long>
