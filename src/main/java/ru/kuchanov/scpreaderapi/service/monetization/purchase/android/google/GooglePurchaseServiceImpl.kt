@@ -11,18 +11,18 @@ import javax.servlet.http.HttpServletResponse
 
 @Service
 class GooglePurchaseServiceImpl @Autowired constructor(
-        private val androidPublisher: AndroidPublisher
+    private val androidPublisher: AndroidPublisher
 ) : GooglePurchaseService {
 
     override fun validateProductPurchase(packageName: String, sku: String, purchaseToken: String): ValidationResponse {
         val productRequest: AndroidPublisher.Purchases.Products.Get = androidPublisher
-                .purchases()
-                .products()
-                .get(
-                        packageName,
-                        sku,
-                        purchaseToken
-                )
+            .purchases()
+            .products()
+            .get(
+                packageName,
+                sku,
+                purchaseToken
+            )
 
         return try {
             val productPurchase = productRequest.execute()
@@ -30,25 +30,29 @@ class GooglePurchaseServiceImpl @Autowired constructor(
         } catch (e: GoogleJsonResponseException) {
             println("Error while validate product: $e")
             ValidationResponse.AndroidProductResponse(
-                    if (e.details.code == HttpServletResponse.SC_BAD_REQUEST) {
-                        ValidationStatus.INVALID
-                    } else {
-                        ValidationStatus.SERVER_ERROR
-                    },
-                    null
+                if (e.details.code == HttpServletResponse.SC_BAD_REQUEST) {
+                    ValidationStatus.INVALID
+                } else {
+                    ValidationStatus.SERVER_ERROR
+                },
+                null
             )
         }
     }
 
-    override fun validateSubscriptionPurchase(packageName: String, sku: String, purchaseToken: String): ValidationResponse {
+    override fun validateSubscriptionPurchase(
+        packageName: String,
+        sku: String,
+        purchaseToken: String
+    ): ValidationResponse {
         val subscriptionRequest: AndroidPublisher.Purchases.Subscriptions.Get = androidPublisher
-                .purchases()
-                .subscriptions()
-                .get(
-                        packageName,
-                        sku,
-                        purchaseToken
-                )
+            .purchases()
+            .subscriptions()
+            .get(
+                packageName,
+                sku,
+                purchaseToken
+            )
 
         return try {
             val subscription: SubscriptionPurchase = subscriptionRequest.execute()
@@ -56,12 +60,12 @@ class GooglePurchaseServiceImpl @Autowired constructor(
         } catch (e: GoogleJsonResponseException) {
             println("Error while validate subscription: $e")
             ValidationResponse.AndroidSubscriptionResponse(
-                    if (e.details.code == HttpServletResponse.SC_BAD_REQUEST) {
-                        ValidationStatus.INVALID
-                    } else {
-                        ValidationStatus.SERVER_ERROR
-                    },
-                    null
+                if (e.details.code == HttpServletResponse.SC_BAD_REQUEST) {
+                    ValidationStatus.INVALID
+                } else {
+                    ValidationStatus.SERVER_ERROR
+                },
+                null
             )
         }
     }

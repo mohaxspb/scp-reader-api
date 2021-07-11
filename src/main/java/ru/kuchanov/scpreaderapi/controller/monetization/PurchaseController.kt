@@ -73,16 +73,20 @@ class PurchaseController @Autowired constructor(
 
     @PostMapping("/subscriptionEvents/huawei")
     fun huaweiSubscriptionEventsWebHook(
-            @RequestBody huaweiSubscriptionEventDto: HuaweiSubscriptionEventDto
+        @RequestBody huaweiSubscriptionEventDto: HuaweiSubscriptionEventDto
     ): HuaweiSubscriptionEventResponse {
         var error: Exception? = null
 
         try {
             val parsedRequest = objectMapper.readValue(
-                    huaweiSubscriptionEventDto.statusUpdateNotification,
-                    StatusUpdateNotification::class.java
+                huaweiSubscriptionEventDto.statusUpdateNotification,
+                StatusUpdateNotification::class.java
             )
-            huaweiLog.info("parsedRequest: ${objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(parsedRequest)}")
+            huaweiLog.info(
+                "parsedRequest: ${
+                    objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(parsedRequest)
+                }"
+            )
 
             when (parsedRequest.notificationType) {
                 INITIAL_BUY, CANCEL, RENEWAL_STOPPED, ON_HOLD,
@@ -91,50 +95,52 @@ class PurchaseController @Autowired constructor(
                 }
                 RENEWAL, RENEWAL_RESTORED, RENEWAL_RECURRING -> {
                     val inAppPurchaseData: InAppPurchaseData = objectMapper.readValue(
-                            parsedRequest.latestReceiptInfo!!,
-                            InAppPurchaseData::class.java
+                        parsedRequest.latestReceiptInfo!!,
+                        InAppPurchaseData::class.java
                     )
                     val huaweiSubId = inAppPurchaseData.subscriptionId!!
 
                     val huaweiSubscriptionInDb: HuaweiSubscription = huaweiMonetizationService
-                            .getHuaweiSubscriptionBySubscriptionId(huaweiSubId)
-                            //there can be subscription switch, so check oriSubscriptionId too
-                            ?: huaweiMonetizationService
-                                    .getHuaweiSubscriptionBySubscriptionId(inAppPurchaseData.oriSubscriptionId!!)
-                            ?: throw HuaweiSubscriptionNotFoundException(
-                                    "HuaweiSubscription not found for subscriptionId: $huaweiSubId"
-                            )
+                        .getHuaweiSubscriptionBySubscriptionId(huaweiSubId)
+                    //there can be subscription switch, so check oriSubscriptionId too
+                        ?: huaweiMonetizationService
+                            .getHuaweiSubscriptionBySubscriptionId(inAppPurchaseData.oriSubscriptionId!!)
+                        ?: throw HuaweiSubscriptionNotFoundException(
+                            "HuaweiSubscription not found for subscriptionId: $huaweiSubId"
+                        )
                     val user: User = huaweiMonetizationService
-                            .getUserByHuaweiSubscriptionId(huaweiSubscriptionInDb.id!!) ?: throw UserNotFoundException()
+                        .getUserByHuaweiSubscriptionId(huaweiSubscriptionInDb.id!!) ?: throw UserNotFoundException()
 
                     val updatedUser = applyHuaweiSubscription(
-                            huaweiSubId,
-                            inAppPurchaseData.purchaseToken,
-                            inAppPurchaseData.accountFlag ?: ACCOUNT_FLAG_HUAWEI_ID,
-                            user,
-                            pushTitle = "Subscription renewal!",
-                            pushMessage = "Your subscription was successfully renewed!"
+                        huaweiSubId,
+                        inAppPurchaseData.purchaseToken,
+                        inAppPurchaseData.accountFlag ?: ACCOUNT_FLAG_HUAWEI_ID,
+                        user,
+                        pushTitle = "Subscription renewal!",
+                        pushMessage = "Your subscription was successfully renewed!"
                     )
                     val updatedSubscription = huaweiMonetizationService
-                            .getHuaweiSubscriptionBySubscriptionId(huaweiSubId)
-                    huaweiLog.info("""
+                        .getHuaweiSubscriptionBySubscriptionId(huaweiSubId)
+                    huaweiLog.info(
+                        """
                         Successfully update renewed Huawei subscription (RENEWAL, RENEWAL_RESTORED, RENEWAL_RECURRING)!
                         User: ${updatedUser.id}/${updatedUser.offlineLimitDisabledEndDate}. 
                         Subscription: ${huaweiSubscriptionInDb.id}/${updatedSubscription?.expiryTimeMillis}.
-                    """.trimIndent())
+                    """.trimIndent()
+                    )
                 }
                 INTERACTIVE_RENEWAL -> {
                     //seems to be, here we can found oriSubscriptionId,
                     //which must be equal to inAppPurchaseDataForPreviousSub.subscriptionId
                     val inAppPurchaseDataForCurrentSub: InAppPurchaseData = objectMapper.readValue(
-                            parsedRequest.latestReceiptInfo!!,
-                            InAppPurchaseData::class.java
+                        parsedRequest.latestReceiptInfo!!,
+                        InAppPurchaseData::class.java
                     )
                     //use it find user by his previous sub
                     @Suppress("DuplicatedCode")
                     val inAppPurchaseDataForPreviousSub: InAppPurchaseData = objectMapper.readValue(
-                            parsedRequest.latestExpiredReceiptInfo!!,
-                            InAppPurchaseData::class.java
+                        parsedRequest.latestExpiredReceiptInfo!!,
+                        InAppPurchaseData::class.java
                     )
 
                     //find user by inAppPurchaseDataForCurrentSub or inAppPurchaseDataForPreviousSub
@@ -143,29 +149,31 @@ class PurchaseController @Autowired constructor(
                     val existingHuaweiSubId = inAppPurchaseDataForPreviousSub.subscriptionId!!
 
                     val huaweiSubscriptionInDb: HuaweiSubscription = huaweiMonetizationService
-                            .getHuaweiSubscriptionBySubscriptionId(existingHuaweiSubId)
-                            ?: throw HuaweiSubscriptionNotFoundException(
-                                    "HuaweiSubscription not found for subscriptionId: $existingHuaweiSubId"
-                            )
+                        .getHuaweiSubscriptionBySubscriptionId(existingHuaweiSubId)
+                        ?: throw HuaweiSubscriptionNotFoundException(
+                            "HuaweiSubscription not found for subscriptionId: $existingHuaweiSubId"
+                        )
 
                     val user: User = huaweiMonetizationService
-                            .getUserByHuaweiSubscriptionId(huaweiSubscriptionInDb.id!!) ?: throw UserNotFoundException()
+                        .getUserByHuaweiSubscriptionId(huaweiSubscriptionInDb.id!!) ?: throw UserNotFoundException()
 
                     val updatedUser = applyHuaweiSubscription(
-                            inAppPurchaseDataForCurrentSub.subscriptionId!!,
-                            inAppPurchaseDataForCurrentSub.purchaseToken,
-                            inAppPurchaseDataForCurrentSub.accountFlag ?: ACCOUNT_FLAG_HUAWEI_ID,
-                            user,
-                            pushTitle = "Subscription resuming!",
-                            pushMessage = "Your subscription was successfully resumed!"
+                        inAppPurchaseDataForCurrentSub.subscriptionId!!,
+                        inAppPurchaseDataForCurrentSub.purchaseToken,
+                        inAppPurchaseDataForCurrentSub.accountFlag ?: ACCOUNT_FLAG_HUAWEI_ID,
+                        user,
+                        pushTitle = "Subscription resuming!",
+                        pushMessage = "Your subscription was successfully resumed!"
                     )
                     val updatedSubscription = huaweiMonetizationService
-                            .getHuaweiSubscriptionBySubscriptionId(inAppPurchaseDataForCurrentSub.subscriptionId)
-                    huaweiLog.info("""
+                        .getHuaweiSubscriptionBySubscriptionId(inAppPurchaseDataForCurrentSub.subscriptionId)
+                    huaweiLog.info(
+                        """
                         Successfully update renewed Huawei subscription (INTERACTIVE_RENEWAL)!
                         User: ${updatedUser.id}/${updatedUser.offlineLimitDisabledEndDate}. 
                         Subscription: ${huaweiSubscriptionInDb.id}/${updatedSubscription?.expiryTimeMillis}.
-                    """.trimIndent())
+                    """.trimIndent()
+                    )
                 }
                 NEW_RENEWAL_PREF -> {
                     //A user selects another subscription in the group and it takes effect
@@ -179,38 +187,40 @@ class PurchaseController @Autowired constructor(
                     //write to db, connect to user, validate
 
                     val inAppPurchaseData: InAppPurchaseData = objectMapper.readValue(
-                            parsedRequest.latestReceiptInfo!!,
-                            InAppPurchaseData::class.java
+                        parsedRequest.latestReceiptInfo!!,
+                        InAppPurchaseData::class.java
                     )
                     val huaweiSubId = inAppPurchaseData.subscriptionId!!
                     val huaweiOriSubId = inAppPurchaseData.oriSubscriptionId!!
 
                     val huaweiSubscriptionInDb: HuaweiSubscription = huaweiMonetizationService
-                            .getHuaweiSubscriptionBySubscriptionId(huaweiOriSubId)
-                            ?: throw HuaweiSubscriptionNotFoundException(
-                                    "HuaweiSubscription not found for huaweiOriSubId: $huaweiOriSubId"
-                            )
+                        .getHuaweiSubscriptionBySubscriptionId(huaweiOriSubId)
+                        ?: throw HuaweiSubscriptionNotFoundException(
+                            "HuaweiSubscription not found for huaweiOriSubId: $huaweiOriSubId"
+                        )
 
                     @Suppress("DuplicatedCode")
                     val user: User = huaweiMonetizationService
-                            .getUserByHuaweiSubscriptionId(huaweiSubscriptionInDb.id!!) ?: throw UserNotFoundException()
+                        .getUserByHuaweiSubscriptionId(huaweiSubscriptionInDb.id!!) ?: throw UserNotFoundException()
 
                     @Suppress("DuplicatedCode")
                     val updatedUser = applyHuaweiSubscription(
-                            subscriptionId = huaweiSubId,
-                            purchaseToken = inAppPurchaseData.purchaseToken,
-                            accountFlag = inAppPurchaseData.accountFlag ?: ACCOUNT_FLAG_HUAWEI_ID,
-                            user = user,
-                            pushTitle = "Subscription plan changed!",
-                            pushMessage = "Your subscription was successfully changed to new one!"
+                        subscriptionId = huaweiSubId,
+                        purchaseToken = inAppPurchaseData.purchaseToken,
+                        accountFlag = inAppPurchaseData.accountFlag ?: ACCOUNT_FLAG_HUAWEI_ID,
+                        user = user,
+                        pushTitle = "Subscription plan changed!",
+                        pushMessage = "Your subscription was successfully changed to new one!"
                     )
                     val updatedSubscription = huaweiMonetizationService
-                            .getHuaweiSubscriptionBySubscriptionId(huaweiSubId)
-                    huaweiLog.info("""
+                        .getHuaweiSubscriptionBySubscriptionId(huaweiSubId)
+                    huaweiLog.info(
+                        """
                         Successfully save changed Huawei subscription (NEW_RENEWAL_PREF)!
                         User: ${updatedUser.id}/${updatedUser.offlineLimitDisabledEndDate}. 
                         Subscription: ${huaweiSubscriptionInDb.id}/${updatedSubscription?.expiryTimeMillis}.
-                    """.trimIndent())
+                    """.trimIndent()
+                    )
                 }
             }
         } catch (e: Exception) {
@@ -218,21 +228,21 @@ class PurchaseController @Autowired constructor(
             huaweiLog.error("Error while handle huawei subscription event", error)
         } finally {
             huaweiSubsEventHandleAttemptService.save(
-                    HuaweiSubscriptionEventHandleAttemptRecord(
-                            statusUpdateNotification = huaweiSubscriptionEventDto.statusUpdateNotification,
-                            notificationSignature = huaweiSubscriptionEventDto.notifycationSignature
-                    ).apply {
-                        error?.let { e ->
-                            errorClass = e::class.java.simpleName
-                            errorMessage = e.message
-                            stacktrace = errorUtils.stackTraceAsString(e)
-                            error.cause?.let {
-                                causeErrorClass = it::class.java.simpleName
-                                causeErrorMessage = it.message
-                                causeStacktrace = errorUtils.stackTraceAsString(it)
-                            }
+                HuaweiSubscriptionEventHandleAttemptRecord(
+                    statusUpdateNotification = huaweiSubscriptionEventDto.statusUpdateNotification,
+                    notificationSignature = huaweiSubscriptionEventDto.notifycationSignature
+                ).apply {
+                    error?.let { e ->
+                        errorClass = e::class.java.simpleName
+                        errorMessage = e.message
+                        stacktrace = errorUtils.stackTraceAsString(e)
+                        error.cause?.let {
+                            causeErrorClass = it::class.java.simpleName
+                            causeErrorMessage = it.message
+                            causeStacktrace = errorUtils.stackTraceAsString(it)
                         }
                     }
+                }
             )
         }
 
@@ -241,13 +251,13 @@ class PurchaseController @Autowired constructor(
 
     @PostMapping("/apply/{store}/{purchaseType}")
     fun applyAndroidProduct(
-            @PathVariable store: Store,
-            @PathVariable purchaseType: InappType,
-            @RequestParam productId: String,
-            @RequestParam subscriptionId: String?,
-            @RequestParam purchaseToken: String,
-            @RequestParam(defaultValue = ACCOUNT_FLAG_HUAWEI_ID.toString()) accountFlag: Int,
-            @AuthenticationPrincipal user: User?
+        @PathVariable store: Store,
+        @PathVariable purchaseType: InappType,
+        @RequestParam productId: String,
+        @RequestParam subscriptionId: String?,
+        @RequestParam purchaseToken: String,
+        @RequestParam(defaultValue = ACCOUNT_FLAG_HUAWEI_ID.toString()) accountFlag: Int,
+        @AuthenticationPrincipal user: User?
     ): UserProjectionV2 {
         check(user != null) { "User is null!" }
         check(user.id != null) { "User ID is null!" }
@@ -257,12 +267,12 @@ class PurchaseController @Autowired constructor(
                 when (purchaseType) {
                     InappType.SUBS -> {
                         return applyHuaweiSubscription(
-                                subscriptionId = subscriptionId!!,
-                                purchaseToken = purchaseToken,
-                                accountFlag = accountFlag,
-                                user = user,
-                                pushTitle = "Subscription is active!",
-                                pushMessage = "Your subscription was successfully activated!"
+                            subscriptionId = subscriptionId!!,
+                            purchaseToken = purchaseToken,
+                            accountFlag = accountFlag,
+                            user = user,
+                            pushTitle = "Subscription is active!",
+                            pushMessage = "Your subscription was successfully activated!"
                         )
                     }
                     InappType.INAPP, InappType.CONSUMABLE -> TODO()
@@ -288,19 +298,19 @@ class PurchaseController @Autowired constructor(
     }
 
     private fun applyHuaweiSubscription(
-            subscriptionId: String,
-            purchaseToken: String,
-            accountFlag: Int,
-            user: User,
-            pushTitle: String,
-            pushMessage: String
+        subscriptionId: String,
+        purchaseToken: String,
+        accountFlag: Int,
+        user: User,
+        pushTitle: String,
+        pushMessage: String
     ): UserProjectionV2 {
         // 1. Verify product
         val verificationResult = huaweiApiService.verifyPurchase(
-                subscriptionId,
-                InappType.SUBS,
-                purchaseToken,
-                accountFlag
+            subscriptionId,
+            InappType.SUBS,
+            purchaseToken,
+            accountFlag
         )
 
         val huaweiSubscriptionResponse = (verificationResult as ValidationResponse.HuaweiSubscriptionResponse)
@@ -313,14 +323,15 @@ class PurchaseController @Autowired constructor(
 
         //4. Send push
         allProvidersMessagingService.sendToUser(
-                userId = user.id,
-                title = pushTitle,
-                message = pushMessage,
-                type = ScpReaderConstants.Push.MessageType.SUBSCRIPTION_EVENT,
-                author = userService.getById(ScpReaderConstants.InternalAuthData.ADMIN_ID)
-                        ?: throw UserNotFoundException()
+            userId = user.id,
+            title = pushTitle,
+            message = pushMessage,
+            type = ScpReaderConstants.Push.MessageType.SUBSCRIPTION_EVENT,
+            author = userService.getById(ScpReaderConstants.InternalAuthData.ADMIN_ID)
+                ?: throw UserNotFoundException()
         )
 
+        //5. Return updated user
         return userService.getByIdAsDtoV2(user.id) ?: throw UserNotFoundException()
     }
 
@@ -329,50 +340,50 @@ class PurchaseController @Autowired constructor(
 
         val curTimeMillis = Instant.now().toEpochMilli()
         val userNonExpiredAndValidSubscriptions = huaweiMonetizationService
-                .getHuaweiSubscriptionsForUser(userId)
-                .filter { it.subIsValid }
-                .filter { it.expiryTimeMillis!!.toInstant(ZoneOffset.UTC).toEpochMilli() > curTimeMillis }
-                .sortedBy { it.expiryTimeMillis }
+            .getHuaweiSubscriptionsForUser(userId)
+            .filter { it.subIsValid }
+            .filter { it.expiryTimeMillis!!.toInstant(ZoneOffset.UTC).toEpochMilli() > curTimeMillis }
+            .sortedBy { it.expiryTimeMillis }
         return if (userNonExpiredAndValidSubscriptions.isEmpty()) {
             userInDb
         } else {
             val maxExpireTimeSub = userNonExpiredAndValidSubscriptions.first()
             huaweiLog.info("userNonExpiredAndValidSubscriptions max expiryTimeMillis: ${maxExpireTimeSub.expiryTimeMillis}")
             userService.update(
-                    userInDb.apply { offlineLimitDisabledEndDate = maxExpireTimeSub.expiryTimeMillis }
+                userInDb.apply { offlineLimitDisabledEndDate = maxExpireTimeSub.expiryTimeMillis }
             )
         }
     }
 
     @GetMapping("/subscription/all")
     fun getUserSubscriptions(
-            @AuthenticationPrincipal user: User,
-            @RequestParam showAll: Boolean,
+        @AuthenticationPrincipal user: User,
+        @RequestParam showAll: Boolean,
     ): UserSubscriptionsDto {
         check(user.id != null) { "User ID is null!" }
 
         val huaweiSubscriptions = if (showAll) {
             huaweiMonetizationService
-                    .getHuaweiSubscriptionsForUser(user.id)
+                .getHuaweiSubscriptionsForUser(user.id)
         } else {
             val curTimeMillis = Instant.now().toEpochMilli()
             huaweiMonetizationService
-                    .getHuaweiSubscriptionsForUser(user.id)
-                    .filter { it.subIsValid }
-                    .filter { it.expiryTimeMillis!!.toInstant(ZoneOffset.UTC).toEpochMilli() > curTimeMillis }
+                .getHuaweiSubscriptionsForUser(user.id)
+                .filter { it.subIsValid }
+                .filter { it.expiryTimeMillis!!.toInstant(ZoneOffset.UTC).toEpochMilli() > curTimeMillis }
         }
-                .sortedBy { it.expiryTimeMillis }
+            .sortedBy { it.expiryTimeMillis }
 
         return UserSubscriptionsDto(huaweiSubscriptions = huaweiSubscriptions)
     }
 
     @GetMapping("/cancel/{store}/{purchaseType}")
     fun cancelProduct(
-            @PathVariable store: Store,
-            @PathVariable purchaseType: InappType,
-            @RequestParam productId: String,
-            @RequestParam purchaseToken: String,
-            @RequestParam(defaultValue = ACCOUNT_FLAG_HUAWEI_ID.toString()) accountFlag: Int
+        @PathVariable store: Store,
+        @PathVariable purchaseType: InappType,
+        @RequestParam productId: String,
+        @RequestParam purchaseToken: String,
+        @RequestParam(defaultValue = ACCOUNT_FLAG_HUAWEI_ID.toString()) accountFlag: Int
     ): String {
         val test = when (store) {
             Store.HUAWEI -> huaweiApiService.cancelSubscription(productId, purchaseToken, accountFlag)
@@ -384,52 +395,52 @@ class PurchaseController @Autowired constructor(
     }
 
     @Scheduled(
-            /**
-             * second, minute, hour, day, month, day of week
-             *
-             * Each 5 minutes in interval of 1-59 minutes
-             */
-            cron = "0 1-59/5 * * * *"
+        /**
+         * second, minute, hour, day, month, day of week
+         *
+         * Each 5 minutes in interval of 1-59 minutes
+         */
+        cron = "0 1-59/5 * * * *"
     )
     @GetMapping("/subscription/recentlyExpired/minutes5")
     fun periodicallyVerifyPurchaseMinutes5(): List<HuaweiSubscription> =
-            validateRecentlyExpiredSubsForPeriod(Period.MINUTES_5)
+        validateRecentlyExpiredSubsForPeriod(Period.MINUTES_5)
 
     @Scheduled(
-            /**
-             * second, minute, hour, day, month, day of week
-             *
-             * Each hour except of midnight
-             */
-            cron = "0 0 1-23 * * *"
+        /**
+         * second, minute, hour, day, month, day of week
+         *
+         * Each hour except of midnight
+         */
+        cron = "0 0 1-23 * * *"
     )
     @GetMapping("/subscription/recentlyExpired/hourly")
     fun periodicallyVerifyPurchaseHourly(): List<HuaweiSubscription> =
-            validateRecentlyExpiredSubsForPeriod(Period.HOUR)
+        validateRecentlyExpiredSubsForPeriod(Period.HOUR)
 
     @Scheduled(
-            /**
-             * second, minute, hour, day, month, day of week
-             *
-             * Each day
-             */
-            cron = "0 0 0 * * *"
+        /**
+         * second, minute, hour, day, month, day of week
+         *
+         * Each day
+         */
+        cron = "0 0 0 * * *"
     )
     @GetMapping("/subscription/recentlyExpired/daily")
     fun periodicallyVerifyPurchaseDaily(): List<HuaweiSubscription> =
-            validateRecentlyExpiredSubsForPeriod(Period.DAY)
+        validateRecentlyExpiredSubsForPeriod(Period.DAY)
 
     @Scheduled(
-            /**
-             * second, minute, hour, day, month, day of week
-             *
-             * Each day
-             */
-            cron = "0 0 0 * * *"
+        /**
+         * second, minute, hour, day, month, day of week
+         *
+         * Each day
+         */
+        cron = "0 0 0 * * *"
     )
     @GetMapping("/subscription/recentlyExpired/dailyForWeek")
     fun periodicallyVerifyPurchaseDailyForWeek(): List<HuaweiSubscription> =
-            validateRecentlyExpiredSubsForPeriod(Period.WEEK)
+        validateRecentlyExpiredSubsForPeriod(Period.WEEK)
 
     private fun validateRecentlyExpiredSubsForPeriod(period: Period): List<HuaweiSubscription> {
         val nowTimeWithoutZone = LocalDateTime.now(ZoneOffset.UTC)
@@ -445,100 +456,101 @@ class PurchaseController @Autowired constructor(
             else -> nowTimeWithoutZone
         }
         val recentlyExpiredSubscriptions = huaweiMonetizationService.getHuaweiSubscriptionsBetweenDates(
-                startDate, endDate
+            startDate, endDate
         ).sortedByDescending { it.expiryTimeMillis }
         if (recentlyExpiredSubscriptions.isEmpty()) {
             huaweiLog.info("THERE ARE NO RECENTLY EXPIRED SUBSCRIPTIONS TO VALIDATE: $period!")
         } else {
             huaweiLog.info(
-                    recentlyExpiredSubscriptions.joinToString(
-                            prefix = "Start validating subs:",
-                            separator = "\n",
-                            transform = { "${it.id}: ${it.startTimeMillis}/${it.expiryTimeMillis}" }
-                    )
+                recentlyExpiredSubscriptions.joinToString(
+                    prefix = "Start validating subs:",
+                    separator = "\n",
+                    transform = { "${it.id}: ${it.startTimeMillis}/${it.expiryTimeMillis}" }
+                )
             )
         }
 
         //2. Iterate them, verify and update DB records
         @Suppress("UnnecessaryVariable")
-        val updatedSubscriptions: List<HuaweiSubscription> = recentlyExpiredSubscriptions.mapNotNull { currentSubscription ->
-            //Do not try to validate after 3 days of unsuccessful attempts if period is not Period.WEEK
-            val previousAttempts = subscriptionValidateAttemptsService
+        val updatedSubscriptions: List<HuaweiSubscription> =
+            recentlyExpiredSubscriptions.mapNotNull { currentSubscription ->
+                //Do not try to validate after 3 days of unsuccessful attempts if period is not Period.WEEK
+                val previousAttempts = subscriptionValidateAttemptsService
                     .getByStoreAndSubscriptionId(Store.HUAWEI.name, currentSubscription.id!!)
-            if (period != Period.WEEK && previousAttempts != null && previousAttempts.attempts >= MAX_VALIDATION_ATTEMPTS) {
-                huaweiLog.error("MAX VALIDATE ATTEMPTS LIMIT EXCEEDED: $currentSubscription!")
-                return@mapNotNull null
-            }
-            val verificationResult: ValidationResponse? = try {
-                huaweiApiService.verifyPurchase(
+                if (period != Period.WEEK && previousAttempts != null && previousAttempts.attempts >= MAX_VALIDATION_ATTEMPTS) {
+                    huaweiLog.error("MAX VALIDATE ATTEMPTS LIMIT EXCEEDED: $currentSubscription!")
+                    return@mapNotNull null
+                }
+                val verificationResult: ValidationResponse? = try {
+                    huaweiApiService.verifyPurchase(
                         currentSubscription.subscriptionId,
                         InappType.SUBS,
                         currentSubscription.purchaseToken,
                         currentSubscription.accountFlag ?: 0
-                )
-            } catch (e: Exception) {
-                huaweiLog.error("Error while validate subscription: $currentSubscription, error: $e", e)
-                null
-            }
-            //increment attempt
-            val attemptsRow = subscriptionValidateAttemptsService.getByStoreAndSubscriptionId(
+                    )
+                } catch (e: Exception) {
+                    huaweiLog.error("Error while validate subscription: $currentSubscription, error: $e", e)
+                    null
+                }
+                //increment attempt
+                val attemptsRow = subscriptionValidateAttemptsService.getByStoreAndSubscriptionId(
                     Store.HUAWEI.name,
                     currentSubscription.id
-            ) ?: SubscriptionValidationAttempts(
+                ) ?: SubscriptionValidationAttempts(
                     subscriptionId = currentSubscription.id,
                     attempts = 0,
                     store = Store.HUAWEI.name,
                     lastAttemptTime = Timestamp.valueOf(nowTimeWithoutZone)
 
-            )
-            subscriptionValidateAttemptsService.save(
+                )
+                subscriptionValidateAttemptsService.save(
                     attemptsRow.apply {
                         attempts = if (verificationResult != null) 0 else attempts++
                         lastAttemptTime = Timestamp.valueOf(nowTimeWithoutZone)
                     }
-            )
+                )
 
-            if (verificationResult == null) {
-                return@mapNotNull null
-            }
+                if (verificationResult == null) {
+                    return@mapNotNull null
+                }
 
-            val huaweiSubscriptionResponse = (verificationResult as ValidationResponse.HuaweiSubscriptionResponse)
+                val huaweiSubscriptionResponse = (verificationResult as ValidationResponse.HuaweiSubscriptionResponse)
 
-            //2. Write product info to DB.
-            val owner = huaweiMonetizationService.getUserByHuaweiSubscriptionId(currentSubscription.id)
+                //2. Write product info to DB.
+                val owner = huaweiMonetizationService.getUserByHuaweiSubscriptionId(currentSubscription.id)
                     ?: throw UserNotFoundException()
-            val updatedSubscription = huaweiMonetizationService.saveSubscription(
+                val updatedSubscription = huaweiMonetizationService.saveSubscription(
                     huaweiSubscriptionResponse.androidSubscription!!,
                     owner
-            )
+                )
 
-            //3. Update user
-            updateUserSubscriptionExpiration(owner.id!!)
+                //3. Update user
+                updateUserSubscriptionExpiration(owner.id!!)
 
-            // 4. Send push messages to users with subscription update info.
-            val title = if (updatedSubscription.subIsValid) {
-                "Subscription was successfully updated!"
-            } else {
-                "Subscription expired!"
-            }
-            val message = if (updatedSubscription.subIsValid) {
-                "Subscription was updated in your profile."
-            } else {
-                "Subscription has expired and no longer active."
-            }
+                // 4. Send push messages to users with subscription update info.
+                val title = if (updatedSubscription.subIsValid) {
+                    "Subscription was successfully updated!"
+                } else {
+                    "Subscription expired!"
+                }
+                val message = if (updatedSubscription.subIsValid) {
+                    "Subscription was updated in your profile."
+                } else {
+                    "Subscription has expired and no longer active."
+                }
 
-            allProvidersMessagingService.sendToUser(
+                allProvidersMessagingService.sendToUser(
                     userId = owner.id,
                     title = title,
                     message = message,
                     type = ScpReaderConstants.Push.MessageType.SUBSCRIPTION_EVENT,
                     author = userService.getById(ScpReaderConstants.InternalAuthData.ADMIN_ID)
-                            ?: throw UserNotFoundException()
-            )
+                        ?: throw UserNotFoundException()
+                )
 
-            updatedSubscription
+                updatedSubscription
 
-        }
+            }
 
         return updatedSubscriptions
     }
