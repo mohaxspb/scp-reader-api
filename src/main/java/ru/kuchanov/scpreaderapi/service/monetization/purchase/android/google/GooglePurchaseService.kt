@@ -2,7 +2,7 @@ package ru.kuchanov.scpreaderapi.service.monetization.purchase.android.google
 
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
 
-interface AndroidPurchaseService {
+interface GooglePurchaseService {
 
     fun validateProductPurchase(
             packageName: String,

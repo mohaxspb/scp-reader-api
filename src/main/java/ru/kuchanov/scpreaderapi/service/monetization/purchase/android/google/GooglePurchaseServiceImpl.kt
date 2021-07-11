@@ -12,7 +12,7 @@ import javax.servlet.http.HttpServletResponse
 @Service
 class GooglePurchaseServiceImpl @Autowired constructor(
         private val androidPublisher: AndroidPublisher
-) : AndroidPurchaseService {
+) : GooglePurchaseService {
 
     override fun validateProductPurchase(packageName: String, sku: String, purchaseToken: String): ValidationResponse {
         val productRequest: AndroidPublisher.Purchases.Products.Get = androidPublisher
