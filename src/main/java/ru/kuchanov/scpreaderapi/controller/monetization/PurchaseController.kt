@@ -1,9 +1,11 @@
 package ru.kuchanov.scpreaderapi.controller.monetization
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.google.api.services.androidpublisher.model.SubscriptionPurchase
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
@@ -16,7 +18,9 @@ import ru.kuchanov.scpreaderapi.bean.purchase.huawei.HuaweiSubscriptionNotFoundE
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
 import ru.kuchanov.scpreaderapi.model.dto.monetization.UserSubscriptionsDto
+import ru.kuchanov.scpreaderapi.model.dto.purchase.GoogleAcknowledgeResult
 import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationResponse
+import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationStatus
 import ru.kuchanov.scpreaderapi.model.dto.user.UserProjectionV2
 import ru.kuchanov.scpreaderapi.model.monetization.InappType
 import ru.kuchanov.scpreaderapi.model.monetization.Store
@@ -26,6 +30,9 @@ import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.subevent.
 import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.subevent.StatusUpdateNotification
 import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.subevent.StatusUpdateNotification.NotificationType.*
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.SubscriptionValidateAttemptsService
+import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.google.GooglePurchaseError
+import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.google.GooglePurchaseService
+import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.google.GoogleSubscriptionService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiApiService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiApiService.Companion.ACCOUNT_FLAG_HUAWEI_ID
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiMonetizationService
@@ -42,15 +49,22 @@ import java.time.ZoneOffset
 @RestController
 @RequestMapping("/" + ScpReaderConstants.Path.MONETIZATION + "/" + ScpReaderConstants.Path.PURCHASE)
 class PurchaseController @Autowired constructor(
-        private val huaweiApiService: HuaweiApiService,
-        private val huaweiMonetizationService: HuaweiMonetizationService,
-        private val userService: ScpReaderUserService,
-        private val subscriptionValidateAttemptsService: SubscriptionValidateAttemptsService,
-        private val huaweiSubsEventHandleAttemptService: HuaweiSubsEventHandleAttemptService,
-        private val allProvidersMessagingService: AllProvidersMessagingService,
-        private val errorUtils: ErrorUtils,
-        private val objectMapper: ObjectMapper,
-        @Qualifier(Application.HUAWEI_LOGGER) private val huaweiLog: Logger
+    //huawei
+    private val huaweiApiService: HuaweiApiService,
+    private val huaweiMonetizationService: HuaweiMonetizationService,
+    private val huaweiSubsEventHandleAttemptService: HuaweiSubsEventHandleAttemptService,
+    @Qualifier(Application.HUAWEI_LOGGER) private val huaweiLog: Logger,
+    //fucking google
+    private val googlePurchaseService: GooglePurchaseService,
+    private val googleSubscriptionService: GoogleSubscriptionService,
+    @Value("\${monetization.subscriptions.google.packageName}") private val googlePackageName: String,
+    @Qualifier(Application.GOOGLE_LOGGER) private val googleLog: Logger,
+    //misc
+    private val userService: ScpReaderUserService,
+    private val subscriptionValidateAttemptsService: SubscriptionValidateAttemptsService,
+    private val allProvidersMessagingService: AllProvidersMessagingService,
+    private val errorUtils: ErrorUtils,
+    private val objectMapper: ObjectMapper
 ) {
 
     companion object {
@@ -297,6 +311,68 @@ class PurchaseController @Autowired constructor(
         }
     }
 
+    private fun applyGoogleSubscription(
+        subscriptionId: String,
+        purchaseToken: String,
+        user: User,
+        pushTitle: String,
+        pushMessage: String
+    ): UserProjectionV2 {
+        googleLog.info("Start applying google subscription: $subscriptionId, $purchaseToken, ${user.id}")
+        checkNotNull(user.id)
+        // 1. Verify product
+        val verificationResult = googlePurchaseService.validateSubscriptionPurchase(
+            packageName = googlePackageName,
+            purchaseToken = purchaseToken,
+            sku = subscriptionId
+        ) as? ValidationResponse.GoogleSubscriptionResponse?
+            ?: throw GooglePurchaseError("Error in google subs validation!", IllegalStateException())
+        googleLog.info("verificationResult: $verificationResult")
+
+        val googleSubscription: SubscriptionPurchase = when (verificationResult.status) {
+            ValidationStatus.VALID -> verificationResult.googleSubscription!!
+            ValidationStatus.INVALID -> throw GooglePurchaseError(
+                "Subscription is not valid!.",
+                IllegalStateException()
+            )
+            ValidationStatus.SERVER_ERROR -> throw GooglePurchaseError(
+                "Can't validate subscription as google api is down.",
+                IllegalStateException()
+            )
+        }
+
+        //2. Write product info to DB.
+        val subscriptionInDb = googleSubscriptionService.saveSubscription(googleSubscription, purchaseToken, user)
+        googleLog.info("subscriptionInDb: $subscriptionInDb")
+
+        //3. Update user in DB.
+        updateUserSubscriptionExpiration(user.id)
+
+        //4. Acknowledge product
+        val acknowledgeResult = googlePurchaseService.acknowledgeSubscription(
+            subscriptionId = subscriptionId, purchaseToken = purchaseToken
+        )
+        if (acknowledgeResult.success) {
+            googleLog.info("Subscription acknowledge is successful!")
+        } else {
+            check(acknowledgeResult is GoogleAcknowledgeResult.GoogleSubscriptionAcknowledgeFailure)
+            throw GooglePurchaseError("Error while acknowledge subscription!", acknowledgeResult.cause)
+        }
+
+        //5. Send push
+        allProvidersMessagingService.sendToUser(
+            userId = user.id,
+            title = pushTitle,
+            message = pushMessage,
+            type = ScpReaderConstants.Push.MessageType.SUBSCRIPTION_EVENT,
+            author = userService.getById(ScpReaderConstants.InternalAuthData.ADMIN_ID)
+                ?: throw UserNotFoundException("Can't find admin user with id: ${ScpReaderConstants.InternalAuthData.ADMIN_ID}")
+        )
+
+        //6. Return updated user
+        return userService.getByIdAsDtoV2(user.id) ?: throw UserNotFoundException()
+    }
+
     private fun applyHuaweiSubscription(
         subscriptionId: String,
         purchaseToken: String,
@@ -328,7 +404,7 @@ class PurchaseController @Autowired constructor(
             message = pushMessage,
             type = ScpReaderConstants.Push.MessageType.SUBSCRIPTION_EVENT,
             author = userService.getById(ScpReaderConstants.InternalAuthData.ADMIN_ID)
-                ?: throw UserNotFoundException()
+                ?: throw UserNotFoundException("Can't find admin user with id: ${ScpReaderConstants.InternalAuthData.ADMIN_ID}")
         )
 
         //5. Return updated user
