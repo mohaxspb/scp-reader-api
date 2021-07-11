@@ -8,10 +8,12 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.util.Base64Utils
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.Application
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.purchase.SubscriptionValidationAttempts
+import ru.kuchanov.scpreaderapi.bean.purchase.google.GoogleSubscriptionEventHandleAttemptRecord
 import ru.kuchanov.scpreaderapi.bean.purchase.huawei.HuaweiSubscription
 import ru.kuchanov.scpreaderapi.bean.purchase.huawei.HuaweiSubscriptionEventHandleAttemptRecord
 import ru.kuchanov.scpreaderapi.bean.purchase.huawei.HuaweiSubscriptionNotFoundException
@@ -24,14 +26,18 @@ import ru.kuchanov.scpreaderapi.model.dto.purchase.ValidationStatus
 import ru.kuchanov.scpreaderapi.model.dto.user.UserProjectionV2
 import ru.kuchanov.scpreaderapi.model.monetization.InappType
 import ru.kuchanov.scpreaderapi.model.monetization.Store
+import ru.kuchanov.scpreaderapi.model.monetization.google.subscription.subevent.DeveloperNotification
+import ru.kuchanov.scpreaderapi.model.monetization.google.subscription.subevent.GoogleSubscriptionEventDto
 import ru.kuchanov.scpreaderapi.model.monetization.huawei.InAppPurchaseData
 import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.subevent.HuaweiSubscriptionEventDto
 import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.subevent.HuaweiSubscriptionEventResponse
 import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.subevent.StatusUpdateNotification
 import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.subevent.StatusUpdateNotification.NotificationType.*
+import ru.kuchanov.scpreaderapi.model.monetization.google.subscription.subevent.DeveloperNotification.SubscriptionNotification.NotificationType.*
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.SubscriptionValidateAttemptsService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.google.GooglePurchaseError
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.google.GooglePurchaseService
+import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.google.GoogleSubsEventHandleAttemptService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.google.GoogleSubscriptionService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiApiService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.huawei.HuaweiApiService.Companion.ACCOUNT_FLAG_HUAWEI_ID
@@ -57,6 +63,7 @@ class PurchaseController @Autowired constructor(
     //fucking google
     private val googlePurchaseService: GooglePurchaseService,
     private val googleSubscriptionService: GoogleSubscriptionService,
+    private val googleSubsEventHandleAttemptService: GoogleSubsEventHandleAttemptService,
     @Value("\${monetization.subscriptions.google.packageName}") private val googlePackageName: String,
     @Qualifier(Application.GOOGLE_LOGGER) private val googleLog: Logger,
     //misc
@@ -80,9 +87,124 @@ class PurchaseController @Autowired constructor(
 
     @PostMapping("/subscriptionEvents/g_purchases")
     fun googleSubscriptionEventsWebHook(
-        @RequestBody huaweiSubscriptionEventDto: HuaweiSubscriptionEventDto
-    ): HuaweiSubscriptionEventResponse {
-        TODO()
+        @RequestBody googleSubscriptionEventDto: GoogleSubscriptionEventDto
+    ) {
+        var error: Exception? = null
+
+        try {
+            val dataStringDecoded =Base64Utils.decodeFromString( googleSubscriptionEventDto.message.data)
+            val parsedRequest = objectMapper.readValue(dataStringDecoded, DeveloperNotification::class.java)
+            googleLog.info(
+                "parsedRequest: ${
+                    objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(parsedRequest)
+                }"
+            )
+            checkNotNull(parsedRequest.subscriptionNotification)
+            //TODO
+//            The notificationType for a subscription can have the following values:
+//            (1) SUBSCRIPTION_RECOVERED - A subscription was recovered from account hold.
+//            (2) SUBSCRIPTION_RENEWED - An active subscription was renewed.
+//            (3) SUBSCRIPTION_CANCELED - A subscription was either voluntarily or involuntarily cancelled. For voluntary cancellation, sent when the user cancels.
+//            (4) SUBSCRIPTION_PURCHASED - A new subscription was purchased.
+//            (5) SUBSCRIPTION_ON_HOLD - A subscription has entered account hold (if enabled).
+//            (6) SUBSCRIPTION_IN_GRACE_PERIOD - A subscription has entered grace period (if enabled).
+//            (7) SUBSCRIPTION_RESTARTED - User has reactivated their subscription from Play > Account > Subscriptions (requires opt-in for subscription restoration).
+//            (8) SUBSCRIPTION_PRICE_CHANGE_CONFIRMED - A subscription price change has successfully been confirmed by the user.
+//            (9) SUBSCRIPTION_DEFERRED - A subscription's recurrence time has been extended.
+//            (10) SUBSCRIPTION_PAUSED - A subscription has been paused.
+//            (11) SUBSCRIPTION_PAUSE_SCHEDULE_CHANGED - A subscription pause schedule has been changed.
+//            (12) SUBSCRIPTION_REVOKED - A subscription has been revoked from the user before the expiration time.
+//            (13) SUBSCRIPTION_EXPIRED - A subscription has expired.
+            when (parsedRequest.subscriptionNotification.notificationType) {
+//                INITIAL_BUY, CANCEL, RENEWAL_STOPPED, ON_HOLD,
+//                PAUSED, PAUSE_PLAN_CHANGED, PRICE_CHANGE_CONFIRMED, DEFERRED -> {
+//                    //nothing to do.
+//                }
+                SUBSCRIPTION_PURCHASED,
+                SUBSCRIPTION_DEFERRED,
+                SUBSCRIPTION_PRICE_CHANGE_CONFIRMED,
+                SUBSCRIPTION_ON_HOLD,
+                SUBSCRIPTION_IN_GRACE_PERIOD -> {
+                    //nothing to do.
+                }
+
+
+                SUBSCRIPTION_RENEWED, SUBSCRIPTION_RESTARTED, SUBSCRIPTION_RECOVERED -> {
+                    val inAppPurchaseData: InAppPurchaseData = objectMapper.readValue(
+                        parsedRequest.latestReceiptInfo!!,
+                        InAppPurchaseData::class.java
+                    )
+                    val huaweiSubId = inAppPurchaseData.subscriptionId!!
+
+                    val huaweiSubscriptionInDb: HuaweiSubscription = huaweiMonetizationService
+                        .getHuaweiSubscriptionBySubscriptionId(huaweiSubId)
+                    //there can be subscription switch, so check oriSubscriptionId too
+                        ?: huaweiMonetizationService
+                            .getHuaweiSubscriptionBySubscriptionId(inAppPurchaseData.oriSubscriptionId!!)
+                        ?: throw HuaweiSubscriptionNotFoundException(
+                            "HuaweiSubscription not found for subscriptionId: $huaweiSubId"
+                        )
+                    val user: User = huaweiMonetizationService
+                        .getUserByHuaweiSubscriptionId(huaweiSubscriptionInDb.id!!) ?: throw UserNotFoundException()
+
+                    val updatedUser = applyHuaweiSubscription(
+                        huaweiSubId,
+                        inAppPurchaseData.purchaseToken,
+                        inAppPurchaseData.accountFlag ?: ACCOUNT_FLAG_HUAWEI_ID,
+                        user,
+                        pushTitle = "Subscription renewal!",
+                        pushMessage = "Your subscription was successfully renewed!"
+                    )
+                    val updatedSubscription = huaweiMonetizationService
+                        .getHuaweiSubscriptionBySubscriptionId(huaweiSubId)
+                    googleLog.info(
+                        """
+                        Successfully update renewed Huawei subscription (RENEWAL, RENEWAL_RESTORED, RENEWAL_RECURRING)!
+                        User: ${updatedUser.id}/${updatedUser.offlineLimitDisabledEndDate}. 
+                        Subscription: ${huaweiSubscriptionInDb.id}/${updatedSubscription?.expiryTimeMillis}.
+                    """.trimIndent()
+                    )
+                }
+                SUBSCRIPTION_CANCELED -> {
+                    //TODO()
+                }
+                SUBSCRIPTION_PAUSED -> {
+                    //TODO()
+                }
+                SUBSCRIPTION_PAUSE_SCHEDULE_CHANGED -> {
+                    //TODO()
+                }
+                SUBSCRIPTION_REVOKED -> {
+                    //TODO()
+                }
+                SUBSCRIPTION_EXPIRED -> {
+                    //TODO()
+                }
+            }
+        } catch (e: Exception) {
+            error = e
+            googleLog.error("Error while handle huawei subscription event", error)
+        } finally {
+            //todo
+            googleSubsEventHandleAttemptService.save(
+                GoogleSubscriptionEventHandleAttemptRecord(
+                    messageId =
+                    encodedData = googleSubscriptionEventDto.message.data,
+                    notificationSignature = googleSubscriptionEventDto.notifycationSignature
+                ).apply {
+                    error?.let { e ->
+                        errorClass = e::class.java.simpleName
+                        errorMessage = e.message
+                        stacktrace = errorUtils.stackTraceAsString(e)
+                        error.cause?.let {
+                            causeErrorClass = it::class.java.simpleName
+                            causeErrorMessage = it.message
+                            causeStacktrace = errorUtils.stackTraceAsString(it)
+                        }
+                    }
+                }
+            )
+        }
     }
 
     @PostMapping("/subscriptionEvents/huawei")
