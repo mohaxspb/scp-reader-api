@@ -1,27 +1,27 @@
-package ru.kuchanov.scpreaderapi.bean.purchase
+package ru.kuchanov.scpreaderapi.bean.purchase.google
 
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
-import java.sql.Timestamp
+import java.time.LocalDateTime
 import javax.persistence.*
 
 /**
  * [entity documentation][https://developers.google.com/android-publisher/api-ref/purchases/subscriptions#resource]
  */
 @Entity
-@Table(name = "android_subscriptions")
-data class AndroidSubscription(
+@Table(name = "google_subscriptions")
+data class GoogleSubscription(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long? = null,
         @Column(name = "auto_renewing")
         val autoRenewing: Boolean? = null,
         @Column(name = "expiry_time_millis")
-        var expiryTimeMillis: Timestamp? = null,
+        val expiryTimeMillis: LocalDateTime? = null,
         @Column(name = "start_time_millis")
-        var startTimeMillis: Timestamp? = null,
+        val startTimeMillis: LocalDateTime? = null,
         @Column(name = "user_cancellation_time_millis")
-        var userCancellationTimeMillis: Timestamp? = null,
+        val userCancellationTimeMillis: LocalDateTime? = null,
         @Column(name = "price_amount_micros")
         val priceAmountMicros: Long? = null,
         @Column(name = "price_currency_code")
@@ -30,9 +30,9 @@ data class AndroidSubscription(
         var orderId: String,
         //dates
         @field:CreationTimestamp
-        val created: Timestamp? = null,
+        val created: LocalDateTime? = null,
         @field:UpdateTimestamp
-        val updated: Timestamp? = null,
+        val updated: LocalDateTime? = null,
         //
         @Column(name = "android_package")
         val androidPackage: String,
@@ -42,5 +42,5 @@ data class AndroidSubscription(
          * token of previously canceled subscription or one from witch this one was upgraded
          */
         @Column(name = "linked_purchase_token")
-        var linkedPurchaseToken: String? = null
+        val linkedPurchaseToken: String? = null
 )
