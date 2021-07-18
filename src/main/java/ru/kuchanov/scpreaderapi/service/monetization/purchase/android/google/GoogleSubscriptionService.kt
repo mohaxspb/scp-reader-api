@@ -20,4 +20,6 @@ interface GoogleSubscriptionService {
         purchaseToken: String,
         user: User
     ): GoogleSubscription
+
+    fun getUserByGoogleSubscriptionId(googleSubscriptionId: Long): User?
 }

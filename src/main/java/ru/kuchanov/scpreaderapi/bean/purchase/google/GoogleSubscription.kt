@@ -2,6 +2,8 @@ package ru.kuchanov.scpreaderapi.bean.purchase.google
 
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
+import org.springframework.http.HttpStatus
+import org.springframework.web.bind.annotation.ResponseStatus
 import java.time.LocalDateTime
 import javax.persistence.*
 
@@ -44,3 +46,8 @@ data class GoogleSubscription(
         @Column(name = "linked_purchase_token")
         val linkedPurchaseToken: String? = null
 )
+
+@ResponseStatus(value = HttpStatus.NOT_FOUND)
+class GoogleSubscriptionNotFoundException(
+        override val message: String? = "GoogleSubscription not found in db!"
+) : RuntimeException(message)

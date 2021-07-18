@@ -14,6 +14,7 @@ import ru.kuchanov.scpreaderapi.Application
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.purchase.SubscriptionValidationAttempts
 import ru.kuchanov.scpreaderapi.bean.purchase.google.GoogleSubscriptionEventHandleAttemptRecord
+import ru.kuchanov.scpreaderapi.bean.purchase.google.GoogleSubscriptionNotFoundException
 import ru.kuchanov.scpreaderapi.bean.purchase.huawei.HuaweiSubscription
 import ru.kuchanov.scpreaderapi.bean.purchase.huawei.HuaweiSubscriptionEventHandleAttemptRecord
 import ru.kuchanov.scpreaderapi.bean.purchase.huawei.HuaweiSubscriptionNotFoundException
@@ -90,9 +91,10 @@ class PurchaseController @Autowired constructor(
         @RequestBody googleSubscriptionEventDto: GoogleSubscriptionEventDto
     ) {
         var error: Exception? = null
+        var dataStringDecoded: String? = null
 
         try {
-            val dataStringDecoded =Base64Utils.decodeFromString( googleSubscriptionEventDto.message.data)
+            dataStringDecoded = Base64Utils.decodeFromString(googleSubscriptionEventDto.message.data).toString(Charsets.UTF_8)
             val parsedRequest = objectMapper.readValue(dataStringDecoded, DeveloperNotification::class.java)
             googleLog.info(
                 "parsedRequest: ${
@@ -128,40 +130,33 @@ class PurchaseController @Autowired constructor(
                     //nothing to do.
                 }
 
-
                 SUBSCRIPTION_RENEWED, SUBSCRIPTION_RESTARTED, SUBSCRIPTION_RECOVERED -> {
-                    val inAppPurchaseData: InAppPurchaseData = objectMapper.readValue(
-                        parsedRequest.latestReceiptInfo!!,
-                        InAppPurchaseData::class.java
-                    )
-                    val huaweiSubId = inAppPurchaseData.subscriptionId!!
+                    val inAppPurchaseData = parsedRequest.subscriptionNotification
+                    val subId = inAppPurchaseData.subscriptionId
+                    val purchaseToken = inAppPurchaseData.purchaseToken
 
-                    val huaweiSubscriptionInDb: HuaweiSubscription = huaweiMonetizationService
-                        .getHuaweiSubscriptionBySubscriptionId(huaweiSubId)
-                    //there can be subscription switch, so check oriSubscriptionId too
-                        ?: huaweiMonetizationService
-                            .getHuaweiSubscriptionBySubscriptionId(inAppPurchaseData.oriSubscriptionId!!)
-                        ?: throw HuaweiSubscriptionNotFoundException(
-                            "HuaweiSubscription not found for subscriptionId: $huaweiSubId"
+                    val subscriptionInDb = googleSubscriptionService
+                        .getByPurchaseToken(inAppPurchaseData.purchaseToken)
+                        ?: throw GoogleSubscriptionNotFoundException(
+                            "GoogleSubscription not found for purchaseToken: $purchaseToken"
                         )
-                    val user: User = huaweiMonetizationService
-                        .getUserByHuaweiSubscriptionId(huaweiSubscriptionInDb.id!!) ?: throw UserNotFoundException()
+                    val user: User = googleSubscriptionService
+                        .getUserByGoogleSubscriptionId(subscriptionInDb.id!!) ?: throw UserNotFoundException()
 
-                    val updatedUser = applyHuaweiSubscription(
-                        huaweiSubId,
+                    val updatedUser = applyGoogleSubscription(
+                        subId,
                         inAppPurchaseData.purchaseToken,
-                        inAppPurchaseData.accountFlag ?: ACCOUNT_FLAG_HUAWEI_ID,
                         user,
                         pushTitle = "Subscription renewal!",
                         pushMessage = "Your subscription was successfully renewed!"
                     )
-                    val updatedSubscription = huaweiMonetizationService
-                        .getHuaweiSubscriptionBySubscriptionId(huaweiSubId)
+                    val updatedSubscription = googleSubscriptionService
+                        .getById(subscriptionInDb.id)
                     googleLog.info(
                         """
                         Successfully update renewed Huawei subscription (RENEWAL, RENEWAL_RESTORED, RENEWAL_RECURRING)!
                         User: ${updatedUser.id}/${updatedUser.offlineLimitDisabledEndDate}. 
-                        Subscription: ${huaweiSubscriptionInDb.id}/${updatedSubscription?.expiryTimeMillis}.
+                        Subscription: ${subscriptionInDb.id}/${updatedSubscription?.expiryTimeMillis}.
                     """.trimIndent()
                     )
                 }
@@ -185,12 +180,10 @@ class PurchaseController @Autowired constructor(
             error = e
             googleLog.error("Error while handle huawei subscription event", error)
         } finally {
-            //todo
             googleSubsEventHandleAttemptService.save(
                 GoogleSubscriptionEventHandleAttemptRecord(
-                    messageId =
+                    decodedDataJson = dataStringDecoded ?: "",
                     encodedData = googleSubscriptionEventDto.message.data,
-                    notificationSignature = googleSubscriptionEventDto.notifycationSignature
                 ).apply {
                     error?.let { e ->
                         errorClass = e::class.java.simpleName
@@ -433,6 +426,9 @@ class PurchaseController @Autowired constructor(
         }
     }
 
+    /**
+     * @param subscriptionId is SKU, i.e. "month_01"
+     */
     private fun applyGoogleSubscription(
         subscriptionId: String,
         purchaseToken: String,

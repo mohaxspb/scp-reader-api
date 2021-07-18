@@ -80,4 +80,7 @@ class GoogleSubscriptionServiceImpl @Autowired constructor(
 
         return subscriptionUpdated
     }
+
+    override fun getUserByGoogleSubscriptionId(googleSubscriptionId: Long): User? =
+        userToGoogleSubscriptionRepository.getUserByGoogleSubscriptionId(googleSubscriptionId)
 }
