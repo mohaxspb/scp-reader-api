@@ -526,18 +526,57 @@ class PurchaseController @Autowired constructor(
         val userInDb = userService.getById(userId) ?: throw UserNotFoundException()
 
         val curTimeMillis = Instant.now().toEpochMilli()
-        val userNonExpiredAndValidSubscriptions = huaweiMonetizationService
+        val userHuaweiSubs = huaweiMonetizationService
             .getHuaweiSubscriptionsForUser(userId)
+        val userNonExpiredAndValidHuaweiSubscriptions = userHuaweiSubs
             .filter { it.subIsValid }
             .filter { it.expiryTimeMillis!!.toInstant(ZoneOffset.UTC).toEpochMilli() > curTimeMillis }
             .sortedBy { it.expiryTimeMillis }
-        return if (userNonExpiredAndValidSubscriptions.isEmpty()) {
-            userInDb
+
+        val userGoogleSubs = googleSubscriptionService
+            .getGoogleSubscriptionsForUser(userId)
+        val userNonExpiredGoogleSubscriptions = userGoogleSubs
+            .filter { it.expiryTimeMillis!!.toInstant(ZoneOffset.UTC).toEpochMilli() > curTimeMillis }
+            .sortedBy { it.expiryTimeMillis }
+
+        val hasNoValidSubscription = userNonExpiredAndValidHuaweiSubscriptions.isEmpty() ||
+                userNonExpiredGoogleSubscriptions.isEmpty()
+
+        return if (hasNoValidSubscription) {
+            googleLog.error("User have no valid and nonExpired subscription.")
+            huaweiLog.error("User have no valid and nonExpired subscription.")
+
+            //so check subscriptions expire times, update it in DB and print in logs if we have smth strange
+
+            val maxExpiredSubsTime: List<LocalDateTime> = listOfNotNull(
+                userHuaweiSubs.maxByOrNull { it.expiryTimeMillis!! }?.expiryTimeMillis,
+                userGoogleSubs.maxByOrNull { it.expiryTimeMillis!! }?.expiryTimeMillis
+            )
+                .sortedWith(Comparator.reverseOrder())
+
+            if (maxExpiredSubsTime.isEmpty()) {
+                userInDb
+            } else {
+                val maxExpireTime = maxExpiredSubsTime.first()
+
+                userService.update(
+                    userInDb.apply { offlineLimitDisabledEndDate = maxExpireTime }
+                )
+            }
         } else {
-            val maxExpireTimeSub = userNonExpiredAndValidSubscriptions.first()
-            huaweiLog.info("userNonExpiredAndValidSubscriptions max expiryTimeMillis: ${maxExpireTimeSub.expiryTimeMillis}")
+            val maxExpireTimeHuaweiSub = userNonExpiredAndValidHuaweiSubscriptions.firstOrNull()
+            val maxExpireTimeGoogleSub = userNonExpiredGoogleSubscriptions.firstOrNull()
+            val expireTimesList = listOfNotNull(
+                maxExpireTimeGoogleSub?.expiryTimeMillis,
+                maxExpireTimeHuaweiSub?.expiryTimeMillis
+            )
+                .sortedWith(Comparator.reverseOrder())
+
+            val maxExpireTime = expireTimesList.first()
+            huaweiLog.info("userNonExpiredAndValidSubscriptions max expiryTimeMillis: $maxExpireTime")
+            googleLog.info("userNonExpiredAndValidSubscriptions max expiryTimeMillis: $maxExpireTime")
             userService.update(
-                userInDb.apply { offlineLimitDisabledEndDate = maxExpireTimeSub.expiryTimeMillis }
+                userInDb.apply { offlineLimitDisabledEndDate = maxExpireTime }
             )
         }
     }
