@@ -28,13 +28,13 @@ import ru.kuchanov.scpreaderapi.model.dto.user.UserProjectionV2
 import ru.kuchanov.scpreaderapi.model.monetization.InappType
 import ru.kuchanov.scpreaderapi.model.monetization.Store
 import ru.kuchanov.scpreaderapi.model.monetization.google.subscription.subevent.DeveloperNotification
+import ru.kuchanov.scpreaderapi.model.monetization.google.subscription.subevent.DeveloperNotification.SubscriptionNotification.NotificationType.*
 import ru.kuchanov.scpreaderapi.model.monetization.google.subscription.subevent.GoogleSubscriptionEventDto
 import ru.kuchanov.scpreaderapi.model.monetization.huawei.InAppPurchaseData
 import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.subevent.HuaweiSubscriptionEventDto
 import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.subevent.HuaweiSubscriptionEventResponse
 import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.subevent.StatusUpdateNotification
 import ru.kuchanov.scpreaderapi.model.monetization.huawei.subscription.subevent.StatusUpdateNotification.NotificationType.*
-import ru.kuchanov.scpreaderapi.model.monetization.google.subscription.subevent.DeveloperNotification.SubscriptionNotification.NotificationType.*
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.SubscriptionValidateAttemptsService
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.google.GooglePurchaseError
 import ru.kuchanov.scpreaderapi.service.monetization.purchase.android.google.GooglePurchaseService
@@ -94,7 +94,8 @@ class PurchaseController @Autowired constructor(
         var dataStringDecoded: String? = null
 
         try {
-            dataStringDecoded = Base64Utils.decodeFromString(googleSubscriptionEventDto.message.data).toString(Charsets.UTF_8)
+            dataStringDecoded =
+                Base64Utils.decodeFromString(googleSubscriptionEventDto.message.data).toString(Charsets.UTF_8)
             val parsedRequest = objectMapper.readValue(dataStringDecoded, DeveloperNotification::class.java)
             googleLog.info(
                 "parsedRequest: ${
@@ -102,7 +103,6 @@ class PurchaseController @Autowired constructor(
                 }"
             )
             checkNotNull(parsedRequest.subscriptionNotification)
-            //TODO
 //            The notificationType for a subscription can have the following values:
 //            (1) SUBSCRIPTION_RECOVERED - A subscription was recovered from account hold.
 //            (2) SUBSCRIPTION_RENEWED - An active subscription was renewed.
@@ -118,10 +118,6 @@ class PurchaseController @Autowired constructor(
 //            (12) SUBSCRIPTION_REVOKED - A subscription has been revoked from the user before the expiration time.
 //            (13) SUBSCRIPTION_EXPIRED - A subscription has expired.
             when (parsedRequest.subscriptionNotification.notificationType) {
-//                INITIAL_BUY, CANCEL, RENEWAL_STOPPED, ON_HOLD,
-//                PAUSED, PAUSE_PLAN_CHANGED, PRICE_CHANGE_CONFIRMED, DEFERRED -> {
-//                    //nothing to do.
-//                }
                 SUBSCRIPTION_PURCHASED,
                 SUBSCRIPTION_DEFERRED,
                 SUBSCRIPTION_PRICE_CHANGE_CONFIRMED,
@@ -180,6 +176,7 @@ class PurchaseController @Autowired constructor(
             error = e
             googleLog.error("Error while handle huawei subscription event", error)
         } finally {
+            @Suppress("DuplicatedCode")
             googleSubsEventHandleAttemptService.save(
                 GoogleSubscriptionEventHandleAttemptRecord(
                     decodedDataJson = dataStringDecoded ?: "",
@@ -356,6 +353,7 @@ class PurchaseController @Autowired constructor(
             error = e
             huaweiLog.error("Error while handle huawei subscription event", error)
         } finally {
+            @Suppress("DuplicatedCode")
             huaweiSubsEventHandleAttemptService.save(
                 HuaweiSubscriptionEventHandleAttemptRecord(
                     statusUpdateNotification = huaweiSubscriptionEventDto.statusUpdateNotification,
@@ -428,6 +426,8 @@ class PurchaseController @Autowired constructor(
 
     /**
      * @param subscriptionId is SKU, i.e. "month_01"
+     *
+     * @throws GooglePurchaseError
      */
     private fun applyGoogleSubscription(
         subscriptionId: String,
@@ -579,13 +579,18 @@ class PurchaseController @Autowired constructor(
         @RequestParam purchaseToken: String,
         @RequestParam(defaultValue = ACCOUNT_FLAG_HUAWEI_ID.toString()) accountFlag: Int
     ): String {
-        val test = when (store) {
-            Store.HUAWEI -> huaweiApiService.cancelSubscription(productId, purchaseToken, accountFlag)
-            Store.GOOGLE -> TODO()
-            Store.AMAZON -> TODO()
-            Store.APPLE -> TODO()
+        return when (store) {
+            Store.HUAWEI -> huaweiApiService.cancelSubscription(productId, purchaseToken, accountFlag).toString()
+            Store.GOOGLE -> {
+                "This can be done in console. Use it, please"
+            }
+            Store.AMAZON -> {
+                "Seems to be we do not need it"
+            }
+            Store.APPLE -> {
+                "Seems to be we do not need it"
+            }
         }
-        return test.toString()
     }
 
     @Scheduled(
