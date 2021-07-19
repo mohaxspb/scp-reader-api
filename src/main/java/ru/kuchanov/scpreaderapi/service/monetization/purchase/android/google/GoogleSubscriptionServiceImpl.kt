@@ -9,34 +9,34 @@ import ru.kuchanov.scpreaderapi.Application
 import ru.kuchanov.scpreaderapi.bean.purchase.google.GoogleSubscription
 import ru.kuchanov.scpreaderapi.bean.purchase.google.UserToGoogleSubscription
 import ru.kuchanov.scpreaderapi.bean.users.User
-import ru.kuchanov.scpreaderapi.repository.monetization.purchase.android.google.AndroidSubscriptionRepository
+import ru.kuchanov.scpreaderapi.repository.monetization.purchase.android.google.GoogleSubscriptionRepository
 import ru.kuchanov.scpreaderapi.repository.monetization.purchase.android.google.UserToGoogleSubscriptionRepository
 
 @Service
 class GoogleSubscriptionServiceImpl @Autowired constructor(
-    private val androidSubscriptionRepository: AndroidSubscriptionRepository,
+    private val googleSubscriptionRepository: GoogleSubscriptionRepository,
     private val userToGoogleSubscriptionRepository: UserToGoogleSubscriptionRepository,
     private val googleConverter: GoogleConverter,
     @Qualifier(Application.GOOGLE_LOGGER) private val log: Logger
 ) : GoogleSubscriptionService {
 
     override fun getById(id: Long) =
-        androidSubscriptionRepository.getOneById(id)
+        googleSubscriptionRepository.getOneById(id)
 
     override fun getByPurchaseToken(purchaseToken: String): GoogleSubscription? =
-        androidSubscriptionRepository.getOneByPurchaseToken(purchaseToken)
+        googleSubscriptionRepository.getOneByPurchaseToken(purchaseToken)
 
     override fun getByOrderId(orderId: String): GoogleSubscription? =
-        androidSubscriptionRepository.getOneByOrderId(orderId)
+        googleSubscriptionRepository.getOneByOrderId(orderId)
 
     override fun saveAll(subscriptions: List<GoogleSubscription>): List<GoogleSubscription> =
-        androidSubscriptionRepository.saveAll(subscriptions)
+        googleSubscriptionRepository.saveAll(subscriptions)
 
     override fun save(googleProduct: GoogleSubscription): GoogleSubscription =
-        androidSubscriptionRepository.save(googleProduct)
+        googleSubscriptionRepository.save(googleProduct)
 
     override fun deleteById(id: Long) =
-        androidSubscriptionRepository.deleteById(id)
+        googleSubscriptionRepository.deleteById(id)
 
     override fun saveSubscription(
         subscriptionPurchase: SubscriptionPurchase,
@@ -44,7 +44,7 @@ class GoogleSubscriptionServiceImpl @Autowired constructor(
         user: User
     ): GoogleSubscription {
         val googleSubscription: GoogleSubscription = googleConverter.convert(subscriptionPurchase, purchaseToken)
-        val googleSubscriptionInDb = androidSubscriptionRepository
+        val googleSubscriptionInDb = googleSubscriptionRepository
             .getOneByOrderId(orderId = googleSubscription.orderId)
 
         log.info("googleSubscription: $googleSubscription")
@@ -52,13 +52,13 @@ class GoogleSubscriptionServiceImpl @Autowired constructor(
         log.info("googleSubscriptionInDb: $googleSubscriptionInDb")
 
         val oriSubscriptionInDb = googleSubscription.linkedPurchaseToken?.let {
-            androidSubscriptionRepository.getOneByLinkedPurchaseToken(it)
+            googleSubscriptionRepository.getOneByLinkedPurchaseToken(it)
         }
         log.info("Subscription has ORI subscription: $oriSubscriptionInDb")
         val subscriptionUpdated = if (googleSubscriptionInDb != null) {
-            androidSubscriptionRepository.save(googleSubscription.copy(id = googleSubscriptionInDb.id))
+            googleSubscriptionRepository.save(googleSubscription.copy(id = googleSubscriptionInDb.id))
         } else {
-            androidSubscriptionRepository.save(googleSubscription)
+            googleSubscriptionRepository.save(googleSubscription)
         }
 
         checkNotNull(subscriptionUpdated.id)
