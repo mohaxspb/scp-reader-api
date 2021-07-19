@@ -22,4 +22,6 @@ interface GoogleSubscriptionService {
     ): GoogleSubscription
 
     fun getUserByGoogleSubscriptionId(googleSubscriptionId: Long): User?
+
+    fun getGoogleSubscriptionsForUser(userId: Long): List<GoogleSubscription>
 }

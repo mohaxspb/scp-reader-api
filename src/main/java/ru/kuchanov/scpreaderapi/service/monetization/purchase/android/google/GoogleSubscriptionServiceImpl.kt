@@ -83,4 +83,7 @@ class GoogleSubscriptionServiceImpl @Autowired constructor(
 
     override fun getUserByGoogleSubscriptionId(googleSubscriptionId: Long): User? =
         userToGoogleSubscriptionRepository.getUserByGoogleSubscriptionId(googleSubscriptionId)
+
+    override fun getGoogleSubscriptionsForUser(userId: Long): List<GoogleSubscription> =
+        googleSubscriptionRepository.getAllByUserId(userId)
 }
