@@ -126,7 +126,9 @@ class PurchaseController @Autowired constructor(
                     //nothing to do.
                 }
 
-                SUBSCRIPTION_RENEWED, SUBSCRIPTION_RESTARTED, SUBSCRIPTION_RECOVERED -> {
+                SUBSCRIPTION_RENEWED, SUBSCRIPTION_RESTARTED, SUBSCRIPTION_RECOVERED,
+                    //seems to be there we can use same logic too.
+                SUBSCRIPTION_PAUSED, SUBSCRIPTION_REVOKED, SUBSCRIPTION_EXPIRED -> {
                     val inAppPurchaseData = parsedRequest.subscriptionNotification
                     val subId = inAppPurchaseData.subscriptionId
                     val purchaseToken = inAppPurchaseData.purchaseToken
@@ -156,20 +158,11 @@ class PurchaseController @Autowired constructor(
                     """.trimIndent()
                     )
                 }
-                SUBSCRIPTION_CANCELED -> {
-                    //TODO()
-                }
-                SUBSCRIPTION_PAUSED -> {
-                    //TODO()
-                }
                 SUBSCRIPTION_PAUSE_SCHEDULE_CHANGED -> {
-                    //TODO()
+                    //nothing to do?..
                 }
-                SUBSCRIPTION_REVOKED -> {
-                    //TODO()
-                }
-                SUBSCRIPTION_EXPIRED -> {
-                    //TODO()
+                SUBSCRIPTION_CANCELED -> {
+                    //nothing to do? As we'll receive expired event...
                 }
             }
         } catch (e: Exception) {
