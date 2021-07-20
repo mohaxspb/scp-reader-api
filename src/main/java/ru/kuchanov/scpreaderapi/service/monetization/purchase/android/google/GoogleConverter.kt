@@ -11,7 +11,7 @@ import java.time.ZoneOffset
 
 @Service
 class GoogleConverter @Autowired constructor(
-    @Value("\${monetization.subscriptions.google.packageName}") private val googlePackageName: String
+    @Value("\${my.monetization.subscriptions.google.packageName}") private val googlePackageName: String
 ) {
 
     fun convert(subscription: SubscriptionPurchase, purchaseToken: String): GoogleSubscription =

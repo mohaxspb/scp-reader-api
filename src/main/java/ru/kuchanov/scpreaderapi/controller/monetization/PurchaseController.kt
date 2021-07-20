@@ -65,7 +65,7 @@ class PurchaseController @Autowired constructor(
     private val googlePurchaseService: GooglePurchaseService,
     private val googleSubscriptionService: GoogleSubscriptionService,
     private val googleSubsEventHandleAttemptService: GoogleSubsEventHandleAttemptService,
-    @Value("\${monetization.subscriptions.google.packageName}") private val googlePackageName: String,
+    @Value("\${my.monetization.subscriptions.google.packageName}") private val googlePackageName: String,
     @Qualifier(Application.GOOGLE_LOGGER) private val googleLog: Logger,
     //misc
     private val userService: ScpReaderUserService,

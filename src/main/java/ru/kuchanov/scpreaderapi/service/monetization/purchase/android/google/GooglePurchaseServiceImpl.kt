@@ -19,7 +19,7 @@ import javax.servlet.http.HttpServletResponse
 class GooglePurchaseServiceImpl @Autowired constructor(
     private val androidPublisher: AndroidPublisher,
     @Qualifier(Application.GOOGLE_LOGGER) private val googleLog: Logger,
-    @Value("\${monetization.subscriptions.google.packageName}") private val googlePackageName: String
+    @Value("\${my.monetization.subscriptions.google.packageName}") private val googlePackageName: String
 ) : GooglePurchaseService {
 
     override fun validateProductPurchase(packageName: String, sku: String, purchaseToken: String): ValidationResponse {
