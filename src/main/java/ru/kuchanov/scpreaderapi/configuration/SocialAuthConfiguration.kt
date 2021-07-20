@@ -2,7 +2,7 @@ package ru.kuchanov.scpreaderapi.configuration
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier
 import com.google.api.client.http.javanet.NetHttpTransport
-import com.google.api.client.json.jackson.JacksonFactory
+import com.google.api.client.json.jackson2.JacksonFactory
 import okhttp3.OkHttpClient
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
