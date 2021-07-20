@@ -27,7 +27,7 @@ ALTER TABLE user__to__google_subscriptions
 alter table user__to__google_subscriptions
     add constraint fk_google_subscription_id__to__google_subscriptions
         foreign key (google_subscription_id)
-            REFERENCES android_subscriptions (id) ON DELETE CASCADE;
+            REFERENCES google_subscriptions (id) ON DELETE CASCADE;
 
 alter table user__to__google_subscriptions
     drop constraint if exists google_subscription_id_and_user_id_unique;
