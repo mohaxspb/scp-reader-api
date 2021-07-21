@@ -20,9 +20,8 @@ import java.time.temporal.ChronoUnit
 @RestController
 @RequestMapping("/" + ScpReaderConstants.Path.USER)
 class UserController @Autowired constructor(
-        private val scpReaderUserService: ScpReaderUserService,
-        private val userAndroidPurchaseService: UserAndroidPurchaseService,
-        private val userToPushTokensService: UserToPushTokensService
+    private val scpReaderUserService: ScpReaderUserService,
+    private val userToPushTokensService: UserToPushTokensService
 ) {
 
     @Deprecated("Uses deprecated return type", ReplaceWith("showMeV2"))
@@ -94,10 +93,6 @@ class UserController @Autowired constructor(
             @AuthenticationPrincipal user: User
     ): Int =
             scpReaderUserService.getUserPositionInLeaderboard(user.id!!, lang.lang)
-
-    @GetMapping("/android/product/all")
-    fun showAndroidProducts(@AuthenticationPrincipal user: User): List<AndroidProduct> =
-            userAndroidPurchaseService.findAllProducts(user.id!!)
 
     @PostMapping("/push/token/{provider}")
     fun receiveUserPushToken(
