@@ -31,9 +31,11 @@ class GoogleConverter @Autowired constructor(
                 Instant.ofEpochMilli(subscription.startTimeMillis),
                 ZoneOffset.UTC
             ),
-            userCancellationTimeMillis = LocalDateTime.ofInstant(
-                Instant.ofEpochMilli(subscription.userCancellationTimeMillis),
-                ZoneOffset.UTC
-            )
+            userCancellationTimeMillis = subscription.userCancellationTimeMillis?.let {
+                LocalDateTime.ofInstant(
+                    Instant.ofEpochMilli(subscription.userCancellationTimeMillis),
+                    ZoneOffset.UTC
+                )
+            }
         )
 }
