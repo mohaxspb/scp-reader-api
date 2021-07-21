@@ -41,9 +41,14 @@ class GoogleSubscriptionServiceImpl @Autowired constructor(
     override fun saveSubscription(
         subscriptionPurchase: SubscriptionPurchase,
         purchaseToken: String,
+        sku: String,
         user: User
     ): GoogleSubscription {
-        val googleSubscription: GoogleSubscription = googleConverter.convert(subscriptionPurchase, purchaseToken)
+        val googleSubscription: GoogleSubscription = googleConverter.convert(
+            subscriptionPurchase,
+            purchaseToken,
+            sku
+        )
         val googleSubscriptionInDb = googleSubscriptionRepository
             .getOneByOrderId(orderId = googleSubscription.orderId)
 

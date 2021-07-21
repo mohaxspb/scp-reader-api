@@ -18,6 +18,7 @@ interface GoogleSubscriptionService {
     fun saveSubscription(
         subscriptionPurchase: SubscriptionPurchase,
         purchaseToken: String,
+        sku: String,
         user: User
     ): GoogleSubscription
 

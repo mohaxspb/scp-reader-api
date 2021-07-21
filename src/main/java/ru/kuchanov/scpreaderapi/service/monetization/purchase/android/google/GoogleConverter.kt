@@ -14,8 +14,13 @@ class GoogleConverter @Autowired constructor(
     @Value("\${my.monetization.subscriptions.google.packageName}") private val googlePackageName: String
 ) {
 
-    fun convert(subscription: SubscriptionPurchase, purchaseToken: String): GoogleSubscription =
+    fun convert(
+        subscription: SubscriptionPurchase,
+        purchaseToken: String,
+        sku: String,
+    ): GoogleSubscription =
         GoogleSubscription(
+            sku = sku,
             androidPackage = googlePackageName,
             autoRenewing = subscription.autoRenewing,
             expiryTimeMillis = LocalDateTime.ofInstant(

@@ -453,7 +453,12 @@ class PurchaseController @Autowired constructor(
         }
 
         //2. Write product info to DB.
-        val subscriptionInDb = googleSubscriptionService.saveSubscription(googleSubscription, purchaseToken, user)
+        val subscriptionInDb = googleSubscriptionService.saveSubscription(
+            googleSubscription,
+            purchaseToken,
+            subscriptionId,
+            user
+        )
         googleLog.info("subscriptionInDb: $subscriptionInDb")
 
         //3. Update user in DB.
