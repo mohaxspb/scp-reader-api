@@ -600,7 +600,21 @@ class PurchaseController @Autowired constructor(
         }
             .sortedBy { it.expiryTimeMillis }
 
-        return UserSubscriptionsDto(huaweiSubscriptions = huaweiSubscriptions)
+        val googleSubscriptions = if (showAll) {
+            googleSubscriptionService
+                .getGoogleSubscriptionsForUser(user.id)
+        } else {
+            val curTimeMillis = Instant.now().toEpochMilli()
+            googleSubscriptionService
+                .getGoogleSubscriptionsForUser(user.id)
+                .filter { it.expiryTimeMillis!!.toInstant(ZoneOffset.UTC).toEpochMilli() > curTimeMillis }
+        }
+            .sortedBy { it.expiryTimeMillis }
+
+        return UserSubscriptionsDto(
+            huaweiSubscriptions = huaweiSubscriptions,
+            googleSubscriptions = googleSubscriptions
+        )
     }
 
     @GetMapping("/cancel/{store}/{purchaseType}")
