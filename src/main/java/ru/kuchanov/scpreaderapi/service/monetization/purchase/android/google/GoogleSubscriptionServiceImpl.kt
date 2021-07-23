@@ -26,9 +26,6 @@ class GoogleSubscriptionServiceImpl @Autowired constructor(
     override fun getByPurchaseToken(purchaseToken: String): GoogleSubscription? =
         googleSubscriptionRepository.getOneByPurchaseToken(purchaseToken)
 
-    override fun getByOrderId(orderId: String): GoogleSubscription? =
-        googleSubscriptionRepository.getOneByOrderId(orderId)
-
     override fun saveAll(subscriptions: List<GoogleSubscription>): List<GoogleSubscription> =
         googleSubscriptionRepository.saveAll(subscriptions)
 
@@ -50,14 +47,14 @@ class GoogleSubscriptionServiceImpl @Autowired constructor(
             sku
         )
         val googleSubscriptionInDb = googleSubscriptionRepository
-            .getOneByOrderId(orderId = googleSubscription.orderId)
+            .findAllByOrderId(orderId = googleSubscription.orderId).maxByOrNull { it.updated!! }
 
         log.info("googleSubscription: $googleSubscription")
 
         log.info("googleSubscriptionInDb: $googleSubscriptionInDb")
 
         val oriSubscriptionInDb = googleSubscription.linkedPurchaseToken?.let {
-            googleSubscriptionRepository.getOneByLinkedPurchaseToken(it)
+            googleSubscriptionRepository.findAllByLinkedPurchaseToken(it)
         }
         log.info("Subscription has ORI subscription: $oriSubscriptionInDb")
         val subscriptionUpdated = if (googleSubscriptionInDb != null) {
