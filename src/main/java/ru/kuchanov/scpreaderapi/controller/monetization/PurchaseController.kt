@@ -2,6 +2,7 @@ package ru.kuchanov.scpreaderapi.controller.monetization
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.api.services.androidpublisher.model.SubscriptionPurchase
+import org.apache.commons.io.IOUtils
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
@@ -51,6 +52,7 @@ import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
+import javax.servlet.http.HttpServletRequest
 
 
 @RestController
@@ -88,14 +90,38 @@ class PurchaseController @Autowired constructor(
 
     @PostMapping("/subscriptionEvents/g_purchases")
     fun googleSubscriptionEventsWebHook(
-        @RequestBody googleSubscriptionEventDto: GoogleSubscriptionEventDto
+        request: HttpServletRequest
     ) {
+        val body = IOUtils.toString(request.inputStream, Charsets.UTF_8)
+        googleLog.info("body: $body")
+        try {
+            request.headerNames.toList().forEach { googleLog.info("headers: $it, ${request.getHeader(it)}") }
+        } catch (e: Throwable) {
+            googleLog.error("headers error", e)
+        }
+
+        try {
+            request.parameterMap.entries.forEach { googleLog.info("parameterMap: ${it.key}, ${it.value}") }
+        } catch (e: Throwable) {
+            googleLog.error("parameterMap error", e)
+        }
+
+        if (body.isNullOrEmpty()) {
+            googleLog.error("Request body is null!")
+            return
+        }
+
+        var googleSubscriptionEventDto: GoogleSubscriptionEventDto? = null
+
         var error: Exception? = null
         var dataStringDecoded: String? = null
 
         try {
-            dataStringDecoded =
-                Base64Utils.decodeFromString(googleSubscriptionEventDto.message.data).toString(Charsets.UTF_8)
+            googleSubscriptionEventDto = objectMapper.readValue(body, GoogleSubscriptionEventDto::class.java)
+
+            dataStringDecoded = Base64Utils
+                .decodeFromString(googleSubscriptionEventDto.message.data)
+                .toString(Charsets.UTF_8)
             val parsedRequest = objectMapper.readValue(dataStringDecoded, DeveloperNotification::class.java)
             googleLog.info(
                 "parsedRequest: ${
@@ -153,7 +179,7 @@ class PurchaseController @Autowired constructor(
                     googleLog.info(
                         """
                         Successfully update renewed Huawei subscription (RENEWAL, RENEWAL_RESTORED, RENEWAL_RECURRING)!
-                        User: ${updatedUser.id}/${updatedUser.offlineLimitDisabledEndDate}. 
+                        User: ${updatedUser.id}/${updatedUser.offlineLimitDisabledEndDate}.
                         Subscription: ${subscriptionInDb.id}/${updatedSubscription?.expiryTimeMillis}.
                     """.trimIndent()
                     )
@@ -173,7 +199,7 @@ class PurchaseController @Autowired constructor(
             googleSubsEventHandleAttemptService.save(
                 GoogleSubscriptionEventHandleAttemptRecord(
                     decodedDataJson = dataStringDecoded ?: "",
-                    encodedData = googleSubscriptionEventDto.message.data,
+                    encodedData = googleSubscriptionEventDto?.message?.data ?: "googleSubscriptionEventDto is NULL!",
                 ).apply {
                     error?.let { e ->
                         errorClass = e::class.java.simpleName
@@ -189,6 +215,110 @@ class PurchaseController @Autowired constructor(
             )
         }
     }
+
+//    @PostMapping("/subscriptionEvents/g_purchases")
+//    fun googleSubscriptionEventsWebHook(
+//        @RequestBody googleSubscriptionEventDto: GoogleSubscriptionEventDto
+//    ) {
+//        var error: Exception? = null
+//        var dataStringDecoded: String? = null
+//
+//        try {
+//            dataStringDecoded =
+//                Base64Utils.decodeFromString(googleSubscriptionEventDto.message.data).toString(Charsets.UTF_8)
+//            val parsedRequest = objectMapper.readValue(dataStringDecoded, DeveloperNotification::class.java)
+//            googleLog.info(
+//                "parsedRequest: ${
+//                    objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(parsedRequest)
+//                }"
+//            )
+//            checkNotNull(parsedRequest.subscriptionNotification)
+////            The notificationType for a subscription can have the following values:
+////            (1) SUBSCRIPTION_RECOVERED - A subscription was recovered from account hold.
+////            (2) SUBSCRIPTION_RENEWED - An active subscription was renewed.
+////            (3) SUBSCRIPTION_CANCELED - A subscription was either voluntarily or involuntarily cancelled. For voluntary cancellation, sent when the user cancels.
+////            (4) SUBSCRIPTION_PURCHASED - A new subscription was purchased.
+////            (5) SUBSCRIPTION_ON_HOLD - A subscription has entered account hold (if enabled).
+////            (6) SUBSCRIPTION_IN_GRACE_PERIOD - A subscription has entered grace period (if enabled).
+////            (7) SUBSCRIPTION_RESTARTED - User has reactivated their subscription from Play > Account > Subscriptions (requires opt-in for subscription restoration).
+////            (8) SUBSCRIPTION_PRICE_CHANGE_CONFIRMED - A subscription price change has successfully been confirmed by the user.
+////            (9) SUBSCRIPTION_DEFERRED - A subscription's recurrence time has been extended.
+////            (10) SUBSCRIPTION_PAUSED - A subscription has been paused.
+////            (11) SUBSCRIPTION_PAUSE_SCHEDULE_CHANGED - A subscription pause schedule has been changed.
+////            (12) SUBSCRIPTION_REVOKED - A subscription has been revoked from the user before the expiration time.
+////            (13) SUBSCRIPTION_EXPIRED - A subscription has expired.
+//            when (parsedRequest.subscriptionNotification.notificationType) {
+//                SUBSCRIPTION_PURCHASED,
+//                SUBSCRIPTION_DEFERRED,
+//                SUBSCRIPTION_PRICE_CHANGE_CONFIRMED,
+//                SUBSCRIPTION_ON_HOLD,
+//                SUBSCRIPTION_IN_GRACE_PERIOD -> {
+//                    //nothing to do.
+//                }
+//
+//                SUBSCRIPTION_RENEWED, SUBSCRIPTION_RESTARTED, SUBSCRIPTION_RECOVERED,
+//                    //seems to be there we can use same logic too.
+//                SUBSCRIPTION_PAUSED, SUBSCRIPTION_REVOKED, SUBSCRIPTION_EXPIRED -> {
+//                    val inAppPurchaseData = parsedRequest.subscriptionNotification
+//                    val subId = inAppPurchaseData.subscriptionId
+//                    val purchaseToken = inAppPurchaseData.purchaseToken
+//
+//                    val subscriptionInDb = googleSubscriptionService
+//                        .getByPurchaseToken(inAppPurchaseData.purchaseToken)
+//                        ?: throw GoogleSubscriptionNotFoundException(
+//                            "GoogleSubscription not found for purchaseToken: $purchaseToken"
+//                        )
+//                    val user: User = googleSubscriptionService
+//                        .getUserByGoogleSubscriptionId(subscriptionInDb.id!!) ?: throw UserNotFoundException()
+//
+//                    val updatedUser = applyGoogleSubscription(
+//                        subId,
+//                        inAppPurchaseData.purchaseToken,
+//                        user,
+//                        pushTitle = "Subscription renewal!",
+//                        pushMessage = "Your subscription was successfully renewed!"
+//                    )
+//                    val updatedSubscription = googleSubscriptionService
+//                        .getById(subscriptionInDb.id)
+//                    googleLog.info(
+//                        """
+//                        Successfully update renewed Huawei subscription (RENEWAL, RENEWAL_RESTORED, RENEWAL_RECURRING)!
+//                        User: ${updatedUser.id}/${updatedUser.offlineLimitDisabledEndDate}.
+//                        Subscription: ${subscriptionInDb.id}/${updatedSubscription?.expiryTimeMillis}.
+//                    """.trimIndent()
+//                    )
+//                }
+//                SUBSCRIPTION_PAUSE_SCHEDULE_CHANGED -> {
+//                    //nothing to do?..
+//                }
+//                SUBSCRIPTION_CANCELED -> {
+//                    //nothing to do? As we'll receive expired event...
+//                }
+//            }
+//        } catch (e: Exception) {
+//            error = e
+//            googleLog.error("Error while handle huawei subscription event", error)
+//        } finally {
+//            @Suppress("DuplicatedCode")
+//            googleSubsEventHandleAttemptService.save(
+//                GoogleSubscriptionEventHandleAttemptRecord(
+//                    decodedDataJson = dataStringDecoded ?: "",
+//                    encodedData = googleSubscriptionEventDto.message.data,
+//                ).apply {
+//                    error?.let { e ->
+//                        errorClass = e::class.java.simpleName
+//                        errorMessage = e.message
+//                        stacktrace = errorUtils.stackTraceAsString(e)
+//                        error.cause?.let {
+//                            causeErrorClass = it::class.java.simpleName
+//                            causeErrorMessage = it.message
+//                            causeStacktrace = errorUtils.stackTraceAsString(it)
+//                        }
+//                    }
+//                }
+//            )
+//        }
+//    }
 
     @PostMapping("/subscriptionEvents/huawei")
     fun huaweiSubscriptionEventsWebHook(

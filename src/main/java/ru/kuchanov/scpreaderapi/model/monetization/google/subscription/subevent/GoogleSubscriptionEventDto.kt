@@ -15,12 +15,14 @@ data class GoogleSubscriptionEventDto(
      */
     val subscription: String
 ) {
+    @JsonIgnoreProperties(ignoreUnknown = true)
     data class Message(
         val attributes: Map<String, String>,
         /**
          * base64-encoded data field, with DeveloperNotification inside it
          */
         val data: String,
+        val publishTime: String,
         val messageId: String,
     )
 }
