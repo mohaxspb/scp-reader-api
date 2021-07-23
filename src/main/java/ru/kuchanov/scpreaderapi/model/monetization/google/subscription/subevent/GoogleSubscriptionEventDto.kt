@@ -9,21 +9,21 @@ import ru.kuchanov.scpreaderapi.model.monetization.google.subscription.subevent.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GoogleSubscriptionEventDto(
-    val message: Message,
+    val message: Message?,
     /**
      * i.e. "projects/myproject/subscriptions/mysubscription"
      */
-    val subscription: String
+    val subscription: String?
 ) {
     @JsonIgnoreProperties(ignoreUnknown = true)
     data class Message(
-        val attributes: Map<String, String>,
+        val attributes: Map<String?, String?>?,
         /**
          * base64-encoded data field, with DeveloperNotification inside it
          */
-        val data: String,
-        val publishTime: String,
-        val messageId: String,
+        val data: String?,
+        val publishTime: String?,
+        val messageId: String?,
     )
 }
 
@@ -32,15 +32,15 @@ data class DeveloperNotification(
     /**
      * The version of this notification. Initially, this is "1.0". This version is distinct from other version fields.
      */
-    val version: String,
+    val version: String?,
     /**
      * The package name of the application that this notification relates to (for example, `com.some.thing`).
      */
-    val packageName: String,
+    val packageName: String?,
     /**
      * The timestamp when the event occurred, in milliseconds since the Epoch.
      */
-    val eventTimeMillis: Long,
+    val eventTimeMillis: Long?,
     /**
      * If this field is present, then this notification is related to a subscription,
      * and this field contains additional information related to the subscription.

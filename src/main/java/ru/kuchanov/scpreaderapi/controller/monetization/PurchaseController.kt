@@ -120,7 +120,7 @@ class PurchaseController @Autowired constructor(
             googleSubscriptionEventDto = objectMapper.readValue(body, GoogleSubscriptionEventDto::class.java)
 
             dataStringDecoded = Base64Utils
-                .decodeFromString(googleSubscriptionEventDto.message.data)
+                .decodeFromString(googleSubscriptionEventDto.message!!.data!!)
                 .toString(Charsets.UTF_8)
             val parsedRequest = objectMapper.readValue(dataStringDecoded, DeveloperNotification::class.java)
             googleLog.info(
@@ -193,7 +193,7 @@ class PurchaseController @Autowired constructor(
             }
         } catch (e: Exception) {
             error = e
-            googleLog.error("Error while handle huawei subscription event", error)
+            googleLog.error("Error while handle google subscription event", error)
         } finally {
             @Suppress("DuplicatedCode")
             googleSubsEventHandleAttemptService.save(
