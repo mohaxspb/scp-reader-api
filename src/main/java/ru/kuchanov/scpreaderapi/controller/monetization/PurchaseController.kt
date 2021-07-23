@@ -143,7 +143,7 @@ class PurchaseController @Autowired constructor(
 //            (11) SUBSCRIPTION_PAUSE_SCHEDULE_CHANGED - A subscription pause schedule has been changed.
 //            (12) SUBSCRIPTION_REVOKED - A subscription has been revoked from the user before the expiration time.
 //            (13) SUBSCRIPTION_EXPIRED - A subscription has expired.
-            when (parsedRequest.subscriptionNotification.notificationType) {
+            when (parsedRequest.subscriptionNotification.notificationTypeEnum) {
                 SUBSCRIPTION_PURCHASED,
                 SUBSCRIPTION_DEFERRED,
                 SUBSCRIPTION_PRICE_CHANGE_CONFIRMED,
@@ -195,6 +195,7 @@ class PurchaseController @Autowired constructor(
             error = e
             googleLog.error("Error while handle google subscription event", error)
         } finally {
+            googleLog.info("write google attempt to DB START")
             @Suppress("DuplicatedCode")
             googleSubsEventHandleAttemptService.save(
                 GoogleSubscriptionEventHandleAttemptRecord(
@@ -213,6 +214,7 @@ class PurchaseController @Autowired constructor(
                     }
                 }
             )
+            googleLog.info("write google attempt to DB END")
         }
     }
 

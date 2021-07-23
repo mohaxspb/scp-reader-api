@@ -1,7 +1,6 @@
 package ru.kuchanov.scpreaderapi.model.monetization.google.subscription.subevent
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonValue
 import ru.kuchanov.scpreaderapi.model.monetization.google.subscription.subevent.DeveloperNotification.SubscriptionNotification.NotificationType
 
 /**
@@ -56,7 +55,7 @@ data class DeveloperNotification(
         /**
          * see [NotificationType]
          */
-        val notificationType: NotificationType,
+        val notificationType: Int,
         /**
          * The token provided to the user's device when the subscription was purchased.
          */
@@ -66,6 +65,12 @@ data class DeveloperNotification(
          */
         val subscriptionId: String,
     ) {
+        /**
+         * see [NotificationType]
+         */
+        val notificationTypeEnum: NotificationType?
+            get() = NotificationType.values().firstOrNull { it.value == notificationType }
+
         enum class NotificationType(val value: Int) {
             /**
              * A subscription was recovered from account hold.
@@ -131,9 +136,6 @@ data class DeveloperNotification(
              * A subscription has expired.
              */
             SUBSCRIPTION_EXPIRED(13);
-
-            @JsonValue
-            fun serializedValue() = value
         }
     }
 }
