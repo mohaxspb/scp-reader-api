@@ -12,6 +12,7 @@ import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.model.dto.auth.CommonUserData
 import ru.kuchanov.scpreaderapi.model.facebook.FacebookProfileResponse
 import ru.kuchanov.scpreaderapi.model.facebook.ValidatedTokenWrapper
+import ru.kuchanov.scpreaderapi.model.huawei.account.HuaweiAccountResponse
 
 @Service
 class ApiClient @Autowired constructor(
@@ -117,7 +118,8 @@ class ApiClient @Autowired constructor(
                 throw IllegalStateException("Huawei account request failed. ErrorBody: ${accountResponse.errorBody()?.string()}")
             }
 
-            val accountData = accountResponse.body() ?: throw IllegalStateException("Huawei account is null!")
+            val accountData: HuaweiAccountResponse = accountResponse.body()
+                    ?: throw IllegalStateException("Huawei account is null!")
 
             CommonUserData(
                     id = accountData.openID,

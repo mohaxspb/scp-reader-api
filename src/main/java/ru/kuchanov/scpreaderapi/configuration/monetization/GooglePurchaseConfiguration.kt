@@ -15,7 +15,7 @@ class GooglePurchaseConfiguration {
 
     companion object {
         const val ANDROID_DEVELOPER_SERVICE_KEY = "googlePlay/googlePlayAndroidDeveloperServiceKey.json"
-        const val APPLICATION_NAME = "web-app"
+        const val APPLICATION_NAME = "purchasevalidation"
     }
 
     @Bean

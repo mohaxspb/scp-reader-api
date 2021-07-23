@@ -115,6 +115,7 @@ class ParseArticleTextService @Autowired constructor(
         return imageTextPart
     }
 
+    //todo print article in logs
     private fun parseSpoilerParts(html: String, order: Int): TextPart {
         val spoilerTextPart = TextPart(data = null, type = TextType.SPOILER, orderInText = order)
 

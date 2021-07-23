@@ -36,6 +36,11 @@ class Application : SpringBootServletInitializer() {
     fun huaweiLogger(): Logger =
             LoggerFactory.getLogger(HUAWEI_LOGGER)
 
+    @Qualifier(GOOGLE_LOGGER)
+    @Bean
+    fun googleLogger(): Logger =
+        LoggerFactory.getLogger(GOOGLE_LOGGER)
+
     @Qualifier(PARSING_LOGGER)
     @Bean
     fun parsingLogger(): Logger =
@@ -48,6 +53,7 @@ class Application : SpringBootServletInitializer() {
         const val APPLICATION_LOGGER = "application"
         const val CACHE_LOGGER = "cache"
         const val HUAWEI_LOGGER = "huawei"
+        const val GOOGLE_LOGGER = "google"
         const val PARSING_LOGGER = "parsing"
 
         @JvmStatic

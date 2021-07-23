@@ -1,0 +1,1 @@
+ALTER SEQUENCE android_subscriptions_id_seq RENAME TO google_subscriptions_id_seq;

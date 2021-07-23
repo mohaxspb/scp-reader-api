@@ -13,6 +13,9 @@
     <property name="HUAWEI_LOG_NAME" value="huaweiLog"/>
     <property name="HUAWEI_LOG" value="${LOG_DIR}/${HUAWEI_LOG_NAME}.log"/>
 
+    <property name="GOOGLE_LOG_NAME" value="googleLog"/>
+    <property name="GOOGLE_LOG" value="${LOG_DIR}/${GOOGLE_LOG_NAME}.log"/>
+
     <property name="PARSING_LOG_NAME" value="parsingLog"/>
     <property name="PARSING_LOG" value="${LOG_DIR}/${PARSING_LOG_NAME}.log"/>
 
@@ -113,6 +116,33 @@
         </encoder>
     </appender>
 
+    <appender name="GOOGLE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${GOOGLE_LOG}</file>
+
+        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+            <evaluator> <!-- defaults to type ch.qos.logback.classic.boolex.JaninoEventEvaluator -->
+                <expression>return logger.equals("google");</expression>
+            </evaluator>
+            <OnMismatch>DENY</OnMismatch>
+            <OnMatch>ACCEPT</OnMatch>
+        </filter>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/archived/${GOOGLE_LOG_NAME}.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <!-- each archived file, size max 10MB -->
+            <maxFileSize>10MB</maxFileSize>
+            <!-- total size of all archive files, if total size > 20GB,
+                it will delete old archived file -->
+            <totalSizeCap>6GB</totalSizeCap>
+            <!-- 60 days to keep -->
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+
+        <encoder>
+            <pattern>${PATTERN_SIMPLE}</pattern>
+        </encoder>
+    </appender>
+
     <appender name="PARSING" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${PARSING_LOG}</file>
 
@@ -158,6 +188,11 @@
     <logger name="huawei" level="debug" additivity="false">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="HUAWEI"/>
+    </logger>
+
+    <logger name="google" level="debug" additivity="false">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="GOOGLE"/>
     </logger>
 
     <logger name="parsing" level="debug" additivity="false">

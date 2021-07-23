@@ -10,8 +10,6 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
 import ru.kuchanov.scpreaderapi.bean.auth.UserToAuthority
-import ru.kuchanov.scpreaderapi.bean.purchase.UsersAndroidProduct
-import ru.kuchanov.scpreaderapi.bean.purchase.UsersAndroidSubscription
 import java.sql.Timestamp
 import java.time.LocalDateTime
 import javax.persistence.*
@@ -71,10 +69,6 @@ data class User(
 
         @Column(name = "main_lang_id")
         var mainLangId: String = ScpReaderConstants.Firebase.FirebaseInstance.EN.lang,
-        @OneToMany(cascade = [CascadeType.ALL], mappedBy = "userId", fetch = FetchType.EAGER)
-        var userAndroidSubscriptions: Set<UsersAndroidSubscription> = setOf(),
-        @OneToMany(cascade = [CascadeType.ALL], mappedBy = "userId", fetch = FetchType.EAGER)
-        var userAndroidProduct: Set<UsersAndroidProduct> = setOf(),
 
         //monetization
         @Column(name = "ads_disabled_end_date")
