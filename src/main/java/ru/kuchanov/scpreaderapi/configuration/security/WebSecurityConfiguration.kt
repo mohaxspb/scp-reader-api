@@ -98,7 +98,8 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
                         "/login**",
                         "/error**",
                         "/${ScpReaderConstants.Path.PUSH}/${ScpReaderConstants.Path.MESSAGING}/all/byTypes",
-                        "/${ScpReaderConstants.Path.MONETIZATION}/${ScpReaderConstants.Path.PURCHASE}/subscriptionEvents/huawei"
+                        "/${ScpReaderConstants.Path.MONETIZATION}/${ScpReaderConstants.Path.PURCHASE}/subscriptionEvents/huawei",
+                        "/${ScpReaderConstants.Path.MONETIZATION}/${ScpReaderConstants.Path.PURCHASE}/subscriptionEvents/g_purchases"
                 )
                 .permitAll()
         http
