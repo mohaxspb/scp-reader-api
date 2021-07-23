@@ -169,6 +169,7 @@ class PurchaseController @Autowired constructor(
                         .getUserByGoogleSubscriptionId(subscriptionInDb.id!!) ?: throw UserNotFoundException()
 
                     val updatedUser = applyGoogleSubscription(
+                        false,
                         subId,
                         inAppPurchaseData.purchaseToken,
                         user,
@@ -535,6 +536,7 @@ class PurchaseController @Autowired constructor(
                 when (purchaseType) {
                     InappType.SUBS -> {
                         return applyGoogleSubscription(
+                            acknowledge = true,
                             subscriptionId = productId,
                             purchaseToken = purchaseToken,
                             user = user,
@@ -556,6 +558,7 @@ class PurchaseController @Autowired constructor(
      * @throws GooglePurchaseError
      */
     private fun applyGoogleSubscription(
+        acknowledge: Boolean,
         subscriptionId: String,
         purchaseToken: String,
         user: User,
@@ -597,15 +600,17 @@ class PurchaseController @Autowired constructor(
         //3. Update user in DB.
         updateUserSubscriptionExpiration(user.id)
 
-        //4. Acknowledge product
-        val acknowledgeResult = googlePurchaseService.acknowledgeSubscription(
-            subscriptionId = subscriptionId, purchaseToken = purchaseToken
-        )
-        if (acknowledgeResult.success) {
-            googleLog.info("Subscription acknowledge is successful!")
-        } else {
-            check(acknowledgeResult is GoogleAcknowledgeResult.GoogleSubscriptionAcknowledgeFailure)
-            throw GooglePurchaseError("Error while acknowledge subscription!", acknowledgeResult.cause)
+        //4. Acknowledge product if need
+        if (acknowledge) {
+            val acknowledgeResult = googlePurchaseService.acknowledgeSubscription(
+                subscriptionId = subscriptionId, purchaseToken = purchaseToken
+            )
+            if (acknowledgeResult.success) {
+                googleLog.info("Subscription acknowledge is successful!")
+            } else {
+                check(acknowledgeResult is GoogleAcknowledgeResult.GoogleSubscriptionAcknowledgeFailure)
+                throw GooglePurchaseError("Error while acknowledge subscription!", acknowledgeResult.cause)
+            }
         }
 
         //5. Send push
