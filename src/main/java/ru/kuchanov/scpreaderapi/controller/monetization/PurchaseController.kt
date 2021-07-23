@@ -160,7 +160,8 @@ class PurchaseController @Autowired constructor(
                     val purchaseToken = inAppPurchaseData.purchaseToken
 
                     val subscriptionInDb = googleSubscriptionService
-                        .getByPurchaseToken(inAppPurchaseData.purchaseToken)
+                        .findAllByPurchaseToken(inAppPurchaseData.purchaseToken)
+                        .maxByOrNull { it.orderId }
                         ?: throw GoogleSubscriptionNotFoundException(
                             "GoogleSubscription not found for purchaseToken: $purchaseToken"
                         )

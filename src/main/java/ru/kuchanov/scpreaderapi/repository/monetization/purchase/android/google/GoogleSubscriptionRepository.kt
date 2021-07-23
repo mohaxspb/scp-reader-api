@@ -6,7 +6,7 @@ import ru.kuchanov.scpreaderapi.bean.purchase.google.GoogleSubscription
 
 interface GoogleSubscriptionRepository : JpaRepository<GoogleSubscription, Long> {
     fun getOneById(id: Long): GoogleSubscription?
-    fun getOneByPurchaseToken(purchaseToken: String): GoogleSubscription?
+    fun findAllByPurchaseToken(purchaseToken: String): List<GoogleSubscription>
     fun findAllByOrderId(orderId: String): List<GoogleSubscription>
     fun findAllByLinkedPurchaseToken(linkedPurchaseToken: String): List<GoogleSubscription>
 

@@ -8,7 +8,7 @@ import javax.transaction.Transactional
 interface GoogleSubscriptionService {
 
     fun getById(id: Long): GoogleSubscription?
-    fun getByPurchaseToken(purchaseToken: String): GoogleSubscription?
+    fun findAllByPurchaseToken(purchaseToken: String): List<GoogleSubscription>
 
     fun save(googleProduct: GoogleSubscription): GoogleSubscription
     fun saveAll(subscriptions: List<GoogleSubscription>): List<GoogleSubscription>

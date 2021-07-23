@@ -23,8 +23,8 @@ class GoogleSubscriptionServiceImpl @Autowired constructor(
     override fun getById(id: Long) =
         googleSubscriptionRepository.getOneById(id)
 
-    override fun getByPurchaseToken(purchaseToken: String): GoogleSubscription? =
-        googleSubscriptionRepository.getOneByPurchaseToken(purchaseToken)
+    override fun findAllByPurchaseToken(purchaseToken: String): List<GoogleSubscription> =
+        googleSubscriptionRepository.findAllByPurchaseToken(purchaseToken)
 
     override fun saveAll(subscriptions: List<GoogleSubscription>): List<GoogleSubscription> =
         googleSubscriptionRepository.saveAll(subscriptions)
