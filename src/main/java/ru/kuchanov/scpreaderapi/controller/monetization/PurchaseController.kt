@@ -597,7 +597,7 @@ class PurchaseController @Autowired constructor(
             .filter { it.expiryTimeMillis!!.toInstant(ZoneOffset.UTC).toEpochMilli() > curTimeMillis }
             .sortedBy { it.expiryTimeMillis }
 
-        val hasNoValidSubscription = userNonExpiredAndValidHuaweiSubscriptions.isEmpty() ||
+        val hasNoValidSubscription = userNonExpiredAndValidHuaweiSubscriptions.isEmpty() &&
                 userNonExpiredGoogleSubscriptions.isEmpty()
 
         return if (hasNoValidSubscription) {
