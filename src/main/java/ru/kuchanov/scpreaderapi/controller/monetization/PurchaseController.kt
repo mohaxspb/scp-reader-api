@@ -15,6 +15,7 @@ import ru.kuchanov.scpreaderapi.Application
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.ScpReaderConstants.InternalAuthData.ADMIN_ID
 import ru.kuchanov.scpreaderapi.bean.purchase.SubscriptionValidationAttempts
+import ru.kuchanov.scpreaderapi.bean.purchase.google.GoogleSubscription
 import ru.kuchanov.scpreaderapi.bean.purchase.google.GoogleSubscriptionEventHandleAttemptRecord
 import ru.kuchanov.scpreaderapi.bean.purchase.google.GoogleSubscriptionNotFoundException
 import ru.kuchanov.scpreaderapi.bean.purchase.huawei.HuaweiSubscription
@@ -141,67 +142,35 @@ class PurchaseController @Autowired constructor(
 
                 //send push with APPLIED message
                 SUBSCRIPTION_RENEWED, SUBSCRIPTION_RESTARTED, SUBSCRIPTION_RECOVERED -> {
-                    val inAppPurchaseData = parsedRequest.subscriptionNotification
-                    val subId = inAppPurchaseData.subscriptionId
-                    val purchaseToken = inAppPurchaseData.purchaseToken
-
-                    val subscriptionInDb = googleSubscriptionService
-                        .findAllByPurchaseToken(inAppPurchaseData.purchaseToken)
-                        .maxByOrNull { it.orderId }
-                        ?: throw GoogleSubscriptionNotFoundException(
-                            "GoogleSubscription not found for purchaseToken: $purchaseToken"
-                        )
-                    val user: User = googleSubscriptionService
-                        .getUserByGoogleSubscriptionId(subscriptionInDb.id!!) ?: throw UserNotFoundException()
-
-                    val updatedUser = applyGoogleSubscription(
-                        false,
-                        subId,
-                        inAppPurchaseData.purchaseToken,
-                        user,
+                    val result = handleGooglePurchaseEvent(
+                        developerNotification = parsedRequest,
                         pushTitle = "Subscription renewal!",
                         pushMessage = "Your subscription was successfully renewed!"
                     )
-                    val updatedSubscription = googleSubscriptionService
-                        .getById(subscriptionInDb.id)
+
                     googleLog.info(
                         """
-                        Successfully update renewed google subscription (SUBSCRIPTION_RENEWED, SUBSCRIPTION_RESTARTED, SUBSCRIPTION_RECOVERED)!
-                        User: ${updatedUser.id}/${updatedUser.offlineLimitDisabledEndDate}.
-                        Subscription: ${subscriptionInDb.id}/${updatedSubscription?.expiryTimeMillis}.
+                        Successfully update renewed google subscription 
+                        (SUBSCRIPTION_RENEWED, SUBSCRIPTION_RESTARTED, SUBSCRIPTION_RECOVERED)!
+                        User: ${result.second.id}/${result.second.offlineLimitDisabledEndDate}.
+                        Subscription: ${result.first.id}/${result.first.expiryTimeMillis}.
                     """.trimIndent()
                     )
                 }
                 //send push with EXPIRED message
                 SUBSCRIPTION_PAUSED, SUBSCRIPTION_REVOKED, SUBSCRIPTION_EXPIRED -> {
-                    val inAppPurchaseData = parsedRequest.subscriptionNotification
-                    val subId = inAppPurchaseData.subscriptionId
-                    val purchaseToken = inAppPurchaseData.purchaseToken
-
-                    val subscriptionInDb = googleSubscriptionService
-                        .findAllByPurchaseToken(inAppPurchaseData.purchaseToken)
-                        .maxByOrNull { it.orderId }
-                        ?: throw GoogleSubscriptionNotFoundException(
-                            "GoogleSubscription not found for purchaseToken: $purchaseToken"
-                        )
-                    val user: User = googleSubscriptionService
-                        .getUserByGoogleSubscriptionId(subscriptionInDb.id!!) ?: throw UserNotFoundException()
-
-                    val updatedUser = applyGoogleSubscription(
-                        false,
-                        subId,
-                        inAppPurchaseData.purchaseToken,
-                        user,
+                    val result = handleGooglePurchaseEvent(
+                        developerNotification = parsedRequest,
                         pushTitle = "Subscription expired.",
                         pushMessage = "Subscription has expired and no longer active."
                     )
-                    val updatedSubscription = googleSubscriptionService
-                        .getById(subscriptionInDb.id)
+
                     googleLog.info(
                         """
-                        Successfully update renewed google subscription (SUBSCRIPTION_RENEWED, SUBSCRIPTION_RESTARTED, SUBSCRIPTION_RECOVERED)!
-                        User: ${updatedUser.id}/${updatedUser.offlineLimitDisabledEndDate}.
-                        Subscription: ${subscriptionInDb.id}/${updatedSubscription?.expiryTimeMillis}.
+                        Successfully update expired google subscription 
+                        (SUBSCRIPTION_PAUSED, SUBSCRIPTION_REVOKED, SUBSCRIPTION_EXPIRED)!
+                        User: ${result.second.id}/${result.second.offlineLimitDisabledEndDate}.
+                        Subscription: ${result.first.id}/${result.first.expiryTimeMillis}.
                     """.trimIndent()
                     )
                 }
@@ -237,6 +206,37 @@ class PurchaseController @Autowired constructor(
             )
             googleLog.info("write google attempt to DB END")
         }
+    }
+
+    fun handleGooglePurchaseEvent(
+        developerNotification: DeveloperNotification,
+        pushTitle: String,
+        pushMessage: String
+    ): Pair<GoogleSubscription, UserProjectionV2> {
+        val inAppPurchaseData = developerNotification.subscriptionNotification
+        checkNotNull(inAppPurchaseData)
+        val subId = inAppPurchaseData.subscriptionId
+        val purchaseToken = inAppPurchaseData.purchaseToken
+
+        val subscriptionInDb = googleSubscriptionService
+            .findAllByPurchaseToken(inAppPurchaseData.purchaseToken)
+            .maxByOrNull { it.orderId }
+            ?: throw GoogleSubscriptionNotFoundException(
+                "GoogleSubscription not found for purchaseToken: $purchaseToken"
+            )
+        val user: User = googleSubscriptionService
+            .getUserByGoogleSubscriptionId(subscriptionInDb.id!!) ?: throw UserNotFoundException()
+
+        val updatedUser = applyGoogleSubscription(
+            false,
+            subId,
+            inAppPurchaseData.purchaseToken,
+            user,
+            pushTitle = pushTitle,
+            pushMessage = pushMessage
+        )
+        val updatedSubscription = googleSubscriptionService.getById(subscriptionInDb.id)!!
+        return updatedSubscription to updatedUser
     }
 
     @PostMapping("/subscriptionEvents/huawei")
