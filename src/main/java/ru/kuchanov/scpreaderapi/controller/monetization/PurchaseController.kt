@@ -13,6 +13,7 @@ import org.springframework.util.Base64Utils
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.Application
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
+import ru.kuchanov.scpreaderapi.ScpReaderConstants.InternalAuthData.ADMIN_ID
 import ru.kuchanov.scpreaderapi.bean.purchase.SubscriptionValidationAttempts
 import ru.kuchanov.scpreaderapi.bean.purchase.google.GoogleSubscriptionEventHandleAttemptRecord
 import ru.kuchanov.scpreaderapi.bean.purchase.google.GoogleSubscriptionNotFoundException
@@ -129,20 +130,6 @@ class PurchaseController @Autowired constructor(
                 }"
             )
             checkNotNull(parsedRequest.subscriptionNotification)
-//            The notificationType for a subscription can have the following values:
-//            (1) SUBSCRIPTION_RECOVERED - A subscription was recovered from account hold.
-//            (2) SUBSCRIPTION_RENEWED - An active subscription was renewed.
-//            (3) SUBSCRIPTION_CANCELED - A subscription was either voluntarily or involuntarily cancelled. For voluntary cancellation, sent when the user cancels.
-//            (4) SUBSCRIPTION_PURCHASED - A new subscription was purchased.
-//            (5) SUBSCRIPTION_ON_HOLD - A subscription has entered account hold (if enabled).
-//            (6) SUBSCRIPTION_IN_GRACE_PERIOD - A subscription has entered grace period (if enabled).
-//            (7) SUBSCRIPTION_RESTARTED - User has reactivated their subscription from Play > Account > Subscriptions (requires opt-in for subscription restoration).
-//            (8) SUBSCRIPTION_PRICE_CHANGE_CONFIRMED - A subscription price change has successfully been confirmed by the user.
-//            (9) SUBSCRIPTION_DEFERRED - A subscription's recurrence time has been extended.
-//            (10) SUBSCRIPTION_PAUSED - A subscription has been paused.
-//            (11) SUBSCRIPTION_PAUSE_SCHEDULE_CHANGED - A subscription pause schedule has been changed.
-//            (12) SUBSCRIPTION_REVOKED - A subscription has been revoked from the user before the expiration time.
-//            (13) SUBSCRIPTION_EXPIRED - A subscription has expired.
             when (parsedRequest.subscriptionNotification.notificationTypeEnum) {
                 SUBSCRIPTION_PURCHASED,
                 SUBSCRIPTION_DEFERRED,
@@ -547,8 +534,8 @@ class PurchaseController @Autowired constructor(
             title = pushTitle,
             message = pushMessage,
             type = ScpReaderConstants.Push.MessageType.SUBSCRIPTION_EVENT,
-            author = userService.getById(ScpReaderConstants.InternalAuthData.ADMIN_ID)
-                ?: throw UserNotFoundException("Can't find admin user with id: ${ScpReaderConstants.InternalAuthData.ADMIN_ID}")
+            author = userService.getById(ADMIN_ID)
+                ?: throw UserNotFoundException("Can't find admin user with id: $ADMIN_ID")
         )
 
         //6. Return updated user
@@ -585,8 +572,8 @@ class PurchaseController @Autowired constructor(
             title = pushTitle,
             message = pushMessage,
             type = ScpReaderConstants.Push.MessageType.SUBSCRIPTION_EVENT,
-            author = userService.getById(ScpReaderConstants.InternalAuthData.ADMIN_ID)
-                ?: throw UserNotFoundException("Can't find admin user with id: ${ScpReaderConstants.InternalAuthData.ADMIN_ID}")
+            author = userService.getById(ADMIN_ID)
+                ?: throw UserNotFoundException("Can't find admin user with id: $ADMIN_ID")
         )
 
         //5. Return updated user
@@ -793,7 +780,11 @@ class PurchaseController @Autowired constructor(
                 //Do not try to validate after 3 days of unsuccessful attempts if period is not Period.WEEK
                 val previousAttempts = subscriptionValidateAttemptsService
                     .getByStoreAndSubscriptionId(Store.HUAWEI.name, currentSubscription.id!!)
-                if (period != Period.WEEK && previousAttempts != null && previousAttempts.attempts >= MAX_VALIDATION_ATTEMPTS) {
+                if (
+                    period != Period.WEEK
+                    && previousAttempts != null
+                    && previousAttempts.attempts >= MAX_VALIDATION_ATTEMPTS
+                ) {
                     huaweiLog.error("MAX VALIDATE ATTEMPTS LIMIT EXCEEDED: $currentSubscription!")
                     return@mapNotNull null
                 }
@@ -830,7 +821,8 @@ class PurchaseController @Autowired constructor(
                     return@mapNotNull null
                 }
 
-                val huaweiSubscriptionResponse = (verificationResult as ValidationResponse.HuaweiSubscriptionResponse)
+                val huaweiSubscriptionResponse =
+                    (verificationResult as ValidationResponse.HuaweiSubscriptionResponse)
 
                 //2. Write product info to DB.
                 val owner = huaweiMonetizationService.getUserByHuaweiSubscriptionId(currentSubscription.id)
@@ -860,7 +852,7 @@ class PurchaseController @Autowired constructor(
                     title = title,
                     message = message,
                     type = ScpReaderConstants.Push.MessageType.SUBSCRIPTION_EVENT,
-                    author = userService.getById(ScpReaderConstants.InternalAuthData.ADMIN_ID)
+                    author = userService.getById(ADMIN_ID)
                         ?: throw UserNotFoundException()
                 )
 
