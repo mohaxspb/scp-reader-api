@@ -152,9 +152,8 @@ class PurchaseController @Autowired constructor(
                     //nothing to do.
                 }
 
-                SUBSCRIPTION_RENEWED, SUBSCRIPTION_RESTARTED, SUBSCRIPTION_RECOVERED,
-                    //seems to be there we can use same logic too.
-                SUBSCRIPTION_PAUSED, SUBSCRIPTION_REVOKED, SUBSCRIPTION_EXPIRED -> {
+                //send push with APPLIED message
+                SUBSCRIPTION_RENEWED, SUBSCRIPTION_RESTARTED, SUBSCRIPTION_RECOVERED -> {
                     val inAppPurchaseData = parsedRequest.subscriptionNotification
                     val subId = inAppPurchaseData.subscriptionId
                     val purchaseToken = inAppPurchaseData.purchaseToken
@@ -180,7 +179,40 @@ class PurchaseController @Autowired constructor(
                         .getById(subscriptionInDb.id)
                     googleLog.info(
                         """
-                        Successfully update renewed Huawei subscription (RENEWAL, RENEWAL_RESTORED, RENEWAL_RECURRING)!
+                        Successfully update renewed google subscription (SUBSCRIPTION_RENEWED, SUBSCRIPTION_RESTARTED, SUBSCRIPTION_RECOVERED)!
+                        User: ${updatedUser.id}/${updatedUser.offlineLimitDisabledEndDate}.
+                        Subscription: ${subscriptionInDb.id}/${updatedSubscription?.expiryTimeMillis}.
+                    """.trimIndent()
+                    )
+                }
+                //send push with EXPIRED message
+                SUBSCRIPTION_PAUSED, SUBSCRIPTION_REVOKED, SUBSCRIPTION_EXPIRED -> {
+                    val inAppPurchaseData = parsedRequest.subscriptionNotification
+                    val subId = inAppPurchaseData.subscriptionId
+                    val purchaseToken = inAppPurchaseData.purchaseToken
+
+                    val subscriptionInDb = googleSubscriptionService
+                        .findAllByPurchaseToken(inAppPurchaseData.purchaseToken)
+                        .maxByOrNull { it.orderId }
+                        ?: throw GoogleSubscriptionNotFoundException(
+                            "GoogleSubscription not found for purchaseToken: $purchaseToken"
+                        )
+                    val user: User = googleSubscriptionService
+                        .getUserByGoogleSubscriptionId(subscriptionInDb.id!!) ?: throw UserNotFoundException()
+
+                    val updatedUser = applyGoogleSubscription(
+                        false,
+                        subId,
+                        inAppPurchaseData.purchaseToken,
+                        user,
+                        pushTitle = "Subscription expired.",
+                        pushMessage = "Subscription has expired and no longer active."
+                    )
+                    val updatedSubscription = googleSubscriptionService
+                        .getById(subscriptionInDb.id)
+                    googleLog.info(
+                        """
+                        Successfully update renewed google subscription (SUBSCRIPTION_RENEWED, SUBSCRIPTION_RESTARTED, SUBSCRIPTION_RECOVERED)!
                         User: ${updatedUser.id}/${updatedUser.offlineLimitDisabledEndDate}.
                         Subscription: ${subscriptionInDb.id}/${updatedSubscription?.expiryTimeMillis}.
                     """.trimIndent()
@@ -219,110 +251,6 @@ class PurchaseController @Autowired constructor(
             googleLog.info("write google attempt to DB END")
         }
     }
-
-//    @PostMapping("/subscriptionEvents/g_purchases")
-//    fun googleSubscriptionEventsWebHook(
-//        @RequestBody googleSubscriptionEventDto: GoogleSubscriptionEventDto
-//    ) {
-//        var error: Exception? = null
-//        var dataStringDecoded: String? = null
-//
-//        try {
-//            dataStringDecoded =
-//                Base64Utils.decodeFromString(googleSubscriptionEventDto.message.data).toString(Charsets.UTF_8)
-//            val parsedRequest = objectMapper.readValue(dataStringDecoded, DeveloperNotification::class.java)
-//            googleLog.info(
-//                "parsedRequest: ${
-//                    objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(parsedRequest)
-//                }"
-//            )
-//            checkNotNull(parsedRequest.subscriptionNotification)
-////            The notificationType for a subscription can have the following values:
-////            (1) SUBSCRIPTION_RECOVERED - A subscription was recovered from account hold.
-////            (2) SUBSCRIPTION_RENEWED - An active subscription was renewed.
-////            (3) SUBSCRIPTION_CANCELED - A subscription was either voluntarily or involuntarily cancelled. For voluntary cancellation, sent when the user cancels.
-////            (4) SUBSCRIPTION_PURCHASED - A new subscription was purchased.
-////            (5) SUBSCRIPTION_ON_HOLD - A subscription has entered account hold (if enabled).
-////            (6) SUBSCRIPTION_IN_GRACE_PERIOD - A subscription has entered grace period (if enabled).
-////            (7) SUBSCRIPTION_RESTARTED - User has reactivated their subscription from Play > Account > Subscriptions (requires opt-in for subscription restoration).
-////            (8) SUBSCRIPTION_PRICE_CHANGE_CONFIRMED - A subscription price change has successfully been confirmed by the user.
-////            (9) SUBSCRIPTION_DEFERRED - A subscription's recurrence time has been extended.
-////            (10) SUBSCRIPTION_PAUSED - A subscription has been paused.
-////            (11) SUBSCRIPTION_PAUSE_SCHEDULE_CHANGED - A subscription pause schedule has been changed.
-////            (12) SUBSCRIPTION_REVOKED - A subscription has been revoked from the user before the expiration time.
-////            (13) SUBSCRIPTION_EXPIRED - A subscription has expired.
-//            when (parsedRequest.subscriptionNotification.notificationType) {
-//                SUBSCRIPTION_PURCHASED,
-//                SUBSCRIPTION_DEFERRED,
-//                SUBSCRIPTION_PRICE_CHANGE_CONFIRMED,
-//                SUBSCRIPTION_ON_HOLD,
-//                SUBSCRIPTION_IN_GRACE_PERIOD -> {
-//                    //nothing to do.
-//                }
-//
-//                SUBSCRIPTION_RENEWED, SUBSCRIPTION_RESTARTED, SUBSCRIPTION_RECOVERED,
-//                    //seems to be there we can use same logic too.
-//                SUBSCRIPTION_PAUSED, SUBSCRIPTION_REVOKED, SUBSCRIPTION_EXPIRED -> {
-//                    val inAppPurchaseData = parsedRequest.subscriptionNotification
-//                    val subId = inAppPurchaseData.subscriptionId
-//                    val purchaseToken = inAppPurchaseData.purchaseToken
-//
-//                    val subscriptionInDb = googleSubscriptionService
-//                        .getByPurchaseToken(inAppPurchaseData.purchaseToken)
-//                        ?: throw GoogleSubscriptionNotFoundException(
-//                            "GoogleSubscription not found for purchaseToken: $purchaseToken"
-//                        )
-//                    val user: User = googleSubscriptionService
-//                        .getUserByGoogleSubscriptionId(subscriptionInDb.id!!) ?: throw UserNotFoundException()
-//
-//                    val updatedUser = applyGoogleSubscription(
-//                        subId,
-//                        inAppPurchaseData.purchaseToken,
-//                        user,
-//                        pushTitle = "Subscription renewal!",
-//                        pushMessage = "Your subscription was successfully renewed!"
-//                    )
-//                    val updatedSubscription = googleSubscriptionService
-//                        .getById(subscriptionInDb.id)
-//                    googleLog.info(
-//                        """
-//                        Successfully update renewed Huawei subscription (RENEWAL, RENEWAL_RESTORED, RENEWAL_RECURRING)!
-//                        User: ${updatedUser.id}/${updatedUser.offlineLimitDisabledEndDate}.
-//                        Subscription: ${subscriptionInDb.id}/${updatedSubscription?.expiryTimeMillis}.
-//                    """.trimIndent()
-//                    )
-//                }
-//                SUBSCRIPTION_PAUSE_SCHEDULE_CHANGED -> {
-//                    //nothing to do?..
-//                }
-//                SUBSCRIPTION_CANCELED -> {
-//                    //nothing to do? As we'll receive expired event...
-//                }
-//            }
-//        } catch (e: Exception) {
-//            error = e
-//            googleLog.error("Error while handle huawei subscription event", error)
-//        } finally {
-//            @Suppress("DuplicatedCode")
-//            googleSubsEventHandleAttemptService.save(
-//                GoogleSubscriptionEventHandleAttemptRecord(
-//                    decodedDataJson = dataStringDecoded ?: "",
-//                    encodedData = googleSubscriptionEventDto.message.data,
-//                ).apply {
-//                    error?.let { e ->
-//                        errorClass = e::class.java.simpleName
-//                        errorMessage = e.message
-//                        stacktrace = errorUtils.stackTraceAsString(e)
-//                        error.cause?.let {
-//                            causeErrorClass = it::class.java.simpleName
-//                            causeErrorMessage = it.message
-//                            causeStacktrace = errorUtils.stackTraceAsString(it)
-//                        }
-//                    }
-//                }
-//            )
-//        }
-//    }
 
     @PostMapping("/subscriptionEvents/huawei")
     fun huaweiSubscriptionEventsWebHook(
