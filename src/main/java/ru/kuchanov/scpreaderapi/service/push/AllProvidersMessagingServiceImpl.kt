@@ -2,7 +2,9 @@ package ru.kuchanov.scpreaderapi.service.push
 
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
+import ru.kuchanov.scpreaderapi.Application
 import ru.kuchanov.scpreaderapi.ScpReaderConstants.Push
 import ru.kuchanov.scpreaderapi.bean.firebase.push.PushMessage
 import ru.kuchanov.scpreaderapi.bean.firebase.push.PushMessageNotFoundException
@@ -23,12 +25,12 @@ class AllProvidersMessagingServiceImpl @Autowired constructor(
 ) : AllProvidersMessagingService {
 
     override fun sendMessageToTopic(
-            topicName: String,
-            type: Push.MessageType,
-            title: String,
-            message: String,
-            url: String?,
-            author: User
+        topicName: String,
+        type: Push.MessageType,
+        title: String,
+        message: String,
+        url: String?,
+        author: User
     ): List<PushSendResult> {
         //check is admin
         if (author.isAdmin().not()) {
@@ -37,27 +39,27 @@ class AllProvidersMessagingServiceImpl @Autowired constructor(
         }
 
         val savedMessage = pushMessageService.save(
-                PushMessage(
-                        topicName = topicName,
-                        type = type,
-                        title = title,
-                        message = message,
-                        url = url,
-                        authorId = author.id!!
-                )
+            PushMessage(
+                topicName = topicName,
+                type = type,
+                title = title,
+                message = message,
+                url = url,
+                authorId = author.id!!
+            )
         )
 
         val firebaseResult: PushSendResult = try {
             PushSendResult.Success(
-                    provider = Push.Provider.GOOGLE,
-                    pushMessage = firebaseMessagingService.sendMessageToTopic(
-                            topicName,
-                            type,
-                            title,
-                            message,
-                            url,
-                            author
-                    )
+                provider = Push.Provider.GOOGLE,
+                pushMessage = firebaseMessagingService.sendMessageToTopic(
+                    topicName,
+                    type,
+                    title,
+                    message,
+                    url,
+                    author
+                )
             )
         } catch (e: Throwable) {
             PushSendResult.Fail(provider = Push.Provider.GOOGLE, error = e, pushMessage = savedMessage)
@@ -65,15 +67,15 @@ class AllProvidersMessagingServiceImpl @Autowired constructor(
 
         val huaweiResult: PushSendResult = try {
             PushSendResult.Success(
-                    provider = Push.Provider.HUAWEI,
-                    pushMessage = huaweiMessagingService.sendMessageToTopic(
-                            topicName,
-                            type,
-                            title,
-                            message,
-                            url,
-                            author
-                    )
+                provider = Push.Provider.HUAWEI,
+                pushMessage = huaweiMessagingService.sendMessageToTopic(
+                    topicName,
+                    type,
+                    title,
+                    message,
+                    url,
+                    author
+                )
             )
         } catch (e: Throwable) {
             PushSendResult.Fail(provider = Push.Provider.HUAWEI, error = e, pushMessage = savedMessage)
@@ -83,9 +85,9 @@ class AllProvidersMessagingServiceImpl @Autowired constructor(
     }
 
     override fun sendMessageToTopicById(
-            topicName: String,
-            pushMessageId: Long,
-            author: User
+        topicName: String,
+        pushMessageId: Long,
+        author: User
     ): List<PushSendResult> {
         //check is admin
         if (author.isAdmin().not()) {
@@ -97,11 +99,11 @@ class AllProvidersMessagingServiceImpl @Autowired constructor(
 
         val firebaseResult: PushSendResult = try {
             PushSendResult.Success(
-                    provider = Push.Provider.GOOGLE,
-                    pushMessage = firebaseMessagingService.sendMessageToTopicById(
-                            topicName,
-                            savedMessage.id!!
-                    )
+                provider = Push.Provider.GOOGLE,
+                pushMessage = firebaseMessagingService.sendMessageToTopicById(
+                    topicName,
+                    savedMessage.id!!
+                )
             )
         } catch (e: Throwable) {
             PushSendResult.Fail(provider = Push.Provider.GOOGLE, error = e, pushMessage = savedMessage)
@@ -109,11 +111,11 @@ class AllProvidersMessagingServiceImpl @Autowired constructor(
 
         val huaweiResult: PushSendResult = try {
             PushSendResult.Success(
-                    provider = Push.Provider.HUAWEI,
-                    pushMessage = huaweiMessagingService.sendMessageToTopicById(
-                            topicName,
-                            savedMessage.id!!
-                    )
+                provider = Push.Provider.HUAWEI,
+                pushMessage = huaweiMessagingService.sendMessageToTopicById(
+                    topicName,
+                    savedMessage.id!!
+                )
             )
         } catch (e: Throwable) {
             PushSendResult.Fail(provider = Push.Provider.HUAWEI, error = e, pushMessage = savedMessage)
@@ -123,11 +125,11 @@ class AllProvidersMessagingServiceImpl @Autowired constructor(
     }
 
     override fun sendToUser(
-            userId: Long,
-            title: String,
-            message: String,
-            type: Push.MessageType,
-            author: User
+        userId: Long,
+        title: String,
+        message: String,
+        type: Push.MessageType,
+        author: User
     ): List<PushSendResult> {
         checkNotNull(author.id)
         //check is admin
@@ -137,24 +139,24 @@ class AllProvidersMessagingServiceImpl @Autowired constructor(
         }
 
         val savedMessage = pushMessageService.save(
-                PushMessage(
-                        userId = userId,
-                        type = type,
-                        title = title,
-                        message = message,
-                        url = null,
-                        authorId = author.id
-                )
+            PushMessage(
+                userId = userId,
+                type = type,
+                title = title,
+                message = message,
+                url = null,
+                authorId = author.id
+            )
         )
 
         val firebaseResult: PushSendResult = try {
             PushSendResult.Success(
-                    provider = Push.Provider.GOOGLE,
-                    pushMessage = firebaseMessagingService.sendMessageToUserById(
-                            userId = userId,
-                            pushMessageId = savedMessage.id!!,
-                            author = author
-                    )
+                provider = Push.Provider.GOOGLE,
+                pushMessage = firebaseMessagingService.sendMessageToUserById(
+                    userId = userId,
+                    pushMessageId = savedMessage.id!!,
+                    author = author
+                )
             )
         } catch (e: Throwable) {
             PushSendResult.Fail(provider = Push.Provider.GOOGLE, error = e, pushMessage = savedMessage)
@@ -162,12 +164,12 @@ class AllProvidersMessagingServiceImpl @Autowired constructor(
 
         val huaweiResult: PushSendResult = try {
             PushSendResult.Success(
-                    provider = Push.Provider.HUAWEI,
-                    pushMessage = huaweiMessagingService.sendMessageToUserById(
-                            userId = userId,
-                            pushMessageId = savedMessage.id!!,
-                            author = author
-                    )
+                provider = Push.Provider.HUAWEI,
+                pushMessage = huaweiMessagingService.sendMessageToUserById(
+                    userId = userId,
+                    pushMessageId = savedMessage.id!!,
+                    author = author
+                )
             )
         } catch (e: Throwable) {
             PushSendResult.Fail(provider = Push.Provider.HUAWEI, error = e, pushMessage = savedMessage)

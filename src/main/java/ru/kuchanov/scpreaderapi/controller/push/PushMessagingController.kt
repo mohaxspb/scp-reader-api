@@ -15,38 +15,38 @@ import ru.kuchanov.scpreaderapi.service.push.PushSendResult
 @RestController
 @RequestMapping("/" + ScpReaderConstants.Path.PUSH + "/" + ScpReaderConstants.Path.MESSAGING)
 class PushMessagingController @Autowired constructor(
-        private val pushMessageService: PushMessageService,
-        private val allProvidersMessagingService: AllProvidersMessagingService
+    private val pushMessageService: PushMessageService,
+    private val allProvidersMessagingService: AllProvidersMessagingService
 ) {
 
     @GetMapping("/send/topic")
     fun sendToTopic(
-            @RequestParam(value = "topicName") topicName: String,
-            @RequestParam(value = "type") type: ScpReaderConstants.Push.MessageType,
-            @RequestParam(value = "title") title: String,
-            @RequestParam(value = "message") message: String,
-            @RequestParam(value = "url") url: String?,
-            @AuthenticationPrincipal user: User
+        @RequestParam(value = "topicName") topicName: String,
+        @RequestParam(value = "type") type: ScpReaderConstants.Push.MessageType,
+        @RequestParam(value = "title") title: String,
+        @RequestParam(value = "message") message: String,
+        @RequestParam(value = "url") url: String?,
+        @AuthenticationPrincipal user: User
     ): List<PushSendResult> =
-            allProvidersMessagingService.sendMessageToTopic(topicName, type, title, message, url, user)
+        allProvidersMessagingService.sendMessageToTopic(topicName, type, title, message, url, user)
 
     @GetMapping("/send/topic/{id}")
     fun sendToTopic(
-            @PathVariable(value = "id") id: Long,
-            @RequestParam(value = "topicName") topicName: String,
-            @AuthenticationPrincipal user: User
+        @PathVariable(value = "id") id: Long,
+        @RequestParam(value = "topicName") topicName: String,
+        @AuthenticationPrincipal user: User
     ): List<PushSendResult> = allProvidersMessagingService.sendMessageToTopicById(topicName, id, user)
 
     @GetMapping("/all/byTypes")
     fun getAllByTypes(
-            @RequestParam(value = "types") types: List<ScpReaderConstants.Push.MessageType>,
-            @AuthenticationPrincipal user: User?
+        @RequestParam(value = "types") types: List<ScpReaderConstants.Push.MessageType>,
+        @AuthenticationPrincipal user: User?
     ) = pushMessageService.findAllByTypeIn(types, user?.id)
 
     @GetMapping("/send/to/{userId}")
     fun sendToUser(
-            @PathVariable(value = "userId") userId: Long,
-            @AuthenticationPrincipal user: User
+        @PathVariable(value = "userId") userId: Long,
+        @AuthenticationPrincipal user: User
     ) {
         if (user.isAdmin().not()) {
             throw ScpAccessDeniedException()
@@ -64,6 +64,6 @@ class PushMessagingController @Autowired constructor(
 
     @GetMapping("/delete/{id}")
     fun delete(
-            @PathVariable(value = "id") id: Long
+        @PathVariable(value = "id") id: Long
     ) = pushMessageService.deleteById(id)
 }
