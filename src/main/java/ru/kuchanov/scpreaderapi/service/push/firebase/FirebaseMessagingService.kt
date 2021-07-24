@@ -154,7 +154,7 @@ class FirebaseMessagingService @Autowired constructor(
             tokens: List<String>
     ): MulticastMessage {
         if (tokens.isEmpty()) {
-            throw ScpServerException(message = "Topics list is empty!")
+            throw ScpServerException(message = "Tokens list is empty!")
         }
 
         return MulticastMessage.builder()
