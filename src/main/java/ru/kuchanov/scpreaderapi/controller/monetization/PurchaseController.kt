@@ -529,7 +529,7 @@ class PurchaseController @Autowired constructor(
         }
 
         //5. Send push
-        allProvidersMessagingService.sendToUser(
+        val pushSendResults = allProvidersMessagingService.sendToUser(
             userId = user.id,
             title = pushTitle,
             message = pushMessage,
@@ -537,6 +537,7 @@ class PurchaseController @Autowired constructor(
             author = userService.getById(ADMIN_ID)
                 ?: throw UserNotFoundException("Can't find admin user with id: $ADMIN_ID")
         )
+        allProvidersMessagingService.printPushSendResults(pushSendResults)
 
         //6. Return updated user
         return userService.getByIdAsDtoV2(user.id) ?: throw UserNotFoundException()
@@ -567,7 +568,8 @@ class PurchaseController @Autowired constructor(
         updateUserSubscriptionExpiration(user.id!!)
 
         //4. Send push
-        allProvidersMessagingService.sendToUser(
+        @Suppress("DuplicatedCode")
+        val pushSendResults = allProvidersMessagingService.sendToUser(
             userId = user.id,
             title = pushTitle,
             message = pushMessage,
@@ -575,6 +577,7 @@ class PurchaseController @Autowired constructor(
             author = userService.getById(ADMIN_ID)
                 ?: throw UserNotFoundException("Can't find admin user with id: $ADMIN_ID")
         )
+        allProvidersMessagingService.printPushSendResults(pushSendResults)
 
         //5. Return updated user
         return userService.getByIdAsDtoV2(user.id) ?: throw UserNotFoundException()
@@ -847,7 +850,8 @@ class PurchaseController @Autowired constructor(
                     "Subscription has expired and no longer active."
                 }
 
-                allProvidersMessagingService.sendToUser(
+                @Suppress("DuplicatedCode")
+                val pushSendResults = allProvidersMessagingService.sendToUser(
                     userId = owner.id,
                     title = title,
                     message = message,
@@ -855,9 +859,9 @@ class PurchaseController @Autowired constructor(
                     author = userService.getById(ADMIN_ID)
                         ?: throw UserNotFoundException()
                 )
+                allProvidersMessagingService.printPushSendResults(pushSendResults)
 
                 updatedSubscription
-
             }
 
         return updatedSubscriptions

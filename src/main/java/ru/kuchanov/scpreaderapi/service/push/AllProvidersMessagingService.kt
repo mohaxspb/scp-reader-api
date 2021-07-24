@@ -28,6 +28,8 @@ interface AllProvidersMessagingService {
             type: ScpReaderConstants.Push.MessageType,
             author: User
     ): List<PushSendResult>
+
+    fun printPushSendResults(pushSendResults: List<PushSendResult>)
 }
 
 sealed class PushSendResult(open val provider: ScpReaderConstants.Push.Provider) {

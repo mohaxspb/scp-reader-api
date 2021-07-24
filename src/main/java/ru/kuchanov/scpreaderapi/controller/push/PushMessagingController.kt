@@ -52,13 +52,14 @@ class PushMessagingController @Autowired constructor(
             throw ScpAccessDeniedException()
         }
 
-        allProvidersMessagingService.sendToUser(
-                userId = userId,
-                title = "titleTest",
-                message = "messageTest",
-                type = ScpReaderConstants.Push.MessageType.SUBSCRIPTION_EVENT,
-                author = user
+        val pushSendResults = allProvidersMessagingService.sendToUser(
+            userId = userId,
+            title = "titleTest",
+            message = "messageTest",
+            type = ScpReaderConstants.Push.MessageType.SUBSCRIPTION_EVENT,
+            author = user
         )
+        allProvidersMessagingService.printPushSendResults(pushSendResults)
     }
 
     @GetMapping("/delete/{id}")

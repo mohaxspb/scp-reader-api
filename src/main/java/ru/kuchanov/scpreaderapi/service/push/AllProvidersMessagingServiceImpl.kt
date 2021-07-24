@@ -14,10 +14,12 @@ import ru.kuchanov.scpreaderapi.service.push.huawei.HuaweiMessagingService
 
 @Service
 class AllProvidersMessagingServiceImpl @Autowired constructor(
-        private val log: Logger,
-        private val pushMessageService: PushMessageService,
-        private val huaweiMessagingService: HuaweiMessagingService,
-        private val firebaseMessagingService: FirebaseMessagingService
+    private val log: Logger,
+    @Qualifier(Application.HUAWEI_LOGGER) private val huaweiLog: Logger,
+    @Qualifier(Application.GOOGLE_LOGGER) private val googleLog: Logger,
+    private val pushMessageService: PushMessageService,
+    private val huaweiMessagingService: HuaweiMessagingService,
+    private val firebaseMessagingService: FirebaseMessagingService
 ) : AllProvidersMessagingService {
 
     override fun sendMessageToTopic(
@@ -172,5 +174,23 @@ class AllProvidersMessagingServiceImpl @Autowired constructor(
         }
 
         return listOf(firebaseResult, huaweiResult)
+    }
+
+    override fun printPushSendResults(pushSendResults: List<PushSendResult>) {
+        pushSendResults.forEach {
+            val logger = when (it.provider) {
+                Push.Provider.GOOGLE -> {
+                    googleLog
+                }
+                Push.Provider.HUAWEI -> {
+                    huaweiLog
+                }
+            }
+            if (it is PushSendResult.Success) {
+                logger.info("Push send successfully!")
+            } else if (it is PushSendResult.Fail) {
+                logger.error("Push send failed!", it.error)
+            }
+        }
     }
 }
