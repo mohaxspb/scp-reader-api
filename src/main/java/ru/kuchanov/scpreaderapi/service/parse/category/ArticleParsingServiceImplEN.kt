@@ -148,12 +148,20 @@ fun parseForObjectArticlesENStyle(lang: Lang, doc: Document, logger: Logger): Li
     val articles = mutableListOf<ArticleForLang>()
 
     for (ul in allUls) {
-        for (li in ul.children()) { //do not add empty articles
-            if (li.getElementsByTag(TAG_A).first().hasClass("newpage")) {
+        for (li in ul.children()) {
+            //do not add empty articles
+            val aTags = li.getElementsByTag(TAG_A)
+            val hasATag = aTags.isNotEmpty()
+            if (hasATag.not()) {
+                logger.error("Li tag has no A tag inside! Li tag: $li")
+                continue
+            }
+            val aTag = aTags.first()
+            if (aTag.hasClass("newpage")) {
                 continue
             }
             val title = li.text()
-            val url = li.getElementsByTag(TAG_A).first().attr(ATTR_HREF)
+            val url = aTag.attr(ATTR_HREF)
             val article = ArticleForLang(
                 langId = lang.id,
                 urlRelative = lang.removeDomainFromUrl(url),
