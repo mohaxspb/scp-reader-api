@@ -43,6 +43,7 @@ class ArticleToLangServiceImpl @Autowired constructor(
     override fun getOneByIdAsDto(id: Long): ArticleToLangDto? {
 //        val startTime = System.currentTimeMillis()
 
+        @Suppress("UnnecessaryVariable")
         val article = articlesForLangRepository
                 .getOneByIdAsProjection(id)
                 ?.toDto()
