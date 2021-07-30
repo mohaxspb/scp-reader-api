@@ -10,10 +10,12 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.Application
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
+import ru.kuchanov.scpreaderapi.bean.articles.category.ArticleCategoryForLangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.settings.ServerSettings
 import ru.kuchanov.scpreaderapi.bean.users.LangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
+import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryForLangService
 import ru.kuchanov.scpreaderapi.service.parse.category.ArticleParsingServiceBase
 import ru.kuchanov.scpreaderapi.service.settings.ServerSettingsService
 import ru.kuchanov.scpreaderapi.service.users.LangService
@@ -27,6 +29,7 @@ class ArticleParseController @Autowired constructor(
         private val serverSettingsService: ServerSettingsService,
         private val articleParsingService: ArticleParsingServiceBase,
         private val articleForLangService: ArticleForLangService,
+        private val articleCategoryToLangService: ArticleCategoryForLangService,
         private val langService: LangService
 ) {
     data class State(val state: String)
@@ -216,6 +219,7 @@ class ArticleParseController @Autowired constructor(
         return ParsingStartedResponse()
     }
 
+    @Deprecated("Use #updateConcreteCategoryForLangArticles() instead")
     @GetMapping("/{langEnum}/object/{concreteObject}")
     fun updateConcreteObjectArticles(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
@@ -234,6 +238,38 @@ class ArticleParseController @Autowired constructor(
                 offset,
                 processOnlyCount,
                 innerArticlesDepth
+        )
+
+        return ParsingStartedResponse()
+    }
+
+    @GetMapping("/{langEnum}/category/{articleCategoryId}")
+    fun updateConcreteCategoryForLangArticles(
+        @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
+        @PathVariable(value = "articleCategoryId") articleCategoryId: Int,
+        @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
+        @RequestParam(value = "offset") offset: Int?,
+        @RequestParam(value = "innerArticlesDepth") innerArticlesDepth: Int?,
+        @AuthenticationPrincipal user: User
+    ): ParsingStartedResponse {
+        val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
+        val parsingService = articleParsingService.getParsingRealizationForLang(lang)
+        val categoryUrl = articleCategoryToLangService.findByLangIdAndArticleCategoryId(
+            langId = lang.id,
+            articleCategoryId = articleCategoryId.toLong()
+        )?.siteUrl ?: throw ArticleCategoryForLangNotFoundException(
+            """
+                |Can't fin articleCategoryForLang by lang id and articleCategory id.
+                |LangId: ${lang.id}
+                |ArticleCategoryId: $articleCategoryId
+            """.trimMargin()
+        )
+        parsingService.parseConcreteObjectArticlesForLang(
+            categoryUrl,
+            lang,
+            offset,
+            processOnlyCount,
+            innerArticlesDepth
         )
 
         return ParsingStartedResponse()
