@@ -259,6 +259,7 @@ class PurchaseController @Autowired constructor(
             when (parsedRequest.notificationType) {
                 INITIAL_BUY, CANCEL, RENEWAL_STOPPED, ON_HOLD,
                 PAUSED, PAUSE_PLAN_CHANGED, PRICE_CHANGE_CONFIRMED, DEFERRED -> {
+                    //todo same as google expired
                     //nothing to do.
                 }
                 RENEWAL, RENEWAL_RESTORED, RENEWAL_RECURRING -> {

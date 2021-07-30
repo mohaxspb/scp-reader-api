@@ -34,6 +34,12 @@ To unignore it execute:
 
 >git update-index --no-assume-unchanged src/test/resources/application.yml
 
+### Adding categories
+
+1. Add category to article_categories table.
+2. Add category_to_lang to article_categories__to__langs table.
+3. See migration №23 for example
+4. Launch parse category from site: https://domain.zone/scp-reader/api/article/parse/LANG_ENUM/category/ARTICLE_CATEGORY_ID
 
 ### Troubleshooting
 

@@ -4,6 +4,7 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
+import org.slf4j.Logger
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
@@ -24,23 +25,29 @@ class ArticleParsingServiceImplEN : ArticleParsingServiceBase() {
     override fun getRecentArticlesUrl() = "/most-recently-created/p/"
 
     override fun getObjectArticlesUrls() =
-            listOf(
-                    "/scp-series",
-                    "/scp-series-2",
-                    "/scp-series-3",
-                    "/scp-series-4",
-                    "/scp-series-5",
-                    "/scp-series-6"
-            )
+        listOf(
+            "/scp-series",
+            "/scp-series-2",
+            "/scp-series-3",
+            "/scp-series-4",
+            "/scp-series-5",
+            "/scp-series-6"
+        )
 
     override fun parseForRecentArticles(lang: Lang, doc: Document) =
-            parseForRecentArticlesENStyle(lang, doc)
+        parseForRecentArticlesENStyle(lang, doc)
 
     override fun parseForRatedArticles(lang: Lang, doc: Document) =
-            parseForRatedArticlesENStyle(lang, doc, getArticleRatingStringDelimiter(), getArticleRatingStringDelimiterEnd())
+        parseForRatedArticlesENStyle(
+            lang,
+            doc,
+            getArticleRatingStringDelimiter(),
+            getArticleRatingStringDelimiterEnd(),
+            logger = log
+        )
 
     override fun parseForObjectArticles(lang: Lang, doc: Document) =
-            parseForObjectArticlesENStyle(lang, doc)
+        parseForObjectArticlesENStyle(lang, doc, log)
 
     override fun getArticleRatingStringDelimiter() = "rating: "
 
@@ -48,47 +55,49 @@ class ArticleParsingServiceImplEN : ArticleParsingServiceBase() {
 }
 
 fun parseForRatedArticlesENStyle(
-        lang: Lang,
-        doc: Document,
-        articleRatingStringDelimiter: String,
-        articleRatingStringDelimiterEnd: String,
-        articlesListContainerNumber: Int = 0
+    lang: Lang,
+    doc: Document,
+    articleRatingStringDelimiter: String,
+    articleRatingStringDelimiterEnd: String,
+    articlesListContainerNumber: Int = 0,
+    logger: Logger
 ): List<ArticleForLang> {
-    println("start parsing rated articles for lang: $lang")
+    logger.debug("start parsing rated articles for lang: $lang")
     val pageContent = doc.getElementById(ID_PAGE_CONTENT)
-            ?: throw ScpParseException("$ID_PAGE_CONTENT is null!", NullPointerException())
+        ?: throw ScpParseException("$ID_PAGE_CONTENT is null!", NullPointerException())
     val listPagesBox = pageContent.getElementsByClass("list-pages-box")[articlesListContainerNumber]
-            ?: throw ScpParseException("list-pages-box is null!", NullPointerException())
+        ?: throw ScpParseException("list-pages-box is null!", NullPointerException())
     val allArticles = listPagesBox.getElementsByTag(TAG_P).first().html()
     val arrayOfArticles = allArticles.split("<br>").toTypedArray()
-    println("arrayOfArticles: ${arrayOfArticles.size}")
+    logger.debug("arrayOfArticles: ${arrayOfArticles.size}")
     val articles = mutableListOf<ArticleForLang>()
     for (arrayItem in arrayOfArticles) {
         val currentDocument = Jsoup.parse(arrayItem)
         val aTag = currentDocument.getElementsByTag(TAG_A).first()
         val url = aTag.attr(ATTR_HREF)
         val title = aTag.text()
-        val rating = arrayItem.substring(arrayItem.indexOf(articleRatingStringDelimiter) + articleRatingStringDelimiter.length)
-        //println("rating: $rating")
-        //println("articleRatingStringDelimiterEnd: $articleRatingStringDelimiterEnd")
-        //println("rating.indexOf(articleRatingStringDelimiterEnd): ${rating.indexOf(articleRatingStringDelimiterEnd)}")
+        val rating =
+            arrayItem.substring(arrayItem.indexOf(articleRatingStringDelimiter) + articleRatingStringDelimiter.length)
+        //logger.debug("rating: $rating")
+        //logger.debug("articleRatingStringDelimiterEnd: $articleRatingStringDelimiterEnd")
+        //logger.debug("rating.indexOf(articleRatingStringDelimiterEnd): ${rating.indexOf(articleRatingStringDelimiterEnd)}")
         val ratingCuted = rating.substring(0, rating.indexOf(articleRatingStringDelimiterEnd))
         val article = ArticleForLang(
-                langId = lang.id,
-                urlRelative = lang.removeDomainFromUrl(url),
-                title = title,
-                rating = try {
-                    ratingCuted.toInt()
-                } catch (e: Exception) {
-                    println("=========================================")
-                    println("arrayItem: $arrayItem")
-                    println("rating: $rating")
-                    println("articleRatingStringDelimiter: $articleRatingStringDelimiter")
-                    println("articleRatingStringDelimiterEnd: $articleRatingStringDelimiterEnd")
-                    println("ratingCuted: $ratingCuted")
-                    println("=========================================")
-                    0
-                }
+            langId = lang.id,
+            urlRelative = lang.removeDomainFromUrl(url),
+            title = title,
+            rating = try {
+                ratingCuted.toInt()
+            } catch (e: Exception) {
+                logger.debug("=========================================")
+                logger.debug("arrayItem: $arrayItem")
+                logger.debug("rating: $rating")
+                logger.debug("articleRatingStringDelimiter: $articleRatingStringDelimiter")
+                logger.debug("articleRatingStringDelimiterEnd: $articleRatingStringDelimiterEnd")
+                logger.debug("ratingCuted: $ratingCuted")
+                logger.debug("=========================================")
+                0
+            }
         )
         articles.add(article)
     }
@@ -98,7 +107,7 @@ fun parseForRatedArticlesENStyle(
 fun parseForRecentArticlesENStyle(lang: Lang, doc: Document): List<ArticleForLang> {
     val contentTypeDescription = doc.getElementsByClass("content-type-description").first()
     val pageContent = contentTypeDescription.getElementsByTag(TAG_TABLE).first()
-            ?: throw ScpParseException("parse error!")
+        ?: throw ScpParseException("parse error!")
 
     val dateFormat = ArticleParsingServiceBase.getDateFormatForLang()
     val articles = mutableListOf<ArticleForLang>()
@@ -114,10 +123,10 @@ fun parseForRecentArticlesENStyle(lang: Lang, doc: Document): List<ArticleForLan
         val createdDateNode: Element = listOfTd[1]
         val createdDate = createdDateNode.text().trim()
         val article = ArticleForLang(
-                langId = lang.id,
-                urlRelative = lang.removeDomainFromUrl(url),
-                title = title,
-                createdOnSite = Timestamp(dateFormat.parse(createdDate).time)
+            langId = lang.id,
+            urlRelative = lang.removeDomainFromUrl(url),
+            title = title,
+            createdOnSite = Timestamp(dateFormat.parse(createdDate).time)
         )
         articles.add(article)
     }
@@ -125,9 +134,9 @@ fun parseForRecentArticlesENStyle(lang: Lang, doc: Document): List<ArticleForLan
     return articles
 }
 
-fun parseForObjectArticlesENStyle(lang: Lang, doc: Document): List<ArticleForLang> {
+fun parseForObjectArticlesENStyle(lang: Lang, doc: Document, logger: Logger): List<ArticleForLang> {
     val pageContent = doc.getElementById(ID_PAGE_CONTENT)
-            ?: throw ScpParseException("Parse error! \"page-content\" tag is null!")
+        ?: throw ScpParseException("Parse error! \"page-content\" tag is null!")
     val listPagesBox = pageContent.getElementsByTag("h1")
     listPagesBox.remove()
     val collapsibleBlock: Element? = pageContent.getElementsByTag(TAG_UL).first()
@@ -139,16 +148,24 @@ fun parseForObjectArticlesENStyle(lang: Lang, doc: Document): List<ArticleForLan
     val articles = mutableListOf<ArticleForLang>()
 
     for (ul in allUls) {
-        for (li in ul.children()) { //do not add empty articles
-            if (li.getElementsByTag(TAG_A).first().hasClass("newpage")) {
+        for (li in ul.children()) {
+            //do not add empty articles
+            val aTags = li.getElementsByTag(TAG_A)
+            val hasATag = aTags.isNotEmpty()
+            if (hasATag.not()) {
+                logger.error("Li tag has no A tag inside! Li tag: $li")
+                continue
+            }
+            val aTag = aTags.first()
+            if (aTag.hasClass("newpage")) {
                 continue
             }
             val title = li.text()
-            val url = li.getElementsByTag(TAG_A).first().attr(ATTR_HREF)
+            val url = aTag.attr(ATTR_HREF)
             val article = ArticleForLang(
-                    langId = lang.id,
-                    urlRelative = lang.removeDomainFromUrl(url),
-                    title = title
+                langId = lang.id,
+                urlRelative = lang.removeDomainFromUrl(url),
+                title = title
             )
             articles.add(article)
         }

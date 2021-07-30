@@ -20,23 +20,23 @@ class ArticleParsingServiceImplPL : ArticleParsingServiceBase() {
 
     override fun getObjectArticlesUrls(): List<String> {
         return listOf(
-                "/lista-eng",
-                "/lista-eng-2",
-                "/lista-eng-3",
-                "/lista-eng-4",
-                "/lista-eng-5"
+            "/lista-eng",
+            "/lista-eng-2",
+            "/lista-eng-3",
+            "/lista-eng-4",
+            "/lista-eng-5"
         )
     }
 
     override fun parseForRecentArticles(lang: Lang, doc: Document) =
-            parseForRecentArticlesENStyle(lang, doc)
+        parseForRecentArticlesENStyle(lang, doc)
 
     override fun parseForRatedArticles(lang: Lang, doc: Document): List<ArticleForLang> {
         println("start parsing rated articles for lang: $lang")
         val pageContent = doc.getElementById(ID_PAGE_CONTENT)
-                ?: throw ScpParseException("parse error!")
+            ?: throw ScpParseException("parse error!")
         val listPagesBox = pageContent.getElementsByClass("list-pages-box").first()
-                ?: throw ScpParseException("parse error!")
+            ?: throw ScpParseException("parse error!")
         val articlesDivs = listPagesBox.getElementsByClass("list-pages-item")
         val articles = mutableListOf<ArticleForLang>()
         for (element in articlesDivs) {
@@ -45,7 +45,7 @@ class ArticleParsingServiceImplPL : ArticleParsingServiceBase() {
             val title = aTag.text()
             val pTag = element.getElementsByTag(TAG_P).first()
             var ratingString = pTag.text().substring(
-                    pTag.text().indexOf(getArticleRatingStringDelimiter()) + getArticleRatingStringDelimiter().length
+                pTag.text().indexOf(getArticleRatingStringDelimiter()) + getArticleRatingStringDelimiter().length
             )
             ratingString = ratingString.substring(0, ratingString.indexOf(getArticleRatingStringDelimiterEnd()))
             val rating = ratingString.toInt()
@@ -53,14 +53,15 @@ class ArticleParsingServiceImplPL : ArticleParsingServiceBase() {
             val updatedDateDelimiterString = "Ostatnio edytowane: "
             val indexOfUpdatedDate = pTag.text().indexOf(updatedDateDelimiterString)
             val indexOfUpdatedDateEnd = pTag.text().lastIndexOf(")")
-            val updatedDateString = pTag.text().substring(indexOfUpdatedDate + updatedDateDelimiterString.length, indexOfUpdatedDateEnd)
+            val updatedDateString =
+                pTag.text().substring(indexOfUpdatedDate + updatedDateDelimiterString.length, indexOfUpdatedDateEnd)
             val updateDateValue = Timestamp(getDateFormatForLang().parse(updatedDateString).time)
             val article = ArticleForLang(
-                    langId = lang.id,
-                    urlRelative = lang.removeDomainFromUrl(url),
-                    title = title,
-                    rating = rating,
-                    updatedOnSite = updateDateValue
+                langId = lang.id,
+                urlRelative = lang.removeDomainFromUrl(url),
+                title = title,
+                rating = rating,
+                updatedOnSite = updateDateValue
             )
             articles.add(article)
         }
@@ -68,7 +69,7 @@ class ArticleParsingServiceImplPL : ArticleParsingServiceBase() {
     }
 
     override fun parseForObjectArticles(lang: Lang, doc: Document) =
-            parseForObjectArticlesENStyle(lang, doc)
+        parseForObjectArticlesENStyle(lang, doc, logger = log)
 
     override fun getArticleRatingStringDelimiter() = "Ocena: "
 

@@ -10,10 +10,12 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.Application
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
+import ru.kuchanov.scpreaderapi.bean.articles.category.ArticleCategoryForLangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.settings.ServerSettings
 import ru.kuchanov.scpreaderapi.bean.users.LangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
+import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryForLangService
 import ru.kuchanov.scpreaderapi.service.parse.category.ArticleParsingServiceBase
 import ru.kuchanov.scpreaderapi.service.settings.ServerSettingsService
 import ru.kuchanov.scpreaderapi.service.users.LangService
@@ -23,17 +25,18 @@ import ru.kuchanov.scpreaderapi.utils.toBooleanOrNull
 @RestController
 @RequestMapping("/" + ScpReaderConstants.Path.ARTICLE + "/" + ScpReaderConstants.Path.PARSE)
 class ArticleParseController @Autowired constructor(
-        @Qualifier(Application.PARSING_LOGGER) private val log: Logger,
-        private val serverSettingsService: ServerSettingsService,
-        private val articleParsingService: ArticleParsingServiceBase,
-        private val articleForLangService: ArticleForLangService,
-        private val langService: LangService
+    @Qualifier(Application.PARSING_LOGGER) private val log: Logger,
+    private val serverSettingsService: ServerSettingsService,
+    private val articleParsingService: ArticleParsingServiceBase,
+    private val articleForLangService: ArticleForLangService,
+    private val articleCategoryToLangService: ArticleCategoryForLangService,
+    private val langService: LangService
 ) {
     data class State(val state: String)
 
     class ParsingStartedResponse(
-            state: String = "parsing started",
-            status: HttpStatus = HttpStatus.ACCEPTED
+        state: String = "parsing started",
+        status: HttpStatus = HttpStatus.ACCEPTED
 
     ) : ResponseEntity<State>(State(state), status)
 
@@ -42,22 +45,23 @@ class ArticleParseController @Autowired constructor(
      */
     @GetMapping("/allLangsRecent")
     @Scheduled(
-            /**
-             * second, minute, hour, day, month, day of week
-             */
-            cron = "0 30 * * * *"
+        /**
+         * second, minute, hour, day, month, day of week
+         */
+        cron = "0 30 * * * *"
     )
     fun parseRecentTask(): ParsingStartedResponse {
-        val hourlySyncTaskEnabledSettings = serverSettingsService.findByKey(ServerSettings.Key.HOURLY_SYNC_TASK_ENABLED.name)
+        val hourlySyncTaskEnabledSettings =
+            serverSettingsService.findByKey(ServerSettings.Key.HOURLY_SYNC_TASK_ENABLED.name)
         val hourlySyncTaskEnabled = hourlySyncTaskEnabledSettings?.value?.toBooleanOrNull()
         return if (hourlySyncTaskEnabled == true && !articleParsingService.isDownloadRecentRunning) {
             log.info("Start hourly parseRecentTask")
             articleParsingService.parseEverything(
-                    maxPageCount = 1,
-                    downloadRecent = true,
-                    downloadObjects = false,
-                    sendMail = false,
-                    massDownloadTaskType = ArticleParsingServiceBase.MassDownloadTaskType.RECENT
+                maxPageCount = 1,
+                downloadRecent = true,
+                downloadObjects = false,
+                sendMail = false,
+                massDownloadTaskType = ArticleParsingServiceBase.MassDownloadTaskType.RECENT
             )
             ParsingStartedResponse()
         } else {
@@ -70,17 +74,20 @@ class ArticleParseController @Autowired constructor(
 
     @GetMapping("/allLangsCategories")
     fun updateAllCategoriesForAllLangs(
-            @RequestParam(value = "parseOnlyLang") parseOnlyLang: ScpReaderConstants.Firebase.FirebaseInstance?,
-            @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
-            @RequestParam(value = "parseCategoriesCount") parseCategoriesCount: Int?,
-            @RequestParam(value = "parseCategoriesCountReversed", defaultValue = "false") parseCategoriesCountReversed: Boolean,
+        @RequestParam(value = "parseOnlyLang") parseOnlyLang: ScpReaderConstants.Firebase.FirebaseInstance?,
+        @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
+        @RequestParam(value = "parseCategoriesCount") parseCategoriesCount: Int?,
+        @RequestParam(
+            value = "parseCategoriesCountReversed",
+            defaultValue = "false"
+        ) parseCategoriesCountReversed: Boolean,
     ): ParsingStartedResponse {
         return if (!articleParsingService.isDownloadCategoriesRunning) {
             startAllCategoriesForAllLangsParsing(
-                    processOnlyCount = processOnlyCount,
-                    parseCategoriesCount = parseCategoriesCount,
-                    parseOnlyLang = parseOnlyLang,
-                    parseCategoriesCountReversed = parseCategoriesCountReversed
+                processOnlyCount = processOnlyCount,
+                parseCategoriesCount = parseCategoriesCount,
+                parseOnlyLang = parseOnlyLang,
+                parseCategoriesCountReversed = parseCategoriesCountReversed
             )
             ParsingStartedResponse()
         } else {
@@ -96,14 +103,14 @@ class ArticleParseController @Autowired constructor(
      * Updates every category for every lang
      */
     @Scheduled(
-            /**
-             * second, minute, hour, day, month, day of week
-             */
-            cron = "0 0 0 * * *"
+        /**
+         * second, minute, hour, day, month, day of week
+         */
+        cron = "0 0 0 * * *"
     )
     fun updateAllCategoriesDaily() {
         val dailyCategoriesSyncTaskEnabledSettings = serverSettingsService
-                .findByKey(ServerSettings.Key.DAILY_CATEGORIES_SYNC_TASK_ENABLED.name)
+            .findByKey(ServerSettings.Key.DAILY_CATEGORIES_SYNC_TASK_ENABLED.name)
         val dailySyncTaskEnabled = dailyCategoriesSyncTaskEnabledSettings?.value?.toBooleanOrNull()
         if (dailySyncTaskEnabled == true && !articleParsingService.isDownloadCategoriesRunning) {
             log.info("Start daily parseCategoriesTask")
@@ -117,21 +124,21 @@ class ArticleParseController @Autowired constructor(
     }
 
     private fun startAllCategoriesForAllLangsParsing(
-            processOnlyCount: Int? = null,
-            parseOnlyLang: ScpReaderConstants.Firebase.FirebaseInstance? = null,
-            parseCategoriesCount: Int? = null,
-            parseCategoriesCountReversed: Boolean = false
+        processOnlyCount: Int? = null,
+        parseOnlyLang: ScpReaderConstants.Firebase.FirebaseInstance? = null,
+        parseCategoriesCount: Int? = null,
+        parseCategoriesCountReversed: Boolean = false
     ) {
         articleParsingService.parseEverything(
-                maxPageCount = 0,
-                downloadRecent = false,
-                downloadObjects = true,
-                sendMail = false,
-                massDownloadTaskType = ArticleParsingServiceBase.MassDownloadTaskType.CATEGORIES,
-                processOnlyCount = processOnlyCount,
-                parseOnlyLang = parseOnlyLang,
-                parseCategoriesCount = parseCategoriesCount,
-                parseCategoriesCountReversed = parseCategoriesCountReversed
+            maxPageCount = 0,
+            downloadRecent = false,
+            downloadObjects = true,
+            sendMail = false,
+            massDownloadTaskType = ArticleParsingServiceBase.MassDownloadTaskType.CATEGORIES,
+            processOnlyCount = processOnlyCount,
+            parseOnlyLang = parseOnlyLang,
+            parseCategoriesCount = parseCategoriesCount,
+            parseCategoriesCountReversed = parseCategoriesCountReversed
         )
     }
 
@@ -140,10 +147,10 @@ class ArticleParseController @Autowired constructor(
      */
     @GetMapping("/allLangsRated")
     @Scheduled(
-            /**
-             * second, minute, hour, day, month, day of week
-             */
-            cron = "0 0 12 * * *"
+        /**
+         * second, minute, hour, day, month, day of week
+         */
+        cron = "0 0 12 * * *"
     )
     fun updateAllRatedDaily(): ParsingStartedResponse {
         TODO()
@@ -151,16 +158,16 @@ class ArticleParseController @Autowired constructor(
 
     @GetMapping("/everything")
     fun updateEverything(
-            @RequestParam(value = "maxPageCount") maxPageCount: Int?,
-            @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
-            @AuthenticationPrincipal user: User
+        @RequestParam(value = "maxPageCount") maxPageCount: Int?,
+        @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
+        @AuthenticationPrincipal user: User
     ): ParsingStartedResponse {
         return if (!articleParsingService.isDownloadAllRunning) {
             articleParsingService.parseEverything(
-                    maxPageCount = maxPageCount,
-                    processOnlyCount = processOnlyCount,
-                    sendMail = true,
-                    massDownloadTaskType = ArticleParsingServiceBase.MassDownloadTaskType.ALL
+                maxPageCount = maxPageCount,
+                processOnlyCount = processOnlyCount,
+                sendMail = true,
+                massDownloadTaskType = ArticleParsingServiceBase.MassDownloadTaskType.ALL
             )
             ParsingStartedResponse()
         } else {
@@ -170,70 +177,103 @@ class ArticleParseController @Autowired constructor(
 
     @GetMapping("/{langEnum}/recent/all")
     fun updateRecentArticles(
-            @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
-            @RequestParam(value = "maxPageCount") maxPageCount: Int?,
-            @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
-            @RequestParam(value = "innerArticlesDepth") innerArticlesDepth: Int?,
-            @AuthenticationPrincipal user: User
+        @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
+        @RequestParam(value = "maxPageCount") maxPageCount: Int?,
+        @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
+        @RequestParam(value = "innerArticlesDepth") innerArticlesDepth: Int?,
+        @AuthenticationPrincipal user: User
     ): ParsingStartedResponse {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
         articleParsingService
-                .getParsingRealizationForLang(lang)
-                .parseMostRecentArticlesForLang(lang, maxPageCount, processOnlyCount, innerArticlesDepth)
+            .getParsingRealizationForLang(lang)
+            .parseMostRecentArticlesForLang(lang, maxPageCount, processOnlyCount, innerArticlesDepth)
 
         return ParsingStartedResponse()
     }
 
     @GetMapping("/{langEnum}/rated/all")
     fun updateRatedArticles(
-            @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
-            @RequestParam(value = "totalPageCount") totalPageCount: Int?,
-            @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
-            @RequestParam(value = "innerArticlesDepth") innerArticlesDepth: Int?,
-            @AuthenticationPrincipal user: User
+        @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
+        @RequestParam(value = "totalPageCount") totalPageCount: Int?,
+        @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
+        @RequestParam(value = "innerArticlesDepth") innerArticlesDepth: Int?,
+        @AuthenticationPrincipal user: User
     ): ParsingStartedResponse {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
         articleParsingService
-                .getParsingRealizationForLang(lang)
-                .parseMostRatedArticlesForLang(lang, totalPageCount, processOnlyCount, innerArticlesDepth)
+            .getParsingRealizationForLang(lang)
+            .parseMostRatedArticlesForLang(lang, totalPageCount, processOnlyCount, innerArticlesDepth)
 
         return ParsingStartedResponse()
     }
 
     @GetMapping("/{langEnum}/object/all")
     fun updateObjectArticles(
-            @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
-            @RequestParam(value = "maxPageCount") maxPageCount: Int?,
-            @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
-            @RequestParam(value = "innerArticlesDepth") innerArticlesDepth: Int?,
-            @AuthenticationPrincipal user: User
+        @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
+        @RequestParam(value = "maxPageCount") maxPageCount: Int?,
+        @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
+        @RequestParam(value = "innerArticlesDepth") innerArticlesDepth: Int?,
+        @AuthenticationPrincipal user: User
     ): ParsingStartedResponse {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
         articleParsingService
-                .getParsingRealizationForLang(lang)
-                .parseObjectsArticlesForLang(lang, maxPageCount, processOnlyCount, innerArticlesDepth)
+            .getParsingRealizationForLang(lang)
+            .parseObjectsArticlesForLang(lang, maxPageCount, processOnlyCount, innerArticlesDepth)
 
         return ParsingStartedResponse()
     }
 
+    @Deprecated("Use #updateConcreteCategoryForLangArticles() instead")
     @GetMapping("/{langEnum}/object/{concreteObject}")
     fun updateConcreteObjectArticles(
-            @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
-            @PathVariable(value = "concreteObject") concreteObject: Int,
-            @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
-            @RequestParam(value = "offset") offset: Int?,
-            @RequestParam(value = "innerArticlesDepth") innerArticlesDepth: Int?,
-            @AuthenticationPrincipal user: User
+        @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
+        @PathVariable(value = "concreteObject") concreteObject: Int,
+        @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
+        @RequestParam(value = "offset") offset: Int?,
+        @RequestParam(value = "innerArticlesDepth") innerArticlesDepth: Int?,
+        @AuthenticationPrincipal user: User
     ): ParsingStartedResponse {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
         val parsingService = articleParsingService.getParsingRealizationForLang(lang)
         val objectUrl = parsingService.getObjectArticlesUrls()[concreteObject]
         parsingService.parseConcreteObjectArticlesForLang(
-                objectUrl,
-                lang,
-                offset,
-                processOnlyCount,
-                innerArticlesDepth
+            objectUrl,
+            lang,
+            offset,
+            processOnlyCount,
+            innerArticlesDepth
+        )
+
+        return ParsingStartedResponse()
+    }
+
+    @GetMapping("/{langEnum}/category/{articleCategoryId}")
+    fun updateConcreteCategoryForLangArticles(
+        @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
+        @PathVariable(value = "articleCategoryId") articleCategoryId: Int,
+        @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
+        @RequestParam(value = "offset") offset: Int?,
+        @RequestParam(value = "innerArticlesDepth") innerArticlesDepth: Int?,
+        @AuthenticationPrincipal user: User
+    ): ParsingStartedResponse {
+        val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
+        val parsingService = articleParsingService.getParsingRealizationForLang(lang)
+        val categoryUrl = articleCategoryToLangService.findByLangIdAndArticleCategoryId(
+            langId = lang.id,
+            articleCategoryId = articleCategoryId.toLong()
+        )?.siteUrl ?: throw ArticleCategoryForLangNotFoundException(
+            """
+                |Can't fin articleCategoryForLang by lang id and articleCategory id.
+                |LangId: ${lang.id}
+                |ArticleCategoryId: $articleCategoryId
+            """.trimMargin()
+        )
+        parsingService.parseConcreteObjectArticlesForLang(
+            categoryUrl,
+            lang,
+            offset,
+            processOnlyCount,
+            innerArticlesDepth
         )
 
         return ParsingStartedResponse()
@@ -241,18 +281,19 @@ class ArticleParseController @Autowired constructor(
 
     @GetMapping("{langEnum}/parseArticleByUrlRelative")
     fun parseArticleByUrlRelativeAndLang(
-            @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
-            @RequestParam(value = "urlRelative") urlRelative: String,
-            @RequestParam(value = "innerArticlesDepth", defaultValue = "0") innerArticlesDepth: Int = 0,
-            @RequestParam(value = "printTextParts", defaultValue = "false") printTextParts: Boolean = false,
-            @RequestParam(value = "async", defaultValue = "false") async: Boolean = false,
-            @AuthenticationPrincipal user: User
+        @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
+        @RequestParam(value = "urlRelative") urlRelative: String,
+        @RequestParam(value = "innerArticlesDepth", defaultValue = "0") innerArticlesDepth: Int = 0,
+        @RequestParam(value = "printTextParts", defaultValue = "false") printTextParts: Boolean = false,
+        @RequestParam(value = "async", defaultValue = "false") async: Boolean = false,
+        @AuthenticationPrincipal user: User
     ): ResponseEntity<*> {
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
         val articleForLang = articleForLangService
-                .getArticleForLangByUrlRelativeAndLang(urlRelative, lang.id)
+            .getArticleForLangByUrlRelativeAndLang(urlRelative, lang.id)
 
-        log.info("""
+        log.info(
+            """
             parseArticleByUrlRelativeAndLang
             lang: ${lang.id}, 
             articleForLang.id: ${articleForLang?.id},
@@ -263,22 +304,26 @@ class ArticleParseController @Autowired constructor(
 
         return if (async) {
             articleParsingService.parseArticleForLang(
-                    urlRelative,
-                    lang,
-                    innerArticlesDepth,
-                    printTextParts
+                urlRelative,
+                lang,
+                innerArticlesDepth,
+                printTextParts
             )
-            ParsingStartedResponse("Parsing started for ArticleForLang id/title ${articleForLang?.id}/${articleForLang?.title}")
+            ParsingStartedResponse(
+                "Parsing started for ArticleForLang id/title ${articleForLang?.id}/${articleForLang?.title}"
+            )
         } else {
             val savedArticle = articleParsingService.parseArticleForLangSync(
-                    urlRelative,
-                    lang,
-                    innerArticlesDepth,
-                    printTextParts
+                urlRelative,
+                lang,
+                innerArticlesDepth,
+                printTextParts
             )
             ResponseEntity(
-                    savedArticle?.articleId?.let { articleForLangService.getOneByLangIdAndArticleIdAsDto(it, lang.id) },
-                    HttpStatus.OK
+                savedArticle
+                    ?.articleId
+                    ?.let { articleForLangService.getOneByLangIdAndArticleIdAsDto(it, lang.id) },
+                HttpStatus.OK
             )
         }
     }

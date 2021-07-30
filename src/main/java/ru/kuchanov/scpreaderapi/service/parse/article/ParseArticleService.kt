@@ -31,19 +31,19 @@ import ru.kuchanov.scpreaderapi.service.parse.category.ScpParseException
 
 @Service
 class ParseArticleService @Autowired constructor(
-        private val parseArticleTextService: ParseArticleTextService,
-        @Qualifier(Application.PARSING_LOGGER) private val log: Logger
+    private val parseArticleTextService: ParseArticleTextService,
+    @Qualifier(Application.PARSING_LOGGER) private val log: Logger
 ) {
 
     /**
      * @throws ScpParseException
      */
     fun parseArticle(
-            urlRelative: String,
-            doc: Document,
-            pageContent: Element,
-            lang: Lang,
-            printTextParts: Boolean = false
+        urlRelative: String,
+        doc: Document,
+        pageContent: Element,
+        lang: Lang,
+        printTextParts: Boolean = false
     ): ArticleForLang {
         //log.info("parseArticle: $urlRelative, ${lang.id}, $printTextParts")
         //log.info("PageContent before parsing: ${pageContent.toString().length}")
@@ -80,6 +80,9 @@ class ParseArticleService @Autowired constructor(
         //and remove all mobile divs
         pageContent.getElementsByClass("warning-mobile").forEach { it.remove() }
         pageContent.getElementsByClass("pictures4mobile").forEach { it.remove() }
+
+        //also remove div with f*cking styles.
+        pageContent.getElementsByClass("code").forEach { it.remove() }
 
         //replace links in footnote refs
         val footnoterefs = pageContent.getElementsByClass("footnoteref")
@@ -208,9 +211,10 @@ class ParseArticleService @Autowired constructor(
         //replace all links to not translated articles
         for (a in pageContent.getElementsByTag(TAG_A)) {
             if (a.className() == "newpage") {
-                a.attr(ATTR_HREF, NOT_TRANSLATED_ARTICLE_UTIL_URL
-                        + NOT_TRANSLATED_ARTICLE_URL_DELIMITER
-                        + a.attr(ATTR_HREF)
+                a.attr(
+                    ATTR_HREF, NOT_TRANSLATED_ARTICLE_UTIL_URL
+                            + NOT_TRANSLATED_ARTICLE_URL_DELIMITER
+                            + a.attr(ATTR_HREF)
                 )
             }
         }
@@ -271,8 +275,8 @@ class ParseArticleService @Autowired constructor(
 
         //comments url
         val commentsUrl = doc
-                .getElementById("discuss-button")
-                ?.attr(ATTR_HREF)
+            .getElementById("discuss-button")
+            ?.attr(ATTR_HREF)
 
         if (commentsUrl?.contains("javascript") == true) {
             log.error("COMMENTS URL ERROR: $urlRelative")
@@ -282,23 +286,24 @@ class ParseArticleService @Autowired constructor(
 
         //finally fill article info
         return ArticleForLang(
-                langId = lang.id,
-                urlRelative = urlRelative,
-                title = title,
-                text = rawText,
-                rating = rating,
-                commentsUrl = commentsUrl,
-                hasIframeTag = hasIframeTag,
-                images = imgsUrls.map { ArticlesImages(url = it) }.toMutableSet(),
-                tags = articleTags.map { TagForLang(langId = lang.id, title = it, tagId = TagForLang.NO_ID) }.toMutableSet(),
-                textParts = textParts,
-                innerArticlesForLang = innerArticlesUrls.map {
-                    ArticleForLang(
-                            langId = lang.id,
-                            urlRelative = lang.removeDomainFromUrl(it),
-                            title = ""
-                    )
-                }.toSet()
+            langId = lang.id,
+            urlRelative = urlRelative,
+            title = title,
+            text = rawText,
+            rating = rating,
+            commentsUrl = commentsUrl,
+            hasIframeTag = hasIframeTag,
+            images = imgsUrls.map { ArticlesImages(url = it) }.toMutableSet(),
+            tags = articleTags.map { TagForLang(langId = lang.id, title = it, tagId = TagForLang.NO_ID) }
+                .toMutableSet(),
+            textParts = textParts,
+            innerArticlesForLang = innerArticlesUrls.map {
+                ArticleForLang(
+                    langId = lang.id,
+                    urlRelative = lang.removeDomainFromUrl(it),
+                    title = ""
+                )
+            }.toSet()
         )
     }
 
@@ -388,8 +393,9 @@ class ParseArticleService @Autowired constructor(
         if (element.tagName() == TAG_DIV && element.hasAttr("style")) {
             val style = element.attr("style")
             if (style.contains("text-align")
-                    || style.contains("background")
-                    || (style.contains("float") && element.className() != "scp-image-block")) {
+                || style.contains("background")
+                || (style.contains("float") && element.className() != "scp-image-block")
+            ) {
                 element.unwrap()
             }
         }

@@ -60,5 +60,5 @@ class ArticleParsingServiceImplCH : ArticleParsingServiceBase() {
     }
 
     override fun parseForObjectArticles(lang: Lang, doc: Document) =
-            parseForObjectArticlesENStyle(lang, doc)
+            parseForObjectArticlesENStyle(lang, doc, log)
 }

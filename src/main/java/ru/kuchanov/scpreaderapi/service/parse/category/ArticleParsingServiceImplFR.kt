@@ -19,11 +19,11 @@ class ArticleParsingServiceImplFR : ArticleParsingServiceBase() {
 
     override fun getObjectArticlesUrls(): List<String> {
         return listOf(
-                "/scp-series",
-                "/scp-series-2",
-                "/scp-series-3",
-                "/scp-series-4",
-                "/scp-series-5"
+            "/scp-series",
+            "/scp-series-2",
+            "/scp-series-3",
+            "/scp-series-4",
+            "/scp-series-5"
         )
     }
 
@@ -32,11 +32,11 @@ class ArticleParsingServiceImplFR : ArticleParsingServiceBase() {
         val recentWithDatesTag = contentTypeDescription.getElementsByClass("collapsible-block").first()
         val recentWithDatesSpoilerTitleTag = recentWithDatesTag.getElementsByClass("collapsible-block-link").first()
         val recentWithDatesSpoilerTitle = recentWithDatesSpoilerTitleTag.text().replace("\\p{Z}".toRegex(), " ")
-        if(recentWithDatesSpoilerTitle != "+ Avec date"){
+        if (recentWithDatesSpoilerTitle != "+ Avec date") {
             throw IllegalStateException("Can't find recent articles table with date!")
         }
         val pageContent = recentWithDatesTag.getElementsByTag(ParseConstants.TAG_TABLE).first()
-                ?: throw ScpParseException("parse error!")
+            ?: throw ScpParseException("parse error!")
 
         val dateFormat = getDateFormatForLang()
         val articles = mutableListOf<ArticleForLang>()
@@ -52,10 +52,10 @@ class ArticleParsingServiceImplFR : ArticleParsingServiceBase() {
             val createdDateNode: Element = listOfTd[1]
             val createdDate = createdDateNode.text().trim()
             val article = ArticleForLang(
-                    langId = lang.id,
-                    urlRelative = lang.removeDomainFromUrl(url),
-                    title = title,
-                    createdOnSite = Timestamp(dateFormat.parse(createdDate).time)
+                langId = lang.id,
+                urlRelative = lang.removeDomainFromUrl(url),
+                title = title,
+                createdOnSite = Timestamp(dateFormat.parse(createdDate).time)
             )
             articles.add(article)
         }
@@ -64,16 +64,17 @@ class ArticleParsingServiceImplFR : ArticleParsingServiceBase() {
     }
 
     override fun parseForRatedArticles(lang: Lang, doc: Document) =
-            parseForRatedArticlesENStyle(
-                    lang,
-                    doc,
-                    getArticleRatingStringDelimiter(),
-                    getArticleRatingStringDelimiterEnd(),
-                    1
-            )
+        parseForRatedArticlesENStyle(
+            lang,
+            doc,
+            getArticleRatingStringDelimiter(),
+            getArticleRatingStringDelimiterEnd(),
+            1,
+            logger = log
+        )
 
     override fun parseForObjectArticles(lang: Lang, doc: Document) =
-            parseForObjectArticlesENStyle(lang, doc)
+        parseForObjectArticlesENStyle(lang, doc, logger = log)
 
     override fun getArticleRatingStringDelimiter() = " ("
 

@@ -13,22 +13,28 @@ class ArticleParsingServiceImplES : ArticleParsingServiceBase() {
     override fun getRecentArticlesUrl() = "/recientemente-creados/p/"
 
     override fun getObjectArticlesUrls() =
-            listOf(
-                    "/scp-series",
-                    "/scp-series-2",
-                    "/scp-series-3",
-                    "/scp-series-4",
-                    "/scp-series-5"
-            )
+        listOf(
+            "/scp-series",
+            "/scp-series-2",
+            "/scp-series-3",
+            "/scp-series-4",
+            "/scp-series-5"
+        )
 
     override fun parseForRecentArticles(lang: Lang, doc: Document) =
-            parseForRecentArticlesENStyle(lang, doc)
+        parseForRecentArticlesENStyle(lang, doc)
 
     override fun parseForRatedArticles(lang: Lang, doc: Document) =
-            parseForRatedArticlesENStyle(lang, doc, getArticleRatingStringDelimiter(), getArticleRatingStringDelimiterEnd())
+        parseForRatedArticlesENStyle(
+            lang,
+            doc,
+            getArticleRatingStringDelimiter(),
+            getArticleRatingStringDelimiterEnd(),
+            logger = log
+        )
 
     override fun parseForObjectArticles(lang: Lang, doc: Document) =
-            parseForObjectArticlesENStyle(lang, doc)
+        parseForObjectArticlesENStyle(lang, doc, logger = log)
 
     override fun getArticleRatingStringDelimiter() = " (+"
 

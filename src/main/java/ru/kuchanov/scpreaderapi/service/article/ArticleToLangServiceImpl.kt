@@ -43,6 +43,7 @@ class ArticleToLangServiceImpl @Autowired constructor(
     override fun getOneByIdAsDto(id: Long): ArticleToLangDto? {
 //        val startTime = System.currentTimeMillis()
 
+        @Suppress("UnnecessaryVariable")
         val article = articlesForLangRepository
                 .getOneByIdAsProjection(id)
                 ?.toDto()
@@ -159,7 +160,7 @@ class ArticleToLangServiceImpl @Autowired constructor(
         return articleToLangs.map { article ->
             article.toDto().apply {
                 imageUrls = images[id] ?: listOf()
-                tagDtos = tags[id]
+                tagDtos = tags[id] ?: listOf()
                 articleTypeToArticleDto = types.firstOrNull { articleId == it.articleId }?.toDto()
                 if (withTextParts) {
                     this.textParts = articlesToTextParts?.get(id)?.let { textPartService.textPartsTreeFromFlattenedList(it) }
