@@ -81,6 +81,9 @@ class ParseArticleService @Autowired constructor(
         pageContent.getElementsByClass("warning-mobile").forEach { it.remove() }
         pageContent.getElementsByClass("pictures4mobile").forEach { it.remove() }
 
+        //also remove div with f*cking styles.
+        pageContent.getElementsByClass("code").forEach { it.remove() }
+
         //replace links in footnote refs
         val footnoterefs = pageContent.getElementsByClass("footnoteref")
         for (snoska in footnoterefs) {
