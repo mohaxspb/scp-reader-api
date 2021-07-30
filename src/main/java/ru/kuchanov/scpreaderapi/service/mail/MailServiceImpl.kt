@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import ru.kuchanov.scpreaderapi.model.dto.article.ArticleToLangDto
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.ArticleService
 import ru.kuchanov.scpreaderapi.service.article.read.ReadArticleForLangService
@@ -21,16 +22,16 @@ import javax.mail.internet.MimeMessage
 @Suppress("SpringJavaInjectionPointsAutowiringInspection")
 @Service
 class MailServiceImpl @Autowired constructor(
-        val javaMailSender: JavaMailSender,
-        val userService: ScpReaderUserService,
-        val articleService: ArticleService,
-        val articleForLangService: ArticleForLangService,
-        val readArticlesService: ReadArticleForLangService,
-        @Value("\${my.mail.admin.address}") val adminEmailAddress: String
+    val javaMailSender: JavaMailSender,
+    val userService: ScpReaderUserService,
+    val articleService: ArticleService,
+    val articleForLangService: ArticleForLangService,
+    val readArticlesService: ReadArticleForLangService,
+    @Value("\${my.mail.admin.address}") val adminEmailAddress: String
 ) : MailService {
 
     override fun getAdminAddress(): String =
-            adminEmailAddress
+        adminEmailAddress
 
     override fun sendMail(vararg to: String, subj: String, text: String, sendAsHtml: Boolean) {
         javaMailSender.send { mimeMessage: MimeMessage ->
@@ -54,18 +55,18 @@ class MailServiceImpl @Autowired constructor(
             |Your password: $password
         """.trimMargin()
         sendMail(
-                email,
-                subj = "Welcome to SCP Reader!",
-                text = text
+            email,
+            subj = "Welcome to SCP Reader!",
+            text = text
         )
     }
 
     @Scheduled(
-            /**
-             * second, minute, hour, day, month, day of week
-             */
+        /**
+         * second, minute, hour, day, month, day of week
+         */
 //        cron = "*/30 * * * * *" //fi xme test
-            cron = "0 5 0 * * *"
+        cron = "0 5 0 * * *"
     )
     override fun sendStatisticsEmail() {
         sendStatisticsEmail(today = false)
@@ -87,66 +88,67 @@ class MailServiceImpl @Autowired constructor(
         val dateString = SimpleDateFormat("EEE, dd MMMMM yyyy").format(Date.from(startDate))
 
         val articlesCreatedToday = articleService.getCreatedArticlesBetweenDates(
-                startDate.toString(),
-                endDate.toString()
+            startDate.toString(),
+            endDate.toString()
         )
 //        println("articlesCreatedToday: $articlesCreatedToday")
-        val articlesToLangsCreatedToday = articleForLangService.getCreatedArticleToLangsBetweenDates(
+        val articlesToLangsCreatedToday: List<ArticleToLangDto> =
+            articleForLangService.getCreatedArticleToLangsBetweenDates(
                 startDate.toString(),
                 endDate.toString()
-        )
+            )
 
         val articlesToLangsCountGroupedByLang = articlesToLangsCreatedToday
-                .groupBy { it.langId }
-                .mapValues { it.value.size }
+            .groupBy { it.langId }
+            .mapValues { it.value.size }
 
         val createdTranslationsCountByLangAsHtml = articlesToLangsCountGroupedByLang
-                .map { "<li>${it.key} = ${it.value}</li>" }
-                .joinToString(separator = "\n")
+            .map { "<li>${it.key} = ${it.value}</li>" }
+            .joinToString(separator = "\n")
 
         val usersCreatedTodayCount = userService.countUsersCreatedBetweenDates(
-                startDate.toString(),
-                endDate.toString()
+            startDate.toString(),
+            endDate.toString()
         )
         val articlesToLangReadCreatedToday = readArticlesService.readArticlesCreatedBetweenDates(
-                startDate.toString(),
-                endDate.toString()
+            startDate.toString(),
+            endDate.toString()
         )
 
         val articlesToLangReadCreatedTodayGroupedByLang = articlesToLangReadCreatedToday
-                .groupBy { it.langId }
-                .mapValues { it.value.size }
+            .groupBy { it.langId }
+            .mapValues { it.value.size }
 
         val articlesToLangReadCreatedTodayGroupedByLangAsHtml = articlesToLangReadCreatedTodayGroupedByLang
-                .map { "<li>${it.key} = ${it.value}</li>" }
-                .joinToString(separator = "\n")
+            .map { "<li>${it.key} = ${it.value}</li>" }
+            .joinToString(separator = "\n")
 
         val text = generateStatisticsText(
-                dateString = dateString,
-                articlesCreatedTodayCount = articlesCreatedToday.size,
-                translationsCreatedTodayCount = articlesToLangsCreatedToday.size,
-                createdTranslationsCountByLangAsHtml = createdTranslationsCountByLangAsHtml,
-                usersCreatedCount = usersCreatedTodayCount,
-                articlesReadCount = articlesToLangReadCreatedToday.size,
-                articlesToLangReadCreatedTodayGroupedByLangAsHtml = articlesToLangReadCreatedTodayGroupedByLangAsHtml
+            dateString = dateString,
+            articlesCreatedTodayCount = articlesCreatedToday.size,
+            translationsCreatedTodayCount = articlesToLangsCreatedToday.size,
+            createdTranslationsCountByLangAsHtml = createdTranslationsCountByLangAsHtml,
+            usersCreatedCount = usersCreatedTodayCount,
+            articlesReadCount = articlesToLangReadCreatedToday.size,
+            articlesToLangReadCreatedTodayGroupedByLangAsHtml = articlesToLangReadCreatedTodayGroupedByLangAsHtml
         )
 
         sendMail(
-                adminEmailAddress,
-                subj = "Statistics for $dateString",
-                text = text,
-                sendAsHtml = true
+            adminEmailAddress,
+            subj = "Statistics for $dateString",
+            text = text,
+            sendAsHtml = true
         )
     }
 
     fun generateStatisticsText(
-            dateString: String,
-            articlesCreatedTodayCount: Int,
-            translationsCreatedTodayCount: Int,
-            createdTranslationsCountByLangAsHtml: String,
-            usersCreatedCount: Int,
-            articlesReadCount: Int,
-            articlesToLangReadCreatedTodayGroupedByLangAsHtml: String
+        dateString: String,
+        articlesCreatedTodayCount: Int,
+        translationsCreatedTodayCount: Int,
+        createdTranslationsCountByLangAsHtml: String,
+        usersCreatedCount: Int,
+        articlesReadCount: Int,
+        articlesToLangReadCreatedTodayGroupedByLangAsHtml: String
     ) = """
                 |<h1>There is statistics for $dateString</h1> 
                 |<h3>Data:</h3>
