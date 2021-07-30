@@ -1330,7 +1330,10 @@ class ArticleParsingServiceBase {
                 .mapValues { it.value }
 
 
-        articlesToLangsCountGroupedByLang.entries.map { (langId, newArticles) ->
+        articlesToLangsCountGroupedByLang.entries.forEach { (langId, newArticles) ->
+            if (newArticles.isEmpty()) {
+                return@forEach
+            }
             val newArticlesDto = NewArticlesDto(
                 langId = langId,
                 newsArticles = newArticles.map {

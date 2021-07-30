@@ -328,4 +328,13 @@ class ArticleParseController @Autowired constructor(
             )
         }
     }
+
+    @GetMapping("testNewArticlesPush")
+    fun testNewArticlesPush(): ResponseEntity<*> {
+        articleParsingService.sendPushToUsersAboutNewArticles()
+        return ResponseEntity(
+            "Push sent!",
+            HttpStatus.OK
+        )
+    }
 }
