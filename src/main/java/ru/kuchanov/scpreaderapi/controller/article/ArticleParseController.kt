@@ -76,7 +76,10 @@ class ArticleParseController @Autowired constructor(
             @RequestParam(value = "parseOnlyLang") parseOnlyLang: ScpReaderConstants.Firebase.FirebaseInstance?,
             @RequestParam(value = "processOnlyCount") processOnlyCount: Int?,
             @RequestParam(value = "parseCategoriesCount") parseCategoriesCount: Int?,
-            @RequestParam(value = "parseCategoriesCountReversed", defaultValue = "false") parseCategoriesCountReversed: Boolean,
+            @RequestParam(
+                value = "parseCategoriesCountReversed",
+                defaultValue = "false"
+            ) parseCategoriesCountReversed: Boolean,
     ): ParsingStartedResponse {
         return if (!articleParsingService.isDownloadCategoriesRunning) {
             startAllCategoriesForAllLangsParsing(
@@ -304,7 +307,9 @@ class ArticleParseController @Autowired constructor(
                     innerArticlesDepth,
                     printTextParts
             )
-            ParsingStartedResponse("Parsing started for ArticleForLang id/title ${articleForLang?.id}/${articleForLang?.title}")
+            ParsingStartedResponse(
+                "Parsing started for ArticleForLang id/title ${articleForLang?.id}/${articleForLang?.title}"
+            )
         } else {
             val savedArticle = articleParsingService.parseArticleForLangSync(
                     urlRelative,
@@ -313,7 +318,9 @@ class ArticleParseController @Autowired constructor(
                     printTextParts
             )
             ResponseEntity(
-                    savedArticle?.articleId?.let { articleForLangService.getOneByLangIdAndArticleIdAsDto(it, lang.id) },
+                    savedArticle
+                        ?.articleId
+                        ?.let { articleForLangService.getOneByLangIdAndArticleIdAsDto(it, lang.id) },
                     HttpStatus.OK
             )
         }
