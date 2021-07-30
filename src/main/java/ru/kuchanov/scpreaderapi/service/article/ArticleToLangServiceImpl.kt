@@ -159,7 +159,7 @@ class ArticleToLangServiceImpl @Autowired constructor(
         return articleToLangs.map { article ->
             article.toDto().apply {
                 imageUrls = images[id] ?: listOf()
-                tagDtos = tags[id]
+                tagDtos = tags[id] ?: listOf()
                 articleTypeToArticleDto = types.firstOrNull { articleId == it.articleId }?.toDto()
                 if (withTextParts) {
                     this.textParts = articlesToTextParts?.get(id)?.let { textPartService.textPartsTreeFromFlattenedList(it) }
