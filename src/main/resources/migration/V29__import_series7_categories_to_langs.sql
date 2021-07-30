@@ -15,5 +15,5 @@ VALUES
 -- ru
 ((select id from SERIES_7), (select id from ruLang), 'Объекты VII', '/scp-series-7'),
 -- en
-((select id from SERIES_7), (select id from enLang), 'SCP Series 7', '/scp-series-7')
+((select id from SERIES_7), (select id from enLang), 'SCP Series VII', '/scp-series-7')
 on conflict DO NOTHING;
