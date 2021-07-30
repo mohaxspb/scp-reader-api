@@ -93,7 +93,7 @@ object ScpReaderConstants {
         }
 
         enum class MessageType {
-            MESSAGE, EXTERNAL_URL, NEW_VERSION, SUBSCRIPTION_EVENT
+            MESSAGE, EXTERNAL_URL, NEW_VERSION, SUBSCRIPTION_EVENT, NEW_ARTICLES
         }
 
         enum class DataParamName {

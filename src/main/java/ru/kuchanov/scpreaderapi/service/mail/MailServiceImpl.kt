@@ -98,9 +98,10 @@ class MailServiceImpl @Autowired constructor(
                 endDate.toString()
             )
 
-        val articlesToLangsCountGroupedByLang = articlesToLangsCreatedToday
-            .groupBy { it.langId }
-            .mapValues { it.value.size }
+        val articlesToLangsCountGroupedByLang: Map<String, Int> =
+            articlesToLangsCreatedToday
+                .groupBy { it.langId }
+                .mapValues { it.value.size }
 
         val createdTranslationsCountByLangAsHtml = articlesToLangsCountGroupedByLang
             .map { "<li>${it.key} = ${it.value}</li>" }

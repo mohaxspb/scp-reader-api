@@ -1260,6 +1260,54 @@ class ArticleParsingServiceBase {
         return typeEnum
     }
 
+    fun sendPushToUsersAboutNewArticles() {
+        val currentDate = LocalDateTime.now()
+
+        val startDate: Instant = currentDate
+            .minus(30, ChronoUnit.MINUTES)
+            .toInstant(ZoneOffset.UTC)
+        val endDate: Instant = currentDate.plus(30, ChronoUnit.MINUTES).toInstant(ZoneOffset.UTC)
+
+        val articlesToLangsCreatedToday: List<ArticleToLangDto> =
+            articleForLangService.getCreatedArticleToLangsBetweenDates(
+                startDate.toString(),
+                endDate.toString()
+            )
+
+        val articlesToLangsCountGroupedByLang: Map<String, List<ArticleToLangDto>> =
+            articlesToLangsCreatedToday
+                .groupBy { it.langId }
+                .mapValues { it.value }
+
+
+        articlesToLangsCountGroupedByLang.entries.map { (langId, newArticles) ->
+            val newArticlesDto = NewArticlesDto(
+                langId = langId,
+                newsArticles = newArticles.map {
+                    NewArticlesDto.NewArticleDto(
+                        id = it.id,
+                        title = it.title
+                    )
+                }
+            )
+
+            val message = objectMapper.writeValueAsString(newArticlesDto)
+
+            val pushSendResults = allProvidersMessagingService.sendMessageToTopic(
+                topicName = langId,
+                message = message,
+                title = "New articles!",
+                type = ScpReaderConstants.Push.MessageType.NEW_ARTICLES,
+                author = userService.getById(ScpReaderConstants.InternalAuthData.ADMIN_ID)
+                    ?: throw UserNotFoundException(
+                        "Can't find admin user with id: ${ScpReaderConstants.InternalAuthData.ADMIN_ID}"
+                    ),
+                url = null
+            )
+            allProvidersMessagingService.printPushSendResults(pushSendResults)
+        }
+    }
+
     companion object {
         private const val DATE_FORMAT_PATTERN_EN = "dd MMM yyyy HH:mm"
 
