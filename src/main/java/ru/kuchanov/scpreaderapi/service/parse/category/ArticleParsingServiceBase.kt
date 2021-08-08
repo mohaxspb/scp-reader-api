@@ -1335,7 +1335,7 @@ class ArticleParsingServiceBase {
             }
             val newArticlesDto = NewArticlesDto(
                 langId = langId,
-                newsArticles = newArticles.map {
+                newArticles = newArticles.map {
                     NewArticlesDto.NewArticleDto(
                         id = it.id,
                         title = it.title
