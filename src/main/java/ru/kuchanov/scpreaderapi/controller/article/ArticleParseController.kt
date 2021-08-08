@@ -61,7 +61,8 @@ class ArticleParseController @Autowired constructor(
                 downloadRecent = true,
                 downloadObjects = false,
                 sendMail = false,
-                massDownloadTaskType = ArticleParsingServiceBase.MassDownloadTaskType.RECENT
+                massDownloadTaskType = ArticleParsingServiceBase.MassDownloadTaskType.RECENT,
+                sendPushNotification = true
             )
             ParsingStartedResponse()
         } else {
@@ -326,5 +327,14 @@ class ArticleParseController @Autowired constructor(
                 HttpStatus.OK
             )
         }
+    }
+
+    @GetMapping("testNewArticlesPush")
+    fun testNewArticlesPush(): ResponseEntity<*> {
+        articleParsingService.sendPushToUsersAboutNewArticles()
+        return ResponseEntity(
+            "Push sent!",
+            HttpStatus.OK
+        )
     }
 }
