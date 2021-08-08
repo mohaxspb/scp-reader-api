@@ -1329,7 +1329,6 @@ class ArticleParsingServiceBase {
                 .groupBy { it.langId }
                 .mapValues { it.value }
 
-
         articlesToLangsCountGroupedByLang.entries.forEach { (langId, newArticles) ->
             if (newArticles.isEmpty()) {
                 return@forEach
