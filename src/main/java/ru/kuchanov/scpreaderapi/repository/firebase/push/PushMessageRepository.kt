@@ -15,7 +15,7 @@ interface PushMessageRepository : JpaRepository<PushMessage, Long> {
             """
                 select * from push_messages
                 where type in :types
-                and user_id = :userId or user_id IS NULL 
+                and (user_id = :userId or user_id IS NULL) 
                 order by created desc
             """,
             nativeQuery = true
