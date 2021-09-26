@@ -220,7 +220,7 @@ SHELL=/bin/bash
            echo "$(date '+%d/%m/%Y %H:%M:%S'): lockFile already exists, so we should think, that restarting is in progress and do nothing"
        else
            touch "$lockFile"
-           restartTomcatOutput=$(systemctl restart -f tomcat8.service 2>&1)
+           restartTomcatOutput=$(systemctl restart -f tomcat9.service 2>&1)
            echo "$(date '+%d/%m/%Y %H:%M:%S'): restartTomcatOutput: $restartTomcatOutput"
    # mail -s "SCP Reader server is down." admin@scp-reader.com <<EOF
    mail -s "SCP Reader server is down." mohax.spb@gmail.com,neva.spb.rx@gmail.com,admin@scp-reader.com <<EOF
