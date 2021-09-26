@@ -181,3 +181,68 @@ SHELL=/bin/bash
    
    50 0 * * * /data/dbBackups/scp-reader.com/dbBackupRotate.sh 60*60*24*7 scpReader_ /data/dbBackups/scp-reader.com/files/ >> /data/dbBackups/scp-reader.com/log.log
     ```
+
+### Server restart script
+
+   ```shell script
+   #!/bin/bash
+   
+   address=$1
+   correctResponse=$2
+   
+   echo "$(date '+%d/%m/%Y %H:%M:%S'): starting server check for $address with correct response: $correctResponse"
+   
+   # correctResponse='Welcome to ScpReader API!'
+   # correctResponse='Welcome to API!'
+   # address='https://scp-reader.com:8443/scp-reader/api/'
+   # address='https://kuchanov.ru:8443/octa-trade/api/v1/'
+   
+   lockFile=/data/utils/restartTomcatLockFile.lock
+   
+   response=$(curl -s $address)
+   echo "$(date '+%d/%m/%Y %H:%M:%S'): $response"
+   if [[ $response == $correctResponse ]]; then
+       echo "$(date '+%d/%m/%Y %H:%M:%S'): response is correct!"
+       if [[ -e "$lockFile" ]]; then
+           rm -f $lockFile
+   # mail -s "SCP Reader server is working again!" admin@scp-reader.com <<EOF
+   mail -s "SCP Reader server is working again!" mohax.spb@gmail.com,neva.spb.rx@gmail.com,admin@scp-reader.com <<EOF
+   SCP Reader server is working again!
+   
+   Seems to be we corretly write a script to check if it is down and restart it in that case.
+   
+   Nice work! =)
+   EOF
+       fi
+   else
+       echo "$(date '+%d/%m/%Y %H:%M:%S'): server is down"
+       if [[ -e "$lockFile" ]]; then
+           echo "$(date '+%d/%m/%Y %H:%M:%S'): lockFile already exists, so we should think, that restarting is in progress and do nothing"
+       else
+           touch "$lockFile"
+           restartTomcatOutput=$(systemctl restart -f tomcat8.service 2>&1)
+           echo "$(date '+%d/%m/%Y %H:%M:%S'): restartTomcatOutput: $restartTomcatOutput"
+   # mail -s "SCP Reader server is down." admin@scp-reader.com <<EOF
+   mail -s "SCP Reader server is down." mohax.spb@gmail.com,neva.spb.rx@gmail.com,admin@scp-reader.com <<EOF
+   SCP Reader server is down.
+   Trying to restart it.
+   
+   Restart Tomcat comand output: "$restartTomcatOutput"
+   EOF
+       fi
+   fi
+   ```
+
+### cron server restart script
+
+   1. Create dirs `/data/utils/logs`.
+   2. Create log file `/data/utils/logs/serverRestart.log`
+   3. Copy script above to executable file `restartScript.sh`
+   4. Add script below to cron vai `crontab -e` (`Ctrl+x` to save changes in NANO)
+
+   ```shell script
+   # use bash to run `*.sh` scripts.
+   SHELL=/bin/bash
+   
+   * * * * * /data/utils/restartScript.sh https://scp-reader.com:8443/scp-reader/api/ 'Welcome to ScpReader API!' >> /data/utils/logs/serverRestart.log 2>&1
+   ```
