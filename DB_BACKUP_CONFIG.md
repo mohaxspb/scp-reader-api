@@ -209,7 +209,7 @@ SHELL=/bin/bash
    mail -s "SCP Reader server is working again!" mohax.spb@gmail.com,neva.spb.rx@gmail.com,admin@scp-reader.com <<EOF
    SCP Reader server is working again!
    
-   Seems to be we corretly write a script to check if it is down and restart it in that case.
+   Seems to be we correctly write a script to check if it is down and restart it in that case.
    
    Nice work! =)
    EOF
