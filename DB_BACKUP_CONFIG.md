@@ -237,7 +237,7 @@ SHELL=/bin/bash
 
    1. Create dirs `/data/utils/logs`.
    2. Create log file `/data/utils/logs/serverRestart.log`
-   3. Copy script above to executable file `restartScript.sh`
+   3. Copy script above to executable file `/data/utils/restartScript.sh`
    4. Add script below to cron vai `crontab -e` (`Ctrl+x` to save changes in NANO)
 
    ```shell script
