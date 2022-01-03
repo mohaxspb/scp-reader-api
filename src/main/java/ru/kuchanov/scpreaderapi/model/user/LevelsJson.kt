@@ -1,13 +1,13 @@
 package ru.kuchanov.scpreaderapi.model.user
 
-import org.codehaus.jackson.annotate.JsonProperty
-import org.codehaus.jackson.map.ObjectMapper
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.ObjectMapper
 import ru.kuchanov.scpreaderapi.utils.FileUtils
 
 
 data class Level(
-        @JsonProperty var id: Int? = null,
-        @JsonProperty var score: Int? = null
+    @JsonProperty var id: Int? = null,
+    @JsonProperty var score: Int? = null
 )
 
 data class LevelsJson(@JsonProperty var levels: List<Level>? = null) {
@@ -42,8 +42,8 @@ data class LevelsJson(@JsonProperty var levels: List<Level>? = null) {
         const val NO_SCORE_TO_MAX_LEVEL = -1
 
         fun getLevelsJson(): LevelsJson = ObjectMapper().readValue(
-                FileUtils.getFileAsStringFromResources(FILE_PATH),
-                LevelsJson::class.java
+            FileUtils.getFileAsStringFromResources(FILE_PATH),
+            LevelsJson::class.java
         )
     }
 }
