@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Primary
 import org.springframework.scheduling.annotation.EnableAsync
 import org.springframework.scheduling.annotation.EnableScheduling
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
 
 @SpringBootApplication
@@ -45,6 +46,9 @@ class Application : SpringBootServletInitializer() {
     @Bean
     fun parsingLogger(): Logger =
             LoggerFactory.getLogger(PARSING_LOGGER)
+
+    @Bean
+    fun passwordEncoder() = BCryptPasswordEncoder()
 
     override fun configure(application: SpringApplicationBuilder): SpringApplicationBuilder =
             application.sources(Application::class.java)

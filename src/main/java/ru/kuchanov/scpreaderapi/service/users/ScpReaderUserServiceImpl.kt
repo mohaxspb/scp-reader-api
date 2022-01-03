@@ -29,7 +29,6 @@ class ScpReaderUserServiceImpl @Autowired constructor(
     override fun getById(id: Long): User? =
             repository.findByIdOrNull(id)
 
-
     @Deprecated("Uses deprecated return type", ReplaceWith("getByIdAsDtoV2"))
     override fun getByIdAsDto(id: Long): UserProjection? =
             repository.getByIdAsProjection(id)

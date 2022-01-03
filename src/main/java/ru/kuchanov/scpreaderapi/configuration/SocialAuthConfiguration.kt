@@ -15,9 +15,9 @@ import ru.kuchanov.scpreaderapi.network.FacebookApi
 
 @Configuration
 class SocialAuthConfiguration @Autowired constructor(
-        val okHttpClient: OkHttpClient,
-        val converterFactory: Converter.Factory,
-        val callAdapterFactory: CallAdapter.Factory
+    val okHttpClient: OkHttpClient,
+    val converterFactory: Converter.Factory,
+    val callAdapterFactory: CallAdapter.Factory,
 ) {
 
     //google auth
@@ -26,19 +26,19 @@ class SocialAuthConfiguration @Autowired constructor(
 
     @Bean
     fun googleIdTokenVerifier(): GoogleIdTokenVerifier = GoogleIdTokenVerifier
-            .Builder(NetHttpTransport(), JacksonFactory())
-            .setAudience(listOf(googleClientId))
-            .build()
+        .Builder(NetHttpTransport(), JacksonFactory())
+        .setAudience(listOf(googleClientId))
+        .build()
 
     //facebook auth
     @Bean
     fun facebookApi(): FacebookApi {
         val retrofit = Retrofit.Builder()
-                .baseUrl(FacebookApi.BASE_API_URL)
-                .client(okHttpClient)
-                .addConverterFactory(converterFactory)
-                .addCallAdapterFactory(callAdapterFactory)
-                .build()
+            .baseUrl(FacebookApi.BASE_API_URL)
+            .client(okHttpClient)
+            .addConverterFactory(converterFactory)
+            .addCallAdapterFactory(callAdapterFactory)
+            .build()
         return retrofit.create(FacebookApi::class.java)
     }
 }
