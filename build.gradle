@@ -28,7 +28,7 @@ buildscript {
 
 plugins {
     //db migrations
-    id "org.flywaydb.flyway" version "6.5.4"
+    id "org.flywaydb.flyway" version "8.3.0"
 
     //to fix CreateProcess error=206, Имя файла или его расширение имеет слишком большую длину
     id "ua.eshepelyuk.ManifestClasspath" version "1.0.0"
@@ -108,10 +108,10 @@ dependencies {
     //spring END
 
     //postgresql
-    implementation 'org.postgresql:postgresql:42.2.1'
+    implementation 'org.postgresql:postgresql:42.3.1'
 
     //db migrations
-    implementation "org.flywaydb:flyway-core:6.5.4"
+    implementation 'org.flywaydb:flyway-core:8.3.0'
 
     //apache
     implementation 'commons-io:commons-io:2.11.0'
