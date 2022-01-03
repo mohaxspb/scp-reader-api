@@ -114,11 +114,11 @@ dependencies {
     implementation "org.flywaydb:flyway-core:6.5.4"
 
     //apache
-    implementation 'commons-io:commons-io:2.6'
+    implementation 'commons-io:commons-io:2.11.0'
 
     //rx
-    implementation "io.reactivex.rxjava2:rxjava:2.2.1"
-    implementation 'io.reactivex.rxjava2:rxkotlin:2.2.0'
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.21'
+    implementation 'io.reactivex.rxjava2:rxkotlin:2.4.0'
 
     //google
     implementation 'com.google.http-client:google-http-client:1.39.2'
@@ -138,7 +138,7 @@ dependencies {
     implementation 'com.squareup.retrofit2:adapter-rxjava2:2.4.0'
 
     //connection poll
-    implementation 'com.zaxxer:HikariCP:3.3.1'
+    implementation 'com.zaxxer:HikariCP:5.0.0'
 
     //jsoup
     api 'org.jsoup:jsoup:1.11.3'
