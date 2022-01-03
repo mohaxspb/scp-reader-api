@@ -5,7 +5,7 @@ buildscript {
         kotlin_version = '1.6.0'
         spring_boot_version = '2.6.2'
 
-        ext['netty.version'] = '4.1.36.Final'
+        ext['netty.version'] = '4.1.72.Final'
 
         //fix tomcat deploy error
         jaxb_api_version = '2.3.0'
@@ -75,7 +75,7 @@ repositories {
 
 dependencies {
     //need as spring version of netty conflicts with one in firebase libs
-    implementation 'io.netty:netty-all:4.1.36.Final'
+    implementation 'io.netty:netty-all:4.1.72.Final'
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'
