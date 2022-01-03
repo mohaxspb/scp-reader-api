@@ -121,8 +121,8 @@ class HuaweiApiConfiguration @Autowired constructor(
 //            log.error("initialResponse: ${initialResponse.isSuccessful}")
 //            log.error("initialResponse: ${initialResponse.code()}")
 //            log.error("initialResponse: ${initialResponse.request().url()}")
-            val initialResponseBody = initialResponse.body()
-                    ?: throw NullPointerException("Body is null while request: ${initialRequest.url().url()}!")
+            val initialResponseBody = initialResponse.body
+                    ?: throw NullPointerException("Body is null while request: ${initialRequest.url.toUrl()}!")
 //            log.error("initialResponseBody: $initialResponseBody")
             val initialResponseBodyContentType = initialResponseBody.contentType()
 //            log.error("initialResponseBodyContentType: $initialResponseBodyContentType")
@@ -207,14 +207,14 @@ class HuaweiApiConfiguration @Autowired constructor(
     }
 
     private fun huaweiPurchaseRequestUnauthorizedResolver(initialResponse: okhttp3.Response) =
-            initialResponse.code() == HttpURLConnection.HTTP_UNAUTHORIZED
+            initialResponse.code == HttpURLConnection.HTTP_UNAUTHORIZED
 
     private fun createHuaweiCommonApiAuthValue(token: HuaweiOAuthAccessToken): String =
             "${ScpReaderConstants.Api.HEADER_PART_BEARER} ${token.accessToken}"
 
     private fun huaweiCommonRequestUnauthorizedResolver(initialResponse: okhttp3.Response): Boolean {
         // body can be read only once, so create copy of it to prevent initialResponse corrupting.
-        val responseBodyAsString = initialResponse.body()!!.string()
+        val responseBodyAsString = initialResponse.body!!.string()
 //        log.error("responseBodyAsString: $responseBodyAsString")
         return responseBodyAsString.contains(""""code":"$HUAWEI_COMMON_API_AUTH_ERROR_CODE"""")
                 || responseBodyAsString.contains(""""code":"$HUAWEI_COMMON_API_AUTH_EXPIRED_ERROR_CODE"""")

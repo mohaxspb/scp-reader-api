@@ -708,7 +708,7 @@ class ArticleParsingServiceBase {
                 .build()
             val responseBody = try {
                 val response: Response = okHttpClient.newCall(request).execute()
-                val body = response.body()
+                val body = response.body
                 if (body != null) {
                     body.string()
                 } else {
@@ -1041,7 +1041,7 @@ class ArticleParsingServiceBase {
             .build()
 
         val response = okHttpClient.newCall(request).execute()
-        var responseBody = response.body()?.string()
+        var responseBody = response.body?.string()
             ?: throw ScpParseException("Response body is NULL for url: $url", NullPointerException())
 
         //remove all fucking RTL(&lrm) used for text-alignment. What a fucking idiots!..
@@ -1051,7 +1051,7 @@ class ArticleParsingServiceBase {
         val pageContent = getArticlePageContentTag(doc)
             ?: throw ScpParseException("pageContent is NULL for url: $url", NullPointerException())
         val p404 = pageContent.getElementById("404-message")
-        if (p404 != null || response.code() == HttpStatus.NOT_FOUND.value()) {
+        if (p404 != null || response.code == HttpStatus.NOT_FOUND.value()) {
             throw ScpParseException("404 page for url: $url")
         } else {
             return parseArticleService.parseArticle(url, doc, pageContent, lang, printTextParts)
@@ -1187,7 +1187,7 @@ class ArticleParsingServiceBase {
 
     private fun getResponseBody(request: Request): String {
         val response = okHttpClient.newCall(request).execute()
-        val body = response.body()
+        val body = response.body
         if (body != null) {
             return body.string()
         } else {
