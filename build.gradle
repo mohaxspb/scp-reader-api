@@ -62,7 +62,7 @@ bootWar {
 //to be able to run with task args to define correct properties file
 //i.e. `bootRun -Dspring.profiles.active=dev`
 bootRun.systemProperties = System.properties as Map<String, ?>
-bootRun.main = 'ru.kuchanov.scpreaderapi.Application'
+bootRun.mainClass.set('ru.kuchanov.scpreaderapi.Application')
 
 
 repositories {
