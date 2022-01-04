@@ -71,7 +71,6 @@ bootRun.main = 'ru.kuchanov.scpreaderapi.Application'
 
 repositories {
     mavenCentral()
-    jcenter()
 }
 
 dependencies {
