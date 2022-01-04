@@ -6,10 +6,6 @@ buildscript {
         spring_boot_version = '2.6.2'
 
         ext['netty.version'] = '4.1.72.Final'
-
-        //fix tomcat deploy error
-        //do not update, it's f*cking broken. ***!!111oneone
-        jaxb_api_version = '2.3.0'
     }
 
     repositories {
@@ -152,7 +148,6 @@ dependencies {
 
     //fix running on java9+
     //see https://stackoverflow.com/questions/43574426/how-to-resolve-java-lang-noclassdeffounderror-javax-xml-bind-jaxbexception-in-j
-    //do not update, it's f*cking broken. ***!!111oneone
     implementation "com.sun.xml.bind:jaxb-core:3.0.1"
     implementation "com.sun.xml.bind:jaxb-impl:3.0.1"
     implementation "javax.xml.bind:jaxb-api:2.4.0-b180830.0359"
