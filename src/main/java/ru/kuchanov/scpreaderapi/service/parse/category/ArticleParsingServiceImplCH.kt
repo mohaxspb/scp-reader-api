@@ -42,8 +42,8 @@ class ArticleParsingServiceImplCH : ArticleParsingServiceBase() {
             val tableRow = listOfElements[i]
             val listOfTd = tableRow.getElementsByTag("td")
             //title and url
-            val firstTd = listOfTd.first()
-            val tagA = firstTd.getElementsByTag(TAG_A).first()
+            val firstTd = listOfTd.first()!!
+            val tagA = firstTd.getElementsByTag(TAG_A).first()!!
             val title = tagA.text()
             val url = tagA.attr(ATTR_HREF)
             val rating = Integer.parseInt(listOfTd[1].text())

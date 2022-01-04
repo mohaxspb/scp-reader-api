@@ -590,7 +590,7 @@ class ArticleParsingServiceBase {
                     articlesForCategory
                 )
 
-                val langEnum = ScpReaderConstants.Firebase.FirebaseInstance.valueOf(lang.id.toUpperCase())
+                val langEnum = ScpReaderConstants.Firebase.FirebaseInstance.valueOf(lang.id.uppercase(Locale.getDefault()))
                 val articlesToCategoryForCache = articleForLangService
                     .findAllArticlesForLangByArticleCategoryToLangId(categoryToLang.id)
                 cacheManager
@@ -616,7 +616,7 @@ class ArticleParsingServiceBase {
 
             //get num of pages
             val spanWithNumber = doc.getElementsByClass("pager-no").first()
-            val text = spanWithNumber.text()
+            val text = spanWithNumber!!.text()
             val numOfPages = Integer.valueOf(text.substring(text.lastIndexOf(" ") + 1))
 
             subscriber.onSuccess(numOfPages)
@@ -679,8 +679,8 @@ class ArticleParsingServiceBase {
         val articles = mutableListOf<ArticleForLang>()
         val listOfElements = listPagesBox.getElementsByClass("list-pages-item")
         for (element in listOfElements) {
-            val tagP = element.getElementsByTag(TAG_P).first()
-            val tagA = tagP.getElementsByTag(TAG_A).first()
+            val tagP = element.getElementsByTag(TAG_P).first()!!
+            val tagA = tagP.getElementsByTag(TAG_A).first()!!
             val title = tagP.text().substring(0, tagP.text().indexOf(getArticleRatingStringDelimiter()))
             val url = tagA.attr(ATTR_HREF)
             //remove a tag to leave only text with rating
@@ -758,13 +758,13 @@ class ArticleParsingServiceBase {
         allHtml = allHtml.substring(indexOfh2WithIdToc1, indexOfHr)
         val document = Jsoup.parse(allHtml)
         val h2withIdToc1 = document.getElementById("toc1")
-        h2withIdToc1.remove()
+        h2withIdToc1?.remove()
         val allH2Tags: Elements = document.getElementsByTag("h2")
         for (h2Tag in allH2Tags) {
             val brTag = Element(Tag.valueOf("br"), "")
             h2Tag.replaceWith(brTag)
         }
-        val allArticles = document.getElementsByTag(TAG_BODY).first().html()
+        val allArticles = document.getElementsByTag(TAG_BODY).first()!!.html()
         val arrayOfArticles = allArticles.split("<br>").toTypedArray()
         val articles: MutableList<ArticleForLang> = mutableListOf()
         for (arrayItem in arrayOfArticles) {
@@ -773,9 +773,9 @@ class ArticleParsingServiceBase {
             }
             val arrayItemParsed = Jsoup.parse(arrayItem)
             //type of object
-            val imageURL = arrayItemParsed.getElementsByTag(TAG_IMG).first().attr(ATTR_SRC)
+            val imageURL = arrayItemParsed.getElementsByTag(TAG_IMG).first()!!.attr(ATTR_SRC)
             val type = getObjectTypeByImageUrl(imageURL)
-            val url = arrayItemParsed.getElementsByTag(TAG_A).first().attr(ATTR_HREF)
+            val url = arrayItemParsed.getElementsByTag(TAG_A).first()!!.attr(ATTR_HREF)
             val title = arrayItemParsed.text()
             val article = ArticleForLang(
                 langId = lang.id,
@@ -894,7 +894,7 @@ class ArticleParsingServiceBase {
             createArticleToArticleRelation(articleDownloaded, articleForLangInDb.id!!, lang)
 
             val langEnum =
-                ScpReaderConstants.Firebase.FirebaseInstance.valueOf(lang.id.toUpperCase())
+                ScpReaderConstants.Firebase.FirebaseInstance.valueOf(lang.id.uppercase(Locale.getDefault()))
             val articleWithTextForCache = articleForLangService.getOneByIdAsDto(articleForLangInDb.id!!)
             cacheManager
                 .getCache(ARTICLE_TO_LANG_DTO_BY_URL_RELATIVE_AND_LANG)
@@ -969,8 +969,8 @@ class ArticleParsingServiceBase {
             val tableRow = listOfElements[i]
             val listOfTd = tableRow.getElementsByTag("td")
             //title and url
-            val firstTd = listOfTd.first()
-            val tagA = firstTd.getElementsByTag(TAG_A).first()
+            val firstTd = listOfTd.first()!!
+            val tagA = firstTd.getElementsByTag(TAG_A).first()!!
             val title = tagA.text()
             val url = tagA.attr(ATTR_HREF)
             //rating

@@ -67,7 +67,7 @@ class ParseArticleTextService @Autowired constructor(
         val blockquoteTextPart = TextPart(data = null, type = TextType.BLOCKQUOTE, orderInText = order)
 
         val document = Jsoup.parse(textPart)
-        val extractedFromBlockquote = document.getElementsByTag("blockquote").first().html()
+        val extractedFromBlockquote = document.getElementsByTag("blockquote").first()!!.html()
 
         blockquoteTextPart.innerTextParts = parseArticleText(extractedFromBlockquote, false)
 
@@ -102,7 +102,7 @@ class ParseArticleTextService @Autowired constructor(
         }
         val title = when {
             !spans.isEmpty() -> spans.html()
-            !scpImageCaptions.isEmpty() -> scpImageCaptions.first().html()
+            !scpImageCaptions.isEmpty() -> scpImageCaptions.first()!!.html()
             descriptionInTable != null -> descriptionInTable
             else -> null
         }
@@ -123,16 +123,16 @@ class ParseArticleTextService @Autowired constructor(
 
         //log.debug("document: $document")
         //parse collapsed part
-        val elementFolded = document.getElementsByClass("collapsible-block-folded").first()
-        val elementA = elementFolded.getElementsByTag(TAG_A).first()
+        val elementFolded = document.getElementsByClass("collapsible-block-folded").first()!!
+        val elementA = elementFolded.getElementsByTag(TAG_A).first()!!
         //replacing non-breaking-spaces
         val collapsedTitle = elementA.text().replace("\\p{Z}".toRegex(), " ")
         val collapsedSpoilerTextPart = TextPart(data = collapsedTitle, type = TextType.SPOILER_COLLAPSED, orderInText = 0)
 
         //parse expanded part
-        val elementUnfolded = document.getElementsByClass("collapsible-block-unfolded").first()
+        val elementUnfolded = document.getElementsByClass("collapsible-block-unfolded").first()!!
         val elementUnfoldedBlockLink = elementUnfolded.getElementsByClass("collapsible-block-unfolded-link").first()
-        val elementUnfoldedLink = elementUnfolded.getElementsByClass("collapsible-block-link").first()
+        val elementUnfoldedLink = elementUnfolded.getElementsByClass("collapsible-block-link").first()!!
 
         val expandedTitle = elementUnfoldedLink.text().replace("\\p{Z}".toRegex(), " ")
         val expandedSpoilerTextPart = TextPart(data = expandedTitle, type = TextType.SPOILER_EXPANDED, orderInText = 1)
@@ -188,13 +188,13 @@ class ParseArticleTextService @Autowired constructor(
         val document = Jsoup.parse(html)
         val yuiNavset = document.getElementsByClass(CLASS_TABS).first()
         yuiNavset?.let { tabsElement ->
-            val titlesTag = tabsElement.getElementsByClass("yui-nav").first()
+            val titlesTag = tabsElement.getElementsByClass("yui-nav").first()!!
             val liElements = titlesTag.getElementsByTag(TAG_LI)
             val tabsTitles = liElements.map { it.text() }
 
             val tabsTextPart = TextPart(data = null, type = TextType.TABS, orderInText = order)
 
-            val yuiContent = tabsElement.getElementsByClass("yui-content").first()
+            val yuiContent = tabsElement.getElementsByClass("yui-content").first()!!
             var tabOrder = 0
 
             //log.debug("Parse tabs: $yuiContent")
@@ -249,7 +249,7 @@ class ParseArticleTextService @Autowired constructor(
         val listOfTextTypes = mutableListOf<TextType>()
         for (textPart in articlesTextParts) {
             val element = Jsoup.parse(textPart)
-            val ourElement = element.getElementsByTag(TAG_BODY).first().children().first()
+            val ourElement = element.getElementsByTag(TAG_BODY).first()?.children()?.first()
             when {
                 ourElement == null -> listOfTextTypes.add(TextType.TEXT)
                 ourElement.tagName() == TAG_P -> listOfTextTypes.add(TextType.TEXT)
@@ -278,7 +278,7 @@ class ParseArticleTextService @Autowired constructor(
                 || element.className() == "cimg"
                 || element.className() == "image"
                 //see /operation-overmeta
-                || (element.tagName() == TAG_A && element.children().size == 1 && element.children().first().tagName() == TAG_IMG)
+                || (element.tagName() == TAG_A && element.children().size == 1 && element.children().first()?.tagName() == TAG_IMG)
                 || element.classNames().contains("image-container")
                 || element.classNames().contains("scp-image-block")
 

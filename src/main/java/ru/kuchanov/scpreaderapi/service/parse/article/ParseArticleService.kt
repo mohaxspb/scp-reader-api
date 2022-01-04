@@ -87,7 +87,7 @@ class ParseArticleService @Autowired constructor(
         //replace links in footnote refs
         val footnoterefs = pageContent.getElementsByClass("footnoteref")
         for (snoska in footnoterefs) {
-            val aTag = snoska.getElementsByTag(TAG_A).first()
+            val aTag = snoska.getElementsByTag(TAG_A).first() ?: throw NullPointerException("No a tag in snoska")
             val idAsString = aTag.id().replace("footnoteref-", "")
 //            log.info("idAsString: $idAsString")
             val digits = StringBuilder()
@@ -102,7 +102,7 @@ class ParseArticleService @Autowired constructor(
         }
         val footnoterefsFooter = pageContent.getElementsByClass("footnote-footer")
         for (snoska in footnoterefsFooter) {
-            val aTag = snoska.getElementsByTag(TAG_A).first()
+            val aTag = snoska.getElementsByTag(TAG_A).first() ?: throw NullPointerException("No a tag in snoska")
             snoska.prependText(aTag.text())
             aTag.remove()
         }
@@ -110,7 +110,7 @@ class ParseArticleService @Autowired constructor(
         //replace links in bibliography
         val bibliographi = pageContent.getElementsByClass("bibcite")
         for (snoska in bibliographi) {
-            val aTag = snoska.getElementsByTag(TAG_A).first()
+            val aTag = snoska.getElementsByTag(TAG_A).first() ?: throw NullPointerException("No a tag in snoska")
             val onclickAttr = aTag.attr("onclick")
 
             val id = onclickAttr.substring(onclickAttr.indexOf("bibitem-"), onclickAttr.lastIndexOf("'"))
@@ -129,15 +129,15 @@ class ParseArticleService @Autowired constructor(
         //remove bottom navigation bar
         val bottomNavigationBar = pageContent.getElementsByClass("footer-wikiwalk-nav")
         if (bottomNavigationBar.isNotEmpty()) {
-            bottomNavigationBar.first().remove()
+            bottomNavigationBar.first()!!.remove()
         }
         //remove audio link from DE version
         val audio = pageContent.getElementsByClass("audio-img-block")
-        audio?.remove()
+        audio.remove()
         val audioContent = pageContent.getElementsByClass("audio-block")
-        audioContent?.remove()
+        audioContent.remove()
         val creditRate = pageContent.getElementsByClass("creditRate")
-        creditRate?.remove()
+        creditRate.remove()
 
         val uCreditView = pageContent.getElementById("u-credit-view")
         uCreditView?.remove()
@@ -321,8 +321,8 @@ class ParseArticleService @Autowired constructor(
     private fun extractScpImageBlocks(element: Element) {
         val scpImageBlocks = element.children()
         scpImageBlocks.forEach {
-            if (it.children().size == 1 && it.children().first().classNames().contains("scp-image-block")) {
-                it.after(it.children().first())
+            if (it.children().size == 1 && it.children().first()!!.classNames().contains("scp-image-block")) {
+                it.after(it.children().first()!!)
                 it.remove()
             }
         }
@@ -331,40 +331,38 @@ class ParseArticleService @Autowired constructor(
     private fun parseRimgLimgCimgImages(className: String, pageContent: Element) {
         //parse multiple imgs in "rimg" tag
         val rimgs = pageContent.getElementsByClass(className)
-        if (rimgs != null) {
-            for (rimg in rimgs) {
-                val imgs = rimg.getElementsByTag(TAG_IMG)
+        rimgs.forEach { rimg ->
+            val imgs = rimg.getElementsByTag(TAG_IMG)
 
-                if (imgs != null && imgs.size > 1) {
-                    val rimgsToAdd = mutableListOf<Element>()
-                    for (i in 0 until imgs.size) {
-                        val img = imgs[i]
+            if (imgs.size > 1) {
+                val rimgsToAdd = mutableListOf<Element>()
+                for (i in 0 until imgs.size) {
+                    val img = imgs[i]
 
-                        var nextImgSibling = img.nextElementSibling()
+                    var nextImgSibling = img.nextElementSibling()
 
-                        val descriptions = Elements()
-                        while (nextImgSibling != null && nextImgSibling.tagName() != TAG_IMG) {
-                            descriptions.add(nextImgSibling)
-                            nextImgSibling = nextImgSibling.nextElementSibling()
-                        }
-
-                        val newRimg = Element(TAG_DIV)
-                        newRimg.addClass(className)
-                        newRimg.appendChild(img)
-
-                        for (element in descriptions) {
-                            newRimg.appendChild(element)
-                        }
-
-                        rimgsToAdd.add(newRimg)
+                    val descriptions = Elements()
+                    while (nextImgSibling != null && nextImgSibling.tagName() != TAG_IMG) {
+                        descriptions.add(nextImgSibling)
+                        nextImgSibling = nextImgSibling.nextElementSibling()
                     }
-                    var rimgLast = rimg
-                    for (newRimg in rimgsToAdd) {
-                        rimgLast.after(newRimg)
-                        rimgLast = newRimg
+
+                    val newRimg = Element(TAG_DIV)
+                    newRimg.addClass(className)
+                    newRimg.appendChild(img)
+
+                    for (element in descriptions) {
+                        newRimg.appendChild(element)
                     }
-                    rimg.remove()
+
+                    rimgsToAdd.add(newRimg)
                 }
+                var rimgLast = rimg
+                for (newRimg in rimgsToAdd) {
+                    rimgLast.after(newRimg)
+                    rimgLast = newRimg
+                }
+                rimg.remove()
             }
         }
     }
@@ -402,8 +400,8 @@ class ParseArticleService @Autowired constructor(
     }
 
     private fun unwrapDivs(element: Element) {
-        if (element.children().size == 1 && element.children().first().tagName() == TAG_DIV) {
-            val theOnlyChildDiv = element.children().first()
+        if (element.children().size == 1 && element.children().first()!!.tagName() == TAG_DIV) {
+            val theOnlyChildDiv = element.children().first()!!
 
             unwrapDivs(theOnlyChildDiv)
 
@@ -437,21 +435,21 @@ class ParseArticleService @Autowired constructor(
             }
 
             val span1 = rateDiv.getElementsByClass("rateup").first()
-            span1.remove()
+            span1?.remove()
             val span2 = rateDiv.getElementsByClass("ratedown").first()
-            span2.remove()
+            span2?.remove()
             val span3 = rateDiv.getElementsByClass("cancel").first()
-            span3.remove()
+            span3?.remove()
 
-            val heritageDiv = rateDiv.parent().getElementsByClass("heritage-emblem")
-            if (heritageDiv != null && !heritageDiv.isEmpty()) {
-                heritageDiv.first().remove()
+            val heritageDiv = rateDiv.parent()?.getElementsByClass("heritage-emblem")
+            if (heritageDiv?.isNotEmpty() == true) {
+                heritageDiv.first()!!.remove()
             }
 
             //remove rating bar
             //attempt to remove parent div, if it has only this child
-            if (rateDiv.parent().childNodeSize() == 1) {
-                rateDiv.parent().remove()
+            if (rateDiv.parent()?.childNodeSize() == 1) {
+                rateDiv.parent()?.remove()
             } else {
                 rateDiv.remove()
             }

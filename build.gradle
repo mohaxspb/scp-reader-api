@@ -137,7 +137,7 @@ dependencies {
     implementation 'com.zaxxer:HikariCP:5.0.0'
 
     //jsoup
-    api 'org.jsoup:jsoup:1.11.3'
+    implementation 'org.jsoup:jsoup:1.14.3'
 
     //testing
     testImplementation 'junit:junit:4.13.2'

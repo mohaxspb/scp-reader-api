@@ -2,7 +2,6 @@ package ru.kuchanov.scpreaderapi.service.parse.category
 
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
-import org.jsoup.select.Elements
 import org.springframework.stereotype.Service
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.users.Lang
@@ -28,9 +27,9 @@ class ArticleParsingServiceImplFR : ArticleParsingServiceBase() {
     }
 
     override fun parseForRecentArticles(lang: Lang, doc: Document): List<ArticleForLang> {
-        val contentTypeDescription = doc.getElementsByClass("content-type-description").first()
-        val recentWithDatesTag = contentTypeDescription.getElementsByClass("collapsible-block").first()
-        val recentWithDatesSpoilerTitleTag = recentWithDatesTag.getElementsByClass("collapsible-block-link").first()
+        val contentTypeDescription = doc.getElementsByClass("content-type-description").first()!!
+        val recentWithDatesTag = contentTypeDescription.getElementsByClass("collapsible-block").first()!!
+        val recentWithDatesSpoilerTitleTag = recentWithDatesTag.getElementsByClass("collapsible-block-link").first()!!
         val recentWithDatesSpoilerTitle = recentWithDatesSpoilerTitleTag.text().replace("\\p{Z}".toRegex(), " ")
         if (recentWithDatesSpoilerTitle != "+ Avec date") {
             throw IllegalStateException("Can't find recent articles table with date!")
@@ -42,9 +41,9 @@ class ArticleParsingServiceImplFR : ArticleParsingServiceBase() {
         val articles = mutableListOf<ArticleForLang>()
         val listOfElements = pageContent.getElementsByTag("tr")
         for (i in 1 /*start from 1 as first row is tables header*/ until listOfElements.size) {
-            val listOfTd: Elements = listOfElements[i].getElementsByTag("td")
-            val firstTd: Element = listOfTd.first()
-            val tagA = firstTd.getElementsByTag(ParseConstants.TAG_A).first()
+            val listOfTd = listOfElements[i].getElementsByTag("td")
+            val firstTd = listOfTd.first()!!
+            val tagA = firstTd.getElementsByTag(ParseConstants.TAG_A).first()!!
             val title = tagA.text()
             val url = tagA.attr(ParseConstants.ATTR_HREF)
             //4 Jun 2017, 22:25

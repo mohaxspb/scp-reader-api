@@ -40,10 +40,10 @@ class ArticleParsingServiceImplPL : ArticleParsingServiceBase() {
         val articlesDivs = listPagesBox.getElementsByClass("list-pages-item")
         val articles = mutableListOf<ArticleForLang>()
         for (element in articlesDivs) {
-            val aTag = element.getElementsByTag(TAG_A).first()
+            val aTag = element.getElementsByTag(TAG_A).first()!!
             val url = aTag.attr(ATTR_HREF)
             val title = aTag.text()
-            val pTag = element.getElementsByTag(TAG_P).first()
+            val pTag = element.getElementsByTag(TAG_P).first()!!
             var ratingString = pTag.text().substring(
                 pTag.text().indexOf(getArticleRatingStringDelimiter()) + getArticleRatingStringDelimiter().length
             )

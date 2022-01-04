@@ -45,10 +45,10 @@ class ArticleParsingServiceImplPT : ArticleParsingServiceBase() {
         val articlesDivs = listPagesBox.getElementsByClass("list-pages-item")
         val articles = mutableListOf<ArticleForLang>()
         for (element in articlesDivs) {
-            val aTag = element.getElementsByTag(TAG_A).first()
+            val aTag = element.getElementsByTag(TAG_A).first()!!
             val url = aTag.attr(ATTR_HREF)
             val title = aTag.text()
-            val pTag = element.getElementsByTag(TAG_P).first()
+            val pTag = element.getElementsByTag(TAG_P).first()!!
             var ratingString = pTag.text().substring(pTag.text().indexOf(getArticleRatingStringDelimiter()) + getArticleRatingStringDelimiter().length)
             ratingString = ratingString.substring(0, ratingString.indexOf(getArticleRatingStringDelimiterEnd()))
             val rating = ratingString.toInt()
@@ -101,7 +101,7 @@ class ArticleParsingServiceImplPT : ArticleParsingServiceBase() {
                 log.error("imageURL is null!")
                 ScpReaderConstants.ArticleTypeEnum.NONE
             }
-            val url = arrayItemParsed.getElementsByTag(TAG_A).first().attr(ATTR_HREF)
+            val url = arrayItemParsed.getElementsByTag(TAG_A).first()!!.attr(ATTR_HREF)
             val title = arrayItemParsed.text()
             val article = ArticleForLang(
                     langId = lang.id,
