@@ -2,7 +2,6 @@ package ru.kuchanov.scpreaderapi.repository.article
 
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
-import ru.kuchanov.scpreaderapi.bean.articles.Article
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInListProjection
 
@@ -253,4 +252,33 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
     fun getRandomArticle(langId: String): ArticleInListProjection
 
     fun deleteByIdIn(ids: List<Long>)
+
+    @Query(
+        value =
+        """
+                SELECT
+                art.id,
+                art.article_id as articleId,
+                art.lang_id as langId,
+                art.url_relative as urlRelative,
+                art.title,
+                art.rating,
+                art.created_on_site as createdOnSite,
+                art.has_iframe_tag as hasIframeTag 
+                FROM articles_langs art
+                WHERE art.lang_id = :langId 
+                AND (
+                    art.id in (
+                        select text_part.article_to_lang_id 
+                        from article_to_lang_text_parts text_part 
+                        where text_part.type in ('TEXT','IMAGE_TITLE') 
+                        and text_part.data ilike '%'||:query||'%'
+                     )
+                     or art.title ilike '%'||:query||'%'
+                )
+                OFFSET :offset LIMIT :limit
+            """,
+        nativeQuery = true
+    )
+    fun search(langId: String, query: String, offset: Int, limit: Int): List<ArticleInListProjection>
 }
