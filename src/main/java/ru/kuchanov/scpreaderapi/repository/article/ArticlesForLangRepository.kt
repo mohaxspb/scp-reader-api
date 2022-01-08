@@ -256,26 +256,33 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
     @Query(
         value =
         """
-                SELECT
-                art.id,
-                art.article_id as articleId,
-                art.lang_id as langId,
-                art.url_relative as urlRelative,
-                art.title,
-                art.rating,
-                art.created_on_site as createdOnSite,
-                art.has_iframe_tag as hasIframeTag 
+                SELECT art.id,
+                       art.article_id      as articleId,
+                       art.lang_id         as langId,
+                       art.url_relative    as urlRelative,
+                       art.title,
+                       art.rating,
+                       art.created_on_site as createdOnSite,
+                       art.has_iframe_tag  as hasIframeTag
                 FROM articles_langs art
-                WHERE art.lang_id = :langId 
-                AND (
-                    art.id in (
-                        select text_part.article_to_lang_id 
-                        from article_to_lang_text_parts text_part 
-                        where text_part.type in ('TEXT','IMAGE_TITLE') 
-                        and text_part.data ilike '%'||:query||'%'
-                     )
-                     or art.title ilike '%'||:query||'%'
-                )
+                         join langs l on art.lang_id = l.id
+                WHERE art.lang_id = :langId
+                  AND (
+                            art.id in (
+                            select text_part.article_to_lang_id
+                            from article_to_lang_text_parts text_part
+                                     join article_to_lang_text_parts_vector atltpv on text_part.id = atltpv.text_part_id
+                            where text_part.type in ('TEXT', 'IMAGE_TITLE', 'TABLE')
+                              and atltpv.vector @@ plainto_tsquery(CAST(l.postgres_lang as regconfig), :query)
+                        )
+                        or
+                            art.id in (
+                                select al.id
+                                from articles_langs al
+                                         join article_to_lang_titles_vector art_vector on al.id = art_vector.article_to_lang_id
+                                where art_vector.vector @@ plainto_tsquery(CAST(l.postgres_lang as regconfig), :query)
+                            )
+                    )
                 OFFSET :offset LIMIT :limit
             """,
         nativeQuery = true
