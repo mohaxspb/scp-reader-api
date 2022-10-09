@@ -2,6 +2,7 @@ package ru.kuchanov.scpreaderapi
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -13,6 +14,9 @@ import org.springframework.context.annotation.Primary
 import org.springframework.scheduling.annotation.EnableAsync
 import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+//import org.springframework.security.oauth2.provider.token.TokenStore
+//import org.springframework.security.oauth2.provider.token.store.JdbcTokenStore
+import javax.sql.DataSource
 
 
 @SpringBootApplication
@@ -49,6 +53,14 @@ class Application : SpringBootServletInitializer() {
 
     @Bean
     fun passwordEncoder() = BCryptPasswordEncoder()
+
+    //do not move to constructor - there are circular dependency error
+//    @Autowired
+//    private lateinit var dataSource: DataSource
+
+//    @Bean
+//    fun tokenStore(): TokenStore =
+//        JdbcTokenStore(dataSource)
 
     override fun configure(application: SpringApplicationBuilder): SpringApplicationBuilder =
             application.sources(Application::class.java)

@@ -12,41 +12,42 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.builders.WebSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
+import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.crypto.password.PasswordEncoder
-import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationManager
-import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationProcessingFilter
-import org.springframework.security.oauth2.provider.token.DefaultTokenServices
-import org.springframework.security.oauth2.provider.token.TokenStore
-import org.springframework.security.oauth2.provider.token.store.JdbcTokenStore
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
-import ru.kuchanov.scpreaderapi.service.auth.ClientServiceImpl
-import ru.kuchanov.scpreaderapi.service.users.ScpReaderUserService
-import javax.servlet.Filter
-import javax.sql.DataSource
 
 
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
 class WebSecurityConfiguration @Autowired constructor(
-    private val clientDetailsService: ClientServiceImpl,
+//    private val clientDetailsService: ClientDetailsService,
     private val authenticationProvider: AuthenticationProvider,
-    private val userDetailsService: ScpReaderUserService,
+    private val userDetailsService: UserDetailsService,
     private val passwordEncoder: PasswordEncoder,
-    private val dataSource: DataSource,
+//    private val dataSource: DataSource,
+//    private val authenticationManager: AuthenticationManager,
 ) : WebSecurityConfigurerAdapter() {
 
-    @Bean
-    fun tokenStore(): TokenStore = JdbcTokenStore(dataSource)
+//    @Bean
+//    fun tokenStore(): TokenStore = JdbcTokenStore(dataSource)
 
-    @Bean
-    fun tokenServices() = DefaultTokenServices().apply {
-        setTokenStore(tokenStore())
-        setClientDetailsService(clientDetailsService)
-        setAuthenticationManager(authenticationManager())
-    }
+    //do not move to constructor - there are circular dependency error
+//    @Autowired
+//    lateinit var clientDetailsService: ClientDetailsService
+
+    //do not move to constructor - there are circular dependency error
+//    @Autowired
+//    lateinit var tokenStore: TokenStore
+
+//    @Bean
+//    fun tokenServices() = DefaultTokenServices().apply {
+//        setTokenStore(tokenStore)
+//        setClientDetailsService(clientDetailsService)
+//        setAuthenticationManager(authenticationManager())
+//    }
 
     @Primary
     @Bean
@@ -61,20 +62,20 @@ class WebSecurityConfiguration @Autowired constructor(
             .passwordEncoder(passwordEncoder)
     }
 
-    @Bean
-    fun oauth2authenticationManager(): OAuth2AuthenticationManager =
-        OAuth2AuthenticationManager().apply {
-            setClientDetailsService(clientDetailsService)
-            setTokenServices(tokenServices())
-        }
-
-    @Bean
-    fun myOAuth2Filter(): Filter =
-        OAuth2AuthenticationProcessingFilter().apply {
-            setAuthenticationManager(oauth2authenticationManager())
-            //allow auth with cookies (not only with token)
-            setStateless(false)
-        }
+//    @Bean
+//    fun oauth2authenticationManager(): OAuth2AuthenticationManager =
+//        OAuth2AuthenticationManager().apply {
+//            setClientDetailsService(clientDetailsService)
+//            setTokenServices(tokenServices())
+//        }
+//
+//    @Bean
+//    fun myOAuth2Filter(): Filter =
+//        OAuth2AuthenticationProcessingFilter().apply {
+//            setAuthenticationManager(oauth2authenticationManager())
+//            //allow auth with cookies (not only with token)
+//            setStateless(false)
+//        }
 
     override fun configure(http: HttpSecurity) {
         http
@@ -111,11 +112,7 @@ class WebSecurityConfiguration @Autowired constructor(
             .formLogin()
             .permitAll()
 
-        http
-            .addFilterBefore(
-                myOAuth2Filter(),
-                BasicAuthenticationFilter::class.java
-            )
+//        httpAuthorizationServerConfiguration
     }
 
     override fun configure(web: WebSecurity) {

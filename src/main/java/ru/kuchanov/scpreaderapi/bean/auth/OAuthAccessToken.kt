@@ -6,6 +6,7 @@ import ru.kuchanov.scpreaderapi.utils.NoArgConstructor
 import java.sql.Timestamp
 import javax.persistence.*
 
+@Deprecated("Use OAuthAuthorizationNew class and oauth_authorization_new table")
 @Entity
 @Table(name = "oauth_access_token")
 @NoArgConstructor
@@ -28,3 +29,5 @@ data class OAuthAccessToken(
         @field:UpdateTimestamp
         val updated: Timestamp
 )
+
+class OAuthAccessTokenNotFoundError : RuntimeException()
