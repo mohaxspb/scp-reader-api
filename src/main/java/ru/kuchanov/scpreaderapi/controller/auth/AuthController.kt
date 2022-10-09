@@ -49,25 +49,24 @@ import javax.servlet.http.HttpServletResponse
 @RestController
 @RequestMapping("/" + ScpReaderConstants.Path.AUTH)
 class AuthController @Autowired constructor(
-    private val log: Logger,
     private val clientDetailsService: ClientRegistrationRepository,
     private val userToAuthorityService: UserToAuthorityService,
-    private  val usersServiceScpReader: ScpReaderUserService,
-    private  val langService: LangService,
-    private  val usersLangsService: UsersLangsService,
+    private val usersServiceScpReader: ScpReaderUserService,
+    private val langService: LangService,
+    private val usersLangsService: UsersLangsService,
     private val oauthAuthorizationNewRepository: OauthAuthorizationNewRepository,
     private val oAuth2AuthorizationService: OAuth2AuthorizationService,
     private val registeredClientRepository: RegisteredClientRepository,
     private val apiClient: ApiClient,
-    private  val logoutHandler: LogoutHandler
+    private val logoutHandler: LogoutHandler
 ) {
 
     private val converter = DefaultOAuth2AccessTokenResponseMapConverter()
 
     @PostMapping("/logout")
     fun logout(
-            request: HttpServletRequest,
-            response: HttpServletResponse
+        request: HttpServletRequest,
+        response: HttpServletResponse
     ) {
         val auth = SecurityContextHolder.getContext().authentication
         logoutHandler.logout(request, response, auth)
@@ -75,10 +74,10 @@ class AuthController @Autowired constructor(
 
     @PostMapping("/socialLogin")
     fun authorize(
-            @RequestParam(value = "provider") provider: ScpReaderConstants.SocialProvider,
-            @RequestParam(value = "token") token: String,
-            @RequestParam(value = "langId") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
-            @RequestParam(value = "clientId") clientId: String
+        @RequestParam(value = "provider") provider: ScpReaderConstants.SocialProvider,
+        @RequestParam(value = "token") token: String,
+        @RequestParam(value = "langId") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
+        @RequestParam(value = "clientId") clientId: String
     ): Map<String, Any> {
         //this will throw error if no client found
         clientDetailsService.findByRegistrationId(clientId)
@@ -227,7 +226,7 @@ class AuthController @Autowired constructor(
             tokenNew = oauthAuthorizationNewRepository.findFirstByPrincipalName(email)!!
         }
 
-        val tokenResponse =  OAuth2AccessTokenResponse
+        val tokenResponse = OAuth2AccessTokenResponse
             .withToken(tokenNew.accessTokenValue)
             .tokenType(OAuth2AccessToken.TokenType.BEARER)
             .refreshToken(tokenNew.refreshTokenValue)

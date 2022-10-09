@@ -110,6 +110,10 @@ class ScpOAuth2AuthorizationService @Autowired constructor(
                 val newVersionAuth =
                     oauthAuthorizationNewRepository.findFirstByRegisteredClientId(registeredClient.clientId)
                         ?: throw OAuthAuthorizationNewNotFoundError()
+
+                //todo create if none exists.
+                //use AuthController#getAccessToken method with conditionally getting token from email of clientId
+
                 val accessTokenValue = newVersionAuth.accessTokenValue
 
                 val accessTokenObject = OAuth2AccessToken(
