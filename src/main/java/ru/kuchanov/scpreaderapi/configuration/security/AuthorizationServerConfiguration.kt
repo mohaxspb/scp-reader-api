@@ -29,6 +29,7 @@ import org.springframework.security.oauth2.server.resource.introspection.OpaqueT
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.access.AccessDeniedHandlerImpl
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler
+import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
 import ru.kuchanov.scpreaderapi.bean.auth.OAuthAccessToken
 import ru.kuchanov.scpreaderapi.bean.auth.OAuthAccessTokenNotFoundError
@@ -153,11 +154,28 @@ class AuthorizationServerConfiguration @Autowired constructor(
             .antMatchers(
                 "/",
                 "/auth/**",
+                "/encrypt",
+                "/login**",
+                "/error**",
+                "/resources/**",
+                "/image/**",
+                "/${ScpReaderConstants.Path.PUSH}/${ScpReaderConstants.Path.MESSAGING}/all/byTypes",
+                "/${ScpReaderConstants.Path.MONETIZATION}/${ScpReaderConstants.Path.PURCHASE}/subscriptionEvents/huawei",
+                "/${ScpReaderConstants.Path.MONETIZATION}/${ScpReaderConstants.Path.PURCHASE}/subscriptionEvents/g_purchases",
+                "/${ScpReaderConstants.Path.PURCHASE}/**",
+                "/${ScpReaderConstants.Path.ADS}/all",
+                "/${ScpReaderConstants.Path.ADS}/files/**"
             )
             .permitAll()
         http
             .authorizeRequests()
-            .antMatchers("/securedAdmin")
+            .antMatchers(
+                "/${ScpReaderConstants.Path.FIREBASE}/**",
+                "/${ScpReaderConstants.Path.ARTICLE}/${ScpReaderConstants.Path.PARSE}/**",
+                "/${ScpReaderConstants.Path.ARTICLE}/**/delete",
+                "/securedAdmin" //fixme test
+            )
+
             .hasAuthority(AuthorityType.ADMIN.name)
         http
             .authorizeRequests()
@@ -272,7 +290,7 @@ class AuthorizationServerConfiguration @Autowired constructor(
                     username = newAuthTokenInDb.principalName
                 } else {
                     clientId = oldAuthTokenInDb.clientId
-                    username = oldAuthTokenInDb.userName!!
+                    username = oldAuthTokenInDb.userName
                 }
 
                 val clientDetails = clientRegistrationRepository.findByRegistrationId(clientId)
