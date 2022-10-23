@@ -9,7 +9,7 @@ interface OauthAuthorizationNewRepository : JpaRepository<OAuthAuthorizationNew,
 
     fun findFirstByRefreshTokenValue(token: String): OAuthAuthorizationNew?
 
-    fun findFirstByPrincipalName(principalName: String): OAuthAuthorizationNew?
+    fun findFirstByPrincipalName(principalName: String?): OAuthAuthorizationNew?
 
     fun findFirstByRegisteredClientId(registeredClientId: String): OAuthAuthorizationNew?
 }

@@ -94,7 +94,7 @@ class AuthorizationServerConfiguration @Autowired constructor(
             }
 
             override fun supports(authentication: Class<*>): Boolean {
-                println("clientCredentialsAuthProvider supports: $authentication")
+//                println("clientCredentialsAuthProvider supports: $authentication")
                 return OAuth2ClientCredentialsAuthenticationToken::class.java.isAssignableFrom(authentication)
             }
         }
@@ -276,19 +276,28 @@ class AuthorizationServerConfiguration @Autowired constructor(
                 println("token from request: $token")
 
                 val md5OfTokenToFindInDbWhichIsUsedAsTokenId = accessTokenService.extractTokenKey(token)!!
-                println("tokenToFindInDb: $md5OfTokenToFindInDbWhichIsUsedAsTokenId")
+                println("OLD tokenToFindInDb in MD5: $md5OfTokenToFindInDbWhichIsUsedAsTokenId")
                 val oldAuthTokenInDb: OAuthAccessToken? =
                     accessTokenService.findFirstByTokenId(md5OfTokenToFindInDbWhichIsUsedAsTokenId)
 
                 //switch between new and old access tokens
                 if (oldAuthTokenInDb == null) {
-                    //todo check
+                    println("OLD tokenToFindInDb is null!")
+
                     val newAuthTokenInDb = authorizationService.findByToken(token, OAuth2TokenType.ACCESS_TOKEN)
-//                        ?: throw OAuthAccessTokenNotFoundError()
-                        ?: throw AuthenticationCredentialsNotFoundException("Token not found exception!")
+                        ?: kotlin.run {
+                            println("PROVIDED token not found in DB (old or new tables). So throw error")
+                            throw AuthenticationCredentialsNotFoundException("Token not found exception!")
+                        }
+
+                    println("NEW token expiration: ${newAuthTokenInDb.accessToken.isExpired}")
+                    println("NEW token issuedAt: ${newAuthTokenInDb.accessToken.token.issuedAt}")
+                    println("NEW token expiresAt: ${newAuthTokenInDb.accessToken.token.expiresAt}")
+                    println("NEW token claims: ${newAuthTokenInDb.accessToken.claims}")
 
                     //todo check
                     if (newAuthTokenInDb.accessToken.isExpired) {
+                        println("PROVIDED token EXPIRED. So throw CredentialsExpiredException")
                         throw CredentialsExpiredException("Token expired exception!")
                     }
 
@@ -303,6 +312,8 @@ class AuthorizationServerConfiguration @Autowired constructor(
 
                 val isClientCredentialsAuth =
                     clientDetails.authorizationGrantType == AuthorizationGrantType.CLIENT_CREDENTIALS
+
+                println("isClientCredentialsAuth: $isClientCredentialsAuth")
 
                 val attributes = mutableMapOf<String, Any>()
                 val authorities = mutableListOf<GrantedAuthority>()

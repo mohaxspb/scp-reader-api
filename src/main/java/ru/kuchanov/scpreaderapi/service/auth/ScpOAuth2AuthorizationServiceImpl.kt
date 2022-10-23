@@ -113,26 +113,24 @@ class ScpOAuth2AuthorizationServiceImpl @Autowired constructor(
             CLIENT_CREDENTIALS_TOKEN -> {
                 val registeredClient = registeredClientRepository.findById(token) ?: throw ClientNotFoundError()
 
-//                val newVersionAuth = oauthAuthorizationNewRepository
-//                    .findFirstByRegisteredClientId(registeredClient.clientId) ?: throw OAuthAuthorizationNewNotFoundError()
-
-                val newVersionAuth: OAuthAuthorizationNew = oauthAuthorizationNewRepository
+                var newVersionAuth: OAuthAuthorizationNew? = oauthAuthorizationNewRepository
                     .findFirstByRegisteredClientId(registeredClient.clientId)
                 //create if none exists.
-                    ?: kotlin.run {
-                        generateAndSaveToken(null, registeredClient.clientId!!)
-                        oauthAuthorizationNewRepository
-                            .findFirstByRegisteredClientId(registeredClient.clientId)
-                            ?: throw OAuthAuthorizationNewNotFoundError()
-                    }
+                if (newVersionAuth == null || newVersionAuth.accessTokenExpiresAt!!.isBefore(LocalDateTime.now())) {
+                    println("CLIENT_CREDENTIALS_TOKEN not found or expired, so create new one")
+                    generateAndSaveToken(null, registeredClient.clientId!!)
+                    newVersionAuth = oauthAuthorizationNewRepository
+                        .findFirstByRegisteredClientId(registeredClient.clientId)
+                        ?: throw OAuthAuthorizationNewNotFoundError()
+                }
 
                 val accessTokenValue = newVersionAuth.accessTokenValue
 
                 val accessTokenObject = OAuth2AccessToken(
                     OAuth2AccessToken.TokenType.BEARER,
                     accessTokenValue,
-                    Instant.now(),
-                    Instant.now().plusMillis(registeredClient.tokenSettings.accessTokenTimeToLive.toMillis()),
+                    newVersionAuth.accessTokenIssuedAt!!.toInstant(ZoneOffset.UTC),
+                    newVersionAuth.accessTokenExpiresAt!!.toInstant(ZoneOffset.UTC),
                     registeredClient.scopes
                 )
 
@@ -159,6 +157,11 @@ class ScpOAuth2AuthorizationServiceImpl @Autowired constructor(
                 val registeredClient: RegisteredClient
                 val principalName: String
 
+                val accessTokenIssuedAt: Instant
+                val accessTokenExpiresAt: Instant
+                val refreshTokenIssuedAt: Instant
+                val refreshTokenExpiresAt: Instant
+
                 val isClientCredentialsToken: Boolean
 
                 val newVersionAuth = oauthAuthorizationNewRepository.findFirstByAccessTokenValue(token)
@@ -169,6 +172,12 @@ class ScpOAuth2AuthorizationServiceImpl @Autowired constructor(
                     registeredClient = registeredClientRepository.findById(newVersionAuth.registeredClientId)
                         ?: throw ClientNotFoundError()
                     principalName = newVersionAuth.principalName ?: newVersionAuth.registeredClientId
+
+                    accessTokenIssuedAt = newVersionAuth.accessTokenIssuedAt!!.toInstant(ZoneOffset.UTC)
+                    accessTokenExpiresAt = newVersionAuth.accessTokenExpiresAt!!.toInstant(ZoneOffset.UTC)
+                    refreshTokenIssuedAt = newVersionAuth.refreshTokenIssuedAt!!.toInstant(ZoneOffset.UTC)
+                    refreshTokenExpiresAt = newVersionAuth.refreshTokenExpiresAt!!.toInstant(ZoneOffset.UTC)
+
                     isClientCredentialsToken =
                         registeredClient.authorizationGrantTypes.contains(AuthorizationGrantType.CLIENT_CREDENTIALS)
                 } else {
@@ -203,6 +212,13 @@ class ScpOAuth2AuthorizationServiceImpl @Autowired constructor(
                         ?: throw ClientNotFoundError()
                     principalName = accessToken.userName ?: registeredClient.clientId
 
+                    accessTokenIssuedAt = accessTokenValueDeserialized.expiration.toInstant()
+                        .minusMillis(registeredClient.tokenSettings.accessTokenTimeToLive.toMillis())
+                    accessTokenExpiresAt = accessTokenValueDeserialized.expiration.toInstant()
+                    refreshTokenIssuedAt = accessTokenValueDeserialized.expiration.toInstant()
+                        .minusMillis(registeredClient.tokenSettings.accessTokenTimeToLive.toMillis())
+                    refreshTokenExpiresAt = accessTokenValueDeserialized.expiration.toInstant()
+
                     isClientCredentialsToken =
                         registeredClient.authorizationGrantTypes.contains(AuthorizationGrantType.CLIENT_CREDENTIALS)
                 }
@@ -212,16 +228,15 @@ class ScpOAuth2AuthorizationServiceImpl @Autowired constructor(
                 val accessTokenObject = OAuth2AccessToken(
                     OAuth2AccessToken.TokenType.BEARER,
                     accessTokenValue,
-                    Instant.now(),
-                    Instant.now().plusMillis(registeredClient.tokenSettings.accessTokenTimeToLive.toMillis()),
+                    accessTokenIssuedAt,
+                    accessTokenExpiresAt,
                     scopes
                 )
-                val now = Instant.now()
                 val refreshTokenObject: OAuth2RefreshToken? = refreshTokenValue?.let {
                     OAuth2RefreshToken(
                         refreshTokenValue,
-                        now,
-                        now.plusMillis(registeredClient.tokenSettings.refreshTokenTimeToLive.toMillis())
+                        refreshTokenIssuedAt,
+                        refreshTokenExpiresAt
                     )
                 }
 
@@ -345,11 +360,12 @@ class ScpOAuth2AuthorizationServiceImpl @Autowired constructor(
     override fun generateAndSaveToken(email: String?, clientId: String): Map<String, Any> {
         var tokenNew: OAuthAuthorizationNew? =
             email?.let { oauthAuthorizationNewRepository.findFirstByPrincipalName(it) }
+                ?: oauthAuthorizationNewRepository.findFirstByRegisteredClientId(clientId)
         println("tokenNew: ${tokenNew?.accessTokenValue}")
         val registeredClient: RegisteredClient =
             registeredClientRepository.findByClientId(clientId) ?: throw ClientNotFoundError()
         val scopes = registeredClient.scopes
-        if (tokenNew == null) {
+        if (tokenNew == null || tokenNew.accessTokenExpiresAt!!.isBefore(LocalDateTime.now())) {
             println("getAccessToken generate new one")
 
             val keyGen = Base64StringKeyGenerator()
