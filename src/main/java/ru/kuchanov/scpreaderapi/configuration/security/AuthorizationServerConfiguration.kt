@@ -6,9 +6,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.core.annotation.Order
 import org.springframework.http.HttpHeaders
 import org.springframework.security.access.AccessDeniedException
-import org.springframework.security.authentication.AuthenticationProvider
-import org.springframework.security.authentication.ProviderManager
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.authentication.*
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration
 import org.springframework.security.core.Authentication
@@ -32,7 +30,6 @@ import org.springframework.security.web.authentication.SavedRequestAwareAuthenti
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
 import ru.kuchanov.scpreaderapi.bean.auth.OAuthAccessToken
-import ru.kuchanov.scpreaderapi.bean.auth.OAuthAccessTokenNotFoundError
 import ru.kuchanov.scpreaderapi.bean.users.User.Companion.USER_PROPERTY_NAME
 import ru.kuchanov.scpreaderapi.service.auth.AccessTokenServiceImpl
 import javax.servlet.http.HttpServletRequest
@@ -239,6 +236,7 @@ class AuthorizationServerConfiguration @Autowired constructor(
                             password = principalFromAuth.password
                             authorities = principalFromAuth.authorities
                         } else if (principalFromAuth is ClientRegistration) {
+//                            principal = principalFromAuth.clientId
                             principal = null
                             password = principalFromAuth.clientSecret
                             authorities = principalFromAuth.scopes.map { SimpleGrantedAuthority(it) }
@@ -284,13 +282,21 @@ class AuthorizationServerConfiguration @Autowired constructor(
 
                 //switch between new and old access tokens
                 if (oldAuthTokenInDb == null) {
+                    //todo check
                     val newAuthTokenInDb = authorizationService.findByToken(token, OAuth2TokenType.ACCESS_TOKEN)
-                        ?: throw OAuthAccessTokenNotFoundError()
+//                        ?: throw OAuthAccessTokenNotFoundError()
+                        ?: throw AuthenticationCredentialsNotFoundException("Token not found exception!")
+
+                    //todo check
+                    if (newAuthTokenInDb.accessToken.isExpired) {
+                        throw CredentialsExpiredException("Token expired exception!")
+                    }
+
                     clientId = newAuthTokenInDb.registeredClientId
                     username = newAuthTokenInDb.principalName
                 } else {
                     clientId = oldAuthTokenInDb.clientId
-                    username = oldAuthTokenInDb.userName
+                    username = oldAuthTokenInDb.userName!!
                 }
 
                 val clientDetails = clientRegistrationRepository.findByRegistrationId(clientId)

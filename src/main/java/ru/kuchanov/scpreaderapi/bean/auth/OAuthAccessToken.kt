@@ -2,6 +2,8 @@ package ru.kuchanov.scpreaderapi.bean.auth
 
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
+import org.springframework.http.HttpStatus
+import org.springframework.web.bind.annotation.ResponseStatus
 import ru.kuchanov.scpreaderapi.utils.NoArgConstructor
 import java.sql.Timestamp
 import javax.persistence.*
@@ -18,7 +20,7 @@ data class OAuthAccessToken(
         @Column(name = "authentication_id")
         val authenticationId: String,
         @Column(name = "user_name")
-        val userName: String,
+        val userName: String?,
         @Column(name = "client_id")
         val clientId: String,
         val authentication: ByteArray,
@@ -30,4 +32,5 @@ data class OAuthAccessToken(
         val updated: Timestamp
 )
 
+@ResponseStatus(value = HttpStatus.UNAUTHORIZED)
 class OAuthAccessTokenNotFoundError : RuntimeException()
