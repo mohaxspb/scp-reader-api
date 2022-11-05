@@ -1,13 +1,12 @@
 package ru.kuchanov.scpreaderapi.controller.auth
 
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository
 import org.springframework.security.web.authentication.logout.LogoutHandler
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
 import ru.kuchanov.scpreaderapi.bean.auth.UserToAuthority
@@ -45,6 +44,17 @@ class AuthController @Autowired constructor(
     ) {
         val auth = SecurityContextHolder.getContext().authentication
         logoutHandler.logout(request, response, auth)
+    }
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @GetMapping("/getAccessTokenForEmail")
+    fun getAccessTokenForEmail(
+        @AuthenticationPrincipal user: User,
+        @RequestParam(value = "email") email: String,
+    ): Map<String, Any> {
+        println("getAccessTokenForEmail: $user")
+        val userInDb = usersServiceScpReader.getByUsername(email)!!
+        return oAuth2AuthorizationService.generateAndSaveToken(userInDb.username, "client_id")
     }
 
     @PostMapping("/socialLogin")

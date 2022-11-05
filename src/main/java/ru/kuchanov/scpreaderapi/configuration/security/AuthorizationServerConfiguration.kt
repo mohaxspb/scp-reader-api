@@ -7,6 +7,7 @@ import org.springframework.core.annotation.Order
 import org.springframework.http.HttpHeaders
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.authentication.*
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration
 import org.springframework.security.core.Authentication
@@ -22,11 +23,14 @@ import org.springframework.security.oauth2.server.authorization.authentication.*
 import org.springframework.security.oauth2.server.authorization.config.ProviderSettings
 import org.springframework.security.oauth2.server.authorization.token.OAuth2AccessTokenGenerator
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator
+import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException
 import org.springframework.security.oauth2.server.resource.introspection.OAuth2IntrospectionException
 import org.springframework.security.oauth2.server.resource.introspection.OpaqueTokenIntrospector
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.access.AccessDeniedHandlerImpl
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher
+import org.springframework.security.web.util.matcher.RequestMatcher
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
 import ru.kuchanov.scpreaderapi.bean.auth.OAuthAccessToken
@@ -37,6 +41,7 @@ import javax.servlet.http.HttpServletResponse
 
 
 @Configuration
+@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
 class AuthorizationServerConfiguration @Autowired constructor(
     private val accessTokenService: AccessTokenServiceImpl,
     private val userDetailsService: UserDetailsService,
@@ -120,7 +125,7 @@ class AuthorizationServerConfiguration @Autowired constructor(
     }
 
     @Bean
-    @Order(1)
+    @Order(2)
     fun authorizationServerSecurityFilterChain(http: HttpSecurity): SecurityFilterChain {
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http)
 
@@ -140,44 +145,33 @@ class AuthorizationServerConfiguration @Autowired constructor(
     }
 
     @Bean
-    @Order(2)
+    @Order(4)
     fun standardSecurityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http.cors().disable()
 
         http.csrf().disable()
 
-        http
-            .authorizeRequests()
-            .antMatchers(
-                "/",
-                "/auth/**",
-                "/encrypt",
-                "/login**",
-                "/error**",
-                "/resources/**",
-                "/image/**",
-                "/${ScpReaderConstants.Path.PUSH}/${ScpReaderConstants.Path.MESSAGING}/all/byTypes",
-                "/${ScpReaderConstants.Path.MONETIZATION}/${ScpReaderConstants.Path.PURCHASE}/subscriptionEvents/huawei",
-                "/${ScpReaderConstants.Path.MONETIZATION}/${ScpReaderConstants.Path.PURCHASE}/subscriptionEvents/g_purchases",
-                "/${ScpReaderConstants.Path.PURCHASE}/**",
-                "/${ScpReaderConstants.Path.ADS}/all",
-                "/${ScpReaderConstants.Path.ADS}/files/**"
+        http.requestMatchers {
+            it.requestMatchers(
+                object : RequestMatcher {
+                    override fun matches(request: HttpServletRequest): Boolean {
+                        println("requestMatchers formLogin: ${request.requestURI}, ${request.getHeader(HttpHeaders.AUTHORIZATION)}")
+                        return request.getHeader(HttpHeaders.AUTHORIZATION) == null
+                    }
+                }
             )
-            .permitAll()
-        http
-            .authorizeRequests()
-            .antMatchers(
-                "/${ScpReaderConstants.Path.FIREBASE}/**",
-                "/${ScpReaderConstants.Path.ARTICLE}/${ScpReaderConstants.Path.PARSE}/**",
-                "/${ScpReaderConstants.Path.ARTICLE}/**/delete",
-                "/securedAdmin" //fixme test
-            )
+        }
 
-            .hasAuthority(AuthorityType.ADMIN.name)
         http
             .authorizeRequests()
-            .anyRequest()
-            .authenticated()
+            .antMatchers(*ignoredAntMatchers())
+            .permitAll()
+
+        http
+            .authorizeRequests()
+            .antMatchers(*adminAntMatchers())
+            .hasAuthority(AuthorityType.ADMIN.name)
+
         //this is default login page and authorization with cookies
         http
             .formLogin()
@@ -196,14 +190,69 @@ class AuthorizationServerConfiguration @Autowired constructor(
             })
             .permitAll()
 
-        //this is used for authorizing with access token in request Authorization header
         http
+            .authorizeRequests()
+            .anyRequest()
+            .authenticated()
+
+        return http.build()
+    }
+
+    @Bean
+    @Order(3)
+    fun resourceServerSecurityFilterChain(http: HttpSecurity): SecurityFilterChain {
+        return http
+            .cors().disable()
+            .csrf().disable()
+
+            //check what request will be handled by this security filter chain
+            //with AUTHORIZATION header in this case
+            .requestMatchers {
+                it.requestMatchers(
+                    object : RequestMatcher {
+                        override fun matches(request: HttpServletRequest): Boolean {
+                            println(
+                                "requestMatchers resource initial: ${request.requestURI}, ${
+                                    request.getHeader(HttpHeaders.AUTHORIZATION)
+                                }"
+                            )
+                            return request.getHeader(HttpHeaders.AUTHORIZATION) != null
+                        }
+                    }
+                )
+            }
+
+
+            .authorizeRequests()
+            .antMatchers(*adminAntMatchers())
+            .hasAuthority(AuthorityType.ADMIN.name)
+            .and()
+            .authorizeRequests()
+            .anyRequest()
+            .authenticated()
+            .and()
+
+            //this is used for authorizing with access token in request Authorization header
             .oauth2ResourceServer()
             //do not use default one, as it prevents requests without space between Bearer and token value
             .bearerTokenResolver { request ->
                 val authorization: String? = request.getHeader(HttpHeaders.AUTHORIZATION)
+//                println("BearerTokenResolver#resolve: ${request.requestURI}, authorization: $authorization")
 
-                authorization?.replaceFirst("Bearer", "")?.trim()
+                //ignore here by return null
+                if (ignoredAntMatchers().map { AntPathRequestMatcher(it) }.any { it.matches(request) }) {
+                    println("found ignored request - so return null from bearerTokenResolver")
+                    return@bearerTokenResolver null
+                }
+
+                val token = authorization?.replaceFirst("Bearer", "", ignoreCase = true)?.trim()
+                if (token.isNullOrEmpty()) {
+
+                    //throw 401 error
+                    throw InvalidBearerTokenException("Token is empty!")
+                } else {
+                    token
+                }
             }
             .accessDeniedHandler(object : AccessDeniedHandlerImpl() {
                 override fun handle(
@@ -251,8 +300,8 @@ class AuthorizationServerConfiguration @Autowired constructor(
                         )
                     }
             }
-
-        return http.build()
+            .and()
+            .build()
     }
 
     @Bean
@@ -295,7 +344,6 @@ class AuthorizationServerConfiguration @Autowired constructor(
                     println("NEW token expiresAt: ${newAuthTokenInDb.accessToken.token.expiresAt}")
                     println("NEW token claims: ${newAuthTokenInDb.accessToken.claims}")
 
-                    //todo check
                     if (newAuthTokenInDb.accessToken.isExpired) {
                         println("PROVIDED token EXPIRED. So throw CredentialsExpiredException")
                         throw CredentialsExpiredException("Token expired exception!")
@@ -334,6 +382,10 @@ class AuthorizationServerConfiguration @Autowired constructor(
         }
     }
 
+    /**
+     * Provide custom tokenEndpoint and authorizationEndpoint
+     * as old version of app uses this urls for token requests
+     */
     @Bean
     fun providerSettings(): ProviderSettings {
         return ProviderSettings.builder()
@@ -346,4 +398,32 @@ class AuthorizationServerConfiguration @Autowired constructor(
     fun tokenGenerator(): OAuth2TokenGenerator<out OAuth2Token> {
         return OAuth2AccessTokenGenerator()
     }
+
+    @Bean
+    fun ignoredAntMatchers() =
+        arrayOf(
+            "/",
+            "/scp-reader/api/",
+            "/encrypt",
+            "/login**",
+            "/error**",
+            "/resources/**",
+            "/image/**",
+            "/${ScpReaderConstants.Path.AUTH}/**",
+            "/${ScpReaderConstants.Path.PUSH}/${ScpReaderConstants.Path.MESSAGING}/all/byTypes",
+            "/${ScpReaderConstants.Path.MONETIZATION}/${ScpReaderConstants.Path.PURCHASE}/subscriptionEvents/huawei",
+            "/${ScpReaderConstants.Path.MONETIZATION}/${ScpReaderConstants.Path.PURCHASE}/subscriptionEvents/g_purchases",
+            "/${ScpReaderConstants.Path.PURCHASE}/**",
+            "/${ScpReaderConstants.Path.ADS}/all",
+            "/${ScpReaderConstants.Path.ADS}/files/**"
+        )
+
+    @Bean
+    fun adminAntMatchers() =
+        arrayOf(
+            "/${ScpReaderConstants.Path.FIREBASE}/**",
+            "/${ScpReaderConstants.Path.ARTICLE}/${ScpReaderConstants.Path.PARSE}/**",
+            "/${ScpReaderConstants.Path.ARTICLE}/**/delete",
+            "/securedAdmin"
+        )
 }
