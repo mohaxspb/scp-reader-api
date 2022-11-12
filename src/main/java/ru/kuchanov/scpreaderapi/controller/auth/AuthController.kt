@@ -5,6 +5,8 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository
+import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository
 import org.springframework.security.web.authentication.logout.LogoutHandler
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
@@ -14,11 +16,14 @@ import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.UsersLangs
 import ru.kuchanov.scpreaderapi.model.user.LevelsJson
 import ru.kuchanov.scpreaderapi.network.ApiClient
+import ru.kuchanov.scpreaderapi.service.auth.AccessTokenServiceImpl
 import ru.kuchanov.scpreaderapi.service.auth.ScpOAuth2AuthorizationService
 import ru.kuchanov.scpreaderapi.service.auth.UserToAuthorityService
 import ru.kuchanov.scpreaderapi.service.users.LangService
 import ru.kuchanov.scpreaderapi.service.users.ScpReaderUserService
 import ru.kuchanov.scpreaderapi.service.users.UsersLangsService
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import javax.security.auth.message.AuthException
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
@@ -34,7 +39,12 @@ class AuthController @Autowired constructor(
     private val usersLangsService: UsersLangsService,
     private val oAuth2AuthorizationService: ScpOAuth2AuthorizationService,
     private val apiClient: ApiClient,
-    private val logoutHandler: LogoutHandler
+    private val logoutHandler: LogoutHandler,
+    private val registeredClientRepository: RegisteredClientRepository,
+    /**
+     * Used as we need to search for old tokens
+     */
+    private val accessTokenService: AccessTokenServiceImpl,
 ) {
 
     @PostMapping("/logout")
@@ -51,10 +61,32 @@ class AuthController @Autowired constructor(
     fun getAccessTokenForEmail(
         @AuthenticationPrincipal user: User,
         @RequestParam(value = "email") email: String,
+        @RequestParam(value = "oldAuth") oldAuth: Boolean,
     ): Map<String, Any> {
         println("getAccessTokenForEmail: $user")
         val userInDb = usersServiceScpReader.getByUsername(email)!!
-        return oAuth2AuthorizationService.generateAndSaveToken(userInDb.username, "client_id")
+        if (oldAuth.not()) {
+            return oAuth2AuthorizationService.generateAndSaveToken(userInDb.username, "client_id")
+        } else {
+            return accessTokenService.findFirstByUserName(userInDb.username)!!.let {
+                val client = registeredClientRepository.findByClientId(it.clientId)!!
+                val accessTokenValueDeserialized = accessTokenService
+                    .deserialize<DefaultOAuth2AccessToken>(it.token)
+                val parameters: MutableMap<String, Any> = mutableMapOf()
+                parameters["access_token"] = accessTokenValueDeserialized.value
+                parameters["token_type"] = "bearer"
+                parameters["expires_in"] = ChronoUnit.SECONDS.between(
+                    accessTokenValueDeserialized.expiration.toInstant()
+                        .minusMillis(client.tokenSettings.accessTokenTimeToLive.toMillis()),
+                    Instant.now()
+                )
+                parameters["scope"] = client.scopes.joinToString(separator = ",")
+
+                parameters["refresh_token"] = accessTokenValueDeserialized.refreshToken.value
+
+                parameters
+            }
+        }
     }
 
     @PostMapping("/socialLogin")

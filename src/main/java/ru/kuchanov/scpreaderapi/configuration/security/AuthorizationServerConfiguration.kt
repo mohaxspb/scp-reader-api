@@ -17,6 +17,7 @@ import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.oauth2.client.registration.ClientRegistration
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository
+import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken
 import org.springframework.security.oauth2.core.*
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService
 import org.springframework.security.oauth2.server.authorization.authentication.*
@@ -36,6 +37,7 @@ import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
 import ru.kuchanov.scpreaderapi.bean.auth.OAuthAccessToken
 import ru.kuchanov.scpreaderapi.bean.users.User.Companion.USER_PROPERTY_NAME
 import ru.kuchanov.scpreaderapi.service.auth.AccessTokenServiceImpl
+import java.time.Instant
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
@@ -352,6 +354,13 @@ class AuthorizationServerConfiguration @Autowired constructor(
                     clientId = newAuthTokenInDb.registeredClientId
                     username = newAuthTokenInDb.principalName
                 } else {
+                    val accessTokenValueDeserialized = accessTokenService
+                        .deserialize<DefaultOAuth2AccessToken>(oldAuthTokenInDb.token)
+                    if (accessTokenValueDeserialized.expiration.toInstant().isBefore(Instant.now())) {
+                        println("PROVIDED token EXPIRED at ${accessTokenValueDeserialized.expiration}. So throw CredentialsExpiredException")
+                        throw CredentialsExpiredException("Token expired exception!")
+                    }
+
                     clientId = oldAuthTokenInDb.clientId
                     username = oldAuthTokenInDb.userName!!
                 }
