@@ -11,8 +11,6 @@ import javax.transaction.Transactional
 
 interface ScpReaderUserService : UserDetailsService {
 
-    override fun loadUserByUsername(username: String): User?
-
     @Deprecated("Uses deprecated return type", ReplaceWith("getByIdAsDtoV2"))
     fun getByIdAsDto(id: Long): UserProjection?
 
