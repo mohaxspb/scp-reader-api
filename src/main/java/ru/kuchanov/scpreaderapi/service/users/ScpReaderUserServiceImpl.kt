@@ -41,7 +41,6 @@ class ScpReaderUserServiceImpl @Autowired constructor(
             repository.findOneByUsername(username)
 
     override fun loadUserByUsername(username: String): UserDetails {
-        println("loadUserByUsername: $username")
         return repository.findOneByUsername(username) ?: throw UserNotFoundException()
     }
 

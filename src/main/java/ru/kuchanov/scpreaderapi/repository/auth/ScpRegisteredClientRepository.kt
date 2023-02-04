@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.oauth2.core.AuthorizationGrantType
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod
+import org.springframework.security.oauth2.core.OAuth2TokenFormat
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository
 import org.springframework.security.oauth2.server.authorization.config.TokenSettings
@@ -73,19 +74,10 @@ class ScpRegisteredClientRepository @Autowired constructor(
                     .refreshTokenTimeToLive(
                         Duration.ofDays(100_000)
                     )
+                    .accessTokenFormat(OAuth2TokenFormat.REFERENCE)
                     .build()
             )
             .build()
-            .also {
-                println(
-                    "authorizationGrantTypes:" + it.authorizationGrantTypes.joinToString(
-                        separator = ", ",
-                        transform = { it.value })
-                )
-                println(
-                    "scopes: ${it.scopes}"
-                )
-            }
     }
 
     override fun findByClientId(clientId: String): RegisteredClient? {
