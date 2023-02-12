@@ -1,9 +1,9 @@
 buildscript {
     ext {
-        app_version = "1.3.28"
+        app_version = "1.4.1"
 
         kotlin_version = '1.6.0'
-        spring_boot_version = '2.6.2'
+        spring_boot_version = '2.7.4'
 
         ext['netty.version'] = '4.1.72.Final'
     }
@@ -25,7 +25,7 @@ buildscript {
 
 plugins {
     //db migrations
-    id "org.flywaydb.flyway" version "8.3.0"
+    id "org.flywaydb.flyway" version "9.4.0"
 
     //to fix CreateProcess error=206, Имя файла или его расширение имеет слишком большую длину
     id "ua.eshepelyuk.ManifestClasspath" version "1.0.0"
@@ -71,6 +71,7 @@ repositories {
 
 dependencies {
     //need as spring version of netty conflicts with one in firebase libs
+    //todo check if it fixed in new spring version (2.7.4)
     implementation 'io.netty:netty-all:4.1.72.Final'
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
@@ -91,7 +92,11 @@ dependencies {
     //mail
     implementation "org.springframework.boot:spring-boot-starter-mail"
     //oauth2
-    implementation 'org.springframework.security.oauth:spring-security-oauth2:2.5.1.RELEASE'
+    //fixme remove it
+//    implementation 'org.springframework.security.oauth:spring-security-oauth2:2.5.1.RELEASE'
+    implementation "org.springframework.boot:spring-boot-starter-oauth2-resource-server"
+    implementation "org.springframework.boot:spring-boot-starter-oauth2-client"
+    implementation 'org.springframework.security:spring-security-oauth2-authorization-server:0.3.1'
     //cache
     implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'org.springframework:spring-context-support:5.3.14'
@@ -104,10 +109,10 @@ dependencies {
     //spring END
 
     //postgresql
-    implementation 'org.postgresql:postgresql:42.3.1'
+    implementation 'org.postgresql:postgresql:42.5.0'
 
     //db migrations
-    implementation 'org.flywaydb:flyway-core:8.3.0'
+    implementation 'org.flywaydb:flyway-core:9.4.0'
 
     //apache
     implementation 'commons-io:commons-io:2.11.0'
@@ -117,24 +122,24 @@ dependencies {
     implementation 'io.reactivex.rxjava2:rxkotlin:2.4.0'
 
     //google
-    implementation 'com.google.http-client:google-http-client:1.40.1'
-    implementation 'com.google.api-client:google-api-client:1.32.2'
+    implementation 'com.google.http-client:google-http-client:1.42.2'
+    implementation 'com.google.api-client:google-api-client:2.0.0'
     //purchases
-    implementation 'com.google.apis:google-api-services-androidpublisher:v3-rev20210605-1.32.1'
-    implementation 'com.google.api-client:google-api-client-jackson2:1.32.2'
+    implementation 'com.google.apis:google-api-services-androidpublisher:v3-rev20220926-2.0.0'
+    implementation 'com.google.api-client:google-api-client-jackson2:2.0.0'
 
     //firebase
-    implementation 'com.google.firebase:firebase-admin:8.1.0'
+    implementation 'com.google.firebase:firebase-admin:9.0.0'
 
     //Retrofit
     implementation('com.squareup.retrofit2:retrofit:2.9.0') { exclude module: 'okhttp' }
-    implementation 'com.squareup.okhttp3:okhttp:4.9.3'
-    implementation 'com.squareup.okhttp3:logging-interceptor:4.9.3'
+    implementation 'com.squareup.okhttp3:okhttp:4.10.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.10.0'
     implementation 'com.squareup.retrofit2:converter-jackson:2.9.0'
     implementation 'com.squareup.retrofit2:adapter-rxjava2:2.9.0'
 
     //connection poll
-    implementation 'com.zaxxer:HikariCP:5.0.0'
+    implementation 'com.zaxxer:HikariCP:5.0.1'
 
     //jsoup
     implementation 'org.jsoup:jsoup:1.14.3'

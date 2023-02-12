@@ -1,37 +1,29 @@
 package ru.kuchanov.scpreaderapi.controller.auth
 
-import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.security.oauth2.common.OAuth2AccessToken
-import org.springframework.security.oauth2.provider.ClientDetailsService
-import org.springframework.security.oauth2.provider.OAuth2Authentication
-import org.springframework.security.oauth2.provider.OAuth2Request
-import org.springframework.security.oauth2.provider.token.DefaultTokenServices
-import org.springframework.security.oauth2.provider.token.TokenStore
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository
+import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository
 import org.springframework.security.web.authentication.logout.LogoutHandler
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
-import ru.kuchanov.scpreaderapi.ScpReaderConstants.InternalAuthData.IMPLICIT_FLOW_CLIENT_ID
 import ru.kuchanov.scpreaderapi.bean.auth.AuthorityType
 import ru.kuchanov.scpreaderapi.bean.auth.UserToAuthority
 import ru.kuchanov.scpreaderapi.bean.users.User
-import ru.kuchanov.scpreaderapi.bean.users.UserNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.UsersLangs
 import ru.kuchanov.scpreaderapi.model.user.LevelsJson
 import ru.kuchanov.scpreaderapi.network.ApiClient
-import ru.kuchanov.scpreaderapi.service.auth.AccessTokenService
+import ru.kuchanov.scpreaderapi.service.auth.AccessTokenServiceImpl
+import ru.kuchanov.scpreaderapi.service.auth.ScpOAuth2AuthorizationService
 import ru.kuchanov.scpreaderapi.service.auth.UserToAuthorityService
 import ru.kuchanov.scpreaderapi.service.users.LangService
 import ru.kuchanov.scpreaderapi.service.users.ScpReaderUserService
 import ru.kuchanov.scpreaderapi.service.users.UsersLangsService
-import java.io.Serializable
-import java.util.*
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import javax.security.auth.message.AuthException
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
@@ -40,37 +32,72 @@ import javax.servlet.http.HttpServletResponse
 @RestController
 @RequestMapping("/" + ScpReaderConstants.Path.AUTH)
 class AuthController @Autowired constructor(
-        val log: Logger,
-        val clientDetailsService: ClientDetailsService,
-        val userToAuthorityService: UserToAuthorityService,
-        val usersServiceScpReader: ScpReaderUserService,
-        val accessTokenService: AccessTokenService,
-        val langService: LangService,
-        val usersLangsService: UsersLangsService,
-        val tokenStore: TokenStore,
-        val tokenServices: DefaultTokenServices,
-        val apiClient: ApiClient,
-        val logoutHandler: LogoutHandler
+    private val clientDetailsService: ClientRegistrationRepository,
+    private val userToAuthorityService: UserToAuthorityService,
+    private val usersServiceScpReader: ScpReaderUserService,
+    private val langService: LangService,
+    private val usersLangsService: UsersLangsService,
+    private val oAuth2AuthorizationService: ScpOAuth2AuthorizationService,
+    private val apiClient: ApiClient,
+    private val logoutHandler: LogoutHandler,
+    private val registeredClientRepository: RegisteredClientRepository,
+    /**
+     * Used as we need to search for old tokens
+     */
+    private val accessTokenService: AccessTokenServiceImpl,
 ) {
 
     @PostMapping("/logout")
     fun logout(
-            request: HttpServletRequest,
-            response: HttpServletResponse
+        request: HttpServletRequest,
+        response: HttpServletResponse
     ) {
         val auth = SecurityContextHolder.getContext().authentication
         logoutHandler.logout(request, response, auth)
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @GetMapping("/getAccessTokenForEmail")
+    fun getAccessTokenForEmail(
+        @AuthenticationPrincipal user: User,
+        @RequestParam(value = "email") email: String,
+        @RequestParam(value = "oldAuth") oldAuth: Boolean,
+    ): Map<String, Any> {
+        println("getAccessTokenForEmail: $user")
+        val userInDb = usersServiceScpReader.getByUsername(email)!!
+        if (oldAuth.not()) {
+            return oAuth2AuthorizationService.generateAndSaveToken(userInDb.username, "client_id")
+        } else {
+            return accessTokenService.findFirstByUserName(userInDb.username)!!.let {
+                val client = registeredClientRepository.findByClientId(it.clientId)!!
+                val accessTokenValueDeserialized = accessTokenService
+                    .deserialize<DefaultOAuth2AccessToken>(it.token)
+                val parameters: MutableMap<String, Any> = mutableMapOf()
+                parameters["access_token"] = accessTokenValueDeserialized.value
+                parameters["token_type"] = "bearer"
+                parameters["expires_in"] = ChronoUnit.SECONDS.between(
+                    accessTokenValueDeserialized.expiration.toInstant()
+                        .minusMillis(client.tokenSettings.accessTokenTimeToLive.toMillis()),
+                    Instant.now()
+                )
+                parameters["scope"] = client.scopes.joinToString(separator = ",")
+
+                parameters["refresh_token"] = accessTokenValueDeserialized.refreshToken.value
+
+                parameters
+            }
+        }
+    }
+
     @PostMapping("/socialLogin")
     fun authorize(
-            @RequestParam(value = "provider") provider: ScpReaderConstants.SocialProvider,
-            @RequestParam(value = "token") token: String,
-            @RequestParam(value = "langId") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
-            @RequestParam(value = "clientId") clientId: String
-    ): OAuth2AccessToken? {
+        @RequestParam(value = "provider") provider: ScpReaderConstants.SocialProvider,
+        @RequestParam(value = "token") token: String,
+        @RequestParam(value = "langId") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
+        @RequestParam(value = "clientId") clientId: String
+    ): Map<String, Any> {
         //this will throw error if no client found
-        clientDetailsService.loadClientByClientId(clientId)
+        clientDetailsService.findByRegistrationId(clientId)
 
         val lang = langService.getById(langEnum.lang) ?: throw IllegalArgumentException("Unknown lang: $langEnum")
 
@@ -89,7 +116,7 @@ class AuthController @Autowired constructor(
                         userInDb.googleId = commonUserData.id
                         usersServiceScpReader.update(userInDb)
                     } else if (userInDb.googleId != commonUserData.id) {
-                        log.error("login with ${commonUserData.id}/$email for user with mismatched googleId: ${userInDb.googleId}")
+                        println("login with ${commonUserData.id}/$email for user with mismatched googleId: ${userInDb.googleId}")
                     }
                 }
                 ScpReaderConstants.SocialProvider.FACEBOOK -> {
@@ -97,7 +124,7 @@ class AuthController @Autowired constructor(
                         userInDb.facebookId = commonUserData.id
                         usersServiceScpReader.update(userInDb)
                     } else if (userInDb.facebookId != commonUserData.id) {
-                        log.error("login with ${commonUserData.id}/$email for user with mismatched facebookId: ${userInDb.facebookId}")
+                        println("login with ${commonUserData.id}/$email for user with mismatched facebookId: ${userInDb.facebookId}")
                     }
                 }
                 ScpReaderConstants.SocialProvider.VK -> {
@@ -105,7 +132,7 @@ class AuthController @Autowired constructor(
                         userInDb.vkId = commonUserData.id
                         usersServiceScpReader.update(userInDb)
                     } else if (userInDb.vkId != commonUserData.id) {
-                        log.error("login with ${commonUserData.id}/$email for user with mismatched vkId: ${userInDb.vkId}")
+                        println("login with ${commonUserData.id}/$email for user with mismatched vkId: ${userInDb.vkId}")
                     }
                 }
                 ScpReaderConstants.SocialProvider.HUAWEI -> {
@@ -113,37 +140,36 @@ class AuthController @Autowired constructor(
                         userInDb.huaweiId = commonUserData.id
                         usersServiceScpReader.update(userInDb)
                     } else if (userInDb.huaweiId != commonUserData.id) {
-                        log.error("login with ${commonUserData.id}/$email for user with mismatched huaweiId: ${userInDb.huaweiId}")
+                        println("login with ${commonUserData.id}/$email for user with mismatched huaweiId: ${userInDb.huaweiId}")
                     }
                 }
             }
-            revokeUserTokens(email, clientId)
-            return generateAccessToken(email, clientId)
+            return oAuth2AuthorizationService.generateAndSaveToken(email, clientId)
         } else {
             //try to find by providers id as email may be changed
             userInDb = usersServiceScpReader.getByProviderId(commonUserData.id!!, provider)
             if (userInDb != null) {
-                return generateAccessToken(userInDb.username, clientId)
+                return oAuth2AuthorizationService.generateAndSaveToken(userInDb.username, clientId)
             } else {
                 //if cant find - register new user and give it initial score
                 val score = ScpReaderConstants.DEFAULT_NEW_USER_SCORE
                 val curLevel = levelsJson.getLevelForScore(score)!!
 
                 val userToSave = User(
-                        username = email,
-                        password = email,
-                        avatar = commonUserData.avatarUrl,
-                        userAuthorities = setOf(),
-                        //firebase
-                        fullName = commonUserData.fullName,
-                        signInRewardGained = true,
-                        score = score,
-                        //level
-                        levelNum = curLevel.id,
-                        curLevelScore = curLevel.score,
-                        scoreToNextLevel = levelsJson.scoreToNextLevel(score, curLevel),
-                        //misc
-                        mainLangId = lang.id
+                    username = email,
+                    password = email,
+                    avatar = commonUserData.avatarUrl,
+                    userAuthorities = setOf(),
+                    //firebase
+                    fullName = commonUserData.fullName,
+                    signInRewardGained = true,
+                    score = score,
+                    //level
+                    levelNum = curLevel.id,
+                    curLevelScore = curLevel.score,
+                    scoreToNextLevel = levelsJson.scoreToNextLevel(score, curLevel),
+                    //misc
+                    mainLangId = lang.id
                 )
                 userToSave.apply {
                     when (provider) {
@@ -159,69 +185,8 @@ class AuthController @Autowired constructor(
                 userToAuthorityService.save(UserToAuthority(userId = newUserInDb.id!!, authority = AuthorityType.USER))
                 usersLangsService.insert(UsersLangs(userId = newUserInDb.id, langId = lang.id))
 
-                return generateAccessToken(newUserInDb.username, clientId)
+                return oAuth2AuthorizationService.generateAndSaveToken(newUserInDb.username, clientId)
             }
         }
-    }
-
-    /**
-     * There is bug, when there are more than one access_token for implicit flow auth.
-     * So, we'll just check it every minute and delete redundant ones... =\
-     */
-    @Scheduled(
-            /**
-             * second, minute, hour, day, month, day of week
-             */
-            cron = "0 * * * * *"
-    )
-    fun checkImplicitFlowAccessTokens() {
-        val tokens = accessTokenService.findAllByClientId(IMPLICIT_FLOW_CLIENT_ID)
-
-        if (tokens.size > 1) {
-            tokens.subList(1, tokens.size).forEach {
-                accessTokenService.delete(it)
-            }
-        }
-    }
-
-    private fun revokeUserTokens(email: String, clientId: String) =
-            tokenStore
-                    .findTokensByClientIdAndUserName(clientId, email)
-                    .forEach { tokenServices.revokeToken(it.value) }
-
-    fun generateAccessToken(email: String, clientId: String): OAuth2AccessToken {
-        val clientDetails = clientDetailsService.loadClientByClientId(clientId)
-
-        val requestParameters = mapOf<String, String>()
-        val authorities = clientDetails.authorities
-        val approved = true
-        val scope = clientDetails.scope
-        val resourceIds = clientDetails.resourceIds
-        val redirectUri = null
-        val responseTypes = setOf("code")
-        val extensionProperties = HashMap<String, Serializable>()
-
-        val oAuth2Request = OAuth2Request(
-                requestParameters,
-                clientId,
-                authorities,
-                approved,
-                scope,
-                resourceIds,
-                redirectUri,
-                responseTypes,
-                extensionProperties
-        )
-
-        val user: User = usersServiceScpReader.loadUserByUsername(email) ?: throw UserNotFoundException()
-        val authenticationToken = UsernamePasswordAuthenticationToken(
-                user,
-                user.password,
-                authorities
-        )
-
-        val auth = OAuth2Authentication(oAuth2Request, authenticationToken)
-
-        return tokenServices.createAccessToken(auth)
     }
 }

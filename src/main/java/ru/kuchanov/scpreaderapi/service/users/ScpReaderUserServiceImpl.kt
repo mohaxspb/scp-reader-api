@@ -3,6 +3,7 @@ package ru.kuchanov.scpreaderapi.service.users
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
+import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.ResponseStatus
@@ -39,8 +40,9 @@ class ScpReaderUserServiceImpl @Autowired constructor(
     override fun getByUsername(username: String) =
             repository.findOneByUsername(username)
 
-    override fun loadUserByUsername(username: String): User? =
-            repository.findOneByUsername(username)
+    override fun loadUserByUsername(username: String): UserDetails {
+        return repository.findOneByUsername(username) ?: throw UserNotFoundException()
+    }
 
     override fun update(user: User): User =
             repository.saveAndFlush(user)

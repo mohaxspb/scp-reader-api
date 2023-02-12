@@ -16,10 +16,10 @@ import ru.kuchanov.scpreaderapi.service.mail.MailService
 
 @RestController
 class IndexController @Autowired constructor(
-        private val log: Logger,
-        private val passwordEncoder: PasswordEncoder,
-        private val mailService: MailService,
-        private val cacheService: CacheService,
+    private val log: Logger,
+    private val passwordEncoder: PasswordEncoder,
+    private val mailService: MailService,
+    private val cacheService: CacheService,
 ) {
 
     @GetMapping("/")
@@ -38,12 +38,18 @@ class IndexController @Autowired constructor(
 
     @GetMapping("/encrypt")
     fun encrypt(@RequestParam(value = "target") target: String): String =
-            passwordEncoder.encode(target)
+        passwordEncoder.encode(target)
+
+
+    @Deprecated("just for tests")
+    @GetMapping("/securedAdmin")
+    fun securedAdmin(@AuthenticationPrincipal user: User): String =
+        "Secured for admin use only! Admin:\n\n\n$user"
 
     @GetMapping("/sendStatisticsEmail")
     fun sendStatisticsEmail(
-            @AuthenticationPrincipal user: User,
-            @RequestParam today: Boolean
+        @AuthenticationPrincipal user: User,
+        @RequestParam today: Boolean
     ): String {
         log.error("sendStatisticsEmail: $user")
         return if (user.isAdmin()) {

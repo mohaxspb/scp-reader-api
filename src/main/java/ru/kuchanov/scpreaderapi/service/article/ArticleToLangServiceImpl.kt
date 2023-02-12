@@ -189,6 +189,15 @@ class ArticleToLangServiceImpl @Autowired constructor(
                     .withType()
                     .withTextPartsV2()
 
+    override fun search(langId: String, query: String, offset: Int, limit: Int): List<ArticleToLangDto> {
+        val startTime = System.currentTimeMillis()
+        val articles =  articlesForLangRepository.search(langId, query, offset, limit)
+        val articlesFilled = fillArticleToLangDtoByArticleToLangIds(articles, false)
+        val (minutes, seconds) = millisToMinutesAndSeconds(System.currentTimeMillis() - startTime)
+        log.debug("search duration (min:sec): $minutes:$seconds")
+        return articlesFilled
+    }
+
     fun ArticleInListProjection.toDto(): ArticleToLangDto =
             ArticleToLangDto(
                     id = this.id,

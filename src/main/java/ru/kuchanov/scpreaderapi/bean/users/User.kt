@@ -85,6 +85,10 @@ data class User(
         val updated: Timestamp? = null
 ) : UserDetails {
 
+    companion object {
+        const val USER_PROPERTY_NAME = "user"
+    }
+
     override fun getUsername() = username
 
     override fun getPassword() = password

@@ -151,4 +151,16 @@ class ArticleController @Autowired constructor(
         val lang = langEnum.lang.let { langService.getById(it) ?: throw LangNotFoundException() }
         return articleForLangService.getRandomArticle(lang.id)
     }
+
+    @GetMapping("{langEnum}/search")
+    fun search(
+        @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
+        @RequestParam(value = "query") query: String,
+        @RequestParam(value = "offset") offset: Int,
+        @RequestParam(value = "limit") limit: Int
+    ): List<ArticleToLangDto> {
+        val lang = langEnum.lang.let { langService.getById(it) ?: throw LangNotFoundException() }
+        log.debug("query: $query")
+        return articleForLangService.search(lang.id, query, offset, limit)
+    }
 }

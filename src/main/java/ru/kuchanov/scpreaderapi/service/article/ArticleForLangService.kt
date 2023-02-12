@@ -43,4 +43,6 @@ interface ArticleForLangService {
     fun findIdsByArticleIds(articleIds: List<Long>): List<Long>
 
     fun deleteByIds(ids: List<Long>)
+
+    fun search(langId: String, query: String, offset: Int, limit: Int): List<ArticleToLangDto>
 }

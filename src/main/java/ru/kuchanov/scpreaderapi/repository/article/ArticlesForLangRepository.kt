@@ -2,7 +2,6 @@ package ru.kuchanov.scpreaderapi.repository.article
 
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
-import ru.kuchanov.scpreaderapi.bean.articles.Article
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.model.dto.article.ArticleInListProjection
 
@@ -11,7 +10,7 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
     fun getOneByArticleIdAndLangId(articleId: Long, langId: String): ArticleForLang?
 
     @Query(
-            value = """
+        value = """
                 select 
                 art.id, 
                 art.lang_id as langId,
@@ -24,12 +23,12 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
                 from articles_langs art
                 where art.article_id = :articleId and lang_id = :langId
             """,
-            nativeQuery = true
+        nativeQuery = true
     )
     fun getOneByArticleIdAndLangIdAsProjection(articleId: Long, langId: String): ArticleInListProjection?
 
     @Query(
-            value = """
+        value = """
                 select 
                 art.id, 
                 art.lang_id as langId,
@@ -42,14 +41,14 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
                 from articles_langs art
                 where art.id = :id
             """,
-            nativeQuery = true
+        nativeQuery = true
     )
     fun getOneByIdAsProjection(id: Long): ArticleInListProjection?
 
     fun findByUrlRelativeAndLangId(urlRelative: String, langId: String): ArticleForLang?
 
     @Query(
-            value = """
+        value = """
                 select 
                 art.id, 
                 art.lang_id as langId,
@@ -62,12 +61,12 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
                 from articles_langs art
                 where art.url_relative = :urlRelative and lang_id = :langId
             """,
-            nativeQuery = true
+        nativeQuery = true
     )
     fun findByUrlRelativeAndLangIdAsProjection(urlRelative: String, langId: String): ArticleInListProjection?
 
     @Query(
-            """
+        """
                 SELECT al.id FROM ArticleForLang al
                 WHERE al.urlRelative = :urlRelative AND al.langId = :langId
                 """
@@ -75,7 +74,7 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
     fun getIdByUrlRelativeAndLangId(urlRelative: String, langId: String): Long?
 
     @Query(
-            """
+        """
                 SELECT al.id FROM ArticleForLang al
                 WHERE al.articleId in :articleIds
                 """
@@ -83,7 +82,7 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
     fun getIdsByArticleIds(articleIds: List<Long>): List<Long>
 
     @Query(
-            """
+        """
                 SELECT
                     art.id,
                     art.article_id as articleId,
@@ -98,13 +97,13 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
                 AND art.created <= CAST( :endDate AS timestamp) 
                 ORDER BY art.created
         """,
-            nativeQuery = true
+        nativeQuery = true
     )
     fun getCreatedArticlesBetweenDates(startDate: String, endDate: String): List<ArticleInListProjection>
 
     @Query(
-            value =
-            """
+        value =
+        """
                 SELECT
                 art.id,
                 art.article_id as articleId,
@@ -119,13 +118,13 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
                 ORDER BY art.created_on_site DESC
                 OFFSET :offset LIMIT :limit
             """,
-            nativeQuery = true
+        nativeQuery = true
     )
     fun getMostRecentArticlesForLang(langId: String, offset: Int, limit: Int): List<ArticleInListProjection>
 
     @Query(
-            value =
-            """
+        value =
+        """
                 SELECT
                 art.id 
                 FROM articles_langs art
@@ -133,12 +132,12 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
                 ORDER BY art.created_on_site DESC
                 OFFSET :offset LIMIT :limit
             """,
-            nativeQuery = true
+        nativeQuery = true
     )
     fun getMostRecentArticlesForLangIds(langId: String, offset: Int, limit: Int): List<Long>
 
     @Query(
-            value = """
+        value = """
                 select 
                 art.id, 
                 art.article_id as articleId,
@@ -153,12 +152,12 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
                 order by rating desc 
                 OFFSET :offset LIMIT :limit
             """,
-            nativeQuery = true
+        nativeQuery = true
     )
     fun getMostRatedArticlesForLang(langId: String, offset: Int, limit: Int): List<ArticleInListProjection>
 
     @Query(
-            value = """
+        value = """
                 select 
                 art.id 
                 from articles_langs art
@@ -166,12 +165,12 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
                 order by rating desc 
                 OFFSET :offset LIMIT :limit
             """,
-            nativeQuery = true
+        nativeQuery = true
     )
     fun getMostRatedArticlesForLangIds(langId: String, offset: Int, limit: Int): List<Long>
 
     @Query(
-            value = """
+        value = """
                 select 
                 art.id, 
                 art.lang_id as langId,
@@ -188,12 +187,12 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
                         where article_category_to_lang_id = :articleCategoryToLangId order by order_in_category)
                 order by art_cat.order_in_category 
             """,
-            nativeQuery = true
+        nativeQuery = true
     )
     fun findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLangId: Long): List<ArticleInListProjection>
 
     @Query(
-            value = """
+        value = """
                 select 
                 art.id, 
                 art.lang_id as langId,
@@ -207,12 +206,12 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
                 join article_categories_to_lang__to__articles_to_lang art_cat on art.id = art_cat.article_to_lang_id
                 where art.id in :articleToLangIds
             """,
-            nativeQuery = true
+        nativeQuery = true
     )
     fun findAllByIds(articleToLangIds: List<Long>): List<ArticleInListProjection>
 
     @Query(
-            """
+        """
                 select 
                 art.id, 
                 art.lang_id as langId,
@@ -227,12 +226,12 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
                 order by random() 
                 limit 1
             """,
-            nativeQuery = true
+        nativeQuery = true
     )
     fun getRandomArticle(): ArticleInListProjection
 
     @Query(
-            """
+        """
                 select 
                 art.id, 
                 art.lang_id as langId,
@@ -248,9 +247,45 @@ interface ArticlesForLangRepository : JpaRepository<ArticleForLang, Long> {
                 order by random() 
                 limit 1
             """,
-            nativeQuery = true
+        nativeQuery = true
     )
     fun getRandomArticle(langId: String): ArticleInListProjection
 
     fun deleteByIdIn(ids: List<Long>)
+
+    @Query(
+        value =
+        """
+                SELECT art.id,
+                       art.article_id      as articleId,
+                       art.lang_id         as langId,
+                       art.url_relative    as urlRelative,
+                       art.title,
+                       art.rating,
+                       art.created_on_site as createdOnSite,
+                       art.has_iframe_tag  as hasIframeTag
+                FROM articles_langs art
+                         join langs l on art.lang_id = l.id
+                WHERE art.lang_id = :langId
+                  AND (
+                            art.id in (
+                            select text_part.article_to_lang_id
+                            from article_to_lang_text_parts text_part
+                                     join article_to_lang_text_parts_vector atltpv on text_part.id = atltpv.text_part_id
+                            where text_part.type in ('TEXT', 'IMAGE_TITLE', 'TABLE')
+                              and atltpv.vector @@ plainto_tsquery(CAST(l.postgres_lang as regconfig), :query)
+                        )
+                        or
+                            art.id in (
+                                select al.id
+                                from articles_langs al
+                                         join article_to_lang_titles_vector art_vector on al.id = art_vector.article_to_lang_id
+                                where art_vector.vector @@ plainto_tsquery(CAST(l.postgres_lang as regconfig), :query)
+                            )
+                    )
+                OFFSET :offset LIMIT :limit
+            """,
+        nativeQuery = true
+    )
+    fun search(langId: String, query: String, offset: Int, limit: Int): List<ArticleInListProjection>
 }
