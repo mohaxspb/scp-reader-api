@@ -316,7 +316,9 @@ class ScpOAuth2AuthorizationServiceImpl @Autowired constructor(
                     username = newVersionAuth.principalName!!
                 }
 
-                val scopes = registeredClient.scopes
+                val user = userDetailsService.loadUserByUsername(username)
+                    ?: throw UserNotFoundException()
+                val scopes = user.authorities.map { it.authority }.toSet()
                 println("scopes: $scopes")
 
                 val accessTokenObject = OAuth2AccessToken(
@@ -332,9 +334,6 @@ class ScpOAuth2AuthorizationServiceImpl @Autowired constructor(
                     now,
                     now.plusMillis(registeredClient.tokenSettings.refreshTokenTimeToLive.toMillis())
                 )
-
-                val user = userDetailsService.loadUserByUsername(username)
-                    ?: throw UserNotFoundException()
 
                 OAuth2Authorization
                     .withRegisteredClient(registeredClient)
