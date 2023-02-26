@@ -81,7 +81,6 @@ class ScpRegisteredClientRepository @Autowired constructor(
     }
 
     override fun findByClientId(clientId: String): RegisteredClient? {
-        println("findByClientId")
         return findById(clientId)
     }
 }

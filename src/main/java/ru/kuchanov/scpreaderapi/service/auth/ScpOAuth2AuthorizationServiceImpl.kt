@@ -316,7 +316,9 @@ class ScpOAuth2AuthorizationServiceImpl @Autowired constructor(
                     username = newVersionAuth.principalName!!
                 }
 
-                val scopes = registeredClient.scopes
+                val user = userDetailsService.loadUserByUsername(username)
+                    ?: throw UserNotFoundException()
+                val scopes = user.authorities.map { it.authority }.toSet()
                 println("scopes: $scopes")
 
                 val accessTokenObject = OAuth2AccessToken(
@@ -332,9 +334,6 @@ class ScpOAuth2AuthorizationServiceImpl @Autowired constructor(
                     now,
                     now.plusMillis(registeredClient.tokenSettings.refreshTokenTimeToLive.toMillis())
                 )
-
-                val user = userDetailsService.loadUserByUsername(username)
-                    ?: throw UserNotFoundException()
 
                 OAuth2Authorization
                     .withRegisteredClient(registeredClient)
@@ -364,30 +363,8 @@ class ScpOAuth2AuthorizationServiceImpl @Autowired constructor(
         println("tokenNew: ${tokenNew?.accessTokenValue}")
         val registeredClient: RegisteredClient =
             registeredClientRepository.findByClientId(clientId) ?: throw ClientNotFoundError()
-        val scopes = registeredClient.scopes
         if (tokenNew == null || tokenNew.accessTokenExpiresAt!!.isBefore(LocalDateTime.now())) {
             println("getAccessToken generate new one")
-
-            val keyGen = Base64StringKeyGenerator()
-            val accessTokenValue = keyGen.generateKey()
-            val refreshTokenValue = keyGen.generateKey()
-
-            val accessTokenObject = OAuth2AccessToken(
-                OAuth2AccessToken.TokenType.BEARER,
-                accessTokenValue,
-                Instant.now(),
-                Instant.now().plusMillis(registeredClient.tokenSettings.accessTokenTimeToLive.toMillis()),
-                scopes
-            )
-            val now = Instant.now()
-
-            val refreshTokenObject = OAuth2RefreshToken(
-                refreshTokenValue,
-                now,
-                now.plusMillis(registeredClient.tokenSettings.refreshTokenTimeToLive.toMillis())
-            )
-
-//            val user = userDetailsService.loadUserByUsername(email)
 
             //handle client credentials token (no user)
             val principalFromAuth = email?.let { userDetailsService.loadUserByUsername(email) }
@@ -413,13 +390,32 @@ class ScpOAuth2AuthorizationServiceImpl @Autowired constructor(
                 throw IllegalArgumentException("unexpected principal type: ${principalFromAuth::class.java.simpleName}")
             }
 
+            val keyGen = Base64StringKeyGenerator()
+            val accessTokenValue = keyGen.generateKey()
+            val refreshTokenValue = keyGen.generateKey()
+
+            val accessTokenObject = OAuth2AccessToken(
+                OAuth2AccessToken.TokenType.BEARER,
+                accessTokenValue,
+                Instant.now(),
+                Instant.now().plusMillis(registeredClient.tokenSettings.accessTokenTimeToLive.toMillis()),
+                authorities.map { it.authority }.toSet()
+            )
+            val now = Instant.now()
+
+            val refreshTokenObject = OAuth2RefreshToken(
+                refreshTokenValue,
+                now,
+                now.plusMillis(registeredClient.tokenSettings.refreshTokenTimeToLive.toMillis())
+            )
+
             val authorization = OAuth2Authorization
                 .withRegisteredClient(registeredClient)
                 .authorizationGrantType(authorizationGrantType)
                 .principalName(principal)
                 .accessToken(accessTokenObject)
                 .refreshToken(refreshTokenObject)
-                .attribute(AUTHORIZED_SCOPE_ATTRIBUTE_NAME, scopes)
+                .attribute(AUTHORIZED_SCOPE_ATTRIBUTE_NAME, authorities.map { it.authority }.toSet())
                 .attribute(
                     Principal::class.java.name,
                     UsernamePasswordAuthenticationToken(
@@ -440,7 +436,7 @@ class ScpOAuth2AuthorizationServiceImpl @Autowired constructor(
             .withToken(tokenNew.accessTokenValue)
             .tokenType(OAuth2AccessToken.TokenType.BEARER)
             .refreshToken(tokenNew.refreshTokenValue)
-            .scopes(scopes)
+            .scopes(tokenNew.accessTokenScopes!!.split(",").toSet())
             .expiresIn(
                 tokenNew.accessTokenExpiresAt!!.minusSeconds(
                     tokenNew.accessTokenIssuedAt!!.toEpochSecond(ZoneOffset.UTC)
