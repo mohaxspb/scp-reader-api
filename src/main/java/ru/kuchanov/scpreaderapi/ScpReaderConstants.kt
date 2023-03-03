@@ -49,6 +49,7 @@ object ScpReaderConstants {
         const val FAVORITE = "favorite"
         const val DOWNLOAD = "download"
         const val PARSE = "parse"
+        const val IMAGE = "image"
     }
 
     object FilesPaths {

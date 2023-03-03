@@ -974,7 +974,7 @@ class ArticleParsingServiceBase {
             val title = tagA.text()
             val url = tagA.attr(ATTR_HREF)
             //rating
-            val rating = Integer.parseInt(listOfTd[1].text())
+            val rating = listOfTd[1].text().toFloat().toInt()
 
             val createdDate = listOfTd[3].text().trim()
             val updatedDate = listOfTd[4].text().trim()
