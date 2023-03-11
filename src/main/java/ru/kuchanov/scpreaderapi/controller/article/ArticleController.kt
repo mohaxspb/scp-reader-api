@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.ScpReaderConstants.Cache.Keys.ARTICLE_TO_LANG_DTO_BY_URL_RELATIVE_AND_LANG
 import ru.kuchanov.scpreaderapi.ScpReaderConstants.Cache.Keys.CATEGORIES_ARTICLES
+import ru.kuchanov.scpreaderapi.ScpReaderConstants.Cache.Keys.SEARCH_RESULTS_CACHE
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLang
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleForLangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.articles.ArticleNotFoundException
@@ -166,8 +167,18 @@ class ArticleController @Autowired constructor(
         @RequestParam(value = "offset") offset: Int,
         @RequestParam(value = "limit") limit: Int
     ): List<ArticleToLangDto> {
-        val lang = langEnum.lang.let { langService.getById(it) ?: throw LangNotFoundException() }
-        log.debug("query: $query")
-        return articleForLangService.search(lang.id, query, offset, limit)
+        val articlesCache = cacheManager.getCache(SEARCH_RESULTS_CACHE)
+        val key = SimpleKey(query, limit, offset)
+        val rawArticlesInCache = articlesCache?.get(key)
+        @Suppress("UNCHECKED_CAST") val categoriesArticlesInCache = rawArticlesInCache?.get() as? List<ArticleToLangDto>?
+        return if (categoriesArticlesInCache != null) {
+            categoriesArticlesInCache
+        } else {
+            val lang = langEnum.lang.let { langService.getById(it) ?: throw LangNotFoundException() }
+            log.debug("query: $query")
+            val searchResults = articleForLangService.search(lang.id, query, offset, limit)
+            articlesCache?.put(key, searchResults)
+            searchResults
+        }
     }
 }

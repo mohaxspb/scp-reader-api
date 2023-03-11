@@ -111,6 +111,7 @@ object ScpReaderConstants {
             const val CATEGORIES_ARTICLES = "getArticlesByCategoryAndLang"
             const val ARTICLE_TO_LANG_DTO_BY_ID = "showArticleForLangById"
             const val ARTICLE_TO_LANG_DTO_BY_URL_RELATIVE_AND_LANG = "showArticleForUrlRelativeAndLangIdFull"
+            const val SEARCH_RESULTS_CACHE = "searchResultsCache"
         }
     }
 }
