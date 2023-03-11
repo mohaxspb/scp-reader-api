@@ -262,6 +262,7 @@ class AuthorizationServerConfiguration @Autowired constructor(
                     response: HttpServletResponse,
                     accessDeniedException: AccessDeniedException
                 ) {
+                    println("accessDeniedHandler: ${request.userPrincipal}")
                     println("accessDeniedHandler: $response")
                     println("accessDeniedHandler: $accessDeniedException")
                     super.handle(request, response, accessDeniedException)
