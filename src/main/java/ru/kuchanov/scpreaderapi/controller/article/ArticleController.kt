@@ -73,8 +73,7 @@ class ArticleController @Autowired constructor(
                     ?: throw ArticleCategoryForLangNotFoundException()
             val articlesToCategoryForCache = articleForLangService
                     .findAllArticlesForLangByArticleCategoryToLangId(articleCategoryToLang.id!!)
-            cacheManager
-                    .getCache(CATEGORIES_ARTICLES)
+            articlesCache
                     ?.put(
                             SimpleKey(langEnum, categoryId),
                             articlesToCategoryForCache

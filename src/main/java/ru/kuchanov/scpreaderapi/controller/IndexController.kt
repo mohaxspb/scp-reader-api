@@ -46,6 +46,11 @@ class IndexController @Autowired constructor(
     fun securedAdmin(@AuthenticationPrincipal user: User): String =
         "Secured for admin use only! Admin:\n\n\n$user"
 
+    @Deprecated("just for tests")
+    @GetMapping("/securedNotAdmin")
+    fun securedNotAdmin(@AuthenticationPrincipal user: User): String =
+        "Secured for not admin use only! Admin:\n\n\n$user"
+
     @GetMapping("/sendStatisticsEmail")
     fun sendStatisticsEmail(
         @AuthenticationPrincipal user: User,
