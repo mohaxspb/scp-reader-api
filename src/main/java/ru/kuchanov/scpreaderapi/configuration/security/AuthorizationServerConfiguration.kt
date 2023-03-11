@@ -434,7 +434,6 @@ class AuthorizationServerConfiguration @Autowired constructor(
         arrayOf(
             "/${ScpReaderConstants.Path.FIREBASE}/**",
             "/${ScpReaderConstants.Path.ARTICLE}/${ScpReaderConstants.Path.PARSE}/**",
-            "/${ScpReaderConstants.Path.ARTICLE}/**/delete",
             "/securedAdmin"
         )
 }

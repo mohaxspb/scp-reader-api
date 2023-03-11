@@ -4,6 +4,7 @@ import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cache.CacheManager
 import org.springframework.cache.interceptor.SimpleKey
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import ru.kuchanov.scpreaderapi.ScpReaderConstants
 import ru.kuchanov.scpreaderapi.ScpReaderConstants.Cache.Keys.ARTICLE_TO_LANG_DTO_BY_URL_RELATIVE_AND_LANG
@@ -14,7 +15,10 @@ import ru.kuchanov.scpreaderapi.bean.articles.ArticleNotFoundException
 import ru.kuchanov.scpreaderapi.bean.articles.category.ArticleCategoryForLangNotFoundException
 import ru.kuchanov.scpreaderapi.bean.articles.category.ArticleCategoryNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.LangNotFoundException
+import ru.kuchanov.scpreaderapi.bean.users.User
+import ru.kuchanov.scpreaderapi.bean.users.isAdmin
 import ru.kuchanov.scpreaderapi.model.dto.article.ArticleToLangDto
+import ru.kuchanov.scpreaderapi.model.exception.ScpAccessDeniedException
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryForLangService
 import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryService
@@ -133,8 +137,12 @@ class ArticleController @Autowired constructor(
     @DeleteMapping("{langEnum}/{articleId}/delete")
     fun deleteArticleTextPartsByLangAndArticleId(
             @PathVariable(value = "langEnum") langEnum: ScpReaderConstants.Firebase.FirebaseInstance,
-            @PathVariable(value = "articleId") articleId: Long
+            @PathVariable(value = "articleId") articleId: Long,
+            @AuthenticationPrincipal user: User
     ): Boolean {
+        if (user.isAdmin().not()) {
+            throw ScpAccessDeniedException()
+        }
         log.error("deleteArticleTextPartsByLangAndArticleId: $langEnum, $articleId")
         val lang = langService.getById(langEnum.lang) ?: throw LangNotFoundException()
         val articleToLangId = articleForLangService.getOneByLangIdAndArticleId(articleId, lang.id)?.id
