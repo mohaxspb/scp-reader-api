@@ -590,7 +590,8 @@ class ArticleParsingServiceBase {
                     articlesForCategory
                 )
 
-                val langEnum = ScpReaderConstants.Firebase.FirebaseInstance.valueOf(lang.id.uppercase(Locale.getDefault()))
+                val langEnum =
+                    ScpReaderConstants.Firebase.FirebaseInstance.valueOf(lang.id.uppercase(Locale.getDefault()))
                 val articlesToCategoryForCache = articleForLangService
                     .findAllArticlesForLangByArticleCategoryToLangId(categoryToLang.id)
                 cacheManager
@@ -974,7 +975,16 @@ class ArticleParsingServiceBase {
             val title = tagA.text()
             val url = tagA.attr(ATTR_HREF)
             //rating
-            val rating = listOfTd[1].text().toFloat().toInt()
+            val rating = try {
+                listOfTd[1].text().toFloat().toInt()
+            } catch (e: Exception) {
+                log.error(
+                    "Error while parse article rating.\nlang: $lang,\nurl: $url,\ntitle: $title\n\n" + errorUtils.stackTraceAsString(
+                        e
+                    )
+                )
+                0
+            }
 
             val createdDate = listOfTd[3].text().trim()
             val updatedDate = listOfTd[4].text().trim()
