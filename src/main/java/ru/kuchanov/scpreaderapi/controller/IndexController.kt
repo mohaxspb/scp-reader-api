@@ -2,6 +2,7 @@ package ru.kuchanov.scpreaderapi.controller
 
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.web.bind.annotation.GetMapping
@@ -34,6 +35,27 @@ class IndexController @Autowired constructor(
         } else {
             throw ScpAccessDeniedException()
         }
+    }
+
+    @GetMapping("/populateCacheStatus")
+    fun populateCacheStatus(@AuthenticationPrincipal user: User): CacheService.CacheStatus {
+        return if (user.isAdmin()) {
+            cacheService.cacheStatus.get()
+        } else {
+            throw ScpAccessDeniedException()
+        }
+    }
+
+    @Scheduled(
+        /**
+         * second, minute, hour, day, month, day of week
+         *
+         * Each 5 minutes in interval of 1-59 minutes
+         */
+        cron = "0 1-59/5 * * * *"
+    )
+    fun populateCacheJob() {
+        //todo check status and start population
     }
 
     @GetMapping("/encrypt")
