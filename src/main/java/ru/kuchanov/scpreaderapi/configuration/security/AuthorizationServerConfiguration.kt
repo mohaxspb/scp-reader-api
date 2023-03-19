@@ -157,7 +157,7 @@ class AuthorizationServerConfiguration @Autowired constructor(
             it.requestMatchers(
                 object : RequestMatcher {
                     override fun matches(request: HttpServletRequest): Boolean {
-                        println("requestMatchers formLogin: ${request.requestURI}, ${request.getHeader(HttpHeaders.AUTHORIZATION)}")
+//                        println("requestMatchers formLogin: ${request.requestURI}, ${request.getHeader(HttpHeaders.AUTHORIZATION)}")
                         return request.getHeader(HttpHeaders.AUTHORIZATION) == null
                     }
                 }
@@ -213,11 +213,11 @@ class AuthorizationServerConfiguration @Autowired constructor(
                 it.requestMatchers(
                     object : RequestMatcher {
                         override fun matches(request: HttpServletRequest): Boolean {
-                            println(
-                                "requestMatchers resource initial: ${request.requestURI}, ${
-                                    request.getHeader(HttpHeaders.AUTHORIZATION)
-                                }"
-                            )
+//                            println(
+//                                "requestMatchers resource initial: ${request.requestURI}, ${
+//                                    request.getHeader(HttpHeaders.AUTHORIZATION)
+//                                }"
+//                            )
                             return request.getHeader(HttpHeaders.AUTHORIZATION) != null
                         }
                     }
@@ -258,10 +258,11 @@ class AuthorizationServerConfiguration @Autowired constructor(
             }
             .accessDeniedHandler(object : AccessDeniedHandlerImpl() {
                 override fun handle(
-                    request: HttpServletRequest?,
-                    response: HttpServletResponse?,
-                    accessDeniedException: AccessDeniedException?
+                    request: HttpServletRequest,
+                    response: HttpServletResponse,
+                    accessDeniedException: AccessDeniedException
                 ) {
+                    println("accessDeniedHandler: ${request.userPrincipal}")
                     println("accessDeniedHandler: $response")
                     println("accessDeniedHandler: $accessDeniedException")
                     super.handle(request, response, accessDeniedException)
@@ -294,6 +295,7 @@ class AuthorizationServerConfiguration @Autowired constructor(
                         } else {
                             throw IllegalArgumentException("unexpected principal type: ${principalFromAuth::class.java.simpleName}")
                         }
+                        println("opaqueToken authenticationManager END")
 
                         UsernamePasswordAuthenticationToken(
                             principal,
@@ -432,7 +434,6 @@ class AuthorizationServerConfiguration @Autowired constructor(
         arrayOf(
             "/${ScpReaderConstants.Path.FIREBASE}/**",
             "/${ScpReaderConstants.Path.ARTICLE}/${ScpReaderConstants.Path.PARSE}/**",
-            "/${ScpReaderConstants.Path.ARTICLE}/**/delete",
             "/securedAdmin"
         )
 }

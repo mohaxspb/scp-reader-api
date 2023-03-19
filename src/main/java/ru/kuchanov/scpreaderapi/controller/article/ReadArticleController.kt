@@ -48,6 +48,9 @@ class ReadArticleController @Autowired constructor(
     fun delete(
             @RequestParam(value = "articleToLangId") articleToLangId: Long,
             @AuthenticationPrincipal user: User
-    ): ReadArticleByLang =
-            readArticleForLangService.removeArticleFromRead(articleToLangId, user.id!!)
+    ): ReadArticleByLang {
+        println("ReadArticle delete: $user")
+        return readArticleForLangService.removeArticleFromRead(articleToLangId, user.id!!)
+    }
+
 }
