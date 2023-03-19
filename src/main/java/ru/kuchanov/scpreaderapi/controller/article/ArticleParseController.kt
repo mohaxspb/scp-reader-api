@@ -147,12 +147,12 @@ class ArticleParseController @Autowired constructor(
      * Executes every day at midday
      */
     @GetMapping("/allLangsRated")
-    @Scheduled(
-        /**
-         * second, minute, hour, day, month, day of week
-         */
-        cron = "0 0 12 * * *"
-    )
+//    @Scheduled(
+//        /**
+//         * second, minute, hour, day, month, day of week
+//         */
+//        cron = "0 0 12 * * *"
+//    )
     fun updateAllRatedDaily(): ParsingStartedResponse {
         TODO()
     }
