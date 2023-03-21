@@ -2,6 +2,7 @@ package ru.kuchanov.scpreaderapi.service.search
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import ru.kuchanov.scpreaderapi.bean.search.SearchStats
 import ru.kuchanov.scpreaderapi.repository.search.SearchStatsRepository
 
 
@@ -12,5 +13,9 @@ class SearchStatsServiceImpl @Autowired constructor(
 
     override fun upsertSearchStats(langId: String, query: String) {
         searchStatsRepository.upsertSearchStats(langId, query)
+    }
+
+    override fun getMostPopularSearchRequests(limit: Int): List<SearchStats> {
+        return searchStatsRepository.getMostPopularSearchRequests(limit)
     }
 }

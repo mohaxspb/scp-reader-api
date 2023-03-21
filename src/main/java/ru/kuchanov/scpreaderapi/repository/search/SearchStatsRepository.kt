@@ -6,8 +6,6 @@ import ru.kuchanov.scpreaderapi.bean.search.SearchStats
 
 interface SearchStatsRepository : JpaRepository<SearchStats, Long> {
 
-    //todo
-
     @Query(
         value = """
             insert into search_stats (lang_id, query, num_of_requests)
@@ -18,4 +16,17 @@ interface SearchStatsRepository : JpaRepository<SearchStats, Long> {
         nativeQuery = true
     )
     fun upsertSearchStats(langId: String, query: String): Long
+
+    @Query(
+        value =
+        """
+            SELECT
+            id, lang_id, query, num_of_requests
+            FROM search_stats
+            ORDER BY num_of_requests DESC
+            LIMIT :limit
+            """,
+        nativeQuery = true
+    )
+    fun getMostPopularSearchRequests(limit: Int): List<SearchStats>
 }

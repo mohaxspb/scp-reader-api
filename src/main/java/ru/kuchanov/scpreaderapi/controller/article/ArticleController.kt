@@ -174,7 +174,7 @@ class ArticleController @Autowired constructor(
         val key = SimpleKey(query, limit, offset)
 
         searchStatsService.upsertSearchStats(langEnum.lang, query)
-        //todo count num of requests for query (create table to store requests (lang + query + counter))
+        // count num of requests for query (create table to store requests (lang + query + counter))
         //later we can populate cache with search results for most popular queries
         //I.e. we can get top 100 requests and add to cache first 100 rows for query...
         //do iterate by results to put paginated results i.e. put(EN, reptile, 0, 10), put(EN, reptile, 10, 20) etc
@@ -183,6 +183,7 @@ class ArticleController @Autowired constructor(
         @Suppress("UNCHECKED_CAST") val categoriesArticlesInCache =
             rawArticlesInCache?.get() as? List<ArticleToLangDto>?
         return if (categoriesArticlesInCache != null) {
+            log.debug("return articles from cache for query `$query`")
             categoriesArticlesInCache
         } else {
             val lang = langEnum.lang.let { langService.getById(it) ?: throw LangNotFoundException() }

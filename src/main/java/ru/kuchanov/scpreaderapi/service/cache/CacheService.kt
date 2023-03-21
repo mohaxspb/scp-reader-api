@@ -19,6 +19,7 @@ import ru.kuchanov.scpreaderapi.bean.settings.ServerSettingsNotFoundException
 import ru.kuchanov.scpreaderapi.bean.users.LangNotFoundException
 import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryForLangService
+import ru.kuchanov.scpreaderapi.service.search.SearchStatsService
 import ru.kuchanov.scpreaderapi.service.settings.ServerSettingsService
 import ru.kuchanov.scpreaderapi.service.users.LangService
 import ru.kuchanov.scpreaderapi.utils.ErrorUtils
@@ -32,6 +33,7 @@ class CacheService @Autowired constructor(
     private val categoryForLangService: ArticleCategoryForLangService,
     private val cacheManager: CacheManager,
     private val serverSettingsService: ServerSettingsService,
+    private val searchStatsService: SearchStatsService,
     private val errorUtils: ErrorUtils,
     @Qualifier(Application.CACHE_LOGGER) private val log: Logger
 ) {
@@ -122,7 +124,41 @@ class CacheService @Autowired constructor(
                 (cacheManager.getCache(ARTICLE_TO_LANG_DTO_BY_URL_RELATIVE_AND_LANG) as CaffeineCache).nativeCache
             log.error("caffeineArticlesByLangAndUrlRelativeCache estimatedSize: ${caffeineArticlesByLangAndUrlRelativeCache.estimatedSize()}")
 
-            //todo search cache
+            //search cache
+            log.error("==populate cache for search START")
+            val startTimeSearch = System.currentTimeMillis()
+            val searchCacheInitialSize =
+                serverSettingsService.findByKey(ServerSettings.Key.SEARCH_RESULTS_CACHE_SIZE.name)?.value?.toInt()
+                    ?: throw ServerSettingsNotFoundException("SEARCH_RESULTS_CACHE_SIZE not found!")
+            val searchPagesCountInitialSize =
+                serverSettingsService.findByKey(ServerSettings.Key.SEARCH_RESULTS_PAGES_COUNT.name)?.value?.toInt()
+                    ?: throw ServerSettingsNotFoundException("SEARCH_RESULTS_PAGES_COUNT not found!")
+            val searchPageInitialSize =
+                serverSettingsService.findByKey(ServerSettings.Key.SEARCH_RESULTS_PAGE_SIZE.name)?.value?.toInt()
+                    ?: throw ServerSettingsNotFoundException("SEARCH_RESULTS_PAGE_SIZE not found!")
+
+            val searchCache = cacheManager.getCache(SEARCH_RESULTS_CACHE)
+            val searchRequests = searchStatsService.getMostPopularSearchRequests(searchCacheInitialSize)
+            searchRequests.forEach { searchStats ->
+                val searchResults = articleForLangService.search(
+                    searchStats.langId,
+                    searchStats.query,
+                    0,
+                    searchPagesCountInitialSize * searchPageInitialSize
+                )
+                println("searchResults size: ${searchResults.size}")
+                searchResults.chunked(searchPageInitialSize).forEachIndexed { index, articleToLangDtos ->
+                    val offset = index * searchPageInitialSize
+                    val limit = offset + searchPageInitialSize
+                    val key = SimpleKey(searchStats.query, limit, offset)
+                    println("put ${articleToLangDtos.size} articles for key: $key")
+                    searchCache?.put(key, articleToLangDtos)
+                }
+            }
+            val (minutesSearch, secondsSearch) = millisToMinutesAndSeconds(
+                System.currentTimeMillis() - startTimeSearch
+            )
+            log.error("==populate cache for search END. Total time (min:sec): $minutesSearch:$secondsSearch")
 
             val caffeineSearchCache =
                 (cacheManager.getCache(SEARCH_RESULTS_CACHE) as CaffeineCache).nativeCache

@@ -12,8 +12,8 @@ data class SearchStats(
     @Column(name = "lang_id")
     var langId: String,
     @Column(columnDefinition = "TEXT")
-    var query: String? = null,
+    var query: String,
 
     @Column(name = "num_of_requests")
-    var numOfRequests: Long? = null,
+    var numOfRequests: Long,
 )
