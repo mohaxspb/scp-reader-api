@@ -1,4 +1,4 @@
-package ru.kuchanov.scpreaderapi.configuration
+package ru.kuchanov.scpreaderapi.service.cache
 
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired

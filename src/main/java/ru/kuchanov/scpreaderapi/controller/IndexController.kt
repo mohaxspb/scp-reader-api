@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController
 import ru.kuchanov.scpreaderapi.Application
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.isAdmin
-import ru.kuchanov.scpreaderapi.configuration.CacheService
+import ru.kuchanov.scpreaderapi.service.cache.CacheService
 import ru.kuchanov.scpreaderapi.model.exception.ScpAccessDeniedException
 import ru.kuchanov.scpreaderapi.service.mail.MailService
 
