@@ -24,19 +24,21 @@ import ru.kuchanov.scpreaderapi.service.article.ArticleForLangService
 import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryForLangService
 import ru.kuchanov.scpreaderapi.service.article.category.ArticleCategoryService
 import ru.kuchanov.scpreaderapi.service.article.text.TextPartService
+import ru.kuchanov.scpreaderapi.service.search.SearchStatsService
 import ru.kuchanov.scpreaderapi.service.users.LangService
 
 
 @RestController
 @RequestMapping("/" + ScpReaderConstants.Path.ARTICLE)
 class ArticleController @Autowired constructor(
-        private val articleForLangService: ArticleForLangService,
-        private val langService: LangService,
-        private val categoryForLangService: ArticleCategoryForLangService,
-        private val categoryService: ArticleCategoryService,
-        private val textPartService: TextPartService,
-        private val cacheManager: CacheManager,
-        private val log: Logger,
+    private val articleForLangService: ArticleForLangService,
+    private val langService: LangService,
+    private val categoryForLangService: ArticleCategoryForLangService,
+    private val categoryService: ArticleCategoryService,
+    private val textPartService: TextPartService,
+    private val searchStatsService: SearchStatsService,
+    private val cacheManager: CacheManager,
+    private val log: Logger,
 ) {
 
     @GetMapping("/{langEnum}/recent")
@@ -170,6 +172,13 @@ class ArticleController @Autowired constructor(
     ): List<ArticleToLangDto> {
         val articlesCache = cacheManager.getCache(SEARCH_RESULTS_CACHE)
         val key = SimpleKey(query, limit, offset)
+
+        searchStatsService.upsertSearchStats(langEnum.lang, query)
+        //todo count num of requests for query (create table to store requests (lang + query + counter))
+        //later we can populate cache with search results for most popular queries
+        //I.e. we can get top 100 requests and add to cache first 100 rows for query...
+        //do iterate by results to put paginated results i.e. put(EN, reptile, 0, 10), put(EN, reptile, 10, 20) etc
+
         val rawArticlesInCache = articlesCache?.get(key)
         @Suppress("UNCHECKED_CAST") val categoriesArticlesInCache =
             rawArticlesInCache?.get() as? List<ArticleToLangDto>?
