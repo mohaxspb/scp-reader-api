@@ -151,7 +151,6 @@ class CacheService @Autowired constructor(
                     val offset = index * searchPageInitialSize
                     val limit = offset + searchPageInitialSize
                     val key = SimpleKey(searchStats.query, limit, offset)
-                    println("put ${articleToLangDtos.size} articles for key: $key")
                     searchCache?.put(key, articleToLangDtos)
                 }
             }
