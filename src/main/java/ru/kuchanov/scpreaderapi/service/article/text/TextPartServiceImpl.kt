@@ -7,7 +7,6 @@ import ru.kuchanov.scpreaderapi.bean.articles.text.toDto
 import ru.kuchanov.scpreaderapi.model.dto.article.TextPartDto
 import ru.kuchanov.scpreaderapi.repository.article.text.TextPartRepository
 
-
 @Service
 class TextPartServiceImpl @Autowired constructor(
         val textPartRepository: TextPartRepository
@@ -25,8 +24,11 @@ class TextPartServiceImpl @Autowired constructor(
     override fun findAllByArticleToLangIds(articleToLangIds: List<Long>): List<TextPart> =
             textPartRepository.findAllByArticleToLangIdAndParentIdNullOrderedCorrectlyBitch(articleToLangIds)
 
-    override fun deleteByArticleToLangId(articleToLangId: Long) =
-            textPartRepository.deleteByArticleToLangIdAndParentIdNull(articleToLangId)
+    override fun deleteByArticleToLangId(articleToLangId: Long) {
+        //firstly remove all connections, then delete all rows...
+        textPartRepository.removeParents(articleToLangId)
+        textPartRepository.deleteByArticleToLangIdAndParentIdNull(articleToLangId)
+    }
 
     override fun textPartsTreeFromFlattenedList(rawTextParts: List<TextPart>): List<TextPartDto> {
         val filledTextParts = mutableListOf<TextPartDto>()
@@ -58,3 +60,4 @@ class TextPartServiceImpl @Autowired constructor(
                 )
     }
 }
+

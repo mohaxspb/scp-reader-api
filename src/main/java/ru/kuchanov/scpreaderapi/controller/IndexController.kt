@@ -2,14 +2,17 @@ package ru.kuchanov.scpreaderapi.controller
 
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import ru.kuchanov.scpreaderapi.Application
 import ru.kuchanov.scpreaderapi.bean.users.User
 import ru.kuchanov.scpreaderapi.bean.users.isAdmin
-import ru.kuchanov.scpreaderapi.configuration.CacheService
+import ru.kuchanov.scpreaderapi.service.cache.CacheService
 import ru.kuchanov.scpreaderapi.model.exception.ScpAccessDeniedException
 import ru.kuchanov.scpreaderapi.service.mail.MailService
 
@@ -20,6 +23,7 @@ class IndexController @Autowired constructor(
     private val passwordEncoder: PasswordEncoder,
     private val mailService: MailService,
     private val cacheService: CacheService,
+    @Qualifier(Application.CACHE_LOGGER) private val cacheLog: Logger
 ) {
 
     @GetMapping("/")
@@ -33,6 +37,34 @@ class IndexController @Autowired constructor(
             "Populate cache started"
         } else {
             throw ScpAccessDeniedException()
+        }
+    }
+
+    @GetMapping("/populateCacheStatus")
+    fun populateCacheStatus(@AuthenticationPrincipal user: User): CacheService.CacheStatus {
+        return if (user.isAdmin()) {
+            cacheService.cacheStatus.get()
+        } else {
+            throw ScpAccessDeniedException()
+        }
+    }
+
+    @Scheduled(
+        /**
+         * second, minute, hour, day, month, day of week
+         *
+         * Each 5 minutes in interval of 1-59 minutes
+         */
+        cron = "0 1-59/5 * * * *"
+    )
+    fun populateCacheJob() {
+        when (cacheService.cacheStatus.get()) {
+            CacheService.CacheStatus.NotPopulated -> {
+                cacheLog.debug("Cache not populated, so start populating.")
+                cacheService.populateCache()
+            }
+            is CacheService.CacheStatus.Populated -> cacheLog.debug("Cache already populated, do nothing.")
+            CacheService.CacheStatus.Populating -> cacheLog.debug("Cache is populating now, do nothing.")
         }
     }
 

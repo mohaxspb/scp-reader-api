@@ -194,7 +194,7 @@ class ArticleToLangServiceImpl @Autowired constructor(
         val startTimeCached = startTime
         val articles =  articlesForLangRepository.search(langId, query, offset, limit)
         val (minutesSearch, secondsSearch) = millisToMinutesAndSeconds(System.currentTimeMillis() - startTime)
-        log.debug("search duration (min:sec): $minutesSearch:$secondsSearch")
+        log.debug("search duration for $langId and '$query' (min:sec): $minutesSearch:$secondsSearch")
         startTime = System.currentTimeMillis()
         val articlesFilled = fillArticleToLangDtoByArticleToLangIds(articles, false)
         val (minutes, seconds) = millisToMinutesAndSeconds(System.currentTimeMillis() - startTime)

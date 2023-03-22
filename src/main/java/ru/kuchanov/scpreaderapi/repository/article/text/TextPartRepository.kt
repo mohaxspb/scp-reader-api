@@ -23,4 +23,15 @@ interface TextPartRepository : JpaRepository<TextPart, Long> {
 
     @Transactional
     fun deleteByArticleToLangIdAndParentIdNull(articleToLangId: Long)
+
+    @Query(
+        """
+                update article_to_lang_text_parts 
+                set parent_id = null
+                where article_to_lang_id = :articleToLangId
+                RETURNING 0;
+                """,
+        nativeQuery = true
+    )
+    fun removeParents(articleToLangId: Long): Long
 }
