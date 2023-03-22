@@ -146,7 +146,6 @@ class CacheService @Autowired constructor(
                     0,
                     searchPagesCountInitialSize * searchPageInitialSize
                 )
-                println("searchResults size: ${searchResults.size}")
                 searchResults.chunked(searchPageInitialSize).forEachIndexed { index, articleToLangDtos ->
                     val offset = index * searchPageInitialSize
                     val limit = offset + searchPageInitialSize
