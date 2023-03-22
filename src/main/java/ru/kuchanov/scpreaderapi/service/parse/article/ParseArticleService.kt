@@ -84,6 +84,13 @@ class ParseArticleService @Autowired constructor(
         //also remove div with f*cking styles.
         pageContent.getElementsByClass("code").forEach { it.remove() }
 
+        //also remove p with f*cking styles.
+        pageContent.getElementsByTag(TAG_IFRAME).forEach {
+            if (it.attr(ATTR_SRC).contains("interwiki.scpwiki.com/styleFrame")) {
+                it.remove()
+            }
+        }
+
         //replace links in footnote refs
         val footnoterefs = pageContent.getElementsByClass("footnoteref")
         for (snoska in footnoterefs) {
