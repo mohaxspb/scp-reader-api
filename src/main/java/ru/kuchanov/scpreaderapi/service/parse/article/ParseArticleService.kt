@@ -24,6 +24,7 @@ import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_A
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_DIV
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_IFRAME
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_IMG
+import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_P
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_SPAN
 import ru.kuchanov.scpreaderapi.service.parse.article.ParseConstants.TAG_TABLE
 import ru.kuchanov.scpreaderapi.service.parse.category.ScpParseException
@@ -71,6 +72,12 @@ class ParseArticleService @Autowired constructor(
 
         //also delete all divs with no content
         pageContent.getElementsByTag(TAG_DIV).forEach {
+            if (it.children().isEmpty()) {
+                it.remove()
+            }
+        }
+        //and delete all p with no content
+        pageContent.getElementsByTag(TAG_P).forEach {
             if (it.children().isEmpty()) {
                 it.remove()
             }
