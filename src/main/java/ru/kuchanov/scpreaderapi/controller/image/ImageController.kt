@@ -3,6 +3,7 @@ package ru.kuchanov.scpreaderapi.controller.image
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.io.InputStreamResource
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -15,11 +16,15 @@ import ru.kuchanov.scpreaderapi.ScpReaderConstants
 
 @RestController
 @RequestMapping("/" + ScpReaderConstants.Path.IMAGE)
-class ImageController @Autowired constructor() {
+class ImageController @Autowired constructor(
+    @Value(value = "\${my.image-proxy}")
+    private val imageProxyUrl: String,
+) {
 
     @GetMapping("/provide")
     fun provide(@RequestParam(value = "imageUrl") imageUrl: String): ResponseEntity<InputStreamResource> {
-        val imageResponse = OkHttpClient().newCall(Request.Builder().url(imageUrl).build()).execute()
+        val proxyImageRequest = "$imageProxyUrl/image?url=$imageUrl"
+        val imageResponse = OkHttpClient().newCall(Request.Builder().url(proxyImageRequest).build()).execute()
         val contentType = when {
             imageUrl.endsWith(".jpg") || imageUrl.endsWith(".jpeg") -> MediaType.IMAGE_JPEG
             imageUrl.endsWith(".png") -> MediaType.IMAGE_PNG
