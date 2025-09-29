@@ -13,8 +13,11 @@ To define profile add this to `arguments` in `gradle` run configuration:
 2. **Linux**
 
      - Deploy to `%Tomcat root%/webapps`
-
      - As we use old version of `Spring` with `javax.*` imports (not `jakarta`) we can't use Tomcat version greater than **9**.
+     - Deploy [DB_BACKUP_CONFIG](DB_BACKUP_CONFIG.md)
+     - See [DB_BACKUP_RESTORE](DB_BACKUP_RESTORE.md) to restore from backup
+     - Add server restart script, as it crashes every day(
+     - Set mail server to send mails.
 
 ### Secret files
 
