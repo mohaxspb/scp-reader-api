@@ -12,7 +12,9 @@ To define profile add this to `arguments` in `gradle` run configuration:
 
 2. **Linux**
 
-    Deploy to `%Tomcat root%/webapps`
+     - Deploy to `%Tomcat root%/webapps`
+
+     - As we use old version of `Spring` with `javax.*` imports (not `jakarta`) we can't use Tomcat version greater than **9**.
 
 ### Secret files
 
