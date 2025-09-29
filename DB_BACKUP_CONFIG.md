@@ -4,20 +4,26 @@
 #!/bin/bash
 
 #create dirs
-mkdir -p /data/dbBackups/scpReader/
-mkdir -p /data/dbBackups/logs/
+mkdir -p /data/scp-reader.com/dbBackups/files/
+mkdir -p /data/scp-reader.com/dbBackups/logs/
 
-chown -R db-backup /data/dbBackups/scpReader
-chown -R db-backup /data/dbBackups/logs
-chmod -R u=rwx,go=r /data/dbBackups/scpReader
-chmod -R u=rwx,go=r /data/dbBackups/logs
+chown -R db-backup /data/scp-reader.com/dbBackups
+chown -R db-backup /data/scp-reader.com/dbBackups/files
+chown -R db-backup /data/scp-reader.com/dbBackups/logs
+chmod -R u=rwx,go=r /data/scp-reader.com/dbBackups
+chmod -R u=rwx,go=r /data/scp-reader.com/dbBackups/files
+chmod -R u=rwx,go=r /data/scp-reader.com/dbBackups/logs
 
-touch /data/dbBackups/logs/scpReader_db_backup.log
+gpBackupsDirName=/data/scp-reader.com/dbBackups/files/
+logsDirName=/data/scp-reader.com/dbBackups/logs/
+
+
+touch $logsDirName/scpReader_db_backup.log
 
 nowDate=$(date "+%Y-%m-%d-%H-%M-%S")
 echo nowDate: $nowDate
 
-gpBackupsDirName=/data/dbBackups/scpReader/
+
 echo gpBackupsDirName: $gpBackupsDirName
 backupDirName=$gpBackupsDirName$nowDate
 echo backupDirName: $backupDirName
@@ -27,7 +33,7 @@ mkdir $backupDirName
 pg_dump -U postgres -h localhost \
 --file "$backupDirName"/scpReader.sql \
 --format=plain scp_reader \
->> /data/dbBackups/logs/scpReader_db_backup.log 2>&1
+>> $logsDirName/scpReader_db_backup.log 2>&1
 
 
 #zip -9 -y -r -q ${backupDirFullName}.zip ${backupDirFullName}
@@ -53,7 +59,7 @@ chmod -R u=r,go=r $backupArhiveFileName
 SHELL=/bin/bash
 
 #prod
-0 0 * * * /data/dbBackups/db_backup.sh $>/data/dbBackups/logs/db_backup.log
+0 0 * * * /data/scp-reader.com/dbBackups/db_backup.sh $>/data/scp-reader.com/dbBackups/logs/db_backup.log
 ```
 
 ### DB backup rotate script
@@ -137,7 +143,7 @@ done
 SHELL=/bin/bash
 
 #backups rotate task
-0 0 * * * /data/dbBackups/dbBackupRotate.sh 60*60*24*7 scpReader_ /data/dbBackups/scpReader >> /data/dbBackups/logs/dbBackupRotate.log 2>&1
+0 0 * * * /data/scp-reader.com/dbBackups/dbBackupRotate.sh 60*60*24*7 scpReader_ /data/scp-reader.com/dbBackups/files >> /data/scp-reader.com/dbBackups/logs/dbBackupRotate.log 2>&1
 ```
 
 ### backups storing on other server
@@ -184,65 +190,17 @@ SHELL=/bin/bash
 
 ### Server restart script
 
-   ```shell script
-   #!/bin/bash
-   
-   address=$1
-   correctResponse=$2
-   
-   echo "$(date '+%d/%m/%Y %H:%M:%S'): starting server check for $address with correct response: $correctResponse"
-   
-   # correctResponse='Welcome to ScpReader API!'
-   # correctResponse='Welcome to API!'
-   # address='https://scp-reader.com:8443/scp-reader/api/'
-   # address='https://kuchanov.ru:8443/octa-trade/api/v1/'
-   
-   lockFile=/data/utils/restartTomcatLockFile.lock
-   
-   response=$(curl -s $address)
-   echo "$(date '+%d/%m/%Y %H:%M:%S'): $response"
-   if [[ $response == $correctResponse ]]; then
-       echo "$(date '+%d/%m/%Y %H:%M:%S'): response is correct!"
-       if [[ -e "$lockFile" ]]; then
-           rm -f $lockFile
-   # mail -s "SCP Reader server is working again!" admin@scp-reader.com <<EOF
-   mail -s "SCP Reader server is working again!" mohax.spb@gmail.com,neva.spb.rx@gmail.com,admin@scp-reader.com <<EOF
-   SCP Reader server is working again!
-   
-   Seems to be we correctly write a script to check if it is down and restart it in that case.
-   
-   Nice work! =)
-   EOF
-       fi
-   else
-       echo "$(date '+%d/%m/%Y %H:%M:%S'): server is down"
-       if [[ -e "$lockFile" ]]; then
-           echo "$(date '+%d/%m/%Y %H:%M:%S'): lockFile already exists, so we should think, that restarting is in progress and do nothing"
-       else
-           touch "$lockFile"
-           restartTomcatOutput=$(systemctl restart -f tomcat9.service 2>&1)
-           echo "$(date '+%d/%m/%Y %H:%M:%S'): restartTomcatOutput: $restartTomcatOutput"
-   # mail -s "SCP Reader server is down." admin@scp-reader.com <<EOF
-   mail -s "SCP Reader server is down." mohax.spb@gmail.com,neva.spb.rx@gmail.com,admin@scp-reader.com <<EOF
-   SCP Reader server is down.
-   Trying to restart it.
-   
-   Restart Tomcat command output: "$restartTomcatOutput"
-   EOF
-       fi
-   fi
-   ```
+see [restartScript.sh](scripts/restartScript.sh)
 
 ### cron server restart script
 
-   1. Create dirs `/data/utils/logs`.
-   2. Create log file `/data/utils/logs/serverRestart.log`
-   3. Copy script above to executable file `/data/utils/restartScript.sh`
-   4. Add script below to cron vai `crontab -e` (`Ctrl+x` to save changes in NANO)
+   1. Create dirs `/data/scp-reader.com/utils/log`.
+   2. Copy [restartScript.sh](scripts/restartScript.sh) to executable file `/data/scp-reader.com/utils/restartScript.sh`
+   3. Add script below to cron vai `crontab -e` (`Ctrl+x` to save changes in NANO)
 
    ```shell script
    # use bash to run `*.sh` scripts.
    SHELL=/bin/bash
    
-   * * * * * /data/utils/restartScript.sh https://scp-reader.com:8443/scp-reader/api/ 'Welcome to ScpReader API!' >> /data/utils/logs/serverRestart.log 2>&1
+   * * * * * /data/utils/restartScript.sh https://scp-reader.com:8443/scp-reader/api/ 'Welcome to ScpReader API!' >> /data/scp-reader.com/utils/log/serverRestart.log 2>&1
    ```
