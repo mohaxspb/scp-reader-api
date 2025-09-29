@@ -227,7 +227,7 @@ SHELL=/bin/bash
    SCP Reader server is down.
    Trying to restart it.
    
-   Restart Tomcat comand output: "$restartTomcatOutput"
+   Restart Tomcat command output: "$restartTomcatOutput"
    EOF
        fi
    fi
