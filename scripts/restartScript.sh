@@ -11,8 +11,8 @@ echo "$(date '+%d/%m/%Y %H:%M:%S'): starting server check for $address with corr
 scriptDir=/data/scp-reader.com/utils
 logDir=$scriptDir/log
 logFile=serverRestart.log
-mkdir $scriptDir
-mkdir $logDir
+mkdir -p $scriptDir
+mkdir -p $logDir
 touch $logDir/$logFile
 
 lockFileName=restartTomcatLockFile.lock

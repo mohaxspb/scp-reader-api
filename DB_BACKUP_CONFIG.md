@@ -154,23 +154,7 @@ SHELL=/bin/bash
     2. add `KEY_FILE_NAME.pub` content to prod server `home/DB_BACKUP_USER_NAME/.ssh/authorized_keys`
 3. Create cron task with `crontab -e` to copy backup files from prod server to another one:
 
-    **receiveBackup.sh**
-    ```shell script
-    echo Get list of files in other server dir modified not later than 2 days ago
-    files=`ssh -i /home/db-backup-fetcher/id_rsa_db-backup-fetcher db-backup@scp-reader.com 'find /data/dbBackups/scpReader/ -type f -mtime -2'`
-    
-    echo Found files: $files
-    
-    for file in $files
-    do
-        echo Start downloading file: $file
-        scp -v -r -i /home/db-backup-fetcher/id_rsa_db-backup-fetcher db-backup@scp-reader.com:$file \
-        /data/dbBackups/scp-reader.com/files/ \
-        >> /data/dbBackups/scp-reader.com/log.log
-    done
-    
-    echo Downloading files complete!
-    ``` 
+    See [receiveBackup.sh](scripts/receiveBackup.sh)
    
    ```shell script
    # use bash to run `*.sh` scripts.
